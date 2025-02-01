@@ -8,6 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\html\contact_page.html" />
+    <Content Remove="wwwroot\html\extra_page.html" />
+    <Content Remove="wwwroot\html\profile_page.html" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.1" />
@@ -33,6 +39,13 @@
   <ItemGroup>
     <Folder Include="Logs\" />
     <Folder Include="Pages\Shared\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\html\contact_page.html" />
+    <None Include="wwwroot\html\extra_page.html" />
+    <None Include="wwwroot\html\profile_page.html" />
+    <None Include="wwwroot\html\content_projects.html" />
   </ItemGroup>
 
 </Project>

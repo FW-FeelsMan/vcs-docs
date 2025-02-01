@@ -1,6 +1,18 @@
 {
   "Files": [
     {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\contactStyle.css",
+      "PackagePath": "staticwebassets\\css\\contactStyle.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\extraStyle.css",
+      "PackagePath": "staticwebassets\\css\\extraStyle.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\infographicsStyle.css",
+      "PackagePath": "staticwebassets\\css\\infographicsStyle.css"
+    },
+    {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\loginStyle.css",
       "PackagePath": "staticwebassets\\css\\loginStyle.css"
     },
@@ -9,8 +21,28 @@
       "PackagePath": "staticwebassets\\css\\mainStyle.css"
     },
     {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\profileStyle.css",
+      "PackagePath": "staticwebassets\\css\\profileStyle.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\projectsStyle.css",
+      "PackagePath": "staticwebassets\\css\\projectsStyle.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\html\\content_projects.html",
+      "PackagePath": "staticwebassets\\html\\content_projects.html"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\html\\infographics_page.html",
+      "PackagePath": "staticwebassets\\html\\infographics_page.html"
+    },
+    {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\images\\archiveIcon.png",
       "PackagePath": "staticwebassets\\images\\archiveIcon.png"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\images\\extra.png",
+      "PackagePath": "staticwebassets\\images\\extra.png"
     },
     {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\images\\helpIcon.png",

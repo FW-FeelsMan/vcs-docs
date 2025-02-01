@@ -267,10 +267,12 @@ body, html {
     .logout-button:active {
         background-color: #a93226;
     }
+.logout-container {
 
-/* »конка выхода */
+}
 .logout-icon {
     width: 18px;
     height: 18px;
     filter: invert(1);
 }
+

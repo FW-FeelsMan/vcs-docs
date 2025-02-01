@@ -23,46 +23,46 @@
         <p class="menu_divider">Version<br>Control<br>System</p>
     </div>
     <div class="sidebar">
-        <div class="sidebar-button" id="button1" onclick="selectButton(this)">
+        <div class="sidebar-button" data-content="content_projects" data-style="projectsStyle" id="button1" onclick="selectButton(this)">
             <img src="~/images/projectsIcon.png" alt="Icon" class="button-icon">
             <span class="button-text">Проекты</span>
             <span class="button-number">1</span>
         </div>
-        <div class="sidebar-button" id="button3" onclick="selectButton(this)">
+        <div class="sidebar-button" data-content="profile_page" data-style="profileStyle" id="button2" onclick="selectButton(this)">
             <img src="~/images/personalIcon.png" alt="Icon" class="button-icon">
             <span class="button-text">Профиль</span>
             <span class="button-number">2</span>
         </div>
-        <div class="sidebar-button" id="button2" onclick="selectButton(this)">
+        <div class="sidebar-button" data-content="infographics_page" data-style="infographicsStyle" id="button3" onclick="selectButton(this)">
             <img src="~/images/infographicIcon.png" alt="Icon" class="button-icon">
             <span class="button-text">Инфографика</span>
             <span class="button-number">3</span>
         </div>
-
-        <div class="sidebar-button" id="button4" onclick="selectButton(this)">
+        <div class="sidebar-button" data-content="contact_page" data-style="contactStyle" id="button4" onclick="selectButton(this)">
             <img src="~/images/helpIcon.png" alt="Icon" class="button-icon">
             <span class="button-text">Обратная связь</span>
             <span class="button-number">4</span>
         </div>
-        <!--<form method="post">
-         @Html.AntiForgeryToken()
-         <button type="submit" asp-page-handler="Logout" class="logout-button">
-             <img src="~/images/logout_icon.png" alt="Выход" class="logout-icon">
-             Выход
-         </button>
-        </form>-->
-        <form method="post" asp-page-handler="Logout">
-            @Html.AntiForgeryToken()
-            <button type="submit" class="logout-button">
-                <img src="~/images/logout_icon.png" alt="Выход" class="logout-icon">
-                Выход
-            </button>
-        </form>
+        <div class="sidebar-button" data-content="extra_page" data-style="extraStyle" id="button5" onclick="selectButton(this)">
+            <img src="~/images/extra.png" alt="Icon" class="button-icon">
+            <span class="button-text">Дополнения</span>
+            <span class="button-number">5</span>
+        </div>
+
+        <div class="logout-container">
+            <form method="post" asp-page-handler="Logout" class="logout-form">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="logout-button">
+                    <img src="~/images/logout_icon.png" alt="Выход" class="logout-icon">
+                    Выход
+                </button>
+            </form>
+        </div>
+
     </div>
 
     <div id="content" class="content-field">
-        <h1>Добро пожаловать!</h1>
-        <p>Выберите опцию из боковой панели.</p>
+        <!--Сюда грузим контент который выбран в сайдбаре-->
     </div>
     <div class="context-menu">
         <ul>
