@@ -29,6 +29,10 @@
       "PackagePath": "staticwebassets\\css\\projectsStyle.css"
     },
     {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\favicon.ico",
+      "PackagePath": "staticwebassets\\favicon.ico"
+    },
+    {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\html\\content_projects.html",
       "PackagePath": "staticwebassets\\html\\content_projects.html"
     },
@@ -83,6 +87,10 @@
     {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\contextMenu.js",
       "PackagePath": "staticwebassets\\js\\contextMenu.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\extraTabbar.js",
+      "PackagePath": "staticwebassets\\js\\extraTabbar.js"
     },
     {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\horizontalResize.js",

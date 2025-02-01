@@ -3,6 +3,24 @@ const signUpButton = document.getElementById('signUp');
 const signInButton = document.getElementById('signIn');
 const container = document.getElementById('container');
 
+// Создаем элементы для лоадера
+const loaderOverlay = document.createElement('div');
+loaderOverlay.className = 'loader-overlay';
+loaderOverlay.innerHTML = `
+    <div class="loader"></div>
+`;
+document.body.appendChild(loaderOverlay);
+hideLoader(); // Скрываем лоадер на старте
+
+// Функции для управления лоадером
+function showLoader() {
+    loaderOverlay.style.display = 'flex';
+}
+
+function hideLoader() {
+    loaderOverlay.style.display = 'none';
+}
+
 // Событие для переключения на форму регистрации
 signUpButton.addEventListener('click', () => {
     container.classList.add("right-panel-active");
@@ -24,6 +42,7 @@ document.querySelector('.sign-up-container form').addEventListener('submit', asy
     const form = event.target;
     const formData = new FormData(form);
 
+    showLoader(); // Показываем лоадер
     try {
         // Отправляем запрос на фиксированный URL
         const response = await fetch('https://vcs-docs.local:7120/Login?handler=Register', {
@@ -53,15 +72,15 @@ document.querySelector('.sign-up-container form').addEventListener('submit', asy
                 successMessage.style.display = 'none';
             }
             if (errorMessage) {
-                errorMessage.innerHTML = result.errors.map(error => `<p>${error}</
-
-                </p>`).join('');
+                errorMessage.innerHTML = result.errors.map(error => `<p>${error}</p>`).join('');
                 errorMessage.style.display = 'block';
             }
         }
     } catch (error) {
         console.error('Ошибка:', error);
         alert('Произошла ошибка при регистрации. Попробуйте позже.');
+    } finally {
+        hideLoader(); // Скрываем лоадер
     }
 });
 
@@ -72,6 +91,7 @@ document.querySelector('.sign-in-container form').addEventListener('submit', asy
     const form = event.target;
     const formData = new FormData(form);
 
+    showLoader(); // Показываем лоадер
     try {
         // Отправляем AJAX-запрос для входа
         const response = await fetch('https://vcs-docs.local:7120/Login?handler=Login', {
@@ -105,5 +125,7 @@ document.querySelector('.sign-in-container form').addEventListener('submit', asy
     } catch (error) {
         console.error('Ошибка:', error);
         alert('Произошла ошибка при входе. Попробуйте позже.');
+    } finally {
+        hideLoader(); // Скрываем лоадер
     }
 });

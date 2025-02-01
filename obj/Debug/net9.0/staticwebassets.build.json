@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "hkQ36aksKyM5mfIDpolTZfH2jGtfBjaUgWbwaeC0jBA=",
+  "Hash": "zaiX/+G80glsMsQ6htcjPfL1Q3Aj9WPHewa0yBz+570=",
   "Source": "VCS-DOCs",
   "BasePath": "_content/VCS-DOCs",
   "Mode": "Default",
@@ -1403,12 +1403,12 @@
       "OriginalItemSpec": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap.rtl.css"
     },
     {
-      "Identity": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\12y52tryo6-ojoxkqnfci.gz",
+      "Identity": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\12y52tryo6-utel9hxwkr.gz",
       "SourceId": "VCS-DOCs",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\",
       "BasePath": "_content/VCS-DOCs",
-      "RelativePath": "js/sidebar#[.{fingerprint=ojoxkqnfci}]?.js.gz",
+      "RelativePath": "js/sidebar#[.{fingerprint=utel9hxwkr}]?.js.gz",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Alternative",
@@ -1417,8 +1417,8 @@
       "RelatedAsset": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\sidebar.js",
       "AssetTraitName": "Content-Encoding",
       "AssetTraitValue": "gzip",
-      "Fingerprint": "vfrltay75y",
-      "Integrity": "KwMS1ltHNVYciou5WRTf2HP45cmOkZkaHxjeAozPLbM=",
+      "Fingerprint": "fe851gbphi",
+      "Integrity": "OXWVDv3TUxr/F+FcvFOL3ZwECoPSTM4IFO3tgF5Zbt0=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\sidebar.js"
@@ -1676,12 +1676,12 @@
       "OriginalItemSpec": "C:\\Users\\User\\.nuget\\packages\\microsoft.aspnetcore.identity.ui\\9.0.1\\staticwebassets\\V5\\lib\\bootstrap\\dist\\css\\bootstrap.min.css"
     },
     {
-      "Identity": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\7ij0ibaa7b-7ohjh9zmrw.gz",
+      "Identity": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\7ij0ibaa7b-l2zkz0u6gw.gz",
       "SourceId": "VCS-DOCs",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\",
       "BasePath": "_content/VCS-DOCs",
-      "RelativePath": "css/mainStyle#[.{fingerprint=7ohjh9zmrw}]?.css.gz",
+      "RelativePath": "css/mainStyle#[.{fingerprint=l2zkz0u6gw}]?.css.gz",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Alternative",
@@ -1690,8 +1690,8 @@
       "RelatedAsset": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\mainStyle.css",
       "AssetTraitName": "Content-Encoding",
       "AssetTraitValue": "gzip",
-      "Fingerprint": "niry4ikslm",
-      "Integrity": "zwsIXjPb6kYFHDUXOWX+RyKDioaenNgaB61qdHR2dsw=",
+      "Fingerprint": "xn6vjehoee",
+      "Integrity": "g9GhXdUS/nrtG+fF5evzg7vXUEnTPNwAw1uD90IH/mw=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\mainStyle.css"
@@ -1779,6 +1779,27 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "C:\\Users\\User\\.nuget\\packages\\microsoft.aspnetcore.identity.ui\\9.0.1\\staticwebassets\\V5\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.min.css.map"
+    },
+    {
+      "Identity": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\8cyjgf49dc-giy5du0gic.gz",
+      "SourceId": "VCS-DOCs",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\",
+      "BasePath": "_content/VCS-DOCs",
+      "RelativePath": "js/extraTabbar#[.{fingerprint=giy5du0gic}]?.js.gz",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Alternative",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\extraTabbar.js",
+      "AssetTraitName": "Content-Encoding",
+      "AssetTraitValue": "gzip",
+      "Fingerprint": "ozm4zhtx6s",
+      "Integrity": "nLtFNNb3oyDhzZPjrF6sVKWIjWB5roHRy2oY6XFmJjg=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\extraTabbar.js"
     },
     {
       "Identity": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\8jdajwksxx-1jj0dhswyh.gz",
@@ -2619,6 +2640,27 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\profileStyle.css"
+    },
+    {
+      "Identity": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\jg8lh4hdsy-5xuo4oxw35.gz",
+      "SourceId": "VCS-DOCs",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\",
+      "BasePath": "_content/VCS-DOCs",
+      "RelativePath": "favicon#[.{fingerprint=5xuo4oxw35}]?.ico.gz",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Alternative",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "D:\\Unity\\VCS-DOCs\\wwwroot\\favicon.ico",
+      "AssetTraitName": "Content-Encoding",
+      "AssetTraitValue": "gzip",
+      "Fingerprint": "eiutdvdr4p",
+      "Integrity": "tthIt9lQDs8u/v8JAIxJauR95ZF0cIYTCjRCNIIewhM=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "D:\\Unity\\VCS-DOCs\\wwwroot\\favicon.ico"
     },
     {
       "Identity": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\k8b25g0zwc-b7pk76d08c.gz",
@@ -3482,12 +3524,12 @@
       "OriginalItemSpec": "C:\\Users\\User\\.nuget\\packages\\microsoft.aspnetcore.identity.ui\\9.0.1\\staticwebassets\\V5\\lib\\jquery\\dist\\jquery.min.js"
     },
     {
-      "Identity": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\t5bm3586ol-um872tv3gk.gz",
+      "Identity": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\t5bm3586ol-0zrbmm9c3e.gz",
       "SourceId": "VCS-DOCs",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\",
       "BasePath": "_content/VCS-DOCs",
-      "RelativePath": "css/extraStyle#[.{fingerprint=um872tv3gk}]?.css.gz",
+      "RelativePath": "css/extraStyle#[.{fingerprint=0zrbmm9c3e}]?.css.gz",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Alternative",
@@ -3496,8 +3538,8 @@
       "RelatedAsset": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\extraStyle.css",
       "AssetTraitName": "Content-Encoding",
       "AssetTraitValue": "gzip",
-      "Fingerprint": "mvj5sb6xjx",
-      "Integrity": "HsSBmj0S9K++DlM2xxOEvE0ceWLeG06upuhc4Jrkfiw=",
+      "Fingerprint": "85e5eyrm16",
+      "Integrity": "JGNik15xQJP1we7QB2+w3nQY+Z0V6gPXkQjjEFtAb84=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\extraStyle.css"
@@ -3860,12 +3902,12 @@
       "OriginalItemSpec": "C:\\Users\\User\\.nuget\\packages\\microsoft.aspnetcore.identity.ui\\9.0.1\\staticwebassets\\V5\\lib\\bootstrap\\dist\\js\\bootstrap.esm.min.js"
     },
     {
-      "Identity": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\x3toudjkij-cv3dnutf7s.gz",
+      "Identity": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\x3toudjkij-vnjjy5ge7e.gz",
       "SourceId": "VCS-DOCs",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\",
       "BasePath": "_content/VCS-DOCs",
-      "RelativePath": "css/loginStyle#[.{fingerprint=cv3dnutf7s}]?.css.gz",
+      "RelativePath": "css/loginStyle#[.{fingerprint=vnjjy5ge7e}]?.css.gz",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Alternative",
@@ -3874,8 +3916,8 @@
       "RelatedAsset": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\loginStyle.css",
       "AssetTraitName": "Content-Encoding",
       "AssetTraitValue": "gzip",
-      "Fingerprint": "tm6iwb4hv2",
-      "Integrity": "FZ6bTlxe0n0voFt9Sj35bZ6kdetLxIHxWnEYUypsteY=",
+      "Fingerprint": "l7m7rrf3ll",
+      "Integrity": "z5wRq53dk4+Wovj0cJryxXndtSREbu4oDrgwpjhD0Yo=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\loginStyle.css"
@@ -4091,12 +4133,12 @@
       "OriginalItemSpec": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.css.map"
     },
     {
-      "Identity": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\z576n6ct2d-8mmdb8wahi.gz",
+      "Identity": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\z576n6ct2d-nuoph9a8cm.gz",
       "SourceId": "VCS-DOCs",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\",
       "BasePath": "_content/VCS-DOCs",
-      "RelativePath": "js/loginScript#[.{fingerprint=8mmdb8wahi}]?.js.gz",
+      "RelativePath": "js/loginScript#[.{fingerprint=nuoph9a8cm}]?.js.gz",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Alternative",
@@ -4105,8 +4147,8 @@
       "RelatedAsset": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\loginScript.js",
       "AssetTraitName": "Content-Encoding",
       "AssetTraitValue": "gzip",
-      "Fingerprint": "8zqer31jzt",
-      "Integrity": "7Mj8yJM154nQu3nvZD5W6GRmPnB7HFMgBk2kETmlDvQ=",
+      "Fingerprint": "ima3w3bv22",
+      "Integrity": "ditwpZuyQI7L2uFZ42AySEbQ0DVK+REbRH7ESBp18/8=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\loginScript.js"
@@ -4210,8 +4252,8 @@
       "RelatedAsset": "",
       "AssetTraitName": "",
       "AssetTraitValue": "",
-      "Fingerprint": "um872tv3gk",
-      "Integrity": "ilJ1GOFcZgXFac6aJUFsuYVTOJ3FVtnX6+byJKMNKu8=",
+      "Fingerprint": "0zrbmm9c3e",
+      "Integrity": "XOAjY27DTOFIAp9MtSquVCK5s7qRnq9Nkf+RoEMhZbg=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\css\\extraStyle.css"
@@ -4252,8 +4294,8 @@
       "RelatedAsset": "",
       "AssetTraitName": "",
       "AssetTraitValue": "",
-      "Fingerprint": "cv3dnutf7s",
-      "Integrity": "KGyon36+abuOK3rhYZGWsJLgHKLIOBjhfs1JaojfLso=",
+      "Fingerprint": "vnjjy5ge7e",
+      "Integrity": "SwAyG+O8hiwPCl2wEJREzkba9zyjmjHujMcI8w7F95c=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\css\\loginStyle.css"
@@ -4273,8 +4315,8 @@
       "RelatedAsset": "",
       "AssetTraitName": "",
       "AssetTraitValue": "",
-      "Fingerprint": "7ohjh9zmrw",
-      "Integrity": "NwU18osflysmtAIIjgBvDD2YZXTFCql8Ix5l0Cw4ZFg=",
+      "Fingerprint": "l2zkz0u6gw",
+      "Integrity": "jVFJYcj5yxky4bwbMFBDZ1qT+WT3eJ5QEAZHcNfjLlk=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\css\\mainStyle.css"
@@ -4320,6 +4362,27 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\css\\projectsStyle.css"
+    },
+    {
+      "Identity": "D:\\Unity\\VCS-DOCs\\wwwroot\\favicon.ico",
+      "SourceId": "VCS-DOCs",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\Unity\\VCS-DOCs\\wwwroot\\",
+      "BasePath": "_content/VCS-DOCs",
+      "RelativePath": "favicon#[.{fingerprint}]?.ico",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "5xuo4oxw35",
+      "Integrity": "d1no2qkusgDfvjTsotvcd95sBbkaYXLjCBmMeb1AcKU=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\favicon.ico"
     },
     {
       "Identity": "D:\\Unity\\VCS-DOCs\\wwwroot\\html\\content_projects.html",
@@ -4595,6 +4658,27 @@
       "OriginalItemSpec": "wwwroot\\js\\contextMenu.js"
     },
     {
+      "Identity": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\extraTabbar.js",
+      "SourceId": "VCS-DOCs",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\Unity\\VCS-DOCs\\wwwroot\\",
+      "BasePath": "_content/VCS-DOCs",
+      "RelativePath": "js/extraTabbar#[.{fingerprint}]?.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "giy5du0gic",
+      "Integrity": "+KJWGsbvv3x9ts4SezcUhycNJpzZ1kRfqkBTo6Zovzk=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\js\\extraTabbar.js"
+    },
+    {
       "Identity": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\horizontalResize.js",
       "SourceId": "VCS-DOCs",
       "SourceType": "Discovered",
@@ -4630,8 +4714,8 @@
       "RelatedAsset": "",
       "AssetTraitName": "",
       "AssetTraitValue": "",
-      "Fingerprint": "8mmdb8wahi",
-      "Integrity": "QMHtZfxSMCG0Y/+lsMFzfhgW4ZQj8VeFUfEiXPHM/Qg=",
+      "Fingerprint": "nuoph9a8cm",
+      "Integrity": "D1+SOEessnAJR47HlEjv8tMV7WEVI25Zcwo1hn9CuHY=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\js\\loginScript.js"
@@ -4651,8 +4735,8 @@
       "RelatedAsset": "",
       "AssetTraitName": "",
       "AssetTraitValue": "",
-      "Fingerprint": "ojoxkqnfci",
-      "Integrity": "hGZRHzaf/6tHodDhBWb2yGRgnGH8Ppvv/T04WtdivUE=",
+      "Fingerprint": "utel9hxwkr",
+      "Integrity": "riQMxpUSDdCHVauxgt2Fm2urMNRF7PYiqU6ovRJOw/g=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\js\\sidebar.js"
@@ -6239,13 +6323,13 @@
       ]
     },
     {
-      "Route": "css/extraStyle.css",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\t5bm3586ol-um872tv3gk.gz",
+      "Route": "css/extraStyle.0zrbmm9c3e.css",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\t5bm3586ol-0zrbmm9c3e.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.005025125628"
+          "Quality": "0.003921568627"
         }
       ],
       "ResponseHeaders": [
@@ -6255,19 +6339,19 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "198"
+          "Value": "254"
         },
         {
           "Name": "ETag",
-          "Value": "\"HsSBmj0S9K++DlM2xxOEvE0ceWLeG06upuhc4Jrkfiw=\""
+          "Value": "\"JGNik15xQJP1we7QB2+w3nQY+Z0V6gPXkQjjEFtAb84=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sat, 01 Feb 2025 15:32:46 GMT"
+          "Value": "Sat, 01 Feb 2025 17:55:36 GMT"
         },
         {
           "Name": "Cache-Control",
-          "Value": "no-cache"
+          "Value": "max-age=31536000, immutable"
         },
         {
           "Name": "Content-Encoding",
@@ -6283,18 +6367,26 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"ilJ1GOFcZgXFac6aJUFsuYVTOJ3FVtnX6+byJKMNKu8=\""
+          "Value": "W/\"XOAjY27DTOFIAp9MtSquVCK5s7qRnq9Nkf+RoEMhZbg=\""
         }
       ],
       "EndpointProperties": [
         {
+          "Name": "fingerprint",
+          "Value": "0zrbmm9c3e"
+        },
+        {
+          "Name": "label",
+          "Value": "css/extraStyle.css"
+        },
+        {
           "Name": "integrity",
-          "Value": "sha256-ilJ1GOFcZgXFac6aJUFsuYVTOJ3FVtnX6+byJKMNKu8="
+          "Value": "sha256-XOAjY27DTOFIAp9MtSquVCK5s7qRnq9Nkf+RoEMhZbg="
         }
       ]
     },
     {
-      "Route": "css/extraStyle.css",
+      "Route": "css/extraStyle.0zrbmm9c3e.css",
       "AssetFile": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\extraStyle.css",
       "Selectors": [],
       "ResponseHeaders": [
@@ -6304,7 +6396,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "347"
+          "Value": "541"
         },
         {
           "Name": "Content-Type",
@@ -6312,121 +6404,21 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"ilJ1GOFcZgXFac6aJUFsuYVTOJ3FVtnX6+byJKMNKu8=\""
+          "Value": "\"XOAjY27DTOFIAp9MtSquVCK5s7qRnq9Nkf+RoEMhZbg=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sat, 01 Feb 2025 15:32:46 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "no-cache"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "integrity",
-          "Value": "sha256-ilJ1GOFcZgXFac6aJUFsuYVTOJ3FVtnX6+byJKMNKu8="
-        }
-      ]
-    },
-    {
-      "Route": "css/extraStyle.css.gz",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\t5bm3586ol-um872tv3gk.gz",
-      "Selectors": [],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "198"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/css"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"HsSBmj0S9K++DlM2xxOEvE0ceWLeG06upuhc4Jrkfiw=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Sat, 01 Feb 2025 15:32:46 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "no-cache"
-        },
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip"
-        },
-        {
-          "Name": "Vary",
-          "Value": "Content-Encoding"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "integrity",
-          "Value": "sha256-HsSBmj0S9K++DlM2xxOEvE0ceWLeG06upuhc4Jrkfiw="
-        }
-      ]
-    },
-    {
-      "Route": "css/extraStyle.um872tv3gk.css",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\t5bm3586ol-um872tv3gk.gz",
-      "Selectors": [
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip",
-          "Quality": "0.005025125628"
-        }
-      ],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "198"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"HsSBmj0S9K++DlM2xxOEvE0ceWLeG06upuhc4Jrkfiw=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Sat, 01 Feb 2025 15:32:46 GMT"
+          "Value": "Sat, 01 Feb 2025 17:55:36 GMT"
         },
         {
           "Name": "Cache-Control",
           "Value": "max-age=31536000, immutable"
-        },
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip"
-        },
-        {
-          "Name": "Vary",
-          "Value": "Content-Encoding"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/css"
-        },
-        {
-          "Name": "ETag",
-          "Value": "W/\"ilJ1GOFcZgXFac6aJUFsuYVTOJ3FVtnX6+byJKMNKu8=\""
         }
       ],
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "um872tv3gk"
+          "Value": "0zrbmm9c3e"
         },
         {
           "Name": "label",
@@ -6434,13 +6426,13 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-ilJ1GOFcZgXFac6aJUFsuYVTOJ3FVtnX6+byJKMNKu8="
+          "Value": "sha256-XOAjY27DTOFIAp9MtSquVCK5s7qRnq9Nkf+RoEMhZbg="
         }
       ]
     },
     {
-      "Route": "css/extraStyle.um872tv3gk.css",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\extraStyle.css",
+      "Route": "css/extraStyle.0zrbmm9c3e.css.gz",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\t5bm3586ol-0zrbmm9c3e.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -6449,7 +6441,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "347"
+          "Value": "254"
         },
         {
           "Name": "Content-Type",
@@ -6457,56 +6449,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"ilJ1GOFcZgXFac6aJUFsuYVTOJ3FVtnX6+byJKMNKu8=\""
+          "Value": "\"JGNik15xQJP1we7QB2+w3nQY+Z0V6gPXkQjjEFtAb84=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sat, 01 Feb 2025 15:32:46 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "max-age=31536000, immutable"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "fingerprint",
-          "Value": "um872tv3gk"
-        },
-        {
-          "Name": "label",
-          "Value": "css/extraStyle.css"
-        },
-        {
-          "Name": "integrity",
-          "Value": "sha256-ilJ1GOFcZgXFac6aJUFsuYVTOJ3FVtnX6+byJKMNKu8="
-        }
-      ]
-    },
-    {
-      "Route": "css/extraStyle.um872tv3gk.css.gz",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\t5bm3586ol-um872tv3gk.gz",
-      "Selectors": [],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "198"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/css"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"HsSBmj0S9K++DlM2xxOEvE0ceWLeG06upuhc4Jrkfiw=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Sat, 01 Feb 2025 15:32:46 GMT"
+          "Value": "Sat, 01 Feb 2025 17:55:36 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -6524,7 +6471,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "um872tv3gk"
+          "Value": "0zrbmm9c3e"
         },
         {
           "Name": "label",
@@ -6532,7 +6479,144 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-HsSBmj0S9K++DlM2xxOEvE0ceWLeG06upuhc4Jrkfiw="
+          "Value": "sha256-JGNik15xQJP1we7QB2+w3nQY+Z0V6gPXkQjjEFtAb84="
+        }
+      ]
+    },
+    {
+      "Route": "css/extraStyle.css",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\t5bm3586ol-0zrbmm9c3e.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.003921568627"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "254"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"JGNik15xQJP1we7QB2+w3nQY+Z0V6gPXkQjjEFtAb84=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 01 Feb 2025 17:55:36 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"XOAjY27DTOFIAp9MtSquVCK5s7qRnq9Nkf+RoEMhZbg=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-XOAjY27DTOFIAp9MtSquVCK5s7qRnq9Nkf+RoEMhZbg="
+        }
+      ]
+    },
+    {
+      "Route": "css/extraStyle.css",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\extraStyle.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "541"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"XOAjY27DTOFIAp9MtSquVCK5s7qRnq9Nkf+RoEMhZbg=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 01 Feb 2025 17:55:36 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-XOAjY27DTOFIAp9MtSquVCK5s7qRnq9Nkf+RoEMhZbg="
+        }
+      ]
+    },
+    {
+      "Route": "css/extraStyle.css.gz",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\t5bm3586ol-0zrbmm9c3e.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "254"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"JGNik15xQJP1we7QB2+w3nQY+Z0V6gPXkQjjEFtAb84=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 01 Feb 2025 17:55:36 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-JGNik15xQJP1we7QB2+w3nQY+Z0V6gPXkQjjEFtAb84="
         }
       ]
     },
@@ -6836,12 +6920,12 @@
     },
     {
       "Route": "css/loginStyle.css",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\x3toudjkij-cv3dnutf7s.gz",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\x3toudjkij-vnjjy5ge7e.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.000719424460"
+          "Quality": "0.000558035714"
         }
       ],
       "ResponseHeaders": [
@@ -6851,15 +6935,15 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "1389"
+          "Value": "1791"
         },
         {
           "Name": "ETag",
-          "Value": "\"FZ6bTlxe0n0voFt9Sj35bZ6kdetLxIHxWnEYUypsteY=\""
+          "Value": "\"z5wRq53dk4+Wovj0cJryxXndtSREbu4oDrgwpjhD0Yo=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Wed, 29 Jan 2025 21:37:35 GMT"
+          "Value": "Sat, 01 Feb 2025 18:49:52 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -6879,13 +6963,13 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"KGyon36+abuOK3rhYZGWsJLgHKLIOBjhfs1JaojfLso=\""
+          "Value": "W/\"SwAyG+O8hiwPCl2wEJREzkba9zyjmjHujMcI8w7F95c=\""
         }
       ],
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-KGyon36+abuOK3rhYZGWsJLgHKLIOBjhfs1JaojfLso="
+          "Value": "sha256-SwAyG+O8hiwPCl2wEJREzkba9zyjmjHujMcI8w7F95c="
         }
       ]
     },
@@ -6900,7 +6984,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "5427"
+          "Value": "6344"
         },
         {
           "Name": "Content-Type",
@@ -6908,11 +6992,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"KGyon36+abuOK3rhYZGWsJLgHKLIOBjhfs1JaojfLso=\""
+          "Value": "\"SwAyG+O8hiwPCl2wEJREzkba9zyjmjHujMcI8w7F95c=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Wed, 29 Jan 2025 21:37:35 GMT"
+          "Value": "Sat, 01 Feb 2025 18:49:52 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -6922,13 +7006,13 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-KGyon36+abuOK3rhYZGWsJLgHKLIOBjhfs1JaojfLso="
+          "Value": "sha256-SwAyG+O8hiwPCl2wEJREzkba9zyjmjHujMcI8w7F95c="
         }
       ]
     },
     {
       "Route": "css/loginStyle.css.gz",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\x3toudjkij-cv3dnutf7s.gz",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\x3toudjkij-vnjjy5ge7e.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -6937,7 +7021,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "1389"
+          "Value": "1791"
         },
         {
           "Name": "Content-Type",
@@ -6945,11 +7029,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"FZ6bTlxe0n0voFt9Sj35bZ6kdetLxIHxWnEYUypsteY=\""
+          "Value": "\"z5wRq53dk4+Wovj0cJryxXndtSREbu4oDrgwpjhD0Yo=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Wed, 29 Jan 2025 21:37:35 GMT"
+          "Value": "Sat, 01 Feb 2025 18:49:52 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -6967,18 +7051,18 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-FZ6bTlxe0n0voFt9Sj35bZ6kdetLxIHxWnEYUypsteY="
+          "Value": "sha256-z5wRq53dk4+Wovj0cJryxXndtSREbu4oDrgwpjhD0Yo="
         }
       ]
     },
     {
-      "Route": "css/loginStyle.cv3dnutf7s.css",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\x3toudjkij-cv3dnutf7s.gz",
+      "Route": "css/loginStyle.vnjjy5ge7e.css",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\x3toudjkij-vnjjy5ge7e.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.000719424460"
+          "Quality": "0.000558035714"
         }
       ],
       "ResponseHeaders": [
@@ -6988,15 +7072,15 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "1389"
+          "Value": "1791"
         },
         {
           "Name": "ETag",
-          "Value": "\"FZ6bTlxe0n0voFt9Sj35bZ6kdetLxIHxWnEYUypsteY=\""
+          "Value": "\"z5wRq53dk4+Wovj0cJryxXndtSREbu4oDrgwpjhD0Yo=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Wed, 29 Jan 2025 21:37:35 GMT"
+          "Value": "Sat, 01 Feb 2025 18:49:52 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -7016,13 +7100,13 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"KGyon36+abuOK3rhYZGWsJLgHKLIOBjhfs1JaojfLso=\""
+          "Value": "W/\"SwAyG+O8hiwPCl2wEJREzkba9zyjmjHujMcI8w7F95c=\""
         }
       ],
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "cv3dnutf7s"
+          "Value": "vnjjy5ge7e"
         },
         {
           "Name": "label",
@@ -7030,12 +7114,12 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-KGyon36+abuOK3rhYZGWsJLgHKLIOBjhfs1JaojfLso="
+          "Value": "sha256-SwAyG+O8hiwPCl2wEJREzkba9zyjmjHujMcI8w7F95c="
         }
       ]
     },
     {
-      "Route": "css/loginStyle.cv3dnutf7s.css",
+      "Route": "css/loginStyle.vnjjy5ge7e.css",
       "AssetFile": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\loginStyle.css",
       "Selectors": [],
       "ResponseHeaders": [
@@ -7045,7 +7129,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "5427"
+          "Value": "6344"
         },
         {
           "Name": "Content-Type",
@@ -7053,11 +7137,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"KGyon36+abuOK3rhYZGWsJLgHKLIOBjhfs1JaojfLso=\""
+          "Value": "\"SwAyG+O8hiwPCl2wEJREzkba9zyjmjHujMcI8w7F95c=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Wed, 29 Jan 2025 21:37:35 GMT"
+          "Value": "Sat, 01 Feb 2025 18:49:52 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -7067,7 +7151,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "cv3dnutf7s"
+          "Value": "vnjjy5ge7e"
         },
         {
           "Name": "label",
@@ -7075,13 +7159,13 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-KGyon36+abuOK3rhYZGWsJLgHKLIOBjhfs1JaojfLso="
+          "Value": "sha256-SwAyG+O8hiwPCl2wEJREzkba9zyjmjHujMcI8w7F95c="
         }
       ]
     },
     {
-      "Route": "css/loginStyle.cv3dnutf7s.css.gz",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\x3toudjkij-cv3dnutf7s.gz",
+      "Route": "css/loginStyle.vnjjy5ge7e.css.gz",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\x3toudjkij-vnjjy5ge7e.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -7090,7 +7174,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "1389"
+          "Value": "1791"
         },
         {
           "Name": "Content-Type",
@@ -7098,11 +7182,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"FZ6bTlxe0n0voFt9Sj35bZ6kdetLxIHxWnEYUypsteY=\""
+          "Value": "\"z5wRq53dk4+Wovj0cJryxXndtSREbu4oDrgwpjhD0Yo=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Wed, 29 Jan 2025 21:37:35 GMT"
+          "Value": "Sat, 01 Feb 2025 18:49:52 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -7120,7 +7204,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "cv3dnutf7s"
+          "Value": "vnjjy5ge7e"
         },
         {
           "Name": "label",
@@ -7128,18 +7212,18 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-FZ6bTlxe0n0voFt9Sj35bZ6kdetLxIHxWnEYUypsteY="
+          "Value": "sha256-z5wRq53dk4+Wovj0cJryxXndtSREbu4oDrgwpjhD0Yo="
         }
       ]
     },
     {
-      "Route": "css/mainStyle.7ohjh9zmrw.css",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\7ij0ibaa7b-7ohjh9zmrw.gz",
+      "Route": "css/mainStyle.css",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\7ij0ibaa7b-l2zkz0u6gw.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.000459770115"
+          "Quality": "0.000433839479"
         }
       ],
       "ResponseHeaders": [
@@ -7149,19 +7233,19 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "2174"
+          "Value": "2304"
         },
         {
           "Name": "ETag",
-          "Value": "\"zwsIXjPb6kYFHDUXOWX+RyKDioaenNgaB61qdHR2dsw=\""
+          "Value": "\"g9GhXdUS/nrtG+fF5evzg7vXUEnTPNwAw1uD90IH/mw=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sat, 01 Feb 2025 15:26:16 GMT"
+          "Value": "Sat, 01 Feb 2025 18:05:40 GMT"
         },
         {
           "Name": "Cache-Control",
-          "Value": "max-age=31536000, immutable"
+          "Value": "no-cache"
         },
         {
           "Name": "Content-Encoding",
@@ -7177,26 +7261,18 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"NwU18osflysmtAIIjgBvDD2YZXTFCql8Ix5l0Cw4ZFg=\""
+          "Value": "W/\"jVFJYcj5yxky4bwbMFBDZ1qT+WT3eJ5QEAZHcNfjLlk=\""
         }
       ],
       "EndpointProperties": [
         {
-          "Name": "fingerprint",
-          "Value": "7ohjh9zmrw"
-        },
-        {
-          "Name": "label",
-          "Value": "css/mainStyle.css"
-        },
-        {
           "Name": "integrity",
-          "Value": "sha256-NwU18osflysmtAIIjgBvDD2YZXTFCql8Ix5l0Cw4ZFg="
+          "Value": "sha256-jVFJYcj5yxky4bwbMFBDZ1qT+WT3eJ5QEAZHcNfjLlk="
         }
       ]
     },
     {
-      "Route": "css/mainStyle.7ohjh9zmrw.css",
+      "Route": "css/mainStyle.css",
       "AssetFile": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\mainStyle.css",
       "Selectors": [],
       "ResponseHeaders": [
@@ -7206,7 +7282,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "6797"
+          "Value": "7338"
         },
         {
           "Name": "Content-Type",
@@ -7214,11 +7290,156 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"NwU18osflysmtAIIjgBvDD2YZXTFCql8Ix5l0Cw4ZFg=\""
+          "Value": "\"jVFJYcj5yxky4bwbMFBDZ1qT+WT3eJ5QEAZHcNfjLlk=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sat, 01 Feb 2025 15:26:16 GMT"
+          "Value": "Sat, 01 Feb 2025 18:05:40 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-jVFJYcj5yxky4bwbMFBDZ1qT+WT3eJ5QEAZHcNfjLlk="
+        }
+      ]
+    },
+    {
+      "Route": "css/mainStyle.css.gz",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\7ij0ibaa7b-l2zkz0u6gw.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2304"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"g9GhXdUS/nrtG+fF5evzg7vXUEnTPNwAw1uD90IH/mw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 01 Feb 2025 18:05:40 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-g9GhXdUS/nrtG+fF5evzg7vXUEnTPNwAw1uD90IH/mw="
+        }
+      ]
+    },
+    {
+      "Route": "css/mainStyle.l2zkz0u6gw.css",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\7ij0ibaa7b-l2zkz0u6gw.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000433839479"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2304"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"g9GhXdUS/nrtG+fF5evzg7vXUEnTPNwAw1uD90IH/mw=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 01 Feb 2025 18:05:40 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"jVFJYcj5yxky4bwbMFBDZ1qT+WT3eJ5QEAZHcNfjLlk=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "l2zkz0u6gw"
+        },
+        {
+          "Name": "label",
+          "Value": "css/mainStyle.css"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-jVFJYcj5yxky4bwbMFBDZ1qT+WT3eJ5QEAZHcNfjLlk="
+        }
+      ]
+    },
+    {
+      "Route": "css/mainStyle.l2zkz0u6gw.css",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\mainStyle.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "7338"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"jVFJYcj5yxky4bwbMFBDZ1qT+WT3eJ5QEAZHcNfjLlk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 01 Feb 2025 18:05:40 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -7228,7 +7449,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "7ohjh9zmrw"
+          "Value": "l2zkz0u6gw"
         },
         {
           "Name": "label",
@@ -7236,13 +7457,13 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-NwU18osflysmtAIIjgBvDD2YZXTFCql8Ix5l0Cw4ZFg="
+          "Value": "sha256-jVFJYcj5yxky4bwbMFBDZ1qT+WT3eJ5QEAZHcNfjLlk="
         }
       ]
     },
     {
-      "Route": "css/mainStyle.7ohjh9zmrw.css.gz",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\7ij0ibaa7b-7ohjh9zmrw.gz",
+      "Route": "css/mainStyle.l2zkz0u6gw.css.gz",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\7ij0ibaa7b-l2zkz0u6gw.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -7251,7 +7472,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "2174"
+          "Value": "2304"
         },
         {
           "Name": "Content-Type",
@@ -7259,11 +7480,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"zwsIXjPb6kYFHDUXOWX+RyKDioaenNgaB61qdHR2dsw=\""
+          "Value": "\"g9GhXdUS/nrtG+fF5evzg7vXUEnTPNwAw1uD90IH/mw=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sat, 01 Feb 2025 15:26:16 GMT"
+          "Value": "Sat, 01 Feb 2025 18:05:40 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -7281,7 +7502,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "7ohjh9zmrw"
+          "Value": "l2zkz0u6gw"
         },
         {
           "Name": "label",
@@ -7289,144 +7510,7 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-zwsIXjPb6kYFHDUXOWX+RyKDioaenNgaB61qdHR2dsw="
-        }
-      ]
-    },
-    {
-      "Route": "css/mainStyle.css",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\7ij0ibaa7b-7ohjh9zmrw.gz",
-      "Selectors": [
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip",
-          "Quality": "0.000459770115"
-        }
-      ],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "2174"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"zwsIXjPb6kYFHDUXOWX+RyKDioaenNgaB61qdHR2dsw=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Sat, 01 Feb 2025 15:26:16 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "no-cache"
-        },
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip"
-        },
-        {
-          "Name": "Vary",
-          "Value": "Content-Encoding"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/css"
-        },
-        {
-          "Name": "ETag",
-          "Value": "W/\"NwU18osflysmtAIIjgBvDD2YZXTFCql8Ix5l0Cw4ZFg=\""
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "integrity",
-          "Value": "sha256-NwU18osflysmtAIIjgBvDD2YZXTFCql8Ix5l0Cw4ZFg="
-        }
-      ]
-    },
-    {
-      "Route": "css/mainStyle.css",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\mainStyle.css",
-      "Selectors": [],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "6797"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/css"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"NwU18osflysmtAIIjgBvDD2YZXTFCql8Ix5l0Cw4ZFg=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Sat, 01 Feb 2025 15:26:16 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "no-cache"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "integrity",
-          "Value": "sha256-NwU18osflysmtAIIjgBvDD2YZXTFCql8Ix5l0Cw4ZFg="
-        }
-      ]
-    },
-    {
-      "Route": "css/mainStyle.css.gz",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\7ij0ibaa7b-7ohjh9zmrw.gz",
-      "Selectors": [],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "2174"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/css"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"zwsIXjPb6kYFHDUXOWX+RyKDioaenNgaB61qdHR2dsw=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Sat, 01 Feb 2025 15:26:16 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "no-cache"
-        },
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip"
-        },
-        {
-          "Name": "Vary",
-          "Value": "Content-Encoding"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "integrity",
-          "Value": "sha256-zwsIXjPb6kYFHDUXOWX+RyKDioaenNgaB61qdHR2dsw="
+          "Value": "sha256-g9GhXdUS/nrtG+fF5evzg7vXUEnTPNwAw1uD90IH/mw="
         }
       ]
     },
@@ -8064,6 +8148,167 @@
       ]
     },
     {
+      "Route": "favicon.5xuo4oxw35.ico",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\jg8lh4hdsy-5xuo4oxw35.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000457038391"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2187"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"tthIt9lQDs8u/v8JAIxJauR95ZF0cIYTCjRCNIIewhM=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 18 Jan 2025 17:53:50 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/x-icon"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"d1no2qkusgDfvjTsotvcd95sBbkaYXLjCBmMeb1AcKU=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "5xuo4oxw35"
+        },
+        {
+          "Name": "label",
+          "Value": "favicon.ico"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-d1no2qkusgDfvjTsotvcd95sBbkaYXLjCBmMeb1AcKU="
+        }
+      ]
+    },
+    {
+      "Route": "favicon.5xuo4oxw35.ico",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\wwwroot\\favicon.ico",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "47442"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/x-icon"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"d1no2qkusgDfvjTsotvcd95sBbkaYXLjCBmMeb1AcKU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 18 Jan 2025 17:53:50 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "5xuo4oxw35"
+        },
+        {
+          "Name": "label",
+          "Value": "favicon.ico"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-d1no2qkusgDfvjTsotvcd95sBbkaYXLjCBmMeb1AcKU="
+        }
+      ]
+    },
+    {
+      "Route": "favicon.5xuo4oxw35.ico.gz",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\jg8lh4hdsy-5xuo4oxw35.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2187"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/x-icon"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"tthIt9lQDs8u/v8JAIxJauR95ZF0cIYTCjRCNIIewhM=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 18 Jan 2025 17:53:50 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "5xuo4oxw35"
+        },
+        {
+          "Name": "label",
+          "Value": "favicon.ico.gz"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-tthIt9lQDs8u/v8JAIxJauR95ZF0cIYTCjRCNIIewhM="
+        }
+      ]
+    },
+    {
       "Route": "favicon.ico",
       "AssetFile": "C:\\Users\\User\\.nuget\\packages\\microsoft.aspnetcore.identity.ui\\9.0.1\\staticwebassets\\favicon.ico",
       "Selectors": [],
@@ -8097,6 +8342,143 @@
         {
           "Name": "integrity",
           "Value": "sha256-qU+KhVPK6oQw3UyjzAHU4xjRmCj3TLZUU/+39dni9E0="
+        }
+      ]
+    },
+    {
+      "Route": "favicon.ico",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\jg8lh4hdsy-5xuo4oxw35.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000457038391"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2187"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"tthIt9lQDs8u/v8JAIxJauR95ZF0cIYTCjRCNIIewhM=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 18 Jan 2025 17:53:50 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/x-icon"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"d1no2qkusgDfvjTsotvcd95sBbkaYXLjCBmMeb1AcKU=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-d1no2qkusgDfvjTsotvcd95sBbkaYXLjCBmMeb1AcKU="
+        }
+      ]
+    },
+    {
+      "Route": "favicon.ico",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\wwwroot\\favicon.ico",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "47442"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/x-icon"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"d1no2qkusgDfvjTsotvcd95sBbkaYXLjCBmMeb1AcKU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 18 Jan 2025 17:53:50 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=3600, must-revalidate"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-d1no2qkusgDfvjTsotvcd95sBbkaYXLjCBmMeb1AcKU="
+        }
+      ]
+    },
+    {
+      "Route": "favicon.ico.gz",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\jg8lh4hdsy-5xuo4oxw35.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "2187"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "image/x-icon"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"tthIt9lQDs8u/v8JAIxJauR95ZF0cIYTCjRCNIIewhM=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 18 Jan 2025 17:53:50 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-tthIt9lQDs8u/v8JAIxJauR95ZF0cIYTCjRCNIIewhM="
         }
       ]
     },
@@ -18346,6 +18728,304 @@
       ]
     },
     {
+      "Route": "js/extraTabbar.giy5du0gic.js",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\8cyjgf49dc-giy5du0gic.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.003745318352"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "266"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"nLtFNNb3oyDhzZPjrF6sVKWIjWB5roHRy2oY6XFmJjg=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 01 Feb 2025 17:40:19 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"+KJWGsbvv3x9ts4SezcUhycNJpzZ1kRfqkBTo6Zovzk=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "giy5du0gic"
+        },
+        {
+          "Name": "label",
+          "Value": "js/extraTabbar.js"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-+KJWGsbvv3x9ts4SezcUhycNJpzZ1kRfqkBTo6Zovzk="
+        }
+      ]
+    },
+    {
+      "Route": "js/extraTabbar.giy5du0gic.js",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\extraTabbar.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "501"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"+KJWGsbvv3x9ts4SezcUhycNJpzZ1kRfqkBTo6Zovzk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 01 Feb 2025 17:40:19 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "giy5du0gic"
+        },
+        {
+          "Name": "label",
+          "Value": "js/extraTabbar.js"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-+KJWGsbvv3x9ts4SezcUhycNJpzZ1kRfqkBTo6Zovzk="
+        }
+      ]
+    },
+    {
+      "Route": "js/extraTabbar.giy5du0gic.js.gz",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\8cyjgf49dc-giy5du0gic.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "266"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"nLtFNNb3oyDhzZPjrF6sVKWIjWB5roHRy2oY6XFmJjg=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 01 Feb 2025 17:40:19 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "giy5du0gic"
+        },
+        {
+          "Name": "label",
+          "Value": "js/extraTabbar.js.gz"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-nLtFNNb3oyDhzZPjrF6sVKWIjWB5roHRy2oY6XFmJjg="
+        }
+      ]
+    },
+    {
+      "Route": "js/extraTabbar.js",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\8cyjgf49dc-giy5du0gic.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.003745318352"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "266"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"nLtFNNb3oyDhzZPjrF6sVKWIjWB5roHRy2oY6XFmJjg=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 01 Feb 2025 17:40:19 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"+KJWGsbvv3x9ts4SezcUhycNJpzZ1kRfqkBTo6Zovzk=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-+KJWGsbvv3x9ts4SezcUhycNJpzZ1kRfqkBTo6Zovzk="
+        }
+      ]
+    },
+    {
+      "Route": "js/extraTabbar.js",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\extraTabbar.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "501"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"+KJWGsbvv3x9ts4SezcUhycNJpzZ1kRfqkBTo6Zovzk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 01 Feb 2025 17:40:19 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-+KJWGsbvv3x9ts4SezcUhycNJpzZ1kRfqkBTo6Zovzk="
+        }
+      ]
+    },
+    {
+      "Route": "js/extraTabbar.js.gz",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\8cyjgf49dc-giy5du0gic.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "266"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"nLtFNNb3oyDhzZPjrF6sVKWIjWB5roHRy2oY6XFmJjg=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 01 Feb 2025 17:40:19 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-nLtFNNb3oyDhzZPjrF6sVKWIjWB5roHRy2oY6XFmJjg="
+        }
+      ]
+    },
+    {
       "Route": "js/horizontalResize.gbfs1u4sm1.js",
       "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\8pzwm4m73e-gbfs1u4sm1.gz",
       "Selectors": [
@@ -18644,13 +19324,13 @@
       ]
     },
     {
-      "Route": "js/loginScript.8mmdb8wahi.js",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\z576n6ct2d-8mmdb8wahi.gz",
+      "Route": "js/loginScript.js",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\z576n6ct2d-nuoph9a8cm.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.000777604977"
+          "Quality": "0.000676589986"
         }
       ],
       "ResponseHeaders": [
@@ -18660,19 +19340,19 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "1285"
+          "Value": "1477"
         },
         {
           "Name": "ETag",
-          "Value": "\"7Mj8yJM154nQu3nvZD5W6GRmPnB7HFMgBk2kETmlDvQ=\""
+          "Value": "\"ditwpZuyQI7L2uFZ42AySEbQ0DVK+REbRH7ESBp18/8=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 30 Jan 2025 19:11:18 GMT"
+          "Value": "Sat, 01 Feb 2025 18:49:25 GMT"
         },
         {
           "Name": "Cache-Control",
-          "Value": "max-age=31536000, immutable"
+          "Value": "no-cache"
         },
         {
           "Name": "Content-Encoding",
@@ -18688,26 +19368,18 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"QMHtZfxSMCG0Y/+lsMFzfhgW4ZQj8VeFUfEiXPHM/Qg=\""
+          "Value": "W/\"D1+SOEessnAJR47HlEjv8tMV7WEVI25Zcwo1hn9CuHY=\""
         }
       ],
       "EndpointProperties": [
         {
-          "Name": "fingerprint",
-          "Value": "8mmdb8wahi"
-        },
-        {
-          "Name": "label",
-          "Value": "js/loginScript.js"
-        },
-        {
           "Name": "integrity",
-          "Value": "sha256-QMHtZfxSMCG0Y/+lsMFzfhgW4ZQj8VeFUfEiXPHM/Qg="
+          "Value": "sha256-D1+SOEessnAJR47HlEjv8tMV7WEVI25Zcwo1hn9CuHY="
         }
       ]
     },
     {
-      "Route": "js/loginScript.8mmdb8wahi.js",
+      "Route": "js/loginScript.js",
       "AssetFile": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\loginScript.js",
       "Selectors": [],
       "ResponseHeaders": [
@@ -18717,7 +19389,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "4490"
+          "Value": "5271"
         },
         {
           "Name": "Content-Type",
@@ -18725,11 +19397,156 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"QMHtZfxSMCG0Y/+lsMFzfhgW4ZQj8VeFUfEiXPHM/Qg=\""
+          "Value": "\"D1+SOEessnAJR47HlEjv8tMV7WEVI25Zcwo1hn9CuHY=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 30 Jan 2025 19:11:18 GMT"
+          "Value": "Sat, 01 Feb 2025 18:49:25 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-D1+SOEessnAJR47HlEjv8tMV7WEVI25Zcwo1hn9CuHY="
+        }
+      ]
+    },
+    {
+      "Route": "js/loginScript.js.gz",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\z576n6ct2d-nuoph9a8cm.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1477"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"ditwpZuyQI7L2uFZ42AySEbQ0DVK+REbRH7ESBp18/8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 01 Feb 2025 18:49:25 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-ditwpZuyQI7L2uFZ42AySEbQ0DVK+REbRH7ESBp18/8="
+        }
+      ]
+    },
+    {
+      "Route": "js/loginScript.nuoph9a8cm.js",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\z576n6ct2d-nuoph9a8cm.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000676589986"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1477"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"ditwpZuyQI7L2uFZ42AySEbQ0DVK+REbRH7ESBp18/8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 01 Feb 2025 18:49:25 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"D1+SOEessnAJR47HlEjv8tMV7WEVI25Zcwo1hn9CuHY=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "nuoph9a8cm"
+        },
+        {
+          "Name": "label",
+          "Value": "js/loginScript.js"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-D1+SOEessnAJR47HlEjv8tMV7WEVI25Zcwo1hn9CuHY="
+        }
+      ]
+    },
+    {
+      "Route": "js/loginScript.nuoph9a8cm.js",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\loginScript.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "5271"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"D1+SOEessnAJR47HlEjv8tMV7WEVI25Zcwo1hn9CuHY=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Sat, 01 Feb 2025 18:49:25 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -18739,7 +19556,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "8mmdb8wahi"
+          "Value": "nuoph9a8cm"
         },
         {
           "Name": "label",
@@ -18747,13 +19564,13 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-QMHtZfxSMCG0Y/+lsMFzfhgW4ZQj8VeFUfEiXPHM/Qg="
+          "Value": "sha256-D1+SOEessnAJR47HlEjv8tMV7WEVI25Zcwo1hn9CuHY="
         }
       ]
     },
     {
-      "Route": "js/loginScript.8mmdb8wahi.js.gz",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\z576n6ct2d-8mmdb8wahi.gz",
+      "Route": "js/loginScript.nuoph9a8cm.js.gz",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\z576n6ct2d-nuoph9a8cm.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -18762,7 +19579,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "1285"
+          "Value": "1477"
         },
         {
           "Name": "Content-Type",
@@ -18770,11 +19587,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"7Mj8yJM154nQu3nvZD5W6GRmPnB7HFMgBk2kETmlDvQ=\""
+          "Value": "\"ditwpZuyQI7L2uFZ42AySEbQ0DVK+REbRH7ESBp18/8=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Thu, 30 Jan 2025 19:11:18 GMT"
+          "Value": "Sat, 01 Feb 2025 18:49:25 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -18792,7 +19609,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "8mmdb8wahi"
+          "Value": "nuoph9a8cm"
         },
         {
           "Name": "label",
@@ -18800,155 +19617,18 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-7Mj8yJM154nQu3nvZD5W6GRmPnB7HFMgBk2kETmlDvQ="
-        }
-      ]
-    },
-    {
-      "Route": "js/loginScript.js",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\z576n6ct2d-8mmdb8wahi.gz",
-      "Selectors": [
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip",
-          "Quality": "0.000777604977"
-        }
-      ],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "1285"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"7Mj8yJM154nQu3nvZD5W6GRmPnB7HFMgBk2kETmlDvQ=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Thu, 30 Jan 2025 19:11:18 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "no-cache"
-        },
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip"
-        },
-        {
-          "Name": "Vary",
-          "Value": "Content-Encoding"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/javascript"
-        },
-        {
-          "Name": "ETag",
-          "Value": "W/\"QMHtZfxSMCG0Y/+lsMFzfhgW4ZQj8VeFUfEiXPHM/Qg=\""
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "integrity",
-          "Value": "sha256-QMHtZfxSMCG0Y/+lsMFzfhgW4ZQj8VeFUfEiXPHM/Qg="
-        }
-      ]
-    },
-    {
-      "Route": "js/loginScript.js",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\loginScript.js",
-      "Selectors": [],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "4490"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/javascript"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"QMHtZfxSMCG0Y/+lsMFzfhgW4ZQj8VeFUfEiXPHM/Qg=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Thu, 30 Jan 2025 19:11:18 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "no-cache"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "integrity",
-          "Value": "sha256-QMHtZfxSMCG0Y/+lsMFzfhgW4ZQj8VeFUfEiXPHM/Qg="
-        }
-      ]
-    },
-    {
-      "Route": "js/loginScript.js.gz",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\z576n6ct2d-8mmdb8wahi.gz",
-      "Selectors": [],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "1285"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/javascript"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"7Mj8yJM154nQu3nvZD5W6GRmPnB7HFMgBk2kETmlDvQ=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Thu, 30 Jan 2025 19:11:18 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "no-cache"
-        },
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip"
-        },
-        {
-          "Name": "Vary",
-          "Value": "Content-Encoding"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "integrity",
-          "Value": "sha256-7Mj8yJM154nQu3nvZD5W6GRmPnB7HFMgBk2kETmlDvQ="
+          "Value": "sha256-ditwpZuyQI7L2uFZ42AySEbQ0DVK+REbRH7ESBp18/8="
         }
       ]
     },
     {
       "Route": "js/sidebar.js",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\12y52tryo6-ojoxkqnfci.gz",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\12y52tryo6-utel9hxwkr.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.001872659176"
+          "Quality": "0.001647446458"
         }
       ],
       "ResponseHeaders": [
@@ -18958,15 +19638,15 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "533"
+          "Value": "606"
         },
         {
           "Name": "ETag",
-          "Value": "\"KwMS1ltHNVYciou5WRTf2HP45cmOkZkaHxjeAozPLbM=\""
+          "Value": "\"OXWVDv3TUxr/F+FcvFOL3ZwECoPSTM4IFO3tgF5Zbt0=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sat, 01 Feb 2025 14:47:38 GMT"
+          "Value": "Sat, 01 Feb 2025 18:12:17 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -18986,13 +19666,13 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"hGZRHzaf/6tHodDhBWb2yGRgnGH8Ppvv/T04WtdivUE=\""
+          "Value": "W/\"riQMxpUSDdCHVauxgt2Fm2urMNRF7PYiqU6ovRJOw/g=\""
         }
       ],
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-hGZRHzaf/6tHodDhBWb2yGRgnGH8Ppvv/T04WtdivUE="
+          "Value": "sha256-riQMxpUSDdCHVauxgt2Fm2urMNRF7PYiqU6ovRJOw/g="
         }
       ]
     },
@@ -19007,7 +19687,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "1173"
+          "Value": "1540"
         },
         {
           "Name": "Content-Type",
@@ -19015,11 +19695,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"hGZRHzaf/6tHodDhBWb2yGRgnGH8Ppvv/T04WtdivUE=\""
+          "Value": "\"riQMxpUSDdCHVauxgt2Fm2urMNRF7PYiqU6ovRJOw/g=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sat, 01 Feb 2025 14:47:38 GMT"
+          "Value": "Sat, 01 Feb 2025 18:12:17 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -19029,13 +19709,13 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-hGZRHzaf/6tHodDhBWb2yGRgnGH8Ppvv/T04WtdivUE="
+          "Value": "sha256-riQMxpUSDdCHVauxgt2Fm2urMNRF7PYiqU6ovRJOw/g="
         }
       ]
     },
     {
       "Route": "js/sidebar.js.gz",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\12y52tryo6-ojoxkqnfci.gz",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\12y52tryo6-utel9hxwkr.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -19044,7 +19724,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "533"
+          "Value": "606"
         },
         {
           "Name": "Content-Type",
@@ -19052,11 +19732,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"KwMS1ltHNVYciou5WRTf2HP45cmOkZkaHxjeAozPLbM=\""
+          "Value": "\"OXWVDv3TUxr/F+FcvFOL3ZwECoPSTM4IFO3tgF5Zbt0=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sat, 01 Feb 2025 14:47:38 GMT"
+          "Value": "Sat, 01 Feb 2025 18:12:17 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -19074,18 +19754,18 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-KwMS1ltHNVYciou5WRTf2HP45cmOkZkaHxjeAozPLbM="
+          "Value": "sha256-OXWVDv3TUxr/F+FcvFOL3ZwECoPSTM4IFO3tgF5Zbt0="
         }
       ]
     },
     {
-      "Route": "js/sidebar.ojoxkqnfci.js",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\12y52tryo6-ojoxkqnfci.gz",
+      "Route": "js/sidebar.utel9hxwkr.js",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\12y52tryo6-utel9hxwkr.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.001872659176"
+          "Quality": "0.001647446458"
         }
       ],
       "ResponseHeaders": [
@@ -19095,15 +19775,15 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "533"
+          "Value": "606"
         },
         {
           "Name": "ETag",
-          "Value": "\"KwMS1ltHNVYciou5WRTf2HP45cmOkZkaHxjeAozPLbM=\""
+          "Value": "\"OXWVDv3TUxr/F+FcvFOL3ZwECoPSTM4IFO3tgF5Zbt0=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sat, 01 Feb 2025 14:47:38 GMT"
+          "Value": "Sat, 01 Feb 2025 18:12:17 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -19123,13 +19803,13 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"hGZRHzaf/6tHodDhBWb2yGRgnGH8Ppvv/T04WtdivUE=\""
+          "Value": "W/\"riQMxpUSDdCHVauxgt2Fm2urMNRF7PYiqU6ovRJOw/g=\""
         }
       ],
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "ojoxkqnfci"
+          "Value": "utel9hxwkr"
         },
         {
           "Name": "label",
@@ -19137,12 +19817,12 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-hGZRHzaf/6tHodDhBWb2yGRgnGH8Ppvv/T04WtdivUE="
+          "Value": "sha256-riQMxpUSDdCHVauxgt2Fm2urMNRF7PYiqU6ovRJOw/g="
         }
       ]
     },
     {
-      "Route": "js/sidebar.ojoxkqnfci.js",
+      "Route": "js/sidebar.utel9hxwkr.js",
       "AssetFile": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\sidebar.js",
       "Selectors": [],
       "ResponseHeaders": [
@@ -19152,7 +19832,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "1173"
+          "Value": "1540"
         },
         {
           "Name": "Content-Type",
@@ -19160,11 +19840,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"hGZRHzaf/6tHodDhBWb2yGRgnGH8Ppvv/T04WtdivUE=\""
+          "Value": "\"riQMxpUSDdCHVauxgt2Fm2urMNRF7PYiqU6ovRJOw/g=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sat, 01 Feb 2025 14:47:38 GMT"
+          "Value": "Sat, 01 Feb 2025 18:12:17 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -19174,7 +19854,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "ojoxkqnfci"
+          "Value": "utel9hxwkr"
         },
         {
           "Name": "label",
@@ -19182,13 +19862,13 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-hGZRHzaf/6tHodDhBWb2yGRgnGH8Ppvv/T04WtdivUE="
+          "Value": "sha256-riQMxpUSDdCHVauxgt2Fm2urMNRF7PYiqU6ovRJOw/g="
         }
       ]
     },
     {
-      "Route": "js/sidebar.ojoxkqnfci.js.gz",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\12y52tryo6-ojoxkqnfci.gz",
+      "Route": "js/sidebar.utel9hxwkr.js.gz",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\Debug\\net9.0\\compressed\\12y52tryo6-utel9hxwkr.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -19197,7 +19877,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "533"
+          "Value": "606"
         },
         {
           "Name": "Content-Type",
@@ -19205,11 +19885,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"KwMS1ltHNVYciou5WRTf2HP45cmOkZkaHxjeAozPLbM=\""
+          "Value": "\"OXWVDv3TUxr/F+FcvFOL3ZwECoPSTM4IFO3tgF5Zbt0=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sat, 01 Feb 2025 14:47:38 GMT"
+          "Value": "Sat, 01 Feb 2025 18:12:17 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -19227,7 +19907,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "ojoxkqnfci"
+          "Value": "utel9hxwkr"
         },
         {
           "Name": "label",
@@ -19235,7 +19915,7 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-KwMS1ltHNVYciou5WRTf2HP45cmOkZkaHxjeAozPLbM="
+          "Value": "sha256-OXWVDv3TUxr/F+FcvFOL3ZwECoPSTM4IFO3tgF5Zbt0="
         }
       ]
     },

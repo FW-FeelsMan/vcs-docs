@@ -12,6 +12,8 @@ function selectButton(button) {
 
     const contentId = button.getAttribute('data-content');
     const styleId = button.getAttribute('data-style');
+
+    showLoader(); 
     loadContent(contentId, styleId);
 }
 
@@ -23,7 +25,8 @@ function loadContent(contentId, styleId) {
             contentDiv.innerHTML = html;
             loadStyles(styleId);
         })
-        .catch(error => console.error('Ошибка загрузки контента:', error));
+        .catch(error => console.error('Ошибка загрузки контента:', error))
+       .finally(() => hideLoader()); 
 }
 
 function loadStyles(styleId) {
@@ -31,4 +34,18 @@ function loadStyles(styleId) {
     link.rel = 'stylesheet';
     link.href = `/css/${styleId}.css`;
     document.head.appendChild(link);
+}
+
+function showLoader() {
+    const loader = document.getElementById('loader');
+    if (loader) {
+        loader.classList.remove('hidden');
+    }
+}
+
+function hideLoader() {
+    const loader = document.getElementById('loader');
+    if (loader) {
+        loader.classList.add('hidden');
+    }
 }
