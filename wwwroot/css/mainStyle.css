@@ -1,0 +1,276 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+}
+
+.background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, #1e1e1e, #333,#283126,#202038,#383131, #1e1e1e);
+    background-size: 400% 400%;
+    animation: gradientAnimation 60s ease infinite;
+}
+
+@keyframes gradientAnimation {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.context-menu {
+    display: none;
+    position: absolute;
+    background-color: #2b2b2b; /* Темный фон */
+    border-radius: 6px; /* Скругленные углы */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3); /* Тень */
+    padding: 10px 0; /* Внутренние отступы */
+    z-index: 1000; /* Поверх других элементов */
+    min-width: 150px; /* Минимальная ширина */
+}
+
+    .context-menu ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .context-menu li {
+        padding: 8px 15px; /* Отступы внутри пунктов */
+        cursor: pointer;
+        font-size: 14px;
+        color: #ffffff; /* Белый текст */
+    }
+
+        .context-menu li:hover {
+            background-color: #3c3c3c; /* Серый фон при наведении */
+        }
+
+    .context-menu hr {
+        border: none;
+        border-top: 1px solid #4d4d4d; /* Серая черта для разделения */
+        margin: 8px 0;
+    }
+
+
+/* Основное поле */
+.content-field {
+    position: absolute; /* Позволяет точно задать положение */
+    top: 7px;
+    right: 7px;
+    bottom: 7px;
+    left: 245px; /* Отступ слева 315 пикселей */
+    background-color: rgba(16, 16, 16, 1); /* Прямоугольник с заданным цветом */
+    border-radius: 6px; /* Скругление углов */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3); /* Лёгкая тень для объёмности */
+}
+
+/* Заголовок программы */
+.header-container {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    display: flex; /* Используем Flexbox для выравнивания */
+    align-items: center; /* Выравнивание по вертикали */
+}
+
+.header-title {
+    font-size: 32px; /* Размер шрифта */
+    font-weight: bold; /* Жирный текст */
+    color: rgba(228,229,229,255); /* Белый текст с небольшой прозрачностью */
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5); /* Лёгкая тень для читаемости */
+    font-family: 'GOST type A';
+}
+
+.menu_divider {
+    margin-left: 20px; /* Отступ слева для расстояния от заголовка */
+    font-size: 10px;
+    font-weight: 480;
+    color: #707070;
+    transition: color .15s ease;
+}
+/*Текст версии сервера*/
+.botom-text {
+    position: absolute;
+    bottom: -5px;
+    margin-left: 150px; 
+    font-size: 15px;
+    font-weight: 480;
+    color: #707070;
+    transition: color .15s ease;
+}
+
+.sidebar {
+    position: absolute;
+    top: 70px; /* Отступ от верхнего края */
+    bottom: 5px; /* Отступ от нижнего края */
+    left: -10px;
+    width: 220px;
+    padding: 1rem;
+    height: auto; /* Убираем фиксированную высоту */
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    overflow-y: auto;
+}
+/* Стили для кнопок */
+.sidebar-button {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    border-radius: 9px;
+    cursor: pointer;
+    position: relative;
+    transition: background-color 0.3s ease;
+    color: white;
+}
+
+    .sidebar-button:hover {
+        background-color: #484747;
+    }
+
+    .sidebar-button.selected {
+        background-color: #555;
+    }
+
+/* Иконки */
+.button-icon {
+    width: 16px;
+    height: 16px;
+    margin-right: 5px;
+}
+
+/* Текст кнопок */
+.button-text {
+    flex-grow: 1;
+    font-size: 14px;
+    color: rgba(228, 229, 229, 255);
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+    margin-top: 5px;
+    padding-left: 10px;
+    display: inline-block;
+}
+
+/* Номера на кнопках */
+.button-number {
+    background-color: #484747;
+    color: white;
+    font-size: 12px;
+    padding: 2px 5px;
+    border-radius: 3px;
+}
+
+/* Кастомная полоса прокрутки */
+.sidebar::-webkit-scrollbar {
+    width: 8px; /* Ширина полосы прокрутки */
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background-color: #555; /* Цвет "ползунка" */
+    border-radius: 4px; /* Скругление ползунка */
+}
+
+    .sidebar::-webkit-scrollbar-thumb:hover {
+        background-color: #777; /* Цвет при наведении */
+    }
+
+.sidebar::-webkit-scrollbar-track {
+    background: transparent; /* Фон трека */
+}
+
+/* Убираем стрелки у полосы прокрутки */
+.sidebar {
+    scrollbar-width: thin; /* Firefox: тонкая полоса прокрутки */
+    scrollbar-color: #555 transparent; /* Firefox: цвет ползунка и фона */
+}
+
+.login-form {
+    background-color: rgba(16, 16, 16, 1);
+    border-radius: 6px;
+    padding: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    color: white;
+    width: 300px; /* Фиксированная ширина для формы логина */
+    position: absolute; /* Позволяет точно задать положение */
+    top: 50%; /* Сдвигаем вниз на 50% от высоты родителя */
+    left: 50%; /* Сдвигаем вправо на 50% от ширины родителя */
+    transform: translate(-50%, -50%); /* Смещаем на половину ширины и высоты, чтобы центрировать */
+}
+
+
+    .login-form input {
+        width: 100%; /* Ширина полей ввода */
+        height: 30px;
+        box-sizing: border-box;
+        margin: 5px 0; /* Отступ сверху и снизу */
+        border: none; /* Убираем рамку */
+        border-radius: 4px; /* Скругление углов */
+        background-color: #333; /* Цвет фона полей ввода */
+        color: white; /* Цвет текста */
+    }
+
+    .login-form button {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px;
+        margin: 5px 0;
+        border: none;
+        border-radius: 4px;
+        background-color: #484747;
+        color: white;
+        cursor: pointer;
+    }
+
+        .login-form button:hover {
+            background-color: #555;
+        }
+/* Стили для формы выхода */
+.logout-form {
+    position: absolute;
+    left: 20px;
+    bottom: 5px;
+}
+
+/* Стили кнопки выхода */
+.logout-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background-color: #555;
+    color: white;
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+    .logout-button:hover {
+        background-color: #c0392b;
+    }
+
+    .logout-button:active {
+        background-color: #a93226;
+    }
+
+/* Иконка выхода */
+.logout-icon {
+    width: 18px;
+    height: 18px;
+    filter: invert(1);
+}

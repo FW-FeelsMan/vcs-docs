@@ -1,0 +1,86 @@
+﻿@page
+@model VCS_DOCs.Pages.LoginModel
+@{
+    ViewData["Title"] = "Вход";
+}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VCS-DOCs - Вход</title>
+    <link rel="stylesheet" href="~/css/loginStyle.css">
+</head>
+<body>
+
+    <div class="background"></div>
+    <div class="container" id="container">
+        <!-- Форма входа -->
+        <div class="form-container sign-in-container">
+            <form method="post" asp-antiforgery="true" asp-page-handler="Login">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="action" value="Login" />
+                <input type="hidden" name="hardwareId" id="hardwareId" />
+                <h1>Вход</h1>
+                <p>Введите Ваши данные для входа в систему</p>
+                <input type="text" name="Username" placeholder="Номер табеля" value="@Model.Username" required />
+                <input type="password" name="Password" placeholder="Пароль" required />
+
+                <div class="error-message" style="display:none;"></div>
+
+                <button type="submit">Войти</button>
+            </form>
+        </div>
+
+        <div class="form-container sign-up-container">
+            <form asp-page-handler="Register" asp-antiforgery="true" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="action" value="Register" />
+                <input type="hidden" name="hardwareId" id="hardwareIdRegister" />
+                <h1>Регистрация</h1>
+                <input type="text" name="Username" placeholder="Номер табеля" required />
+                <select name="speciality" required>
+                    <option value="" disabled selected>Выберите должность</option>
+                    @foreach (var speciality in Model.Specialities)
+                    {
+                        <option value="@speciality">@speciality</option>
+                    }
+                </select>
+                <input type="password" name="Password" placeholder="Пароль" required />
+
+                @if (Model.RegistrationErrors.Any())
+                {
+                    <div class="error-message-registration" style="display:none;">
+                        @foreach (var error in Model.RegistrationErrors)
+                        {
+                            <p>@error</p>
+                        }
+                    </div>
+                }
+                <div class="error-message-registration" style="display:none;"></div>
+                <div class="successful-message" style="display:none;">
+                    <p>Регистрация прошла успешно! Вы сможете войти в систему как только учетная запись будет активированна администрацией.</p>
+                </div>
+
+                <button type="submit" @(Model.IsRegistrationSuccessful ? "disabled" : "")>Зарегистрировать</button>
+            </form>
+        </div>
+        <div class="overlay-container">
+            <div class="overlay">
+                <div class="overlay-panel overlay-left">
+                    <h1>Регистрация пользователя</h1>
+                    <p>Введите Ваши данные и нажмите кнопку "Зарегистрировать"</p>
+                    <button class="ghost" id="signIn">Вернуться</button>
+                </div>
+                <div class="overlay-panel overlay-right">
+                    <h1>VCS-DOCs</h1>
+                    <p>Еще не зарегистрированы в системе?</p>
+                    <button class="ghost" id="signUp">Зарегистрироваться</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="/js/loginScript.js"></script>
+</body>
+</html>
