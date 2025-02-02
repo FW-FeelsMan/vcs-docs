@@ -3,20 +3,16 @@
   "WorkspaceRootPath": "D:\\Unity\\VCS-DOCs\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\pages\\login.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:pages\\login.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\css\\extrastyle.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\css\\extrastyle.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\loginscript.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\loginscript.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\html\\extra_page.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\html\\extra_page.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\css\\loginstyle.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\css\\loginstyle.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\css\\mainstyle.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\css\\mainstyle.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\extratabbar.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\extratabbar.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     }
   ],
   "DocumentGroupContainers": [
@@ -26,7 +22,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 5,
+          "SelectedChildIndex": 4,
           "Children": [
             {
               "$type": "Bookmark",
@@ -42,54 +38,41 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "mainStyle.css",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\mainStyle.css",
-              "RelativeDocumentMoniker": "wwwroot\\css\\mainStyle.css",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\mainStyle.css",
-              "RelativeToolTip": "wwwroot\\css\\mainStyle.css",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAACAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
-              "WhenOpened": "2025-02-01T18:43:55.059Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "loginStyle.css",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\loginStyle.css",
-              "RelativeDocumentMoniker": "wwwroot\\css\\loginStyle.css",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\loginStyle.css",
-              "RelativeToolTip": "wwwroot\\css\\loginStyle.css",
-              "ViewState": "AgIAACMBAAAAAAAAAAAIwD0BAAABAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
-              "WhenOpened": "2025-02-01T18:13:18.368Z",
+              "DocumentIndex": 1,
+              "Title": "extra_page.html",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\html\\extra_page.html",
+              "RelativeDocumentMoniker": "wwwroot\\html\\extra_page.html",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\html\\extra_page.html",
+              "RelativeToolTip": "wwwroot\\html\\extra_page.html",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
+              "WhenOpened": "2025-02-01T19:44:32.206Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "Login.cshtml",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Pages\\Login.cshtml",
-              "RelativeDocumentMoniker": "Pages\\Login.cshtml",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\Pages\\Login.cshtml",
-              "RelativeToolTip": "Pages\\Login.cshtml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAqAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-02-01T18:12:42.712Z",
+              "Title": "extraStyle.css",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\extraStyle.css",
+              "RelativeDocumentMoniker": "wwwroot\\css\\extraStyle.css",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\extraStyle.css",
+              "RelativeToolTip": "wwwroot\\css\\extraStyle.css",
+              "ViewState": "AgIAAGIBAAAAAAAAAAAAAHgBAAAQAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2025-02-01T19:44:14.213Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "loginScript.js",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\loginScript.js",
-              "RelativeDocumentMoniker": "wwwroot\\js\\loginScript.js",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\loginScript.js",
-              "RelativeToolTip": "wwwroot\\js\\loginScript.js",
-              "ViewState": "AgIAAEoAAAAAAAAAAAAgwIMAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 2,
+              "Title": "extraTabbar.js",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\extraTabbar.js",
+              "RelativeDocumentMoniker": "wwwroot\\js\\extraTabbar.js",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\extraTabbar.js",
+              "RelativeToolTip": "wwwroot\\js\\extraTabbar.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-02-01T18:12:39.121Z",
+              "WhenOpened": "2025-02-01T19:43:42.615Z",
               "EditorCaption": ""
             }
           ]

@@ -285,17 +285,17 @@ button[type="submit"]:disabled {
 
 
 .loader-overlay {
-    display: flex; /* Используем Flexbox для центрирования */
-    justify-content: center; /* Центрируем по горизонтали */
-    align-items: center; /* Центрируем по вертикали */
-    position: fixed; /* Фиксируем позицию относительно окна браузера */
-    top: 0; /* Верхний край */
-    left: 0; /* Левый край */
-    width: 100%; /* Ширина 100% */
-    height: 100%; /* Высота 100% */
-    background: rgba(0, 0, 0, 0.5); /* Полупрозрачный фон */
-    z-index: 1000; /* Убедитесь, что лоадер поверх других элементов */
-    display: none; /* Скрываем по умолчанию */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(0, 0, 0, 0.5); 
+    z-index: 1000; 
+    display: none; 
 }
 
 .loader {

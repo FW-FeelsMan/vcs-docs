@@ -86,6 +86,10 @@
               "target": "Package",
               "version": "[9.0.0, )"
             },
+            "OpenCASCADE.SilverHorn": {
+              "target": "Package",
+              "version": "[7.2.0-alpha, )"
+            },
             "Pomelo.EntityFrameworkCore.MySql": {
               "target": "Package",
               "version": "[9.0.0-preview.2.efcore.9.0.0, )"
