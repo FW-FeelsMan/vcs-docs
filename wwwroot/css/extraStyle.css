@@ -7,6 +7,7 @@
 .pcss3t {
     margin: 5px;
     font-size: 0;
+    height: 98%;
 }
 
     .pcss3t > input {
@@ -77,7 +78,7 @@
     /* typography */
     /**/
     .pcss3t .typography {
-        color: #fff;
+        color: #000000;
     }
 
         .pcss3t .typography h1 {
@@ -179,7 +180,7 @@
     .pcss3t .grid-col .inner {
         padding: 10px 0;
         border-radius: 5px;
-        background: #fff;
+        background: #000000;
         text-align: center;
     }
 
@@ -342,7 +343,7 @@
 /**/
 .pcss3t > label {
     padding: 0 20px;
-    background: #fff;
+    background: #1889e6;
     font-size: 13px;
     line-height: 49px;
 }
@@ -411,5 +412,8 @@
 /**/
 .pcss3t > ul,
 .pcss3t > ul > li {
-    height: 370px;
+    height: calc(100% - 50px); /* 5px отступ сверху и снизу */
+    
+    box-sizing: border-box; /* Учитывает отступы и границы в размере */
 }
+

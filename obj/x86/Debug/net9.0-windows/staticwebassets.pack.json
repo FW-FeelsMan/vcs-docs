@@ -1,0 +1,389 @@
+{
+  "Files": [
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\contactStyle.css",
+      "PackagePath": "staticwebassets\\css\\contactStyle.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\extraStyle.css",
+      "PackagePath": "staticwebassets\\css\\extraStyle.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\infographicsStyle.css",
+      "PackagePath": "staticwebassets\\css\\infographicsStyle.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\loginStyle.css",
+      "PackagePath": "staticwebassets\\css\\loginStyle.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\mainStyle.css",
+      "PackagePath": "staticwebassets\\css\\mainStyle.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\profileStyle.css",
+      "PackagePath": "staticwebassets\\css\\profileStyle.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\projectsStyle.css",
+      "PackagePath": "staticwebassets\\css\\projectsStyle.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\favicon.ico",
+      "PackagePath": "staticwebassets\\favicon.ico"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\html\\content_projects.html",
+      "PackagePath": "staticwebassets\\html\\content_projects.html"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\html\\infographics_page.html",
+      "PackagePath": "staticwebassets\\html\\infographics_page.html"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\bundle.js",
+      "PackagePath": "staticwebassets\\ifcjs\\bundle.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\bundle.js.map",
+      "PackagePath": "staticwebassets\\ifcjs\\bundle.js.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\index.html",
+      "PackagePath": "staticwebassets\\ifcjs\\index.html"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\wasm\\web-ifc-mt.wasm",
+      "PackagePath": "staticwebassets\\ifcjs\\wasm\\web-ifc-mt.wasm"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\wasm\\web-ifc.wasm",
+      "PackagePath": "staticwebassets\\ifcjs\\wasm\\web-ifc.wasm"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\images\\archiveIcon.png",
+      "PackagePath": "staticwebassets\\images\\archiveIcon.png"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\images\\extra.png",
+      "PackagePath": "staticwebassets\\images\\extra.png"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\images\\helpIcon.png",
+      "PackagePath": "staticwebassets\\images\\helpIcon.png"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\images\\ibackground.jpg",
+      "PackagePath": "staticwebassets\\images\\ibackground.jpg"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\images\\infographicIcon.png",
+      "PackagePath": "staticwebassets\\images\\infographicIcon.png"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\images\\logoVCS.png",
+      "PackagePath": "staticwebassets\\images\\logoVCS.png"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\images\\logout_icon.png",
+      "PackagePath": "staticwebassets\\images\\logout_icon.png"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\images\\personalIcon.png",
+      "PackagePath": "staticwebassets\\images\\personalIcon.png"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\images\\projectsIcon.png",
+      "PackagePath": "staticwebassets\\images\\projectsIcon.png"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\images\\ptkLogoTitel.png",
+      "PackagePath": "staticwebassets\\images\\ptkLogoTitel.png"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\StatusOnlineController.js",
+      "PackagePath": "staticwebassets\\js\\StatusOnlineController.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\contextMenu.js",
+      "PackagePath": "staticwebassets\\js\\contextMenu.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\extraTabbar.js",
+      "PackagePath": "staticwebassets\\js\\extraTabbar.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\horizontalResize.js",
+      "PackagePath": "staticwebassets\\js\\horizontalResize.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\loginScript.js",
+      "PackagePath": "staticwebassets\\js\\loginScript.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\sidebar.js",
+      "PackagePath": "staticwebassets\\js\\sidebar.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\LICENSE",
+      "PackagePath": "staticwebassets\\lib\\bootstrap"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-grid.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-grid.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-grid.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-grid.css.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-grid.min.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-grid.min.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-grid.min.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-grid.min.css.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-grid.rtl.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-grid.rtl.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-grid.rtl.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-grid.rtl.css.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-grid.rtl.min.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-grid.rtl.min.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-grid.rtl.min.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-grid.rtl.min.css.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.css.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.min.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.min.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.min.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.min.css.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.rtl.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.rtl.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.rtl.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.rtl.css.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.rtl.min.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.rtl.min.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.rtl.min.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-reboot.rtl.min.css.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.css.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.min.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.min.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.min.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.min.css.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.rtl.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.rtl.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.rtl.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.rtl.css.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.rtl.min.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.rtl.min.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.rtl.min.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.rtl.min.css.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap.css.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap.min.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap.min.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap.min.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap.min.css.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap.rtl.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap.rtl.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap.rtl.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap.rtl.css.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap.rtl.min.css",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap.rtl.min.css"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap.rtl.min.css.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\css\\bootstrap.rtl.min.css.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.bundle.js",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.bundle.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.bundle.js.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.bundle.js.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.bundle.min.js",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.bundle.min.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.bundle.min.js.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.bundle.min.js.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.esm.js",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.esm.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.esm.js.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.esm.js.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.esm.min.js",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.esm.min.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.esm.min.js.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.esm.min.js.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.js",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.js.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.js.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.min.js",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.min.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\js\\bootstrap.min.js.map",
+      "PackagePath": "staticwebassets\\lib\\bootstrap\\dist\\js\\bootstrap.min.js.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\jquery-validation-unobtrusive\\LICENSE.txt",
+      "PackagePath": "staticwebassets\\lib\\jquery-validation-unobtrusive\\LICENSE.txt"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\jquery-validation-unobtrusive\\dist\\jquery.validate.unobtrusive.js",
+      "PackagePath": "staticwebassets\\lib\\jquery-validation-unobtrusive\\dist\\jquery.validate.unobtrusive.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\jquery-validation-unobtrusive\\dist\\jquery.validate.unobtrusive.min.js",
+      "PackagePath": "staticwebassets\\lib\\jquery-validation-unobtrusive\\dist\\jquery.validate.unobtrusive.min.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\jquery-validation\\LICENSE.md",
+      "PackagePath": "staticwebassets\\lib\\jquery-validation\\LICENSE.md"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\jquery-validation\\dist\\additional-methods.js",
+      "PackagePath": "staticwebassets\\lib\\jquery-validation\\dist\\additional-methods.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\jquery-validation\\dist\\additional-methods.min.js",
+      "PackagePath": "staticwebassets\\lib\\jquery-validation\\dist\\additional-methods.min.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\jquery-validation\\dist\\jquery.validate.js",
+      "PackagePath": "staticwebassets\\lib\\jquery-validation\\dist\\jquery.validate.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\jquery-validation\\dist\\jquery.validate.min.js",
+      "PackagePath": "staticwebassets\\lib\\jquery-validation\\dist\\jquery.validate.min.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\jquery\\LICENSE.txt",
+      "PackagePath": "staticwebassets\\lib\\jquery\\LICENSE.txt"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\jquery\\dist\\jquery.js",
+      "PackagePath": "staticwebassets\\lib\\jquery\\dist\\jquery.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\jquery\\dist\\jquery.min.js",
+      "PackagePath": "staticwebassets\\lib\\jquery\\dist\\jquery.min.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\jquery\\dist\\jquery.min.map",
+      "PackagePath": "staticwebassets\\lib\\jquery\\dist\\jquery.min.map"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\jquery\\dist\\jquery.slim.js",
+      "PackagePath": "staticwebassets\\lib\\jquery\\dist\\jquery.slim.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\jquery\\dist\\jquery.slim.min.js",
+      "PackagePath": "staticwebassets\\lib\\jquery\\dist\\jquery.slim.min.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\jquery\\dist\\jquery.slim.min.map",
+      "PackagePath": "staticwebassets\\lib\\jquery\\dist\\jquery.slim.min.map"
+    },
+    {
+      "Id": "obj\\x86\\Debug\\net9.0-windows\\staticwebassets\\msbuild.VCS-DOCs.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssetEndpoints.props"
+    },
+    {
+      "Id": "obj\\x86\\Debug\\net9.0-windows\\staticwebassets\\msbuild.VCS-DOCs.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\x86\\Debug\\net9.0-windows\\staticwebassets\\msbuild.build.VCS-DOCs.props",
+      "PackagePath": "build\\VCS-DOCs.props"
+    },
+    {
+      "Id": "obj\\x86\\Debug\\net9.0-windows\\staticwebassets\\msbuild.buildMultiTargeting.VCS-DOCs.props",
+      "PackagePath": "buildMultiTargeting\\VCS-DOCs.props"
+    },
+    {
+      "Id": "obj\\x86\\Debug\\net9.0-windows\\staticwebassets\\msbuild.buildTransitive.VCS-DOCs.props",
+      "PackagePath": "buildTransitive\\VCS-DOCs.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "04PU3+nAvfY=",
+  "dgSpecHash": "0MWdU658VHk=",
   "success": true,
   "projectFilePath": "D:\\Unity\\VCS-DOCs\\VCS-DOCs.csproj",
   "expectedPackageFiles": [
@@ -56,7 +56,6 @@
     "C:\\Users\\User\\.nuget\\packages\\mysql.data\\9.2.0\\mysql.data.9.2.0.nupkg.sha512",
     "C:\\Users\\User\\.nuget\\packages\\mysql.entityframeworkcore\\9.0.0\\mysql.entityframeworkcore.9.0.0.nupkg.sha512",
     "C:\\Users\\User\\.nuget\\packages\\mysqlconnector\\2.4.0\\mysqlconnector.2.4.0.nupkg.sha512",
-    "C:\\Users\\User\\.nuget\\packages\\opencascade.silverhorn\\7.2.0-alpha\\opencascade.silverhorn.7.2.0-alpha.nupkg.sha512",
     "C:\\Users\\User\\.nuget\\packages\\pomelo.entityframeworkcore.mysql\\9.0.0-preview.2.efcore.9.0.0\\pomelo.entityframeworkcore.mysql.9.0.0-preview.2.efcore.9.0.0.nupkg.sha512",
     "C:\\Users\\User\\.nuget\\packages\\runtime.debian.8-x64.runtime.native.system.security.cryptography.openssl\\4.3.2\\runtime.debian.8-x64.runtime.native.system.security.cryptography.openssl.4.3.2.nupkg.sha512",
     "C:\\Users\\User\\.nuget\\packages\\runtime.fedora.23-x64.runtime.native.system.security.cryptography.openssl\\4.3.2\\runtime.fedora.23-x64.runtime.native.system.security.cryptography.openssl.4.3.2.nupkg.sha512",
