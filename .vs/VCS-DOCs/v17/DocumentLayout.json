@@ -3,8 +3,20 @@
   "WorkspaceRootPath": "D:\\Unity\\VCS-DOCs\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\ifcjs\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\ifcjs\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\ifcjs\\bundle.js.map||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\ifcjs\\bundle.js.map||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\ifcjs\\bundle.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
       "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\ifcjs\\bundle.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\pages\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:pages\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\extratabbar.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
@@ -13,10 +25,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\html\\extra_page.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\html\\extra_page.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\ifcjs\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\ifcjs\\index.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\css\\extrastyle.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
@@ -51,32 +59,58 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "bundle.js",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\bundle.js",
-              "RelativeDocumentMoniker": "wwwroot\\ifcjs\\bundle.js",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\bundle.js",
-              "RelativeToolTip": "wwwroot\\ifcjs\\bundle.js",
-              "ViewState": "AgIAAHBsAgAAAAAAAAAjwI5oAgAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-02-05T21:13:27.829Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
               "Title": "index.html",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\index.html",
               "RelativeDocumentMoniker": "wwwroot\\ifcjs\\index.html",
               "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\index.html",
               "RelativeToolTip": "wwwroot\\ifcjs\\index.html",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAIAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAMAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
-              "WhenOpened": "2025-02-05T21:11:45.688Z",
+              "WhenOpened": "2025-02-07T22:13:38.574Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 1,
+              "Title": "bundle.js.map",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\bundle.js.map",
+              "RelativeDocumentMoniker": "wwwroot\\ifcjs\\bundle.js.map",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\bundle.js.map",
+              "RelativeToolTip": "wwwroot\\ifcjs\\bundle.js.map",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAADJrAoAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002838|",
+              "WhenOpened": "2025-02-07T22:13:29.06Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "bundle.js",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\bundle.js",
+              "RelativeDocumentMoniker": "wwwroot\\ifcjs\\bundle.js",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\bundle.js",
+              "RelativeToolTip": "wwwroot\\ifcjs\\bundle.js",
+              "ViewState": "AgIAAK1xAgAAAAAAAAD4v7lxAgACAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-02-07T22:11:39.175Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Pages\\Index.cshtml",
+              "RelativeDocumentMoniker": "Pages\\Index.cshtml",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Pages\\Index.cshtml",
+              "RelativeToolTip": "Pages\\Index.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-02-07T19:25:50.392Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
               "Title": "extraTabbar.js",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\extraTabbar.js",
               "RelativeDocumentMoniker": "wwwroot\\js\\extraTabbar.js",
@@ -89,33 +123,33 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 5,
               "Title": "extra_page.html",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\html\\extra_page.html",
               "RelativeDocumentMoniker": "wwwroot\\html\\extra_page.html",
               "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\html\\extra_page.html",
               "RelativeToolTip": "wwwroot\\html\\extra_page.html",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAyAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAIAwwA4AAAA1AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
               "WhenOpened": "2025-02-05T19:32:46.879Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 6,
               "Title": "extraStyle.css",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\extraStyle.css",
               "RelativeDocumentMoniker": "wwwroot\\css\\extraStyle.css",
               "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\extraStyle.css",
               "RelativeToolTip": "wwwroot\\css\\extraStyle.css",
-              "ViewState": "AgIAACwAAAAAAAAAAAAnwD8AAAAMAAAAAAAAAA==",
+              "ViewState": "AgIAAAwAAAAAAAAAAAAgwBkAAAAbAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
               "WhenOpened": "2025-02-05T17:32:33.994Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 7,
               "Title": "Program.cs",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Program.cs",
               "RelativeDocumentMoniker": "Program.cs",

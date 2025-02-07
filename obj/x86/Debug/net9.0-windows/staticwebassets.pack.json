@@ -49,6 +49,18 @@
       "PackagePath": "staticwebassets\\ifcjs\\bundle.js.map"
     },
     {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\img\\lampIconOff.png",
+      "PackagePath": "staticwebassets\\ifcjs\\img\\lampIconOff.png"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\img\\lampIconOn.png",
+      "PackagePath": "staticwebassets\\ifcjs\\img\\lampIconOn.png"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\img\\uploadIcon.png",
+      "PackagePath": "staticwebassets\\ifcjs\\img\\uploadIcon.png"
+    },
+    {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\index.html",
       "PackagePath": "staticwebassets\\ifcjs\\index.html"
     },

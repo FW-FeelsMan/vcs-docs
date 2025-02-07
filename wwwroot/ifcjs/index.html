@@ -1,9 +1,18 @@
-<head><script defer src="bundle.js"></script></head><div class="viewer-container">
-  <div class="input-wrapper">
-    <input type="file" name="load" id="file-input" />
-    <button id="theme-toggle" class="theme-toggle">
-      <img id="theme-icon" src="lampIconOn.png" alt="Theme Icon" />
-    </button>
-  </div>  
-  <canvas id="three-canvas"></canvas>
-</div>
+<head><script defer src="bundle.js"></script></head><body>
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <div class="viewer-container">
+    <div class="input-wrapper">
+      <div class="button-container">
+        <button id="theme-toggle" class="theme-toggle">
+          <img id="theme-icon" src="img/lampIconOff.png" alt="Theme Icon" />
+        </button>
+        <button id="file-upload-button" class="theme-toggle">
+          <img src="img/uploadIcon.png" alt="Загрузить модель" />
+        </button>
+        <input type="file" id="file-input" style="display: none;" />
+      </div>
+    </div>  
+    <canvas id="three-canvas"></canvas>
+  </div>
+  
+</body>

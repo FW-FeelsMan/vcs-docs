@@ -90,6 +90,9 @@ wwwroot\html\content_projects.html
 wwwroot\html\infographics_page.html
 wwwroot\ifcjs\bundle.js
 wwwroot\ifcjs\bundle.js.map
+wwwroot\ifcjs\img\lampIconOff.png
+wwwroot\ifcjs\img\lampIconOn.png
+wwwroot\ifcjs\img\uploadIcon.png
 wwwroot\ifcjs\index.html
 wwwroot\ifcjs\wasm\web-ifc.wasm
 wwwroot\ifcjs\wasm\web-ifc-mt.wasm
