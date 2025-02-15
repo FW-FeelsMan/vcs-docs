@@ -10,9 +10,17 @@
 
   <ItemGroup>
     <Compile Remove="wwwroot\htmlExtra\**" />
+    <Compile Remove="wwwroot\lib\online-3d-viewer\**" />
+    <Compile Remove="wwwroot\models\**" />
     <Content Remove="wwwroot\htmlExtra\**" />
+    <Content Remove="wwwroot\lib\online-3d-viewer\**" />
+    <Content Remove="wwwroot\models\**" />
     <EmbeddedResource Remove="wwwroot\htmlExtra\**" />
+    <EmbeddedResource Remove="wwwroot\lib\online-3d-viewer\**" />
+    <EmbeddedResource Remove="wwwroot\models\**" />
     <None Remove="wwwroot\htmlExtra\**" />
+    <None Remove="wwwroot\lib\online-3d-viewer\**" />
+    <None Remove="wwwroot\models\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -27,6 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="AssimpNet" Version="4.1.0" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.1" />
@@ -47,11 +56,12 @@
     <PackageReference Include="System.Net.Security" Version="4.3.2" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="9.0.1" />
     <PackageReference Include="System.ServiceModel.Security" Version="6.0.0" />
+    <PackageReference Include="Xbim.Essentials" Version="6.0.493" />
+    <PackageReference Include="XbimWebUI" Version="0.1.41" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Logs\" />
-    <Folder Include="Pages\Shared\" />
   </ItemGroup>
 
   <ItemGroup>

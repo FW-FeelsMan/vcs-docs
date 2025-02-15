@@ -6,16 +6,15 @@ using VCS_DOCs.Utilities;
 
 namespace VCS_DOCs.Pages
 {
-    public class IndexModel : PageModel
-    {
-
+	public class IndexModel : PageModel
+	{
 		private readonly ApplicationDbContext _context;
 		private readonly ILogger<IndexModel> _logger;
 
 		public IndexModel(ILogger<IndexModel> logger, ApplicationDbContext context)
-        {
+		{
 			_context = context;
-			_logger = logger;			
+			_logger = logger;
 		}
 
 		public IActionResult OnGet()
@@ -36,26 +35,19 @@ namespace VCS_DOCs.Pages
 		public async Task<IActionResult> OnPostSetUserOnlineAsync()
 		{
 			_logger.LogInformation("Метод OnPostSetUserOnlineAsync вызван.");
-
 			var username = HttpContext.Request.Cookies["AuthUser"];
+
 			if (string.IsNullOrEmpty(username))
-			{
-				_logger.LogWarning("Попытка установить пользователя в онлайн без авторизации.");
 				return Unauthorized();
-			}
 
 			var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 			if (user == null)
-			{
-				_logger.LogWarning($"Пользователь с номером табеля {username} не найден.");
 				return NotFound();
-			}
 
-			user.StatusOnline = 1; // Устанавливаем статус "онлайн"
-			user.LastEntry = DateTime.UtcNow; // Обновляем время последней активности
+			user.StatusOnline = 1;
+			user.LastEntry = DateTime.UtcNow;
 			await _context.SaveChangesAsync();
 
-			_logger.LogInformation($"Пользователь {username} был установлен в статус онлайн.");
 			return new JsonResult("OK");
 		}
 
@@ -63,33 +55,24 @@ namespace VCS_DOCs.Pages
 		public async Task<IActionResult> OnPostSetUserOfflineAsync()
 		{
 			var username = HttpContext.Request.Cookies["AuthUser"];
+
 			if (string.IsNullOrEmpty(username))
-			{
-				_logger.LogWarning("Попытка установить пользователя в оффлайн без авторизации.");
 				return Unauthorized();
-			}
 
 			var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 			if (user == null)
-			{
-				_logger.LogWarning($"Пользователь с номером табеля {username} не найден.");
 				return NotFound();
-			}
 
-			user.StatusOnline = 0; // Устанавливаем статус "офлайн"
+			user.StatusOnline = 0;
 			await _context.SaveChangesAsync();
 
-			_logger.LogInformation($"Пользователь {username} был установлен в статус оффлайн.");
 			return new JsonResult("OK");
-
 		}
 
 		[HttpPost]
 		[ValidateAntiForgeryToken]
 		public async Task<IActionResult> OnPostLogoutAsync()
 		{
-			_logger.LogInformation("Очищаем куки");
-
 			Response.Cookies.Delete("AuthUser", new CookieOptions
 			{
 				Secure = true,
@@ -99,7 +82,6 @@ namespace VCS_DOCs.Pages
 
 			Response.Cookies.Delete(".AspNetCore.Identity.Application");
 			HttpContext.Session.Clear();
-
 			await HttpContext.SignOutAsync("Identity.Application");
 
 			return RedirectToPage("/Login");

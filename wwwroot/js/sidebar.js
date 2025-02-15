@@ -1,11 +1,14 @@
 ﻿document.addEventListener("DOMContentLoaded", function () {
     const firstButton = document.querySelector('.sidebar-button');
-    if (firstButton) {
-        selectButton(firstButton);
-    }
+    document.querySelectorAll('.sidebar-button').forEach(button => {
+        button.addEventListener('click', function () {
+            window.selectButton(this);
+        });
+    });
+    if (firstButton) window.selectButton(firstButton);
 });
 
-function selectButton(button) {
+window.selectButton = function (button) {
     const buttons = document.querySelectorAll('.sidebar-button');
     buttons.forEach(btn => btn.classList.remove('selected'));
     button.classList.add('selected');
@@ -13,7 +16,7 @@ function selectButton(button) {
     const contentId = button.getAttribute('data-content');
     const styleId = button.getAttribute('data-style');
 
-    showLoader(); 
+    showLoader();
     loadContent(contentId, styleId);
 }
 
@@ -21,12 +24,11 @@ function loadContent(contentId, styleId) {
     fetch(`/html/${contentId}.html`)
         .then(response => response.text())
         .then(html => {
-            const contentDiv = document.getElementById('content');
-            contentDiv.innerHTML = html;
+            document.getElementById('content').innerHTML = html;
             loadStyles(styleId);
         })
         .catch(error => console.error('Ошибка загрузки контента:', error))
-       .finally(() => hideLoader()); 
+        .finally(() => hideLoader());
 }
 
 function loadStyles(styleId) {
@@ -38,14 +40,10 @@ function loadStyles(styleId) {
 
 function showLoader() {
     const loader = document.getElementById('loader');
-    if (loader) {
-        loader.classList.remove('hidden');
-    }
+    if (loader) loader.classList.remove('hidden');
 }
 
 function hideLoader() {
     const loader = document.getElementById('loader');
-    if (loader) {
-        loader.classList.add('hidden');
-    }
+    if (loader) loader.classList.add('hidden');
 }

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -11,15 +12,17 @@ namespace VCS_DOCs.Pages
 		private readonly ILogger<LoginModel> _logger;
 		public List<string> Specialities { get; set; }
 
-		public LoginModel(ApplicationDbContext context, ILogger<LoginModel> logger)
+		private readonly IWebHostEnvironment _webHostEnvironment;
+
+		public LoginModel(ApplicationDbContext context, ILogger<LoginModel> logger, IWebHostEnvironment webHostEnvironment)
 		{
 			_context = context;
 			_logger = logger;
+			_webHostEnvironment = webHostEnvironment;
 			LoginErrors = new List<string>();
 			RegistrationErrors = new List<string>();
 			Specialities = new List<string>();
 		}
-
 
 		[BindProperty]
 		public string Username { get; set; }
@@ -118,6 +121,13 @@ namespace VCS_DOCs.Pages
 
 				_context.Users.Add(newUser);
 				await _context.SaveChangesAsync();
+
+				// Создание папки пользователя
+				string appDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", $"userData_{Username}");
+				if (!Directory.Exists(appDataPath))
+				{
+					Directory.CreateDirectory(appDataPath);
+				}
 
 				IsRegistrationSuccessful = true;
 				return new JsonResult(new { success = true });

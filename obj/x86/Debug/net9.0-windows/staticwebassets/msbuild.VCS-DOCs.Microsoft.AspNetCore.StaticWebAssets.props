@@ -192,8 +192,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>kr4itxpb1i</Fingerprint>
-      <Integrity>YGZ+X7ildk6p80igoeTNZ+1TrrICs+FJsEw4cqFdDOM=</Integrity>
+      <Fingerprint>ct7vliv06h</Fingerprint>
+      <Integrity>sBmjj7hxl3Lkek4D8nKzyTmJbQTpqErTB4DhMAeqvLs=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\ifcjs\bundle.js'))</OriginalItemSpec>
@@ -588,8 +588,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>utel9hxwkr</Fingerprint>
-      <Integrity>riQMxpUSDdCHVauxgt2Fm2urMNRF7PYiqU6ovRJOw/g=</Integrity>
+      <Fingerprint>9gk06kly9e</Fingerprint>
+      <Integrity>ic2wfEa+U0smmY9a94sA3e1c2TE0By2+80Nq1mxfGTY=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\sidebar.js'))</OriginalItemSpec>
