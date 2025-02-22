@@ -102,6 +102,10 @@
               "target": "Package",
               "version": "[9.0.1, )"
             },
+            "System.Net.Http": {
+              "target": "Package",
+              "version": "[4.3.4, )"
+            },
             "System.Net.Security": {
               "target": "Package",
               "version": "[4.3.2, )"
@@ -113,6 +117,10 @@
             "System.ServiceModel.Security": {
               "target": "Package",
               "version": "[6.0.0, )"
+            },
+            "System.Text.RegularExpressions": {
+              "target": "Package",
+              "version": "[4.3.1, )"
             },
             "Xbim.Essentials": {
               "target": "Package",

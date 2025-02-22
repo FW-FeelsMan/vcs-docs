@@ -4,14 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"] - VCS-DOCs</title>
-    <link rel="stylesheet" href="~/css/mainStyle.css">
+    <!-- Основной стиль всегда активен -->
+    <link rel="stylesheet" href="~/css/main_css/mainStyle.css">
+    <!-- Стили страниц предзагружаем, но отключаем -->
+    <link id="projectsStyle" rel="stylesheet" href="~/css/sub_css/project_page.css" disabled>
+    <link id="profileStyle" rel="stylesheet" href="~/css/sub_css/profile_page.css" disabled>
+    <link id="infographicsStyle" rel="stylesheet" href="~/css/sub_css/infographics_page.css" disabled>
+    <link id="contactStyle" rel="stylesheet" href="~/css/sub_css/contact_page.css" disabled>
+    <link id="extraStyle" rel="stylesheet" href="~/css/sub_css/extra_page.css" disabled>
     @await RenderSectionAsync("Styles", required: false)
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 </head>
 <body>
     @RenderBody()
 
-    <!-- Важно: sidebar.js должен быть ПЕРВЫМ -->
     <script src="~/js/sidebar.js"></script>
     <script src="~/js/contextMenu.js"></script>
     <script src="~/js/extraTabbar.js"></script>

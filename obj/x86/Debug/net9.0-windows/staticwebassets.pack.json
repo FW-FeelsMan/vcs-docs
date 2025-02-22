@@ -1,44 +1,36 @@
 {
   "Files": [
     {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\contactStyle.css",
-      "PackagePath": "staticwebassets\\css\\contactStyle.css"
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\main_css\\loginStyle.css",
+      "PackagePath": "staticwebassets\\css\\main_css\\loginStyle.css"
     },
     {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\extraStyle.css",
-      "PackagePath": "staticwebassets\\css\\extraStyle.css"
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\main_css\\mainStyle.css",
+      "PackagePath": "staticwebassets\\css\\main_css\\mainStyle.css"
     },
     {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\infographicsStyle.css",
-      "PackagePath": "staticwebassets\\css\\infographicsStyle.css"
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\sub_css\\contact_page.css",
+      "PackagePath": "staticwebassets\\css\\sub_css\\contact_page.css"
     },
     {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\loginStyle.css",
-      "PackagePath": "staticwebassets\\css\\loginStyle.css"
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\sub_css\\extra_page.css",
+      "PackagePath": "staticwebassets\\css\\sub_css\\extra_page.css"
     },
     {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\mainStyle.css",
-      "PackagePath": "staticwebassets\\css\\mainStyle.css"
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\sub_css\\infographics_page.css",
+      "PackagePath": "staticwebassets\\css\\sub_css\\infographics_page.css"
     },
     {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\profileStyle.css",
-      "PackagePath": "staticwebassets\\css\\profileStyle.css"
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\sub_css\\profile_page.css",
+      "PackagePath": "staticwebassets\\css\\sub_css\\profile_page.css"
     },
     {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\projectsStyle.css",
-      "PackagePath": "staticwebassets\\css\\projectsStyle.css"
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\sub_css\\project_page.css",
+      "PackagePath": "staticwebassets\\css\\sub_css\\project_page.css"
     },
     {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\favicon.ico",
       "PackagePath": "staticwebassets\\favicon.ico"
-    },
-    {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\html\\content_projects.html",
-      "PackagePath": "staticwebassets\\html\\content_projects.html"
-    },
-    {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\html\\infographics_page.html",
-      "PackagePath": "staticwebassets\\html\\infographics_page.html"
     },
     {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\bundle.js",

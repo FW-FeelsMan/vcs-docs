@@ -303,3 +303,16 @@ body, html {
         transform: translate(-50%, -50%) rotate(360deg);
     }
 }
+
+/* mainStyle.css */
+[data-cached-content] {
+    display: none;
+}
+
+    [data-cached-content].active {
+        display: block;
+    }
+
+.hidden {
+    display: none !important;
+}

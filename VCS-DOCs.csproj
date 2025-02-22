@@ -22,12 +22,6 @@
     <None Remove="wwwroot\lib\online-3d-viewer\**" />
     <None Remove="wwwroot\models\**" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Content Remove="wwwroot\html\contact_page.html" />
-    <Content Remove="wwwroot\html\extra_page.html" />
-    <Content Remove="wwwroot\html\profile_page.html" />
-  </ItemGroup>
   <ItemGroup>
     <None Update="bin\Debug\net9.0\*.dll">
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -53,22 +47,18 @@
     <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0-preview.2.efcore.9.0.0" />
     <PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.0" />
     <PackageReference Include="System.Formats.Asn1" Version="9.0.1" />
+    <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="System.Net.Security" Version="4.3.2" />
     <PackageReference Include="System.Security.Cryptography.Pkcs" Version="9.0.1" />
     <PackageReference Include="System.ServiceModel.Security" Version="6.0.0" />
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
     <PackageReference Include="Xbim.Essentials" Version="6.0.493" />
     <PackageReference Include="XbimWebUI" Version="0.1.41" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Logs\" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="wwwroot\html\contact_page.html" />
-    <None Include="wwwroot\html\extra_page.html" />
-    <None Include="wwwroot\html\profile_page.html" />
-    <None Include="wwwroot\html\content_projects.html" />
+    <Folder Include="Model\" />
   </ItemGroup>
 
 </Project>

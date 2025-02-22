@@ -1,4 +1,11 @@
-﻿﻿<div class="pcss3t pcss3t-effect-scale pcss3t-theme-1">
+﻿@page
+@model extra_pageModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Дополнения";
+}
+
+<div class="pcss3t pcss3t-effect-scale pcss3t-theme-1">
     <input type="radio" name="pcss3t" checked id="tab1" class="tab-content-first">
     <label for="tab1">STEP-Viewer</label>
 
@@ -11,7 +18,7 @@
     <ul>
         <li class="tab-content tab-content-first typography">
             <iframe src="/ifcjs/index.html"
-                    style="width: 100%; height: 107%; border: none;">
+                    style="width: 100%; height: 108%; border: none;">
             </iframe>
         </li>
 
