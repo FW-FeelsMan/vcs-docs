@@ -34,12 +34,12 @@ body, html {
 .context-menu {
     display: none;
     position: absolute;
-    background-color: #2b2b2b; /* Темный фон */
-    border-radius: 6px; /* Скругленные углы */
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3); /* Тень */
-    padding: 10px 0; /* Внутренние отступы */
-    z-index: 1000; /* Поверх других элементов */
-    min-width: 150px; /* Минимальная ширина */
+    background-color: #2b2b2b; 
+    border-radius: 6px; 
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3); 
+    padding: 10px 0; 
+    z-index: 1000; 
+    min-width: 150px;
 }
 
     .context-menu ul {

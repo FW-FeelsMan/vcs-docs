@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"] - VCS-DOCs</title>
-    <!-- Основной стиль всегда активен -->
     <link rel="stylesheet" href="~/css/main_css/mainStyle.css">
-    <!-- Стили страниц предзагружаем, но отключаем -->
     <link id="projectsStyle" rel="stylesheet" href="~/css/sub_css/project_page.css" disabled>
     <link id="profileStyle" rel="stylesheet" href="~/css/sub_css/profile_page.css" disabled>
     <link id="infographicsStyle" rel="stylesheet" href="~/css/sub_css/infographics_page.css" disabled>
@@ -18,6 +16,11 @@
 <body>
     @RenderBody()
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <script src="~/js/userStatus.js"></script>
+    }
     <script src="~/js/sidebar.js"></script>
     <script src="~/js/contextMenu.js"></script>
     <script src="~/js/extraTabbar.js"></script>

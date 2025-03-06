@@ -1,13 +1,16 @@
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 using VCS_DOCs.Utilities;
 
 namespace VCS_DOCs.Pages
 {
 	public class LoginModel : PageModel
-    {
+	{
 		private readonly ApplicationDbContext _context;
 		private readonly ILogger<LoginModel> _logger;
 		public List<string> Specialities { get; set; }
@@ -51,26 +54,32 @@ namespace VCS_DOCs.Pages
 					return new JsonResult(new { success = false, errors = LoginErrors });
 				}
 
-
 				if (user.Access == 0)
 				{
 					LoginErrors.Add("Учетная запись не активирована.");
 					return new JsonResult(new { success = false, errors = LoginErrors });
 				}
 
-				string hardwareId = Request.Form["hardwareId"];
+				var claims = new List<Claim>
+				{
+					new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+					new Claim(ClaimTypes.Name, user.Username)
+				};
 
-				user.HardwareId = hardwareId;
-				user.LastEntry = DateTime.Now;
+				var authProperties = new AuthenticationProperties
+				{
+					IsPersistent = true,
+					ExpiresUtc = DateTime.UtcNow.AddDays(7)
+				};
+
+				await HttpContext.SignInAsync(
+					CookieAuthenticationDefaults.AuthenticationScheme,
+					new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)),
+					authProperties);
+
+				user.LastEntry = DateTime.UtcNow;
 				_context.Users.Update(user);
 				await _context.SaveChangesAsync();
-
-				HttpContext.Response.Cookies.Append("AuthUser", user.Username, new Microsoft.AspNetCore.Http.CookieOptions
-				{
-					HttpOnly = true,
-					Secure = true,
-					SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict
-				});
 
 				return new JsonResult(new { success = true });
 			}
@@ -81,6 +90,7 @@ namespace VCS_DOCs.Pages
 				return new JsonResult(new { success = false, errors = LoginErrors });
 			}
 		}
+
 		public async Task<IActionResult> OnPostRegisterAsync()
 		{
 			if (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password))
@@ -122,7 +132,6 @@ namespace VCS_DOCs.Pages
 				_context.Users.Add(newUser);
 				await _context.SaveChangesAsync();
 
-				// Создание папки пользователя
 				string appDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", $"userData_{Username}");
 				if (!Directory.Exists(appDataPath))
 				{
@@ -153,6 +162,7 @@ namespace VCS_DOCs.Pages
 
 			return Page();
 		}
+
 		public void OnGet()
 		{
 			var configPath = Path.Combine(Directory.GetCurrentDirectory(), "Utilities", "Config.ini");

@@ -129,6 +129,10 @@
       "PackagePath": "staticwebassets\\js\\sidebar.js"
     },
     {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\userStatus.js",
+      "PackagePath": "staticwebassets\\js\\userStatus.js"
+    },
+    {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\LICENSE",
       "PackagePath": "staticwebassets\\lib\\bootstrap"
     },

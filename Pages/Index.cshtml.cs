@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
-using VCS_DOCs.Utilities;
+using System.Security.Claims;
+using VCS_DOCs.Data;
 
 namespace VCS_DOCs.Pages
 {
@@ -17,74 +19,43 @@ namespace VCS_DOCs.Pages
 			_logger = logger;
 		}
 
-		public IActionResult OnGet()
+		public async Task<IActionResult> OnGet()
 		{
-			var user = HttpContext.Request.Cookies["AuthUser"];
-			if (string.IsNullOrEmpty(user))
+			if (!User.Identity.IsAuthenticated)
 			{
-				_logger.LogWarning("Пользователь не авторизован, перенаправление на страницу входа.");
 				return RedirectToPage("/Login");
 			}
 
-			ViewData["Username"] = user;
-			_logger.LogInformation($"Пользователь {user} зашел на главную страницу.");
+			var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+			await UpdateUserStatus(userId, true);
+
+			ViewData["Username"] = User.Identity.Name;
 			return Page();
-		}
-
-		[HttpPost]
-		public async Task<IActionResult> OnPostSetUserOnlineAsync()
-		{
-			_logger.LogInformation("Метод OnPostSetUserOnlineAsync вызван.");
-			var username = HttpContext.Request.Cookies["AuthUser"];
-
-			if (string.IsNullOrEmpty(username))
-				return Unauthorized();
-
-			var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
-			if (user == null)
-				return NotFound();
-
-			user.StatusOnline = 1;
-			user.LastEntry = DateTime.UtcNow;
-			await _context.SaveChangesAsync();
-
-			return new JsonResult("OK");
-		}
-
-		[HttpPost]
-		public async Task<IActionResult> OnPostSetUserOfflineAsync()
-		{
-			var username = HttpContext.Request.Cookies["AuthUser"];
-
-			if (string.IsNullOrEmpty(username))
-				return Unauthorized();
-
-			var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
-			if (user == null)
-				return NotFound();
-
-			user.StatusOnline = 0;
-			await _context.SaveChangesAsync();
-
-			return new JsonResult("OK");
 		}
 
 		[HttpPost]
 		[ValidateAntiForgeryToken]
 		public async Task<IActionResult> OnPostLogoutAsync()
 		{
-			Response.Cookies.Delete("AuthUser", new CookieOptions
-			{
-				Secure = true,
-				SameSite = SameSiteMode.None,
-				Path = "/"
-			});
+			var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+			await UpdateUserStatus(userId, false);
 
-			Response.Cookies.Delete(".AspNetCore.Identity.Application");
-			HttpContext.Session.Clear();
-			await HttpContext.SignOutAsync("Identity.Application");
-
+			await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 			return RedirectToPage("/Login");
+		}
+
+		private async Task UpdateUserStatus(string userId, bool isOnline)
+		{
+			if (!string.IsNullOrEmpty(userId) && int.TryParse(userId, out int id))
+			{
+				var user = await _context.Users.FindAsync(id);
+				if (user != null)
+				{
+					user.StatusOnline = isOnline ? 1 : 0;
+					user.LastEntry = DateTime.UtcNow;
+					await _context.SaveChangesAsync();
+				}
+			}
 		}
 	}
 }

@@ -1,0 +1,1070 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        "Occt.NET8"
+    </assembly>
+    <members>
+        <member name="M:TX.LicenseFile.CheckSignature(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+            <summary>
+验证签名
+</summary>
+            <param name="publicKey" />
+            <returns />
+        </member>
+        <member name="M:tinyxml2.XMLPrinter.PrintSpace(System.Int32)">
+Prints out the space before an element. You may override to change
+	    the space and tabs used. A PrintSpace() override should call Print().
+
+</member>
+        <member name="M:tinyxml2.XMLPrinter.ClearBuffer">
+If in print to memory mode, reset the buffer to the
+beginning.
+
+</member>
+        <member name="M:tinyxml2.XMLPrinter.CStrSize">
+If in print to memory mode, return the size
+of the XML file in memory. (Note the size returned
+includes the terminating null.)
+
+</member>
+        <member name="M:tinyxml2.XMLPrinter.CStr">
+If in print to memory mode, return a pointer to
+the XML file in memory.
+
+</member>
+        <member name="M:tinyxml2.XMLPrinter.PushComment(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*)">
+Add a comment
+</member>
+        <member name="M:tinyxml2.XMLPrinter.PushText(System.Double)">
+Add a text node from a double.
+</member>
+        <member name="M:tinyxml2.XMLPrinter.PushText(System.Single)">
+Add a text node from a float.
+</member>
+        <member name="M:tinyxml2.XMLPrinter.PushText(System.Boolean)">
+Add a text node from a bool.
+</member>
+        <member name="M:tinyxml2.XMLPrinter.PushText(System.Int64)">
+Add a text node from an unsigned.
+</member>
+        <member name="M:tinyxml2.XMLPrinter.PushText(System.UInt32)">
+Add a text node from an unsigned.
+</member>
+        <member name="M:tinyxml2.XMLPrinter.PushText(System.Int32)">
+Add a text node from an integer.
+</member>
+        <member name="M:tinyxml2.XMLPrinter.PushText(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.Boolean)">
+Add a text node.
+</member>
+        <member name="M:tinyxml2.XMLPrinter.CloseElement(System.Boolean)">
+If streaming, close the Element.
+</member>
+        <member name="M:tinyxml2.XMLPrinter.PushAttribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*)">
+If streaming, add an attribute to an open element.
+</member>
+        <member name="M:tinyxml2.XMLPrinter.OpenElement(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.Boolean)">
+If streaming, start writing an element.
+        The element must be closed with CloseElement()
+
+</member>
+        <member name="M:tinyxml2.XMLPrinter.PushHeader(System.Boolean,System.Boolean)">
+If streaming, write the BOM and declaration. 
+</member>
+        <member name="M:tinyxml2.XMLPrinter.#ctor(_iobuf*,System.Boolean,System.Int32)">
+Construct the printer. If the FILE* is specified,
+    	this will print to the FILE. Else it will print
+    	to memory, and the result is available in CStr().
+    	If 'compact' is set to true, then output is created
+    	with only required whitespace and newlines.
+
+</member>
+        <member name="T:tinyxml2.XMLConstHandle">
+A variant of the XMLHandle class for working with const XMLNodes and Documents. It is the
+same in all regards, except for the 'const' qualifiers. See XMLHandle for API.
+
+</member>
+        <member name="M:tinyxml2.XMLHandle.ToDeclaration">
+Safe cast to XMLDeclaration. This can return null.
+</member>
+        <member name="M:tinyxml2.XMLHandle.ToUnknown">
+Safe cast to XMLUnknown. This can return null.
+</member>
+        <member name="M:tinyxml2.XMLHandle.ToText">
+Safe cast to XMLText. This can return null.
+</member>
+        <member name="M:tinyxml2.XMLHandle.ToElement">
+Safe cast to XMLElement. This can return null.
+</member>
+        <member name="M:tinyxml2.XMLHandle.ToNode">
+Safe cast to XMLNode. This can return null.
+</member>
+        <member name="M:tinyxml2.XMLHandle.NextSiblingElement(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*)">
+Get the next sibling element of this handle.
+</member>
+        <member name="M:tinyxml2.XMLHandle.NextSibling">
+Get the next sibling of this handle.
+</member>
+        <member name="M:tinyxml2.XMLHandle.PreviousSiblingElement(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*)">
+Get the previous sibling element of this handle.
+</member>
+        <member name="M:tinyxml2.XMLHandle.PreviousSibling">
+Get the previous sibling of this handle.
+</member>
+        <member name="M:tinyxml2.XMLHandle.LastChildElement(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*)">
+Get the last child element of this handle.
+</member>
+        <member name="M:tinyxml2.XMLHandle.LastChild">
+Get the last child of this handle.
+</member>
+        <member name="M:tinyxml2.XMLHandle.FirstChildElement(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*)">
+Get the first child element of this handle.
+</member>
+        <member name="M:tinyxml2.XMLHandle.FirstChild">
+Get the first child of this handle.
+</member>
+        <member name="M:tinyxml2.XMLHandle.op_Assign(tinyxml2.XMLHandle!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+Assignment
+</member>
+        <member name="M:tinyxml2.XMLHandle.#ctor(tinyxml2.XMLHandle!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+Copy constructor
+</member>
+        <member name="M:tinyxml2.XMLHandle.#ctor(tinyxml2.XMLNode*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+Create a handle from a node.
+</member>
+        <member name="M:tinyxml2.XMLHandle.#ctor(tinyxml2.XMLNode*)">
+Create a handle from any node (at any depth of the tree.) This can be a null pointer.
+</member>
+        <member name="M:tinyxml2.XMLDocument.DeepCopy(tinyxml2.XMLDocument*)">
+		Copies this document to a target document.
+		The target will be completely cleared before the copy.
+		If you want to copy a sub-tree, see XMLNode::DeepClone().
+
+		NOTE: that the 'target' must be non-null.
+
+</member>
+        <member name="M:tinyxml2.XMLDocument.Clear">
+Clear the document, resetting it to the initial state.
+</member>
+        <member name="M:tinyxml2.XMLDocument.ErrorLineNum">
+Return the line where the error occured, or zero if unknown.
+</member>
+        <member name="M:tinyxml2.XMLDocument.PrintError">
+A (trivial) utility function that prints the ErrorStr() to stdout.
+</member>
+        <member name="M:tinyxml2.XMLDocument.ErrorStr">
+Returns a "long form" error description. A hopefully helpful 
+        diagnostic with location, line number, and/or additional info.
+
+</member>
+        <member name="M:tinyxml2.XMLDocument.ErrorID">
+Return the errorID.
+</member>
+        <member name="M:tinyxml2.XMLDocument.Error">
+Return true if there was an error parsing the document.
+</member>
+        <member name="M:tinyxml2.XMLDocument.DeleteNode(tinyxml2.XMLNode*)">
+Delete a node associated with this document.
+It will be unlinked from the DOM.
+
+</member>
+        <member name="M:tinyxml2.XMLDocument.NewUnknown(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*)">
+Create a new Unknown associated with
+this Document. The memory for the object
+is managed by the Document.
+
+</member>
+        <member name="M:tinyxml2.XMLDocument.NewText(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*)">
+Create a new Text associated with
+this Document. The memory for the Text
+is managed by the Document.
+
+</member>
+        <member name="M:tinyxml2.XMLDocument.NewComment(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*)">
+Create a new Comment associated with
+this Document. The memory for the Comment
+is managed by the Document.
+
+</member>
+        <member name="M:tinyxml2.XMLDocument.NewElement(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*)">
+Create a new Element associated with
+this Document. The memory for the Element
+is managed by the Document.
+
+</member>
+        <member name="M:tinyxml2.XMLDocument.RootElement">
+Return the root element of DOM. Equivalent to FirstChildElement().
+        To get the first node, use FirstChild().
+
+</member>
+        <member name="M:tinyxml2.XMLDocument.SetBOM(System.Boolean)">
+Sets whether to write the BOM when writing the file.
+
+</member>
+        <member name="M:tinyxml2.XMLDocument.HasBOM">
+Returns true if this document has a leading Byte Order Mark of UTF8.
+
+</member>
+        <member name="M:tinyxml2.XMLDocument.SaveFile(_iobuf*,System.Boolean)">
+    	Save the XML file to disk. You are responsible
+    	for providing and closing the FILE*.
+
+    	Returns XML_SUCCESS (0) on success, or
+    	an errorID.
+
+</member>
+        <member name="M:tinyxml2.XMLDocument.SaveFile(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.Boolean)">
+Save the XML file to disk.
+Returns XML_SUCCESS (0) on success, or
+an errorID.
+
+</member>
+        <member name="M:tinyxml2.XMLDocument.LoadFile(_iobuf*)">
+    	Load an XML file from disk. You are responsible
+    	for providing and closing the FILE*. 
+     
+        NOTE: The file should be opened as binary ("rb")
+        not text in order for TinyXML-2 to correctly
+        do newline normalization.
+
+    	Returns XML_SUCCESS (0) on success, or
+    	an errorID.
+
+</member>
+        <member name="M:tinyxml2.XMLDocument.LoadFile(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*)">
+Load an XML file from disk.
+Returns XML_SUCCESS (0) on success, or
+an errorID.
+
+</member>
+        <member name="M:tinyxml2.XMLDocument.Parse(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.UInt32)">
+    	Parse an XML file from a character string.
+    	Returns XML_SUCCESS (0) on success, or
+    	an errorID.
+
+    	You may optionally pass in the 'nBytes', which is
+    	the number of bytes which will be parsed. If not
+    	specified, TinyXML-2 will assume 'xml' points to a
+    	null terminated string.
+
+</member>
+        <member name="M:tinyxml2.XMLDocument.#ctor(System.Boolean,tinyxml2.Whitespace)">
+constructor
+</member>
+        <member name="T:tinyxml2.XMLDocument">
+A Document binds together all the functionality.
+	It can be saved, loaded, and printed to the screen.
+	All Nodes are connected and allocated to a Document.
+	If the Document is deleted, all its Nodes are also deleted.
+
+</member>
+        <member name="M:tinyxml2.XMLElement.FloatText(System.Single)">
+See QueryIntText()
+</member>
+        <member name="M:tinyxml2.XMLElement.DoubleText(System.Double)">
+See QueryIntText()
+</member>
+        <member name="M:tinyxml2.XMLElement.BoolText(System.Boolean)">
+See QueryIntText()
+</member>
+        <member name="M:tinyxml2.XMLElement.Int64Text(System.Int64)">
+See QueryIntText()
+</member>
+        <member name="M:tinyxml2.XMLElement.UnsignedText(System.UInt32)">
+See QueryIntText()
+</member>
+        <member name="M:tinyxml2.XMLElement.QueryFloatText(System.Single*)">
+See QueryIntText()
+</member>
+        <member name="M:tinyxml2.XMLElement.QueryDoubleText(System.Double*)">
+See QueryIntText()
+</member>
+        <member name="M:tinyxml2.XMLElement.QueryBoolText(System.Boolean*)">
+See QueryIntText()
+</member>
+        <member name="M:tinyxml2.XMLElement.QueryInt64Text(System.Int64*)">
+See QueryIntText()
+</member>
+        <member name="M:tinyxml2.XMLElement.QueryUnsignedText(System.UInt32*)">
+See QueryIntText()
+</member>
+        <member name="M:tinyxml2.XMLElement.SetText(System.Single)">
+Convenience method for setting text inside an element. See SetText() for important limitations.
+</member>
+        <member name="M:tinyxml2.XMLElement.SetText(System.Double)">
+Convenience method for setting text inside an element. See SetText() for important limitations.
+</member>
+        <member name="M:tinyxml2.XMLElement.SetText(System.Boolean)">
+Convenience method for setting text inside an element. See SetText() for important limitations.
+</member>
+        <member name="M:tinyxml2.XMLElement.SetText(System.Int64)">
+Convenience method for setting text inside an element. See SetText() for important limitations.
+</member>
+        <member name="M:tinyxml2.XMLElement.SetText(System.UInt32)">
+Convenience method for setting text inside an element. See SetText() for important limitations.
+</member>
+        <member name="M:tinyxml2.XMLElement.SetText(System.Int32)">
+Convenience method for setting text inside an element. See SetText() for important limitations.
+</member>
+        <member name="M:tinyxml2.XMLElement.SetText(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*)">
+Convenience function for easy access to the text inside an element. Although easy
+    	and concise, SetText() is limited compared to creating an XMLText child
+    	and mutating it directly.
+
+    	If the first child of 'this' is a XMLText, SetText() sets its value to
+		the given string, otherwise it will create a first child that is an XMLText.
+
+    	This is a convenient method for setting the text of simple contained text:
+    	@verbatim
+    	<foo>This is text</foo>
+    		fooElement-&gt;SetText( "Hullaballoo!" );
+     	<foo>Hullaballoo!</foo>
+		@endverbatim
+
+    	Note that this function can be misleading. If the element foo was created from
+    	this XML:
+    	@verbatim
+    		<foo><b>This is text</b></foo>
+    	@endverbatim
+
+    	then it will not change "This is text", but rather prefix it with a text element:
+    	@verbatim
+    		<foo>Hullaballoo!<b>This is text</b></foo>
+    	@endverbatim
+		
+		For this XML:
+    	@verbatim
+    		<foo />
+    	@endverbatim
+    	SetText() will generate
+    	@verbatim
+    		<foo>Hullaballoo!</foo>
+    	@endverbatim
+
+</member>
+        <member name="M:tinyxml2.XMLElement.GetText">
+Convenience function for easy access to the text inside an element. Although easy
+    	and concise, GetText() is limited compared to getting the XMLText child
+    	and accessing it directly.
+
+    	If the first child of 'this' is a XMLText, the GetText()
+    	returns the character string of the Text node, else null is returned.
+
+    	This is a convenient method for getting the text of simple contained text:
+    	@verbatim
+    	<foo>This is text</foo>
+    		const char* str = fooElement-&gt;GetText();
+    	@endverbatim
+
+    	'str' will be a pointer to "This is text".
+
+    	Note that this function can be misleading. If the element foo was created from
+    	this XML:
+    	@verbatim
+    		<foo><b>This is text</b></foo>
+    	@endverbatim
+
+    	then the value of str would be null. The first child node isn't a text node, it is
+    	another element. From this XML:
+    	@verbatim
+    		<foo>This is <b>text</b></foo>
+    	@endverbatim
+    	GetText() will return "This is ".
+
+</member>
+        <member name="M:tinyxml2.XMLElement.FindAttribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*)">
+Query a specific attribute in the list.
+</member>
+        <member name="M:tinyxml2.XMLElement.FirstAttribute">
+Return the first attribute in the list.
+</member>
+        <member name="M:tinyxml2.XMLElement.DeleteAttribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*)">
+Delete an attribute.
+
+</member>
+        <member name="M:tinyxml2.XMLElement.SetAttribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.Single)">
+Sets the named attribute to value.
+</member>
+        <member name="M:tinyxml2.XMLElement.SetAttribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.Double)">
+Sets the named attribute to value.
+</member>
+        <member name="M:tinyxml2.XMLElement.SetAttribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.Boolean)">
+Sets the named attribute to value.
+</member>
+        <member name="M:tinyxml2.XMLElement.SetAttribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.Int64)">
+Sets the named attribute to value.
+</member>
+        <member name="M:tinyxml2.XMLElement.SetAttribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.UInt32)">
+Sets the named attribute to value.
+</member>
+        <member name="M:tinyxml2.XMLElement.SetAttribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.Int32)">
+Sets the named attribute to value.
+</member>
+        <member name="M:tinyxml2.XMLElement.SetAttribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*)">
+Sets the named attribute to value.
+</member>
+        <member name="M:tinyxml2.XMLElement.QueryStringAttribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst**)">
+See QueryIntAttribute()
+</member>
+        <member name="M:tinyxml2.XMLElement.QueryFloatAttribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.Single*)">
+See QueryIntAttribute()
+</member>
+        <member name="M:tinyxml2.XMLElement.QueryDoubleAttribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.Double*)">
+See QueryIntAttribute()
+</member>
+        <member name="M:tinyxml2.XMLElement.QueryBoolAttribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.Boolean*)">
+See QueryIntAttribute()
+</member>
+        <member name="M:tinyxml2.XMLElement.QueryInt64Attribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.Int64*)">
+See QueryIntAttribute()
+</member>
+        <member name="M:tinyxml2.XMLElement.QueryUnsignedAttribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.UInt32*)">
+See QueryIntAttribute()
+</member>
+        <member name="M:tinyxml2.XMLElement.FloatAttribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.Single)">
+See IntAttribute()
+</member>
+        <member name="M:tinyxml2.XMLElement.DoubleAttribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.Double)">
+See IntAttribute()
+</member>
+        <member name="M:tinyxml2.XMLElement.BoolAttribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.Boolean)">
+See IntAttribute()
+</member>
+        <member name="M:tinyxml2.XMLElement.Int64Attribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.Int64)">
+See IntAttribute()
+</member>
+        <member name="M:tinyxml2.XMLElement.UnsignedAttribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.UInt32)">
+See IntAttribute()
+</member>
+        <member name="M:tinyxml2.XMLElement.IntAttribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.Int32)">
+Given an attribute name, IntAttribute() returns the value
+    	of the attribute interpreted as an integer. The default
+        value will be returned if the attribute isn't present,
+        or if there is an error. (For a method with error
+    	checking, see QueryIntAttribute()).
+
+</member>
+        <member name="M:tinyxml2.XMLElement.Attribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*)">
+Given an attribute name, Attribute() returns the value
+    	for the attribute of that name, or null if none
+    	exists. For example:
+
+    	@verbatim
+    	const char* value = ele-&gt;Attribute( "foo" );
+    	@endverbatim
+
+    	The 'value' parameter is normally null. However, if specified,
+    	the attribute will only be returned if the 'name' and 'value'
+    	match. This allow you to write code:
+
+    	@verbatim
+    	if ( ele-&gt;Attribute( "foo", "bar" ) ) callFooIsBar();
+    	@endverbatim
+
+    	rather than:
+    	@verbatim
+    	if ( ele-&gt;Attribute( "foo" ) ) {
+    		if ( strcmp( ele-&gt;Attribute( "foo" ), "bar" ) == 0 ) callFooIsBar();
+    	}
+    	@endverbatim
+
+</member>
+        <member name="M:tinyxml2.XMLElement.SetName(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.Boolean)">
+Set the name of the element.
+</member>
+        <member name="M:tinyxml2.XMLElement.Name">
+Get the name of an element (which is the Value() of the node.)
+</member>
+        <member name="T:tinyxml2.XMLElement">
+The element is a container class. It has a value, the element name,
+	and can contain other elements, text, comments, and unknowns.
+	Elements also contain an arbitrary number of attributes.
+
+</member>
+        <member name="M:tinyxml2.XMLAttribute.SetAttribute(System.Single)">
+Set the attribute to value.
+</member>
+        <member name="M:tinyxml2.XMLAttribute.SetAttribute(System.Double)">
+Set the attribute to value.
+</member>
+        <member name="M:tinyxml2.XMLAttribute.SetAttribute(System.Boolean)">
+Set the attribute to value.
+</member>
+        <member name="M:tinyxml2.XMLAttribute.SetAttribute(System.Int64)">
+Set the attribute to value.
+</member>
+        <member name="M:tinyxml2.XMLAttribute.SetAttribute(System.UInt32)">
+Set the attribute to value.
+</member>
+        <member name="M:tinyxml2.XMLAttribute.SetAttribute(System.Int32)">
+Set the attribute to value.
+</member>
+        <member name="M:tinyxml2.XMLAttribute.SetAttribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*)">
+Set the attribute to a string value.
+</member>
+        <member name="M:tinyxml2.XMLAttribute.QueryFloatValue(System.Single*)">
+See QueryIntValue
+</member>
+        <member name="M:tinyxml2.XMLAttribute.QueryDoubleValue(System.Double*)">
+See QueryIntValue
+</member>
+        <member name="M:tinyxml2.XMLAttribute.QueryBoolValue(System.Boolean*)">
+See QueryIntValue
+</member>
+        <member name="M:tinyxml2.XMLAttribute.QueryInt64Value(System.Int64*)">
+See QueryIntValue
+</member>
+        <member name="M:tinyxml2.XMLAttribute.QueryUnsignedValue(System.UInt32*)">
+See QueryIntValue
+</member>
+        <member name="M:tinyxml2.XMLAttribute.QueryIntValue(System.Int32*)">
+QueryIntValue interprets the attribute as an integer, and returns the value
+    	in the provided parameter. The function will return XML_SUCCESS on success,
+    	and XML_WRONG_ATTRIBUTE_TYPE if the conversion is not successful.
+
+</member>
+        <member name="M:tinyxml2.XMLAttribute.FloatValue">
+Query as a float. See IntValue()
+</member>
+        <member name="M:tinyxml2.XMLAttribute.DoubleValue">
+Query as a double. See IntValue()
+</member>
+        <member name="M:tinyxml2.XMLAttribute.BoolValue">
+Query as a boolean. See IntValue()
+</member>
+        <member name="M:tinyxml2.XMLAttribute.UnsignedValue">
+Query as an unsigned integer. See IntValue()
+</member>
+        <member name="M:tinyxml2.XMLAttribute.IntValue">
+IntValue interprets the attribute as an integer, and returns the value.
+        If the value isn't an integer, 0 will be returned. There is no error checking;
+    	use QueryIntValue() if you need error checking.
+
+</member>
+        <member name="M:tinyxml2.XMLAttribute.Next">
+The next attribute in the list.
+</member>
+        <member name="M:tinyxml2.XMLAttribute.GetLineNum">
+Gets the line number the attribute is in, if the document was parsed from a file.
+</member>
+        <member name="M:tinyxml2.XMLAttribute.Value">
+The value of the attribute.
+</member>
+        <member name="M:tinyxml2.XMLAttribute.Name">
+The name of the attribute.
+</member>
+        <member name="T:tinyxml2.XMLAttribute">
+An attribute is a name-value pair. Elements have an arbitrary
+	number of attributes, each with a unique name.
+
+	@note The attributes are not XMLNodes. You may only query the
+	Next() attribute in a list.
+
+</member>
+        <member name="T:tinyxml2.XMLUnknown">
+Any tag that TinyXML-2 doesn't recognize is saved as an
+	unknown. It is a tag of text, but should not be modified.
+	It will be written back to the XML, unchanged, when the file
+	is saved.
+
+	DTD tags get thrown into XMLUnknowns.
+
+</member>
+        <member name="T:tinyxml2.XMLComment">
+An XML Comment. 
+</member>
+        <member name="M:tinyxml2.XMLText.CData">
+Returns true if this is a CDATA text element.
+</member>
+        <member name="M:tinyxml2.XMLText.SetCData(System.Boolean)">
+Declare whether this should be CDATA or standard text.
+</member>
+        <member name="T:tinyxml2.XMLText">
+XML text.
+
+	Note that a text node can have child element nodes, for example:
+	@verbatim
+	<root>This is <b>bold</b></root>
+	@endverbatim
+
+	A text node can have 2 ways to output the next. "normal" output
+	and CDATA. It will default to the mode it was parsed from the XML file and
+	you generally want to leave it alone, but you can change the output mode with
+	SetCData() and query it with CData().
+
+</member>
+        <member name="M:tinyxml2.XMLNode.GetUserData">
+Get user data set into the XMLNode. TinyXML-2 in
+no way processes or interprets user data.
+It is initially 0.
+
+</member>
+        <member name="M:tinyxml2.XMLNode.SetUserData(System.Void*)">
+Set user data into the XMLNode. TinyXML-2 in 
+no way processes or interprets user data.
+It is initially 0.
+
+</member>
+        <member name="M:tinyxml2.XMLNode.ShallowEqual(tinyxml2.XMLNode!System.Runtime.CompilerServices.IsConst*)">
+    	Test if 2 nodes are the same, but don't test children.
+    	The 2 nodes do not need to be in the same Document.
+
+    	Note: if called on a XMLDocument, this will return false.
+
+</member>
+        <member name="M:tinyxml2.XMLNode.DeepClone(tinyxml2.XMLDocument*)">
+		Make a copy of this node and all its children.
+
+		If the 'target' is null, then the nodes will
+		be allocated in the current document. If 'target' 
+        is specified, the memory will be allocated is the 
+        specified XMLDocument.
+
+		NOTE: This is probably not the correct tool to 
+		copy a document, since XMLDocuments can have multiple
+		top level XMLNodes. You probably want to use
+        XMLDocument::DeepCopy()
+
+</member>
+        <member name="M:tinyxml2.XMLNode.ShallowClone(tinyxml2.XMLDocument*)">
+    	Make a copy of this node, but not its children.
+    	You may pass in a Document pointer that will be
+    	the owner of the new Node. If the 'document' is
+    	null, then the node returned will be allocated
+    	from the current Document. (this-&gt;GetDocument())
+
+    	Note: if called on a XMLDocument, this will return null.
+
+</member>
+        <member name="M:tinyxml2.XMLNode.DeleteChild(tinyxml2.XMLNode*)">
+Delete a child of this node.
+
+</member>
+        <member name="M:tinyxml2.XMLNode.DeleteChildren">
+Delete all the children of this node.
+
+</member>
+        <member name="M:tinyxml2.XMLNode.InsertAfterChild(tinyxml2.XMLNode*,tinyxml2.XMLNode*)">
+    	Add a node after the specified child node.
+		If the child node is already part of the document,
+		it is moved from its old location to the new location.
+		Returns the addThis argument or 0 if the afterThis node
+		is not a child of this node, or if the node does not
+		belong to the same document.
+
+</member>
+        <member name="M:tinyxml2.XMLNode.InsertFirstChild(tinyxml2.XMLNode*)">
+    	Add a child node as the first (left) child.
+		If the child node is already part of the document,
+		it is moved from its old location to the new location.
+		Returns the addThis argument or 0 if the node does not
+		belong to the same document.
+
+</member>
+        <member name="M:tinyxml2.XMLNode.InsertEndChild(tinyxml2.XMLNode*)">
+    	Add a child node as the last (right) child.
+		If the child node is already part of the document,
+		it is moved from its old location to the new location.
+		Returns the addThis argument or 0 if the node does not
+		belong to the same document.
+
+</member>
+        <member name="M:tinyxml2.XMLNode.NextSiblingElement(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*)">
+Get the next (right) sibling element of this node, with an optionally supplied name.
+</member>
+        <member name="M:tinyxml2.XMLNode.NextSibling">
+Get the next (right) sibling node of this node.
+</member>
+        <member name="M:tinyxml2.XMLNode.PreviousSiblingElement(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*)">
+Get the previous (left) sibling element of this node, with an optionally supplied name.
+</member>
+        <member name="M:tinyxml2.XMLNode.PreviousSibling">
+Get the previous (left) sibling node of this node.
+</member>
+        <member name="M:tinyxml2.XMLNode.LastChildElement(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*)">
+Get the last child element or optionally the last child
+        element with the specified name.
+
+</member>
+        <member name="M:tinyxml2.XMLNode.LastChild">
+Get the last child node, or null if none exists.
+</member>
+        <member name="M:tinyxml2.XMLNode.FirstChildElement(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*)">
+Get the first child element, or optionally the first child
+        element with the specified name.
+
+</member>
+        <member name="M:tinyxml2.XMLNode.FirstChild">
+Get the first child node, or null if none exists.
+</member>
+        <member name="M:tinyxml2.XMLNode.NoChildren">
+Returns true if this node has no children.
+</member>
+        <member name="M:tinyxml2.XMLNode.Parent">
+Get the parent of this node on the DOM.
+</member>
+        <member name="M:tinyxml2.XMLNode.GetLineNum">
+Gets the line number the node is in, if the document was parsed from a file.
+</member>
+        <member name="M:tinyxml2.XMLNode.SetValue(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.Boolean)">
+Set the Value of an XML node.
+    	@sa Value()
+
+</member>
+        <member name="M:tinyxml2.XMLNode.Value">
+The meaning of 'value' changes for the specific type.
+    	@verbatim
+    	Document:	empty (NULL is returned, not an empty string)
+    	Element:	name of the element
+    	Comment:	the comment text
+    	Unknown:	the tag contents
+    	Text:		the text string
+    	@endverbatim
+
+</member>
+        <member name="M:tinyxml2.XMLNode.ToUnknown">
+Safely cast to an Unknown, or null.
+</member>
+        <member name="M:tinyxml2.XMLNode.ToDeclaration">
+Safely cast to a Declaration, or null.
+</member>
+        <member name="M:tinyxml2.XMLNode.ToDocument">
+Safely cast to a Document, or null.
+</member>
+        <member name="M:tinyxml2.XMLNode.ToComment">
+Safely cast to a Comment, or null.
+</member>
+        <member name="M:tinyxml2.XMLNode.ToText">
+Safely cast to Text, or null.
+</member>
+        <member name="M:tinyxml2.XMLNode.ToElement">
+Safely cast to an Element, or null.
+</member>
+        <member name="M:tinyxml2.XMLNode.GetDocument">
+Get the XMLDocument that owns this XMLNode.
+
+Get the XMLDocument that owns this XMLNode.
+</member>
+        <member name="T:tinyxml2.XMLNode">
+XMLNode is a base class for every object that is in the
+	XML Document Object Model (DOM), except XMLAttributes.
+	Nodes have siblings, a parent, and children which can
+	be navigated. A node is always in a XMLDocument.
+	The type of a XMLNode can be queried, and it can
+	be cast to its more defined type.
+
+	A XMLDocument allocates memory for all its Nodes.
+	When the XMLDocument gets deleted, all its Nodes
+	will also be deleted.
+
+	@verbatim
+	A Document can contain:	Element	(container or leaf)
+							Comment (leaf)
+							Unknown (leaf)
+							Declaration( leaf )
+
+	An Element can contain:	Element (container or leaf)
+							Text	(leaf)
+							Attributes (not on tree)
+							Comment (leaf)
+							Unknown (leaf)
+
+	@endverbatim
+
+</member>
+        <member name="M:tinyxml2.XMLVisitor.Visit(tinyxml2.XMLUnknown!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+Visit an unknown node.
+</member>
+        <member name="M:tinyxml2.XMLVisitor.Visit(tinyxml2.XMLComment!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+Visit a comment node.
+</member>
+        <member name="M:tinyxml2.XMLVisitor.Visit(tinyxml2.XMLText!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+Visit a text node.
+</member>
+        <member name="M:tinyxml2.XMLVisitor.Visit(tinyxml2.XMLDeclaration!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+Visit a declaration.
+</member>
+        <member name="M:tinyxml2.XMLVisitor.VisitExit(tinyxml2.XMLElement!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+Visit an element.
+</member>
+        <member name="M:tinyxml2.XMLVisitor.VisitEnter(tinyxml2.XMLElement!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,tinyxml2.XMLAttribute!System.Runtime.CompilerServices.IsConst*)">
+Visit an element.
+</member>
+        <member name="M:tinyxml2.XMLVisitor.VisitExit(tinyxml2.XMLDocument!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+Visit a document.
+</member>
+        <member name="M:tinyxml2.XMLVisitor.VisitEnter(tinyxml2.XMLDocument!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced)">
+Visit a document.
+</member>
+        <member name="T:tinyxml2.XMLVisitor">
+	Implements the interface to the "Visitor pattern" (see the Accept() method.)
+	If you call the Accept() method, it requires being passed a XMLVisitor
+	class to handle callbacks. For nodes that contain other nodes (Document, Element)
+	you will get called with a VisitEnter/VisitExit pair. Nodes that are always leafs
+	are simply called with Visit().
+
+	If you return 'true' from a Visit method, recursive parsing will continue. If you return
+	false, <b>no children of this node or its siblings</b> will be visited.
+
+	All flavors of Visit methods have a default implementation that returns 'true' (continue
+	visiting). You need to only override methods that are interesting to you.
+
+	Generally Accept() is called on the XMLDocument, although all nodes support visiting.
+
+	You should never change the document from a callback.
+
+	@sa XMLNode::Accept()
+
+</member>
+        <member name="M:TX.DateTime.IsLeapYear(System.Int32)">
+            <summary>
+是否是平年
+</summary>
+            <param name="year" />
+            <returns />
+        </member>
+        <member name="M:TX.DateTime.IsLeapYear">
+            <summary>
+是否是平年
+</summary>
+            <returns />
+        </member>
+        <member name="T:NCollection_BaseAllocator">
+Purpose:     Basic class for memory allocation wizards.
+             Defines  the  interface  for devising  different  allocators
+             firstly to be used  by collections of NCollection, though it
+             it is not  deferred. It allocates/frees  the memory  through
+             Standard procedures, thus it is  unnecessary (and  sometimes
+             injurious) to have  more than one such  allocator.  To avoid
+             creation  of multiple  objects the  constructors  were  maid
+             inaccessible.  To  create the  BaseAllocator use  the method
+             CommonBaseAllocator.
+             Note that this object is managed by Handle.
+
+</member>
+        <member name="P:Occt.XCAFDoc_AssemblyItemId.Path">
+TColStd_ListOfAsciiString^ GetPath();
+</member>
+        <member name="T:gp_XY">
+Base class defining part of the Inspector interface
+for CellFilter algorithm, working with gp_XY points in 2d space
+
+</member>
+        <member name="T:gp_XYZ">
+Base class defining part of the Inspector interface
+for CellFilter algorithm, working with gp_XYZ points in 3d space
+
+</member>
+        <member name="T:point">
+BFGS Solver parameters
+Solve exit codes
+</member>
+        <member name="T:NCollection_IncAllocator">
+  Class NCollection_IncAllocator - incremental memory  allocator. This class
+  allocates  memory  on  request  returning  the  pointer  to  an  allocated
+  block. This memory is never returned  to the system until the allocator is
+  destroyed.
+
+  By comparison with  the standard new() and malloc()  calls, this method is
+  faster and consumes very small additional memory to maintain the heap.
+
+  All pointers  returned by Allocate() are  aligned to the size  of the data
+  type "aligned_t". To  modify the size of memory  blocks requested from the
+  OS,  use the parameter  of the  constructor (measured  in bytes);  if this
+  parameter is  smaller than  25 bytes on  32bit or  49 bytes on  64bit, the
+  block size will be the default 12 kbytes.
+
+  It is not recommended  to use memory blocks  larger than 16KB  on  Windows
+  platform  for the repeated operations  because  Low Fragmentation Heap  is
+  not going to be  used  for  these  allocations  which  may lead  to memory
+  fragmentation and the general performance slow down.
+
+  Note that this allocator is most suitable for single-threaded algorithms
+  (consider creating dedicated allocators per working thread),
+  and thread-safety of allocations is DISABLED by default (see SetThreadSafe()).
+
+</member>
+        <member name="T:NCollection_HeapAllocator">
+Allocator that uses the global dynamic heap (malloc / free).
+
+</member>
+        <member name="M:Occt.TColStd_PackedMapOfInteger.HasIntersection(Occt.TColStd_PackedMapOfInteger)">
+Overloaded operator version of IsSubset().
+
+Returns True if this map has common items with the given one.
+
+</member>
+        <member name="M:Occt.TColStd_PackedMapOfInteger.IsSubset(Occt.TColStd_PackedMapOfInteger)">
+Overloaded operator version of IsEqual().
+
+Returns True if this map is subset of the given one, i.e. all elements
+contained in this map is contained also in the operand map.
+if this map is empty that this method returns true for any operand map.
+
+</member>
+        <member name="M:Occt.TColStd_PackedMapOfInteger.IsEqual(Occt.TColStd_PackedMapOfInteger)">
+Overloaded operator version of Differ().
+
+Returns True if this map is equal to the given one, i.e. they contain the
+same sets of elements
+
+</member>
+        <member name="M:Occt.TColStd_PackedMapOfInteger.Differ(Occt.TColStd_PackedMapOfInteger)">
+Apply to this Map the symmetric difference (aka exclusive disjunction, boolean XOR) operation with another (given) Map.
+The result contains the values that are contained only in this or the operand map, but not in both.
+This algorithm is similar to method Difference().
+@return True if contents of this map is changed
+
+</member>
+        <member name="M:Occt.TColStd_PackedMapOfInteger.Difference(Occt.TColStd_PackedMapOfInteger,Occt.TColStd_PackedMapOfInteger)">
+Overloaded operator version of Subtract().
+
+Sets this Map to be the result of symmetric difference (aka exclusive disjunction, boolean XOR) operation between two given Maps.
+The new Map contains the values that are contained only in the first or the second operand maps but not in both.
+All previous contents of this Map is cleared.
+This map (result of the boolean operation) can also be used as one of operands.
+
+</member>
+        <member name="M:Occt.TColStd_PackedMapOfInteger.Subtract(Occt.TColStd_PackedMapOfInteger)">
+Apply to this Map the subtraction (aka set-theoretic difference, relative complement, exclude, cut, boolean NOT) operation with another (given) Map.
+The result contains only the values that were previously contained in this map and not contained in this map.
+This algorithm is similar to method Subtract() with two operands.
+@return True if contents of this map is changed
+
+</member>
+        <member name="M:Occt.TColStd_PackedMapOfInteger.Subtraction(Occt.TColStd_PackedMapOfInteger,Occt.TColStd_PackedMapOfInteger)">
+Overloaded operator version of Intersect().
+
+Sets this Map to be the result of subtraction
+(aka set-theoretic difference, relative complement, exclude, cut, boolean NOT) operation between two given Maps.
+The new Map contains only the values that are contained in the first map operands and not contained in the second one.
+All previous contents of this Map is cleared.
+This map (result of the boolean operation) can also be used as the first operand.
+
+</member>
+        <member name="M:Occt.TColStd_PackedMapOfInteger.Intersect(Occt.TColStd_PackedMapOfInteger)">
+Apply to this Map the intersection operation (aka multiplication, common,  boolean AND) with another (given) Map.
+The result contains only the values that are contained in both this and the given maps.
+This algorithm is similar to method Intersection().
+@return True if content of this map is changed
+
+</member>
+        <member name="M:Occt.TColStd_PackedMapOfInteger.Intersection(Occt.TColStd_PackedMapOfInteger,Occt.TColStd_PackedMapOfInteger)">
+Overloaded operator version of Unite().
+
+Sets this Map to be the result of intersection (aka multiplication, common, boolean AND) operation between two given Maps.
+The new Map contains only the values that are contained in both map operands.
+All previous contents of this Map is cleared. This same map (result of the boolean operation) can also be used as one of operands.
+The order of operands makes no difference; the method minimizes internally the number of iterations using the smallest map for the loop.
+
+</member>
+        <member name="M:Occt.TColStd_PackedMapOfInteger.Unite(Occt.TColStd_PackedMapOfInteger)">
+Apply to this Map the boolean operation union (aka addition, fuse, merge, boolean OR) with another (given) Map.
+The result contains the values that were previously contained in this map or contained in the given (operand) map.
+This algorithm is similar to method Union().
+@return True if content of this map is changed
+
+</member>
+        <member name="M:Occt.TColStd_PackedMapOfInteger.Union(Occt.TColStd_PackedMapOfInteger,Occt.TColStd_PackedMapOfInteger)">
+Sets this Map to be the result of union (aka addition, fuse, merge, boolean OR) operation between two given Maps.
+The new Map contains the values that are contained either in the first map or in the second map or in both.
+All previous contents of this Map is cleared. This map (result of the boolean operation) can also be passed as one of operands.
+
+</member>
+        <member name="P:Occt.TColStd_PackedMapOfInteger.MaximalMapped">
+Query the maximal contained key value.
+
+</member>
+        <member name="P:Occt.TColStd_PackedMapOfInteger.MinimalMapped">
+Query the minimal contained key value.
+
+</member>
+        <member name="M:Occt.TColStd_PackedMapOfInteger.#ctor(System.Int32)">
+Constructor
+</member>
+        <member name="P:Occt.IntRes2d_Transition.IsOpposite">
+Standard_Boolean IsOpposite() const;
+</member>
+        <member name="M:TX.Convert.IpFormString(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*)">
+@brief 将ip地址字符串转换成数字类型
+@param[in] ip地址字符串
+@return 返回数字类型的字符串
+</member>
+        <member name="M:TX.Convert.IpToString(System.UInt32)">
+@brief 将uint类型的ip地址装换成字符串
+@param[in] ip uint类型的ip地址
+@return 返回字符串类型的ip地址
+</member>
+        <member name="M:TX.Convert.BulgeToRad(System.Double)">
+            <summary>
+从凸度转换成角度  .
+</summary>
+            <param name="bulge">凸度.</param>
+            <returns>角度.</returns>
+        </member>
+        <member name="M:TX.Convert.RadToBulge(System.Double)">
+            <summary>
+角度到凸度的转换   .
+</summary>
+            <param name="radian">弧度.</param>
+            <returns>凸度.</returns>
+        </member>
+        <member name="M:TX.Convert.DegToAzimuth(System.Double)">
+            <summary>
+普通角度（X轴为0方向）转方位角（Y轴为0方向）
+</summary>
+            <param name="degree">角度值（不是弧度值）</param>
+            <returns>方位角（不是弧度值）</returns>
+        </member>
+        <member name="M:TX.Convert.AzimuthToDeg(System.Double)">
+            <summary>
+方位角（Y轴为0方向）转普通角度（X轴为0方向）
+</summary>
+            <param name="azimuth">方位角（不是弧度值）</param>
+            <returns>角度值（不是弧度值）</returns>
+        </member>
+        <member name="M:TX.StrEx.Substring(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,System.UInt32,System.UInt32,System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte)">
+            <summary>
+取指定长度的字符串
+</summary>
+            <param name="source">要检查的字符串</param>
+            <param name="startIndex">起始位置</param>
+            <param name="length">指定长度</param>
+            <param name="c">默认字符</param>
+            <returns>截取后的字符串</returns>
+        </member>
+        <member name="M:TX.StrEx.Substring(std.basic_string&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte,std.char_traits{System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte},std.allocator&lt;System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte&gt;&gt;!System.Runtime.CompilerServices.IsConst*!System.Runtime.CompilerServices.IsImplicitlyDereferenced,System.UInt32,System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte)">
+            <summary>
+字符串如果操过指定长度则将超出的部分用指定字符串代替
+</summary>
+            <param name="source">要截取的字符串</param>
+            <param name="length">指定长度</param>
+            <param name="c">默认字符</param>
+            <returns>截取后的字符串</returns>
+        </member>
+        <member name="M:Occt.ClassTree.Fill(System.Type,System.Type[])">
+            <summary />
+            <param name="baseType">基类</param>
+            <param name="allTypes">所有的子类</param>
+        </member>
+        <member name="P:Occt.HandleBase.IsNull">
+            <summary>Transient
+Handle是否为空.
+</summary>
+            <value>The handle is null.</value>
+        </member>
+        <!-- 丢弃成员“P:Occt.XCAFDimTolObjects_DatumObject.Modifiers”的格式错误的 XML 文档注释。-->
+        <!-- 丢弃成员“P:Occt.TopTools_ShapeSet.Locations”的格式错误的 XML 文档注释。-->
+        <!-- 丢弃成员“P:Occt.XCAFDimTolObjects_DatumObject.Modifiers”的格式错误的 XML 文档注释。-->
+        <!-- 丢弃成员“P:Occt.TopTools_ShapeSet.Locations”的格式错误的 XML 文档注释。-->
+        <!-- 丢弃成员“M:tinyxml2.XMLNode.Accept(tinyxml2.XMLVisitor*)”的格式错误的 XML 文档注释。-->
+        <!-- 丢弃成员“T:tinyxml2.XMLDeclaration”的格式错误的 XML 文档注释。-->
+        <!-- 丢弃成员“M:tinyxml2.XMLElement.QueryIntAttribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.Int32*)”的格式错误的 XML 文档注释。-->
+        <!-- 丢弃成员“M:tinyxml2.XMLElement.QueryAttribute(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*,System.Int32*)”的格式错误的 XML 文档注释。-->
+        <!-- 丢弃成员“M:tinyxml2.XMLElement.QueryIntText(System.Int32*)”的格式错误的 XML 文档注释。-->
+        <!-- 丢弃成员“M:tinyxml2.XMLDocument.Print(tinyxml2.XMLPrinter*)”的格式错误的 XML 文档注释。-->
+        <!-- 丢弃成员“M:tinyxml2.XMLDocument.NewDeclaration(System.SByte!System.Runtime.CompilerServices.IsSignUnspecifiedByte!System.Runtime.CompilerServices.IsConst*)”的格式错误的 XML 文档注释。-->
+        <!-- 丢弃成员“T:tinyxml2.XMLHandle”的格式错误的 XML 文档注释。-->
+        <!-- 丢弃成员“T:tinyxml2.XMLPrinter”的格式错误的 XML 文档注释。-->
+        <!-- 丢弃成员“P:Occt.XCAFDimTolObjects_DatumObject.Modifiers”的格式错误的 XML 文档注释。-->
+    </members>
+</doc>

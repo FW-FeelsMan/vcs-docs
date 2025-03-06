@@ -51,6 +51,7 @@ D:\Unity\VCS-DOCs\wwwroot\js\contextMenu.js
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.js.map
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.css
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.css.map
+D:\Unity\VCS-DOCs\wwwroot\js\userStatus.js
 D:\Unity\VCS-DOCs\wwwroot\css\main_css\mainStyle.css
 D:\Unity\VCS-DOCs\wwwroot\lib\jquery\dist\jquery.min.js
 D:\Unity\VCS-DOCs\wwwroot\lib\jquery-validation\dist\jquery.validate.js
@@ -108,6 +109,7 @@ wwwroot\js\horizontalResize.js
 wwwroot\js\loginScript.js
 wwwroot\js\sidebar.js
 wwwroot\js\StatusOnlineController.js
+wwwroot\js\userStatus.js
 wwwroot\lib\bootstrap\dist\css\bootstrap.css
 wwwroot\lib\bootstrap\dist\css\bootstrap.css.map
 wwwroot\lib\bootstrap\dist\css\bootstrap.min.css
