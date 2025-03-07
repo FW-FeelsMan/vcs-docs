@@ -19,3 +19,10 @@ h1 {
 p {
     color: white;
 }
+.avatar img {
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+    -ms-border-radius: 50%;
+    -o-border-radius: 50%;
+    border-radius: 50%;
+}

@@ -39,15 +39,20 @@
         <span class="button-number">5</span>
     </div>
 
-    <div class="logout-container">
-        <form method="post" asp-page-handler="Logout" class="logout-form">
-            @Html.AntiForgeryToken()
-            <button type="submit" class="logout-button">
-                <img src="~/images/logout_icon.png" alt="Выход" class="logout-icon">
-                Выход
-            </button>
-        </form>
+    <div class="user-block">
+        <div class="user-avatar"></div>
+        <div class="user-info">
+            <div class="user-name">2825</div>
+            <div class="user-status online">В сети</div>
+        </div>
     </div>
+    <form method="post" asp-page-handler="Logout">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="logout-button">
+            <img src="~/images/logout_icon.png" alt="Выход" class="logout-icon">
+        </button>
+    </form>
+
 </div>
 
 <div id="content" class="content-field">

@@ -69,6 +69,10 @@
       "PackagePath": "staticwebassets\\images\\archiveIcon.png"
     },
     {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\images\\default_avatar.png",
+      "PackagePath": "staticwebassets\\images\\default_avatar.png"
+    },
+    {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\images\\extra.png",
       "PackagePath": "staticwebassets\\images\\extra.png"
     },

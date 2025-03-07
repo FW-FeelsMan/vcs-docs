@@ -244,38 +244,6 @@ body, html {
     bottom: 5px;
 }
 
-/* Стили кнопки выхода */
-.logout-button {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background-color: #555;
-    color: white;
-    border: none;
-    border-radius: 9px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    font-family: inherit;
-    font-size: 14px;
-}
-
-    .logout-button:hover {
-        background-color: #c0392b;
-    }
-
-    .logout-button:active {
-        background-color: #a93226;
-    }
-.logout-container {
-
-}
-.logout-icon {
-    width: 18px;
-    height: 18px;
-    filter: invert(1);
-}
-
 .loader {
     position: fixed;
     top: 50%;
@@ -316,3 +284,75 @@ body, html {
 .hidden {
     display: none !important;
 }
+.user-block {
+    position: absolute;
+    bottom: 10px;
+    width: 170px;
+    background-color: #535151;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    padding: 5px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.user-avatar {
+    width: 35px;
+    height: 35px;
+    background: url('/images/default_avatar.png') center/cover;
+    margin: 0px 10px 0px 5px
+}
+
+.user-info {
+    flex-grow: 1;
+}
+
+.user-name {
+    font-size: 14px;
+    color: white;
+    font-weight: bold;
+}
+
+.user-status {
+    font-size: 12px;
+    color: #43b581;
+}
+
+    .user-status.offline {
+        color: #747f8d;
+    }
+
+
+
+/* Стили кнопки выхода */
+.logout-button {
+    position: absolute;
+    margin-left: 187px;
+    width: 45px;
+    height: 45px;
+    bottom: 10px;
+    background-color: #555;
+    color: white;
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+    .logout-button:hover {
+        background-color: #c0392b;
+    }
+
+    .logout-button:active {
+        background-color: #a93226;
+    }
+
+.logout-container {
+}
+
+.logout-icon {
+    width: 18px;
+    height: 18px;
+    filter: invert(1);
+}
+

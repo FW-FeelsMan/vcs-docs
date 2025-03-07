@@ -94,6 +94,7 @@ wwwroot\ifcjs\index.html
 wwwroot\ifcjs\wasm\web-ifc.wasm
 wwwroot\ifcjs\wasm\web-ifc-mt.wasm
 wwwroot\images\archiveIcon.png
+wwwroot\images\default_avatar.png
 wwwroot\images\extra.png
 wwwroot\images\helpIcon.png
 wwwroot\images\ibackground.jpg

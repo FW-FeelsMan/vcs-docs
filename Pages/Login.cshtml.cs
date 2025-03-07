@@ -1,4 +1,7 @@
 using Microsoft.AspNetCore.Authentication;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -45,6 +48,24 @@ namespace VCS_DOCs.Pages
 				return new JsonResult(new { success = false, errors = LoginErrors });
 			}
 
+			if (Username.Length > 20)
+			{
+				LoginErrors.Add("Имя пользователя не должно превышать 20 символов.");
+				return new JsonResult(new { success = false, errors = LoginErrors });
+			}
+
+			if (!Regex.IsMatch(Username, @"^[a-zA-Z0-9]+$"))
+			{
+				LoginErrors.Add("Имя пользователя может содержать только латинские буквы и цифры.");
+				return new JsonResult(new { success = false, errors = LoginErrors });
+			}
+
+			if (Password.Length > 20)
+			{
+				LoginErrors.Add("Пароль не должен превышать 20 символов.");
+				return new JsonResult(new { success = false, errors = LoginErrors });
+			}
+
 			try
 			{
 				var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == Username);
@@ -59,6 +80,16 @@ namespace VCS_DOCs.Pages
 					LoginErrors.Add("Учетная запись не активирована.");
 					return new JsonResult(new { success = false, errors = LoginErrors });
 				}
+
+				string? hardwareId = Request.Form["hardwareId"];
+				if (!string.IsNullOrEmpty(hardwareId))
+				{
+					user.HardwareId = hardwareId;
+				}
+
+				user.LastEntry = DateTime.UtcNow;
+				_context.Users.Update(user);
+				await _context.SaveChangesAsync();
 
 				var claims = new List<Claim>
 				{
@@ -76,10 +107,6 @@ namespace VCS_DOCs.Pages
 					CookieAuthenticationDefaults.AuthenticationScheme,
 					new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)),
 					authProperties);
-
-				user.LastEntry = DateTime.UtcNow;
-				_context.Users.Update(user);
-				await _context.SaveChangesAsync();
 
 				return new JsonResult(new { success = true });
 			}
@@ -99,21 +126,33 @@ namespace VCS_DOCs.Pages
 				return new JsonResult(new { success = false, errors = RegistrationErrors });
 			}
 
-			if (Password.Length < 6)
+			if (Username.Length > 20)
 			{
-				RegistrationErrors.Add("Пароль должен содержать не менее 6 символов.");
+				RegistrationErrors.Add("Имя пользователя не должно превышать 20 символов.");
 				return new JsonResult(new { success = false, errors = RegistrationErrors });
 			}
 
-			var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == Username);
-			if (existingUser != null)
+			if (!Regex.IsMatch(Username, @"^[a-zA-Z0-9]+$"))
 			{
-				RegistrationErrors.Add("Пользователь уже существует.");
+				RegistrationErrors.Add("Имя пользователя может содержать только латинские буквы и цифры.");
+				return new JsonResult(new { success = false, errors = RegistrationErrors });
+			}
+
+			if (Password.Length > 20)
+			{
+				RegistrationErrors.Add("Пароль не должен превышать 20 символов.");
 				return new JsonResult(new { success = false, errors = RegistrationErrors });
 			}
 
 			try
 			{
+				var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == Username);
+				if (existingUser != null)
+				{
+					RegistrationErrors.Add("Пользователь с таким логином уже существует.");
+					return new JsonResult(new { success = false, errors = RegistrationErrors });
+				}
+
 				string hashedPassword = BCrypt.Net.BCrypt.HashPassword(Password);
 
 				var newUser = new User
@@ -132,12 +171,24 @@ namespace VCS_DOCs.Pages
 				_context.Users.Add(newUser);
 				await _context.SaveChangesAsync();
 
-				string appDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", $"userData_{Username}");
-				if (!Directory.Exists(appDataPath))
+				string appDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData");
+				string userDataPath = Path.Combine(appDataPath, $"userData_{Username}");
+				
+				if (!Directory.Exists(userDataPath))
 				{
-					Directory.CreateDirectory(appDataPath);
+					Directory.CreateDirectory(userDataPath);
 				}
 
+				/*// Проверка размера папки пользователя
+				long directorySize = GetDirectorySize(userDataPath);
+				const long maxSize = 5L * 1024L * 1024L * 1024L; // 5 GB
+
+				if (directorySize > maxSize)
+				{
+					RegistrationErrors.Add("Размер Вашей папки превышает лимит в 5 ГБ.");
+					return new JsonResult(new { success = false, errors = RegistrationErrors });
+				}
+				*/
 				IsRegistrationSuccessful = true;
 				return new JsonResult(new { success = true });
 			}
@@ -147,6 +198,16 @@ namespace VCS_DOCs.Pages
 				RegistrationErrors.Add("Произошла ошибка при регистрации.");
 				return new JsonResult(new { success = false, errors = RegistrationErrors });
 			}
+		}
+
+		private long GetDirectorySize(string directoryPath)
+		{
+			if (Directory.Exists(directoryPath))
+			{
+				return Directory.GetFiles(directoryPath, "*", SearchOption.AllDirectories)
+								.Sum(file => new FileInfo(file).Length);
+			}
+			return 0;
 		}
 
 		public async Task<IActionResult> OnPostAsync(string action)

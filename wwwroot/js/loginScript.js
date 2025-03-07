@@ -1,18 +1,13 @@
-﻿// Получаем элементы управления
-const signUpButton = document.getElementById('signUp');
+﻿const signUpButton = document.getElementById('signUp');
 const signInButton = document.getElementById('signIn');
 const container = document.getElementById('container');
 
-// Создаем элементы для лоадера
 const loaderOverlay = document.createElement('div');
 loaderOverlay.className = 'loader-overlay';
-loaderOverlay.innerHTML = `
-    <div class="loader"></div>
-`;
+loaderOverlay.innerHTML = `<div class="loader"></div>`;
 document.body.appendChild(loaderOverlay);
-hideLoader(); // Скрываем лоадер на старте
+hideLoader();
 
-// Функции для управления лоадером
 function showLoader() {
     loaderOverlay.style.display = 'flex';
 }
@@ -21,111 +16,76 @@ function hideLoader() {
     loaderOverlay.style.display = 'none';
 }
 
-// Событие для переключения на форму регистрации
-signUpButton.addEventListener('click', () => {
-    container.classList.add("right-panel-active");
+signUpButton.addEventListener('click', () => container.classList.add("right-panel-active"));
+signInButton.addEventListener('click', () => container.classList.remove("right-panel-active"));
+
+function validateInput(event, isPassword = false) {
+    const input = event.target;
+    let value = input.value;
+
+    if (value.length > 20) {
+        input.value = value.substring(0, 20);
+        return;
+    }
+
+    const regex = isPassword ? /^[a-zA-Z0-9@]+$/ : /^[a-zA-Z0-9]+$/;
+    if (!regex.test(value)) {
+        input.value = value.replace(/[^a-zA-Z0-9@]/g, '');
+    }
+}
+
+document.querySelectorAll('input[name="Username"]').forEach(input => {
+    input.addEventListener('input', event => validateInput(event, false));
+});
+document.querySelectorAll('input[name="Password"]').forEach(input => {
+    input.addEventListener('input', event => validateInput(event, true));
 });
 
-// Событие для переключения на форму входа
-signInButton.addEventListener('click', () => {
-    container.classList.remove("right-panel-active");
-});
-
-// Получаем HardwareId (например, через userAgent)
-const hardwareId = navigator.userAgent; // Или любой другой способ получения уникального идентификатора
+const hardwareId = navigator.userAgent;
 document.getElementById('hardwareId').value = hardwareId;
 document.getElementById('hardwareIdRegister').value = hardwareId;
 
-document.querySelector('.sign-up-container form').addEventListener('submit', async (event) => {
-    event.preventDefault(); // Останавливаем стандартное поведение формы
+async function submitForm(event, url, errorSelector, successRedirect = null) {
+    event.preventDefault();
 
     const form = event.target;
     const formData = new FormData(form);
+    showLoader();
 
-    showLoader(); // Показываем лоадер
     try {
-        // Отправляем запрос на фиксированный URL
-        const response = await fetch('https://vcs-docs.local:7120/Login?handler=Register', {
+        const response = await fetch(url, {
             method: 'POST',
-            body: formData,
+            body: formData
         });
 
-        if (!response.ok) {
-            throw new Error('Ошибка сервера');
-        }
+        if (!response.ok) throw new Error('Ошибка сервера');
 
         const result = await response.json();
-
-        // Проверяем, существуют ли элементы для сообщений
-        const successMessage = document.querySelector('.successful-message');
-        const errorMessage = document.querySelector('.error-message-registration');
+        const errorMessage = document.querySelector(errorSelector);
 
         if (result.success) {
-            if (successMessage) {
-                successMessage.style.display = 'block';
-            }
-            if (errorMessage) {
+            if (successRedirect) {
+                window.location.href = successRedirect;
+            } else {
+                document.querySelector('.successful-message').style.display = 'block';
                 errorMessage.style.display = 'none';
             }
         } else {
-            if (successMessage) {
-                successMessage.style.display = 'none';
-            }
-            if (errorMessage) {
-                errorMessage.innerHTML = result.errors.map(error => `<p>${error}</p>`).join('');
-                errorMessage.style.display = 'block';
-            }
+            errorMessage.innerHTML = result.errors.map(error => `<p>${error}</p>`).join('');
+            errorMessage.style.display = 'block';
         }
     } catch (error) {
         console.error('Ошибка:', error);
-        alert('Произошла ошибка при регистрации. Попробуйте позже.');
+        alert('Произошла ошибка. Попробуйте позже.');
     } finally {
-        hideLoader(); // Скрываем лоадер
+        hideLoader();
     }
-});
+}
 
-// Добавляем обработчик для формы входа
-document.querySelector('.sign-in-container form').addEventListener('submit', async (event) => {
-    event.preventDefault(); // Останавливаем стандартное поведение формы
+document.querySelector('.sign-up-container form').addEventListener('submit', event =>
+    submitForm(event, 'https://vcs-docs.local:7120/Login?handler=Register', '.error-message-registration')
+);
 
-    const form = event.target;
-    const formData = new FormData(form);
-
-    showLoader(); // Показываем лоадер
-    try {
-        // Отправляем AJAX-запрос для входа
-        const response = await fetch('https://vcs-docs.local:7120/Login?handler=Login', {
-            method: 'POST',
-            body: formData,
-        });
-
-        if (!response.ok) {
-            throw new Error('Ошибка сервера');
-        }
-
-        const result = await response.json();
-
-        // Элементы для отображения сообщений
-        const errorMessage = document.querySelector('.error-message');
-        const successMessage = document.querySelector('.successful-message');
-
-        if (result.success) {
-            // Успешный вход — перенаправляем на главную страницу
-            window.location.href = '/Index';
-        } else {
-            // Показываем ошибки
-            if (errorMessage) {
-                errorMessage.innerHTML = result.errors.map(error => `<p>${error}</p>`).join('');
-                errorMessage.style.display = 'block';
-            }
-            if (successMessage) {
-                successMessage.style.display = 'none';
-            }
-        }
-    } catch (error) {
-        console.error('Ошибка:', error);
-        alert('Произошла ошибка при входе. Попробуйте позже.');
-    } finally {
-        hideLoader(); // Скрываем лоадер
-    }
-});
+document.querySelector('.sign-in-container form').addEventListener('submit', event =>
+    submitForm(event, 'https://vcs-docs.local:7120/Login?handler=Login', '.error-message', '/Index')
+);
