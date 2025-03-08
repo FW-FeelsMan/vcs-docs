@@ -56,37 +56,29 @@ function updateButtonSelection(button) {
 }
 
 async function loadContent(contentId) {
-    try {
-        const contentContainer = document.getElementById('content');
+    const contentContainer = document.getElementById('content');
+    if (!contentContainer) {
+        console.error('Контейнер контента не найден');
+        return;
+    }
 
-        // Всегда очищаем контейнер, кроме случая кеширования
-        if (contentId !== 'extra_page' || !contentCache.has('extra_page')) {
-            contentContainer.innerHTML = '';
-        }
+    try {
+        contentContainer.innerHTML = '';
 
         const response = await fetch(`/Content/${contentId}`);
         if (!response.ok) throw new Error(`HTTP error! ${response.status}`);
         const html = await response.text();
 
-        // Для всех страниц
         contentContainer.innerHTML = html;
-
-        // Только для extra_page
-        if (contentId === 'extra_page') {
-            contentCache.set('extra_page', {
-                html: html,
-                state: getPageState('extra_page')
-            });
-            initExtraPage(); // Инициализация после вставки HTML
-        }
     } catch (error) {
         console.error('Ошибка загрузки:', error);
-        contentContainer.innerHTML = `<div class="error-message">Ошибка загрузки</div>`;
+        if (contentContainer) {
+            contentContainer.innerHTML = `<div class="error-message">Ошибка загрузки</div>`;
+        }
     } finally {
         hideLoader();
     }
 }
-
 function showCachedContent(contentId) {
     const contentContainer = document.getElementById('content');
     const cachedData = contentCache.get(contentId);

@@ -1,17 +1,14 @@
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using VCS_DOCs;
 using VCS_DOCs.Data;
 using VCS_DOCs.Services;
+using AspNetCoreRateLimit;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Добавление служб в контейнер
 builder.Services.AddRazorPages();
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -35,7 +32,6 @@ builder.Services.AddSession(options =>
 	options.Cookie.IsEssential = true;
 });
 
-// Настройка аутентификации с использованием куки
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
 	.AddCookie(options =>
 	{
@@ -65,7 +61,45 @@ builder.Services.AddCors(options =>
 	});
 });
 
+builder.Services.AddMemoryCache();
+builder.Services.Configure<IpRateLimitOptions>(options =>
+{
+	options.GeneralRules = new List<RateLimitRule>
+	{
+		new RateLimitRule
+		{
+			Endpoint = "*",
+			Limit = 50,
+			Period = "10s"
+		},
+		new RateLimitRule
+		{
+			Endpoint = "/hub/*", 
+			Limit = 0,
+			Period = "1s"
+		},
+		new RateLimitRule
+		{
+			Endpoint = "/css/*",
+			Limit = 0,
+			Period = "1s"
+		},
+		new RateLimitRule
+		{
+			Endpoint = "/js/*", 
+			Limit = 0,
+			Period = "1s"
+		}
+	};
+});
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+builder.Services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+
 var app = builder.Build();
+app.UseIpRateLimiting();
 
 if (!app.Environment.IsDevelopment())
 {

@@ -3,6 +3,18 @@
   "WorkspaceRootPath": "D:\\Unity\\VCS-DOCs\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\sidebar.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}|",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\sidebar.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\userstatus.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\userstatus.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\pages\\login.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:pages\\login.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -13,10 +25,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\pages\\login.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:pages\\login.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\userstatus.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\userstatus.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     }
   ],
   "DocumentGroupContainers": [
@@ -26,7 +34,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 5,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Bookmark",
@@ -42,7 +50,33 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "sidebar.js",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\sidebar.js",
+              "RelativeDocumentMoniker": "wwwroot\\js\\sidebar.js",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\sidebar.js",
+              "RelativeToolTip": "wwwroot\\js\\sidebar.js",
+              "ViewState": "AgIAAEIAAAAAAAAAAAAAAFAAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-03-08T19:57:54.922Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 2,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Program.cs",
+              "RelativeDocumentMoniker": "Program.cs",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAADcAAAAAAAAAAAAAAFgAAAAXAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-08T17:44:36.528Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
               "Title": "Login.cshtml",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Pages\\Login.cshtml",
               "RelativeDocumentMoniker": "Pages\\Login.cshtml",
@@ -55,7 +89,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 4,
               "Title": "UserStatusHub.cs",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Data\\UserStatusHub.cs",
               "RelativeDocumentMoniker": "Data\\UserStatusHub.cs",
@@ -68,26 +102,26 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 3,
               "Title": "Login.cshtml.cs",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Pages\\Login.cshtml.cs",
               "RelativeDocumentMoniker": "Pages\\Login.cshtml.cs",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\Pages\\Login.cshtml.cs*",
-              "RelativeToolTip": "Pages\\Login.cshtml.cs*",
-              "ViewState": "AgIAABcAAAAAAAAAAAAQwCEAAAAfAAAAAAAAAA==",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Pages\\Login.cshtml.cs",
+              "RelativeToolTip": "Pages\\Login.cshtml.cs",
+              "ViewState": "AgIAACcAAAAAAAAAAADwv3MAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-03-08T17:16:03.405Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 1,
               "Title": "userStatus.js",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\userStatus.js",
               "RelativeDocumentMoniker": "wwwroot\\js\\userStatus.js",
               "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\userStatus.js",
               "RelativeToolTip": "wwwroot\\js\\userStatus.js",
-              "ViewState": "AgIAAB8AAAAAAAAAAAAUwC4AAAALAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAxAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
               "WhenOpened": "2025-03-08T16:49:12.325Z",
               "EditorCaption": ""

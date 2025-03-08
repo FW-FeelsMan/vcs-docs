@@ -10,6 +10,7 @@ using VCS_DOCs.Data;
 using Microsoft.AspNetCore.SignalR;
 using System.Text.RegularExpressions;
 using VCS_DOCs.Services;
+using System.Collections.Concurrent;
 
 namespace VCS_DOCs.Pages
 {
@@ -49,107 +50,87 @@ namespace VCS_DOCs.Pages
 		public bool IsRegistrationSuccessful { get; set; }
 		public string? ErrorMessage { get; set; }
 		public List<string> Specialities { get; set; }
+		private static readonly ConcurrentDictionary<string, (int Attempts, DateTime LastAttempt)> FailedLogins = new();
 
 		public async Task<IActionResult> OnPostLoginAsync()
 		{
+			var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+			if (ip == null) return new JsonResult(new { success = false, errors = new List<string> { "Ошибка авторизации." } });
+
+			if (FailedLogins.TryGetValue(ip, out var data))
+			{
+				if (data.Attempts >= 5 && (DateTime.UtcNow - data.LastAttempt).TotalMinutes < 10)
+				{
+					return new JsonResult(new { success = false, errors = new List<string> { "Слишком много неудачных попыток. Попробуйте позже." } });
+				}
+			}
+
 			if (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password))
 			{
-				LoginErrors.Add("Имя пользователя и пароль обязательны.");
-				return new JsonResult(new { success = false, errors = LoginErrors });
+				FailedLogins[ip] = (data.Attempts + 1, DateTime.UtcNow);
+				return new JsonResult(new { success = false, errors = new List<string> { "Имя пользователя и пароль обязательны." } });
 			}
 
-			if (Username.Length > 20)
+			if (Username.Length > 20 || Password.Length > 20 || !Regex.IsMatch(Username, @"^[a-zA-Z0-9]+$"))
 			{
-				LoginErrors.Add("Имя пользователя не должно превышать 20 символов.");
-				return new JsonResult(new { success = false, errors = LoginErrors });
+				FailedLogins[ip] = (data.Attempts + 1, DateTime.UtcNow);
+				return new JsonResult(new { success = false, errors = new List<string> { "Неверный формат имени пользователя или пароля." } });
 			}
 
-			if (!Regex.IsMatch(Username, @"^[a-zA-Z0-9]+$"))
+			var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == Username);
+			if (user == null || !BCrypt.Net.BCrypt.Verify(Password, user.Password))
 			{
-				LoginErrors.Add("Имя пользователя может содержать только латинские буквы и цифры.");
-				return new JsonResult(new { success = false, errors = LoginErrors });
+				FailedLogins[ip] = (data.Attempts + 1, DateTime.UtcNow);
+				return new JsonResult(new { success = false, errors = new List<string> { "Неверное имя пользователя или пароль." } });
 			}
 
-			if (Password.Length > 20)
+			if (user.Access == 0)
 			{
-				LoginErrors.Add("Пароль не должен превышать 20 символов.");
-				return new JsonResult(new { success = false, errors = LoginErrors });
+				return new JsonResult(new { success = false, errors = new List<string> { "Учетная запись не активирована." } });
 			}
 
-			try
+			bool forceLogin = Request.Form["ForceLogin"].ToString().ToLower() == "true";
+			if (!string.IsNullOrEmpty(user.JwtId))
 			{
-				var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == Username);
-
-				if (user == null || !BCrypt.Net.BCrypt.Verify(Password, user.Password))
+				if (!forceLogin)
 				{
-					LoginErrors.Add("Неверное имя пользователя или пароль.");
-					return new JsonResult(new { success = false, errors = LoginErrors });
+					return new JsonResult(new { success = false, errors = new List<string> { "Этот аккаунт уже используется на другом устройстве." } });
 				}
-
-				if (user.Access == 0)
-				{
-					LoginErrors.Add("Учетная запись не активирована.");
-					return new JsonResult(new { success = false, errors = LoginErrors });
-				}
-
-				bool forceLogin = Request.Form["ForceLogin"].ToString().ToLower() == "true";
-
-				if (!string.IsNullOrEmpty(user.JwtId))
-				{
-					if (!forceLogin)
-					{
-						LoginErrors.Add("Этот аккаунт уже используется на другом устройстве.");
-						return new JsonResult(new { success = false, errors = LoginErrors });
-					}
-					else if (forceLogin) {
-						Console.WriteLine($"Отправка ForceLogout для пользователя {user.Id}");
-						await _hubContext.Clients.User(user.Id.ToString()).SendAsync("ForceLogout");
-						await _userService.ClearUserJwtIdAsync(user.Id.ToString());
-						_context.Users.Update(user);
-						await _context.SaveChangesAsync();
-					}
-				}
-
-				// Обновляем JwtId для новой сессии
-				user.JwtId = Guid.NewGuid().ToString();
-
-				string? hardwareId = Request.Form["hardwareId"];
-				if (!string.IsNullOrEmpty(hardwareId))
-				{
-					user.HardwareId = hardwareId;
-				}
-
-				user.LastEntry = DateTime.UtcNow;
-				user.JwtId = Guid.NewGuid().ToString();
-
+				await _hubContext.Clients.User(user.Id.ToString()).SendAsync("ForceLogout");
+				await _userService.ClearUserJwtIdAsync(user.Id.ToString());
 				_context.Users.Update(user);
 				await _context.SaveChangesAsync();
-
-				var claims = new List<Claim>
-				{
-					new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-					new Claim(ClaimTypes.Name, user.Username)
-				};
-
-				var authProperties = new AuthenticationProperties
-				{
-					IsPersistent = true,
-					ExpiresUtc = DateTime.UtcNow.AddDays(7)
-				};
-
-				await HttpContext.SignInAsync(
-					CookieAuthenticationDefaults.AuthenticationScheme,
-					new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)),
-					authProperties);
-
-				return new JsonResult(new { success = true });
 			}
-			catch (Exception ex)
+
+			user.JwtId = Guid.NewGuid().ToString();
+			string? hardwareId = Request.Form["hardwareId"];
+			if (!string.IsNullOrEmpty(hardwareId))
 			{
-				_logger.LogError(ex, "An error occurred during login.");
-				LoginErrors.Add("Произошла ошибка при входе в систему.");
-				return new JsonResult(new { success = false, errors = LoginErrors });
+				user.HardwareId = hardwareId;
 			}
+			user.LastEntry = DateTime.UtcNow;
+			_context.Users.Update(user);
+			await _context.SaveChangesAsync();
+
+			var claims = new List<Claim>
+			{
+				new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+				new Claim(ClaimTypes.Name, user.Username)
+			};
+
+			var authProperties = new AuthenticationProperties
+			{
+				IsPersistent = true,
+				ExpiresUtc = DateTime.UtcNow.AddDays(7)
+			};
+
+			await HttpContext.SignInAsync(
+				CookieAuthenticationDefaults.AuthenticationScheme,
+				new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)),
+				authProperties);
+
+			FailedLogins.TryRemove(ip, out _);
+			return new JsonResult(new { success = true });
 		}
 
 		public async Task<IActionResult> OnPostRegisterAsync()
