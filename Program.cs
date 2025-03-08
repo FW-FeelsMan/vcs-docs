@@ -18,7 +18,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 	options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
-builder.Services.AddSignalR();
+builder.Services
+	.AddSignalR(options => {
+		options.EnableDetailedErrors = true;
+	})
+	.AddHubOptions<UserStatusHub>(options => {
+		options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
+	});
 builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services.AddDistributedMemoryCache();

@@ -9,44 +9,45 @@ namespace VCS_DOCs.Data
 	public class UserStatusHub : Hub
 	{
 		private readonly IUserService _userService;
+		private readonly IHubContext<UserStatusHub> _hubContext;
 
-		public UserStatusHub(IUserService userService)
+		public UserStatusHub(IUserService userService, IHubContext<UserStatusHub> hubContext)
 		{
 			_userService = userService;
+			_hubContext = hubContext;
 		}
 
 		public override async Task OnConnectedAsync()
 		{
-			var user = Context.User;
-			var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier);
-			if (userIdClaim != null)
+			var userId = Context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+			if (!string.IsNullOrEmpty(userId))
 			{
-				var userId = userIdClaim.Value;
 				await _userService.UpdateUserStatusAsync(userId, true);
-				Console.WriteLine($"Статус пользователя {userId} обновлен на 'онлайн'.");
-			}
-			else
-			{
-				Console.WriteLine("Утверждение NameIdentifier не найдено.");
+				await _hubContext.Clients.User(userId).SendAsync("InvalidateOtherSessions");
 			}
 			await base.OnConnectedAsync();
 		}
 
 		public override async Task OnDisconnectedAsync(Exception exception)
 		{
-			var user = Context.User;
-			var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier);
-			if (userIdClaim != null)
+			var userId = Context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+			if (!string.IsNullOrEmpty(userId))
 			{
-				var userId = userIdClaim.Value;
 				await _userService.UpdateUserStatusAsync(userId, false);
-				Console.WriteLine($"Статус пользователя {userId} обновлен на 'оффлайн'.");
-			}
-			else
-			{
-				Console.WriteLine("Утверждение NameIdentifier не найдено.");
+				await _userService.ClearUserJwtIdAsync(userId);
 			}
 			await base.OnDisconnectedAsync(exception);
+		}
+		public async Task ForceLogoutUser(string userId)
+		{
+			Console.WriteLine($"Force logout initiated for user {userId}");
+			await _hubContext.Clients.User(userId).SendAsync("ForceLogout");
+			await _userService.ClearUserJwtIdAsync(userId);
+			Console.WriteLine($"JwtId cleared for user {userId}");
+		}
+		public async Task DebugMessage()
+		{
+			await Clients.Caller.SendAsync("DebugResponse", "Проверка связи с сервером успешна");
 		}
 	}
 }

@@ -1,7 +1,4 @@
 using Microsoft.AspNetCore.Authentication;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
@@ -9,6 +6,10 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using VCS_DOCs.Utilities;
+using VCS_DOCs.Data;
+using Microsoft.AspNetCore.SignalR;
+using System.Text.RegularExpressions;
+using VCS_DOCs.Services;
 
 namespace VCS_DOCs.Pages
 {
@@ -16,29 +17,38 @@ namespace VCS_DOCs.Pages
 	{
 		private readonly ApplicationDbContext _context;
 		private readonly ILogger<LoginModel> _logger;
-		public List<string> Specialities { get; set; }
-
 		private readonly IWebHostEnvironment _webHostEnvironment;
-
-		public LoginModel(ApplicationDbContext context, ILogger<LoginModel> logger, IWebHostEnvironment webHostEnvironment)
+		private readonly IHubContext<UserStatusHub> _hubContext;
+		private readonly IUserService _userService;
+		public LoginModel(
+		ApplicationDbContext context,
+		ILogger<LoginModel> logger,
+		IWebHostEnvironment webHostEnvironment,
+		IHubContext<UserStatusHub> hubContext,
+		IUserService userService) 
 		{
 			_context = context;
 			_logger = logger;
 			_webHostEnvironment = webHostEnvironment;
+			_hubContext = hubContext;
+			_userService = userService; 
 			LoginErrors = new List<string>();
 			RegistrationErrors = new List<string>();
 			Specialities = new List<string>();
 		}
+
 
 		[BindProperty]
 		public string Username { get; set; }
 
 		[BindProperty]
 		public string Password { get; set; }
+
 		public List<string> LoginErrors { get; set; }
 		public List<string> RegistrationErrors { get; set; }
 		public bool IsRegistrationSuccessful { get; set; }
 		public string? ErrorMessage { get; set; }
+		public List<string> Specialities { get; set; }
 
 		public async Task<IActionResult> OnPostLoginAsync()
 		{
@@ -69,6 +79,7 @@ namespace VCS_DOCs.Pages
 			try
 			{
 				var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == Username);
+
 				if (user == null || !BCrypt.Net.BCrypt.Verify(Password, user.Password))
 				{
 					LoginErrors.Add("Неверное имя пользователя или пароль.");
@@ -81,6 +92,27 @@ namespace VCS_DOCs.Pages
 					return new JsonResult(new { success = false, errors = LoginErrors });
 				}
 
+				bool forceLogin = Request.Form["ForceLogin"].ToString().ToLower() == "true";
+
+				if (!string.IsNullOrEmpty(user.JwtId))
+				{
+					if (!forceLogin)
+					{
+						LoginErrors.Add("Этот аккаунт уже используется на другом устройстве.");
+						return new JsonResult(new { success = false, errors = LoginErrors });
+					}
+					else if (forceLogin) {
+						Console.WriteLine($"Отправка ForceLogout для пользователя {user.Id}");
+						await _hubContext.Clients.User(user.Id.ToString()).SendAsync("ForceLogout");
+						await _userService.ClearUserJwtIdAsync(user.Id.ToString());
+						_context.Users.Update(user);
+						await _context.SaveChangesAsync();
+					}
+				}
+
+				// Обновляем JwtId для новой сессии
+				user.JwtId = Guid.NewGuid().ToString();
+
 				string? hardwareId = Request.Form["hardwareId"];
 				if (!string.IsNullOrEmpty(hardwareId))
 				{
@@ -88,6 +120,8 @@ namespace VCS_DOCs.Pages
 				}
 
 				user.LastEntry = DateTime.UtcNow;
+				user.JwtId = Guid.NewGuid().ToString();
+
 				_context.Users.Update(user);
 				await _context.SaveChangesAsync();
 
@@ -173,22 +207,12 @@ namespace VCS_DOCs.Pages
 
 				string appDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData");
 				string userDataPath = Path.Combine(appDataPath, $"userData_{Username}");
-				
+
 				if (!Directory.Exists(userDataPath))
 				{
 					Directory.CreateDirectory(userDataPath);
 				}
 
-				/*// Проверка размера папки пользователя
-				long directorySize = GetDirectorySize(userDataPath);
-				const long maxSize = 5L * 1024L * 1024L * 1024L; // 5 GB
-
-				if (directorySize > maxSize)
-				{
-					RegistrationErrors.Add("Размер Вашей папки превышает лимит в 5 ГБ.");
-					return new JsonResult(new { success = false, errors = RegistrationErrors });
-				}
-				*/
 				IsRegistrationSuccessful = true;
 				return new JsonResult(new { success = true });
 			}
@@ -198,16 +222,6 @@ namespace VCS_DOCs.Pages
 				RegistrationErrors.Add("Произошла ошибка при регистрации.");
 				return new JsonResult(new { success = false, errors = RegistrationErrors });
 			}
-		}
-
-		private long GetDirectorySize(string directoryPath)
-		{
-			if (Directory.Exists(directoryPath))
-			{
-				return Directory.GetFiles(directoryPath, "*", SearchOption.AllDirectories)
-								.Sum(file => new FileInfo(file).Length);
-			}
-			return 0;
 		}
 
 		public async Task<IActionResult> OnPostAsync(string action)

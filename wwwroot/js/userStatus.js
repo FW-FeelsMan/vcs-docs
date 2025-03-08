@@ -1,10 +1,9 @@
-﻿// userStatus.js (Client-side)
-(function () {
+﻿(function () {
     const initializeSignalR = () => {
         if (window.location.pathname.toLowerCase() === '/login') return;
 
         if (typeof signalR === 'undefined') {
-            console.error('SignalR library not loaded');
+            console.error('SignalR не загружен');
             return;
         }
 
@@ -18,19 +17,34 @@
             .build();
 
         connection.on("UserStatusUpdated", (userId, isOnline) => {
-            console.log(`User ${userId} status: ${isOnline ? 'online' : 'offline'}`);
+            console.log(`Статус пользователя ${userId}: ${isOnline ? 'онлайн' : 'оффлайн'}`);
+        });
+
+        connection.on("ForceLogout", () => {
+            console.log("Received ForceLogout command");
+            localStorage.removeItem('token');
+            window.location.href = '/Login?message=session_terminated';
         });
 
         connection.onclose(error => {
             if (error?.statusCode === 401) {
-                window.location.href = '/login';
+                window.location.href = '/Login';
             }
-            console.error('Connection closed:', error);
+            console.error('Соединение закрыто:', error);
+        });
+        connection.on("ForceLogout", function () {
+            console.log("Received ForceLogout command");
+            alert("Связь с сервером разорвана. Причина: принудительный вход с другого устройства");
+            window.location.href = "/Login";
+        });
+        connection.on("DebugResponse", function (message) {
+            console.log("Получено сообщение от сервера:", message);
         });
 
-        connection.start()
-            .then(() => console.log('SignalR connection established'))
-            .catch(error => console.error('Connection error:', error));
+        // Вызови метод с клиента после подключения
+        connection.start().then(() => {
+            connection.invoke("DebugMessage");
+        });
     };
 
     initializeSignalR();
