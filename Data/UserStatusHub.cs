@@ -33,8 +33,15 @@ namespace VCS_DOCs.Data
 			var userId = Context.User.FindFirstValue(ClaimTypes.NameIdentifier);
 			if (!string.IsNullOrEmpty(userId))
 			{
-				await _userService.UpdateUserStatusAsync(userId, false);
-				await _userService.ClearUserJwtIdAsync(userId);
+				try
+				{
+					await _userService.UpdateUserStatusAsync(userId, false);
+					await _userService.ClearUserJwtIdAsync(userId);
+				}
+				catch (Exception ex)
+				{
+					Console.WriteLine($"Ошибка при обновлении статуса пользователя {userId}: {ex.Message}");
+				}
 			}
 			await base.OnDisconnectedAsync(exception);
 		}

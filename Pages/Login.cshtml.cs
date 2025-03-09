@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.SignalR;
 using System.Text.RegularExpressions;
 using VCS_DOCs.Services;
 using System.Collections.Concurrent;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace VCS_DOCs.Pages
 {
@@ -18,26 +20,32 @@ namespace VCS_DOCs.Pages
 	{
 		private readonly ApplicationDbContext _context;
 		private readonly ILogger<LoginModel> _logger;
-		private readonly IWebHostEnvironment _webHostEnvironment;
+		private readonly ILogger<UserBackgroundService> _loggerUserBackgroundService; // Логирование для UserBackgroundService
+		private readonly IServiceProvider _serviceProvider;
 		private readonly IHubContext<UserStatusHub> _hubContext;
 		private readonly IUserService _userService;
+		private readonly IWebHostEnvironment _webHostEnvironment; // Добавляем IWebHostEnvironment
+
 		public LoginModel(
-		ApplicationDbContext context,
-		ILogger<LoginModel> logger,
-		IWebHostEnvironment webHostEnvironment,
-		IHubContext<UserStatusHub> hubContext,
-		IUserService userService) 
+			ApplicationDbContext context,
+			ILogger<LoginModel> logger,
+			ILogger<UserBackgroundService> userBackgroundServiceLogger, // Для логирования в UserBackgroundService
+			IServiceProvider serviceProvider,
+			IHubContext<UserStatusHub> hubContext,
+			IUserService userService,
+			IWebHostEnvironment webHostEnvironment) // Передаем IWebHostEnvironment
 		{
 			_context = context;
 			_logger = logger;
-			_webHostEnvironment = webHostEnvironment;
+			_loggerUserBackgroundService = userBackgroundServiceLogger; // Для логирования
+			_serviceProvider = serviceProvider;
 			_hubContext = hubContext;
-			_userService = userService; 
+			_userService = userService;
+			_webHostEnvironment = webHostEnvironment; // Инициализируем
 			LoginErrors = new List<string>();
 			RegistrationErrors = new List<string>();
 			Specialities = new List<string>();
 		}
-
 
 		[BindProperty]
 		public string Username { get; set; }
@@ -69,12 +77,6 @@ namespace VCS_DOCs.Pages
 			{
 				FailedLogins[ip] = (data.Attempts + 1, DateTime.UtcNow);
 				return new JsonResult(new { success = false, errors = new List<string> { "Имя пользователя и пароль обязательны." } });
-			}
-
-			if (Username.Length > 20 || Password.Length > 20 || !Regex.IsMatch(Username, @"^[a-zA-Z0-9]+$"))
-			{
-				FailedLogins[ip] = (data.Attempts + 1, DateTime.UtcNow);
-				return new JsonResult(new { success = false, errors = new List<string> { "Неверный формат имени пользователя или пароля." } });
 			}
 
 			var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == Username);
@@ -113,10 +115,10 @@ namespace VCS_DOCs.Pages
 			await _context.SaveChangesAsync();
 
 			var claims = new List<Claim>
-			{
-				new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-				new Claim(ClaimTypes.Name, user.Username)
-			};
+	{
+		new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+		new Claim(ClaimTypes.Name, user.Username)
+	};
 
 			var authProperties = new AuthenticationProperties
 			{
@@ -130,6 +132,14 @@ namespace VCS_DOCs.Pages
 				authProperties);
 
 			FailedLogins.TryRemove(ip, out _);
+
+			// Получаем или создаем сервис для пользователя
+			var userServiceManager = _serviceProvider.GetRequiredService<UserServiceManager>();
+			var userBackgroundService = userServiceManager.GetOrCreateService(user.Id.ToString());
+
+			// Логируем успешный вход
+			_logger.LogInformation($"Пользователь {user.Username} вошел в систему.");
+
 			return new JsonResult(new { success = true });
 		}
 
