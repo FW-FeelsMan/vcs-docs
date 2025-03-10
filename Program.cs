@@ -59,6 +59,9 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddMemoryCache();
+builder.Services.AddControllersWithViews()
+	.AddRazorRuntimeCompilation();
+
 builder.Services.Configure<IpRateLimitOptions>(options =>
 {
 	options.GeneralRules = new List<RateLimitRule>

@@ -1,10 +1,59 @@
 ﻿@page
 @model profile_pageModel
 @{
-    Layout = null; // Так как контент грузится динамически
+    Layout = null;
 }
 <div class="profile_background">
-    <h2>Профиль пользователя</h2>
-    <p>Про профиль</p>
-    <p>89051185901</p>
+    <div class="button-container">
+        <h2>VCS-DOSc Account</h2>
+        <button class="css-button-sliding-to-left--red">Выйти</button>
+    </div>
+    <hr class="solid">
+
+    <div class="profile-container">
+        <div class="profile-sidebar">
+            <div class="avatar">
+                <img src="~/images/default_avatar.png;" alt="User Avatar">
+            </div>
+            <h3>Имя пользователя</h3>
+            <p>user@email.com</p>
+            <ul class="sidebar-menu">
+                <li class="active">Личная информация</li>
+                <li>Платежи</li>
+                <li>История заказов</li>
+                <li>Подарочные карты</li>
+            </ul>
+        </div>
+
+        <div class="profile-content">
+            <h2>Личная информация</h2>
+            <h3>Раздел управления личными данными, установленными задачами и содержимым персонального репозитория</h3>
+            <div class="info-grid">
+                <div class="info-card">
+                    <h4>Имя</h4>
+                    <p>Имя Фамилия</p>
+                </div>
+                <div class="info-card">
+                    <h4>Дата рождения</h4>
+                    <p>01 Января 2000</p>
+                </div>
+                <div class="info-card">
+                    <h4>Страна</h4>
+                    <p>Россия, Москва</p>
+                </div>
+                <div class="info-card">
+                    <h4>Язык</h4>
+                    <p>Русский</p>
+                </div>
+                <div class="info-card">
+                    <h4>Email</h4>
+                    <p>user@email.com</p>
+                </div>
+                <div class="info-card">
+                    <h4>Удаление аккаунта</h4>
+                    <button class="css-button-sliding-to-left--red">Удалить</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
