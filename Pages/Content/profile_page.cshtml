@@ -3,57 +3,113 @@
 @{
     Layout = null;
 }
-<div class="profile_background">
-    <div class="button-container">
-        <h2>VCS-DOSc Account</h2>
-        <button class="css-button-sliding-to-left--red">Выйти</button>
-    </div>
-    <hr class="solid">
-
-    <div class="profile-container">
-        <div class="profile-sidebar">
-            <div class="avatar">
-                <img src="~/images/default_avatar.png;" alt="User Avatar">
-            </div>
-            <h3>Имя пользователя</h3>
-            <p>user@email.com</p>
-            <ul class="sidebar-menu">
-                <li class="active">Личная информация</li>
-                <li>Платежи</li>
-                <li>История заказов</li>
-                <li>Подарочные карты</li>
-            </ul>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль</title>
+    <link rel="stylesheet" href="~/css/sub_css/profile_page.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="profile_background">
+        <div class="button-container">
+            <h2>VCS-DOSc Account</h2>
+            <button class="css-button-sliding-to-left--red">Выйти</button>
         </div>
+        <hr class="solid">
 
-        <div class="profile-content">
-            <h2>Личная информация</h2>
-            <h3>Раздел управления личными данными, установленными задачами и содержимым персонального репозитория</h3>
-            <div class="info-grid">
-                <div class="info-card">
-                    <h4>Имя</h4>
-                    <p>Имя Фамилия</p>
+        <div class="profile-container">
+            <div class="profile-sidebar">
+                <div class="avatar">
+                    <img src="~/images/default_avatar.png" alt="Icon">
                 </div>
-                <div class="info-card">
-                    <h4>Дата рождения</h4>
-                    <p>01 Января 2000</p>
+                <h3>2825</h3>
+                <p>2825@email.com</p>
+                <ul class="sidebar-menu">
+                    <li class="active" data-target="personal-data">Персональные данные</li>
+                    <li data-target="storage">Личное хранилище</li>
+                    <li data-target="tasks">Задачи</li>
+                </ul>
+            </div>
+
+            <div class="profile-content">
+                <div id="personal-data" class="content-section active">
+                    <h2>Персональные данные</h2>
+                    <h3>Раздел управления личными данными</h3>
+                    <div class="info-grid">
+                        <div class="info-card">
+                            <h4>ФИО <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>
+                            <p>Колотов Михаил Викторович</p>
+                        </div>
+                        <div class="info-card">
+                            <h4>Дата рождения <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>
+                            <p>29.12.1995</p>
+                        </div>
+                        <div class="info-card">
+                            <h4>Организация <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>
+                            <p>ООО "КБ "Тулажелдормаш"</p>
+                        </div>
+                        <div class="info-card">
+                            <h4>Подразделение <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>
+                            <p>Группа узлов серийных машин</p>
+                        </div>
+                        <div class="info-card">
+                            <h4>Должность <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>
+                            <p>Главный конструтор по САПР</p>
+                        </div>
+                        <div class="info-card">
+                            <h4>Удаление аккаунта</h4>
+                            <button class="css-button-sliding-to-left--red">Удалить</button>
+                        </div>
+                    </div>
                 </div>
-                <div class="info-card">
-                    <h4>Страна</h4>
-                    <p>Россия, Москва</p>
+
+                <div id="storage" class="content-section">
+                    <h2>Личное хранилище</h2>
+                    <h3>Содержимое личного хранилища пользователя</h3>
+                    <div id="chart-container">
+                        <div class="y-axis">
+                            <div class="y-label">5000</div>
+                            <div class="y-label">4500</div>
+                            <div class="y-label">4000</div>
+                            <div class="y-label">3500</div>
+                            <div class="y-label">3000</div>
+                            <div class="y-label">2500</div>
+                            <div class="y-label">2000</div>
+                            <div class="y-label">1500</div>
+                            <div class="y-label">1000</div>
+                            <div class="y-label">500</div>
+                            <div class="y-label">0</div>
+                        </div>
+                        <div class="y-axis-line"></div>
+                        <div class="x-axis-line"></div>
+                        <div class="y-axis-text">Размер, Мб</div>
+                        <div class="x-axis-text">Наименование</div>
+
+                        <!-- Контейнер для столбиков -->
+                        <div class="bar-container">
+                            <!-- Столбики -->
+                            <div class="bar" style="height: 70%;">
+                                <div class="bar-text">File1 01.01.2025</div>
+                            </div>
+                            <div class="bar" style="height: 40%;">
+                                <div class="bar-text">File1 01.01.2025</div>
+                            </div>
+                            <div class="bar" style="height: 20%;">
+                                <div class="bar-text">File1 01.01.2025</div>
+                            </div>
+                            
+                        </div>
+                    </div>
                 </div>
-                <div class="info-card">
-                    <h4>Язык</h4>
-                    <p>Русский</p>
-                </div>
-                <div class="info-card">
-                    <h4>Email</h4>
-                    <p>user@email.com</p>
-                </div>
-                <div class="info-card">
-                    <h4>Удаление аккаунта</h4>
-                    <button class="css-button-sliding-to-left--red">Удалить</button>
+                <div id="tasks" class="content-section">
+                    <h2>Задачи</h2>
+                    <h3>Задачи пользователя обрабатываемые на сервере</h3>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</body>
+</html>

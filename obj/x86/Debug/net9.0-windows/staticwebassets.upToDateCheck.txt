@@ -8,6 +8,7 @@ D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.css
 D:\Unity\VCS-DOCs\wwwroot\css\sub_css\contact_page.css
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.min.css
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\css\bootstrap.css
+D:\Unity\VCS-DOCs\wwwroot\js\profile.js
 D:\Unity\VCS-DOCs\wwwroot\ifcjs\wasm\web-ifc.wasm
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\css\bootstrap.css.map
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.min.css
@@ -95,6 +96,7 @@ wwwroot\ifcjs\wasm\web-ifc.wasm
 wwwroot\ifcjs\wasm\web-ifc-mt.wasm
 wwwroot\images\archiveIcon.png
 wwwroot\images\default_avatar.png
+wwwroot\images\edit_icon.png
 wwwroot\images\extra.png
 wwwroot\images\helpIcon.png
 wwwroot\images\ibackground.jpg
@@ -108,6 +110,7 @@ wwwroot\js\contextMenu.js
 wwwroot\js\extraTabbar.js
 wwwroot\js\horizontalResize.js
 wwwroot\js\loginScript.js
+wwwroot\js\profile.js
 wwwroot\js\sidebar.js
 wwwroot\js\StatusOnlineController.js
 wwwroot\js\userStatus.js

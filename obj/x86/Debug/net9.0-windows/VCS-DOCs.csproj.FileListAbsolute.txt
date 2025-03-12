@@ -272,7 +272,6 @@ D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\nezrqnk58p-muycvpuwrr.
 D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\v0zgfp0y55-87fc7y1x7t.gz
 D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\yfc7ypekbg-mlv21k5csn.gz
 D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\4d8o4wagd0-b5fit1v4b8.gz
-D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\rz0vurh5an-bnarf8qagc.gz
 D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\ck8e37485g-4dkhi00vr3.gz
 D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\lvwn6nk2s6-tqo1cwwbv4.gz
 D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\jg8lh4hdsy-5xuo4oxw35.gz
@@ -370,7 +369,6 @@ D:\Unity\VCS-DOCs\bin\x86\Debug\net9.0-windows\Microsoft.AspNetCore.SignalR.Prot
 D:\Unity\VCS-DOCs\bin\x86\Debug\net9.0-windows\Microsoft.Extensions.Features.dll
 D:\Unity\VCS-DOCs\bin\x86\Debug\net9.0-windows\System.Net.ServerSentEvents.dll
 D:\Unity\VCS-DOCs\bin\x86\Debug\net9.0-windows\System.Threading.Channels.dll
-D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\obt8gn1yoe-lxsl9cd98w.gz
 D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\z576n6ct2d-f2oc1jg7mn.gz
 D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\mivt6u010q-sljnuluhj3.gz
 D:\Unity\VCS-DOCs\bin\x86\Debug\net9.0-windows\AspNetCoreRateLimit.dll
@@ -659,4 +657,7 @@ D:\Unity\VCS-DOCs\bin\x86\Debug\net9.0-windows\Microsoft.AspNetCore.Mvc.Razor.Ex
 D:\Unity\VCS-DOCs\bin\x86\Debug\net9.0-windows\Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation.dll
 D:\Unity\VCS-DOCs\bin\x86\Debug\net9.0-windows\Microsoft.AspNetCore.Razor.Language.dll
 D:\Unity\VCS-DOCs\bin\x86\Debug\net9.0-windows\Microsoft.CodeAnalysis.Razor.dll
-D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\ao7l21c0ch-fdhn1434xl.gz
+D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\rz0vurh5an-bnarf8qagc.gz
+D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\658ns2dfxj-t21xu47s7y.gz
+D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\obt8gn1yoe-tdjzcvs99s.gz
+D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\ao7l21c0ch-3gpspo66mi.gz
