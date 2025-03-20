@@ -141,6 +141,14 @@
       "PackagePath": "staticwebassets\\js\\sidebar.js"
     },
     {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\sorttable.js",
+      "PackagePath": "staticwebassets\\js\\sorttable.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\sorttableObserver.js",
+      "PackagePath": "staticwebassets\\js\\sorttableObserver.js"
+    },
+    {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\userStatus.js",
       "PackagePath": "staticwebassets\\js\\userStatus.js"
     },

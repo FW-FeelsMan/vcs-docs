@@ -35,6 +35,7 @@ D:\Unity\VCS-DOCs\wwwroot\lib\jquery-validation-unobtrusive\dist\jquery.validate
 D:\Unity\VCS-DOCs\wwwroot\ifcjs\bundle.js.map
 D:\Unity\VCS-DOCs\wwwroot\lib\jquery\dist\jquery.min.map
 D:\Unity\VCS-DOCs\wwwroot\favicon.ico
+D:\Unity\VCS-DOCs\wwwroot\js\sorttableObserver.js
 D:\Unity\VCS-DOCs\wwwroot\lib\jquery-validation\dist\jquery.validate.min.js
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\js\bootstrap.esm.js
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\css\bootstrap.min.css.map
@@ -42,6 +43,7 @@ D:\Unity\VCS-DOCs\wwwroot\lib\jquery\dist\jquery.slim.min.js
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\js\bootstrap.esm.js.map
 D:\Unity\VCS-DOCs\wwwroot\css\sub_css\project_page.css
 D:\Unity\VCS-DOCs\wwwroot\ifcjs\wasm\web-ifc-mt.wasm
+D:\Unity\VCS-DOCs\wwwroot\js\sorttable.js
 D:\Unity\VCS-DOCs\wwwroot\css\main_css\loginStyle.css
 D:\Unity\VCS-DOCs\wwwroot\lib\jquery\dist\jquery.slim.min.map
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\js\bootstrap.js.map
@@ -112,6 +114,8 @@ wwwroot\js\horizontalResize.js
 wwwroot\js\loginScript.js
 wwwroot\js\profile.js
 wwwroot\js\sidebar.js
+wwwroot\js\sorttable.js
+wwwroot\js\sorttableObserver.js
 wwwroot\js\StatusOnlineController.js
 wwwroot\js\userStatus.js
 wwwroot\lib\bootstrap\dist\css\bootstrap.css

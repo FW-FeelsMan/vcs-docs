@@ -69,44 +69,119 @@
                 <div id="storage" class="content-section">
                     <h2>Личное хранилище</h2>
                     <h3>Содержимое личного хранилища пользователя</h3>
-                    <div id="chart-container">
-                        <div class="y-axis">
-                            <div class="y-label">5000</div>
-                            <div class="y-label">4500</div>
-                            <div class="y-label">4000</div>
-                            <div class="y-label">3500</div>
-                            <div class="y-label">3000</div>
-                            <div class="y-label">2500</div>
-                            <div class="y-label">2000</div>
-                            <div class="y-label">1500</div>
-                            <div class="y-label">1000</div>
-                            <div class="y-label">500</div>
-                            <div class="y-label">0</div>
-                        </div>
-                        <div class="y-axis-line"></div>
-                        <div class="x-axis-line"></div>
-                        <div class="y-axis-text">Размер, Мб</div>
-                        <div class="x-axis-text">Наименование</div>
-
-                        <!-- Контейнер для столбиков -->
-                        <div class="bar-container">
-                            <!-- Столбики -->
-                            <div class="bar" style="height: 70%;">
-                                <div class="bar-text">File1 01.01.2025</div>
-                            </div>
-                            <div class="bar" style="height: 40%;">
-                                <div class="bar-text">File1 01.01.2025</div>
-                            </div>
-                            <div class="bar" style="height: 20%;">
-                                <div class="bar-text">File1 01.01.2025</div>
-                            </div>
-                            
-                        </div>
-                    </div>
+                    <table class="sortable">
+                        <thead>
+                            <tr>
+                                <th class="sorttable_alpha" style="min-width: 200px;">
+                                    <div class="header-wrapper">
+                                        <div class="cell-content">Имя файла</div>
+                                    </div>
+                                </th>
+                                <th class="sorttable_alpha" style="min-width: 200px;">
+                                    <div class="header-wrapper">
+                                        <div class="cell-content">Размер, Мб</div>
+                                    </div>
+                                </th>
+                                <th class="sorttable_alpha" style="min-width: 200px;">
+                                    <div class="header-wrapper">
+                                        <div class="cell-content">Дата и время загрузки</div>
+                                    </div>
+                                </th>
+                                <th class="sorttable_alpha" style="min-width: 200px;">
+                                    <div class="header-wrapper">
+                                        <div class="cell-content">Команда</div>
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <div class="cell-content">
+                                        filename_1.stpfilename_1.stpfilename_1.stpfilename_1.stpfilename_1.stpfilename_1.stpfilename_1.stpfilename_1.stp
+                                    </div>
+                                </td>
+                                <td>30.1</td>
+                                <td>10.05.1993, 18:01</td>
+                                <td>
+                                    <button class="delete-button">Удалить</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="cell-content">filename_2.stp</div>
+                                </td>
+                                <td>300.1</td>
+                                <td>02.05.1993, 17:01</td>
+                                <td>
+                                    <button class="delete-button">Удалить</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <div class="cell-content">filename_3.stp</div>
+                                </td>
+                                <td>10.1</td>
+                                <td>10.05.1993, 20:01</td>
+                                <td>
+                                    <button class="delete-button">Удалить</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
                 <div id="tasks" class="content-section">
                     <h2>Задачи</h2>
-                    <h3>Задачи пользователя обрабатываемые на сервере</h3>
+                    <h3>Задачи пользователя, обрабатываемые на сервере</h3>
+                    <div class="tasks-grid">
+                        <!-- Пример задачи -->
+                        <div class="task-card">
+                            <div class="task-header">
+                                <span class="task-status processing">В обработке</span>
+                                <span class="task-time">10:45, 25.10.2023</span>
+                            </div>
+                            <div class="task-content">
+                                <h4>Обработка файла: <span class="task-filename">project_final.stp</span></h4>
+                                <div class="task-progress">
+                                    <div class="progress-bar" style="width: 65%;"></div>
+                                </div>
+                                <p class="task-details">Файл находится в процессе обработки. Осталось примерно 2 минуты.</p>
+                            </div>
+                            <div class="task-actions">
+                                <button class="task-cancel-button">Отменить</button>
+                            </div>
+                        </div>
+
+                        <!-- Пример завершенной задачи -->
+                        <div class="task-card completed">
+                            <div class="task-header">
+                                <span class="task-status completed">Завершено</span>
+                                <span class="task-time">09:30, 24.10.2023</span>
+                            </div>
+                            <div class="task-content">
+                                <h4>Обработка файла: <span class="task-filename">design_v2.stp</span></h4>
+                                <div class="task-progress">
+                                    <div class="progress-bar" style="width: 100%;"></div>
+                                </div>
+                                <p class="task-details">Файл успешно обработан. <a href="#" class="download-link">Скачать результат</a></p>
+                            </div>
+                        </div>
+
+                        <!-- Пример отмененной задачи -->
+                        <div class="task-card cancelled">
+                            <div class="task-header">
+                                <span class="task-status cancelled">Отменено</span>
+                                <span class="task-time">15:20, 23.10.2023</span>
+                            </div>
+                            <div class="task-content">
+                                <h4>Обработка файла: <span class="task-filename">draft_project.stp</span></h4>
+                                <div class="task-progress">
+                                    <div class="progress-bar" style="width: 30%;"></div>
+                                </div>
+                                <p class="task-details">Задача была отменена пользователем.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
