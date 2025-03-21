@@ -25,7 +25,7 @@
                 <div class="avatar">
                     <img src="~/images/default_avatar.png" alt="Icon">
                 </div>
-                <h3>2825</h3>
+                <p>2825</p>
                 <p>2825@email.com</p>
                 <ul class="sidebar-menu">
                     <li class="active" data-target="personal-data">Персональные данные</li>
@@ -41,23 +41,23 @@
                     <div class="info-grid">
                         <div class="info-card">
                             <h4>ФИО <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>
-                            <p>Колотов Михаил Викторович</p>
+                            <p>@Model.CurrentUser?.FullName</p>
                         </div>
                         <div class="info-card">
                             <h4>Дата рождения <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>
-                            <p>29.12.1995</p>
+                            <p>@Model.CurrentUser?.DateOfBirth</p>
                         </div>
                         <div class="info-card">
                             <h4>Организация <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>
-                            <p>ООО "КБ "Тулажелдормаш"</p>
+                            <p>@Model.CurrentUser?.Organization</p>
                         </div>
                         <div class="info-card">
                             <h4>Подразделение <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>
-                            <p>Группа узлов серийных машин</p>
+                            <p>@Model.CurrentUser?.Department</p>
                         </div>
                         <div class="info-card">
                             <h4>Должность <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>
-                            <p>Главный конструтор по САПР</p>
+                            <p>@Model.CurrentUser?.Speciality</p>
                         </div>
                         <div class="info-card">
                             <h4>Удаление аккаунта</h4>
@@ -69,122 +69,106 @@
                 <div id="storage" class="content-section">
                     <h2>Личное хранилище</h2>
                     <h3>Содержимое личного хранилища пользователя</h3>
-                    <table class="sortable">
-                        <thead>
-                            <tr>
-                                <th class="sorttable_alpha" style="min-width: 200px;">
-                                    <div class="header-wrapper">
-                                        <div class="cell-content">Имя файла</div>
-                                    </div>
-                                </th>
-                                <th class="sorttable_alpha" style="min-width: 200px;">
-                                    <div class="header-wrapper">
-                                        <div class="cell-content">Размер, Мб</div>
-                                    </div>
-                                </th>
-                                <th class="sorttable_alpha" style="min-width: 200px;">
-                                    <div class="header-wrapper">
-                                        <div class="cell-content">Дата и время загрузки</div>
-                                    </div>
-                                </th>
-                                <th class="sorttable_alpha" style="min-width: 200px;">
-                                    <div class="header-wrapper">
-                                        <div class="cell-content">Команда</div>
-                                    </div>
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <div class="cell-content">
-                                        filename_1.stpfilename_1.stpfilename_1.stpfilename_1.stpfilename_1.stpfilename_1.stpfilename_1.stpfilename_1.stp
-                                    </div>
-                                </td>
-                                <td>30.1</td>
-                                <td>10.05.1993, 18:01</td>
-                                <td>
-                                    <button class="delete-button">Удалить</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="cell-content">filename_2.stp</div>
-                                </td>
-                                <td>300.1</td>
-                                <td>02.05.1993, 17:01</td>
-                                <td>
-                                    <button class="delete-button">Удалить</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>
-                                    <div class="cell-content">filename_3.stp</div>
-                                </td>
-                                <td>10.1</td>
-                                <td>10.05.1993, 20:01</td>
-                                <td>
-                                    <button class="delete-button">Удалить</button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="content-scrollable">
+                        <table class="sortable">
+                            <thead>
+                                <tr>
+                                    <th class="sorttable_alpha" style="min-width: 200px;">
+                                        <div class="header-wrapper">
+                                            <div class="cell-content">Имя файла</div>
+                                        </div>
+                                    </th>
+                                    <th class="sorttable_alpha" style="min-width: 200px;">
+                                        <div class="header-wrapper">
+                                            <div class="cell-content">Размер, Мб</div>
+                                        </div>
+                                    </th>
+                                    <th class="sorttable_alpha" style="min-width: 200px;">
+                                        <div class="header-wrapper">
+                                            <div class="cell-content">Дата и время загрузки</div>
+                                        </div>
+                                    </th>
+                                    <th class="sorttable_alpha" style="min-width: 200px;">
+                                        <div class="header-wrapper">
+                                            <div class="cell-content">Команда</div>
+                                        </div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="cell-content">
+                                            filename_1filename_1filename_1filename_1filename_1filename_1filename_1filename_1filename_1filename_1filename_1filename_1filename_1.stp
+                                        </div>
+                                    </td>
+                                    <td>30.1</td>
+                                    <td>10.05.1993, 18:01</td>
+                                    <td>
+                                        <button class="delete-button">Удалить</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
+
                 <div id="tasks" class="content-section">
                     <h2>Задачи</h2>
                     <h3>Задачи пользователя, обрабатываемые на сервере</h3>
-                    <div class="tasks-grid">
-                        <!-- Пример задачи -->
-                        <div class="task-card">
-                            <div class="task-header">
-                                <span class="task-status processing">В обработке</span>
-                                <span class="task-time">10:45, 25.10.2023</span>
-                            </div>
-                            <div class="task-content">
-                                <h4>Обработка файла: <span class="task-filename">project_final.stp</span></h4>
-                                <div class="task-progress">
-                                    <div class="progress-bar" style="width: 65%;"></div>
+                    <div class="tasks-container">
+                        <div class="tasks-grid">
+                            <!-- Пример задачи -->
+                            <div class="task-card">
+                                <div class="task-header">
+                                    <span class="task-status processing">В обработке</span>
+                                    <span class="task-time">10:45, 25.10.2023</span>
                                 </div>
-                                <p class="task-details">Файл находится в процессе обработки. Осталось примерно 2 минуты.</p>
+                                <div class="task-content">
+                                    <h4>Обработка файла: <span class="task-filename">project_final.stp</span></h4>
+                                    <div class="task-progress">
+                                        <div class="progress-bar" style="width: 65%;"></div>
+                                    </div>
+                                    <p class="task-details">Файл находится в процессе обработки. Осталось примерно 2 минуты.</p>
+                                </div>
+                                <div class="task-actions">
+                                    <button class="task-cancel-button">Отменить</button>
+                                </div>
                             </div>
-                            <div class="task-actions">
-                                <button class="task-cancel-button">Отменить</button>
-                            </div>
-                        </div>
 
-                        <!-- Пример завершенной задачи -->
-                        <div class="task-card completed">
-                            <div class="task-header">
-                                <span class="task-status completed">Завершено</span>
-                                <span class="task-time">09:30, 24.10.2023</span>
-                            </div>
-                            <div class="task-content">
-                                <h4>Обработка файла: <span class="task-filename">design_v2.stp</span></h4>
-                                <div class="task-progress">
-                                    <div class="progress-bar" style="width: 100%;"></div>
+                            <!-- Пример завершенной задачи -->
+                            <div class="task-card completed">
+                                <div class="task-header">
+                                    <span class="task-status completed">Завершено</span>
+                                    <span class="task-time">09:30, 24.10.2023</span>
                                 </div>
-                                <p class="task-details">Файл успешно обработан. <a href="#" class="download-link">Скачать результат</a></p>
+                                <div class="task-content">
+                                    <h4>Обработка файла: <span class="task-filename">design_v2.stp</span></h4>
+                                    <div class="task-progress">
+                                        <div class="progress-bar" style="width: 100%;"></div>
+                                    </div>
+                                    <p class="task-details">Файл успешно обработан. <a href="#" class="download-link">Скачать результат</a></p>
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- Пример отмененной задачи -->
-                        <div class="task-card cancelled">
-                            <div class="task-header">
-                                <span class="task-status cancelled">Отменено</span>
-                                <span class="task-time">15:20, 23.10.2023</span>
-                            </div>
-                            <div class="task-content">
-                                <h4>Обработка файла: <span class="task-filename">draft_project.stp</span></h4>
-                                <div class="task-progress">
-                                    <div class="progress-bar" style="width: 30%;"></div>
+                            <!-- Пример отмененной задачи -->
+                            <div class="task-card cancelled">
+                                <div class="task-header">
+                                    <span class="task-status cancelled">Отменено</span>
+                                    <span class="task-time">15:20, 23.10.2023</span>
                                 </div>
-                                <p class="task-details">Задача была отменена пользователем.</p>
+                                <div class="task-content">
+                                    <h4>Обработка файла: <span class="task-filename">draft_project.stp</span></h4>
+                                    <div class="task-progress">
+                                        <div class="progress-bar" style="width: 30%;"></div>
+                                    </div>
+                                    <p class="task-details">Задача была отменена пользователем.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
     </div>
 </body>
 </html>

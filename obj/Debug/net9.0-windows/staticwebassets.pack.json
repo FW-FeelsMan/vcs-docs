@@ -73,6 +73,10 @@
       "PackagePath": "staticwebassets\\images\\default_avatar.png"
     },
     {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\images\\edit_icon.png",
+      "PackagePath": "staticwebassets\\images\\edit_icon.png"
+    },
+    {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\images\\extra.png",
       "PackagePath": "staticwebassets\\images\\extra.png"
     },
@@ -129,8 +133,20 @@
       "PackagePath": "staticwebassets\\js\\loginScript.js"
     },
     {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\profile.js",
+      "PackagePath": "staticwebassets\\js\\profile.js"
+    },
+    {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\sidebar.js",
       "PackagePath": "staticwebassets\\js\\sidebar.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\sorttable.js",
+      "PackagePath": "staticwebassets\\js\\sorttable.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\sorttableObserver.js",
+      "PackagePath": "staticwebassets\\js\\sorttableObserver.js"
     },
     {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\userStatus.js",

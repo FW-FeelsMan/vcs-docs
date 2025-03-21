@@ -20,9 +20,7 @@ namespace VCS_DOCs
 			}
 		}
 	}
-
-
-	// Модель для таблицы users
+	
 	public class User
 	{
 		public int Id { get; set; }
@@ -35,7 +33,10 @@ namespace VCS_DOCs
 		public DateTime CreatedAt { get; set; }
 		public DateTime UpdatedAt { get; set; }
 		public int Access { get; set; }
-		public string? JwtId { get; set; } 
+		public string? JwtId { get; set; }
+		public string FullName { get; set; } = "Не установлено";
+		public string DateOfBirth { get; set; } = "Не установлено";
+		public string Organization { get; set; } = "Не установлено";
+		public string Department { get; set; } = "Не установлено";
 	}
-
 }
