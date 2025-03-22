@@ -1,8 +1,11 @@
-﻿@page
+﻿@page 
 @model profile_pageModel
 @{
     Layout = null;
 }
+<form method="post" id="anti-forgery-form" style="display: none;">
+    @Html.AntiForgeryToken()
+</form>
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -13,6 +16,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <div style="display:none;">
+        @Html.AntiForgeryToken()
+    </div>
     <div class="profile_background">
         <div class="button-container">
             <h2>VCS-DOSc Account</h2>
@@ -25,8 +31,7 @@
                 <div class="avatar">
                     <img src="~/images/default_avatar.png" alt="Icon">
                 </div>
-                <p>2825</p>
-                <p>2825@email.com</p>
+                <p data-field="FullName">@Model.CurrentUser?.Username</p>
                 <ul class="sidebar-menu">
                     <li class="active" data-target="personal-data">Персональные данные</li>
                     <li data-target="storage">Личное хранилище</li>
@@ -41,23 +46,23 @@
                     <div class="info-grid">
                         <div class="info-card">
                             <h4>ФИО <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>
-                            <p>@Model.CurrentUser?.FullName</p>
+                            <p data-field="FullName">@Model.CurrentUser?.FullName</p>
                         </div>
                         <div class="info-card">
                             <h4>Дата рождения <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>
-                            <p>@Model.CurrentUser?.DateOfBirth</p>
+                            <p data-field="DateOfBirth">@Model.CurrentUser?.DateOfBirth</p>
                         </div>
                         <div class="info-card">
                             <h4>Организация <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>
-                            <p>@Model.CurrentUser?.Organization</p>
+                            <p data-field="Organization">@Model.CurrentUser?.Organization</p>
                         </div>
                         <div class="info-card">
                             <h4>Подразделение <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>
-                            <p>@Model.CurrentUser?.Department</p>
+                            <p data-field="Department">@Model.CurrentUser?.Department</p>
                         </div>
                         <div class="info-card">
                             <h4>Должность <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>
-                            <p>@Model.CurrentUser?.Speciality</p>
+                            <p data-field="Speciality">@Model.CurrentUser?.Speciality</p>
                         </div>
                         <div class="info-card">
                             <h4>Удаление аккаунта</h4>
@@ -118,7 +123,6 @@
                     <h3>Задачи пользователя, обрабатываемые на сервере</h3>
                     <div class="tasks-container">
                         <div class="tasks-grid">
-                            <!-- Пример задачи -->
                             <div class="task-card">
                                 <div class="task-header">
                                     <span class="task-status processing">В обработке</span>
@@ -136,7 +140,6 @@
                                 </div>
                             </div>
 
-                            <!-- Пример завершенной задачи -->
                             <div class="task-card completed">
                                 <div class="task-header">
                                     <span class="task-status completed">Завершено</span>
@@ -151,7 +154,6 @@
                                 </div>
                             </div>
 
-                            <!-- Пример отмененной задачи -->
                             <div class="task-card cancelled">
                                 <div class="task-header">
                                     <span class="task-status cancelled">Отменено</span>
@@ -169,6 +171,7 @@
                     </div>
                 </div>
             </div>
+        </div>
     </div>
 </body>
 </html>

@@ -5,10 +5,19 @@ using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Data;
 using VCS_DOCs.Services;
 using VCS_DOCs;
+using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<UserServiceManager>();
-builder.Services.AddRazorPages();
+
+builder.Services.AddRazorPages(options => {
+	options.Conventions.ConfigureFilter(new AutoValidateAntiforgeryTokenAttribute());
+})
+.AddJsonOptions(jsonOptions => {
+	jsonOptions.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+	jsonOptions.JsonSerializerOptions.PropertyNamingPolicy = null;
+});
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 	options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))

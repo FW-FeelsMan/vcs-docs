@@ -12,6 +12,7 @@ namespace VCS_DOCs.Pages
 	{
 		private readonly ApplicationDbContext _context;
 		private readonly ILogger<IndexModel> _logger;
+		public User CurrentUser { get; set; }
 
 		public IndexModel(ILogger<IndexModel> logger, ApplicationDbContext context)
 		{
@@ -19,7 +20,7 @@ namespace VCS_DOCs.Pages
 			_logger = logger;
 		}
 
-		public async Task<IActionResult> OnGet()
+		public async Task<IActionResult> OnGetAsync()
 		{
 			if (!User.Identity.IsAuthenticated)
 			{
@@ -30,11 +31,12 @@ namespace VCS_DOCs.Pages
 			await UpdateUserStatus(userId, true);
 
 			ViewData["Username"] = User.Identity.Name;
+			CurrentUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == User.Identity.Name);
 			return Page();
 		}
 
-		[HttpPost]
-		[ValidateAntiForgeryToken]
+		//[HttpPost]
+		//[ValidateAntiForgeryToken]
 		public async Task<IActionResult> OnPostLogoutAsync()
 		{
 			var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);

@@ -1,21 +1,29 @@
-﻿<!DOCTYPE html>
+﻿@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    var tokens = Antiforgery.GetAndStoreTokens(Context);
+    var csrfToken = tokens.RequestToken;
+}
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - VCS-DOCs</title>
-    <link rel="stylesheet" href="~/css/main_css/mainStyle.css">
-    <link id="projectsStyle" rel="stylesheet" href="~/css/sub_css/project_page.css" disabled>
-    <link id="profileStyle" rel="stylesheet" href="~/css/sub_css/profile_page.css" disabled>
-    <link id="infographicsStyle" rel="stylesheet" href="~/css/sub_css/infographics_page.css" disabled>
-    <link id="contactStyle" rel="stylesheet" href="~/css/sub_css/contact_page.css" disabled>
-    <link id="extraStyle" rel="stylesheet" href="~/css/sub_css/extra_page.css" disabled>
+    <link rel="stylesheet" href="~/css/main_css/mainStyle.css" />
+    <link id="projectsStyle" rel="stylesheet" href="~/css/sub_css/project_page.css" disabled />
+    <link id="profileStyle" rel="stylesheet" href="~/css/sub_css/profile_page.css" disabled />
+    <link id="infographicsStyle" rel="stylesheet" href="~/css/sub_css/infographics_page.css" disabled />
+    <link id="contactStyle" rel="stylesheet" href="~/css/sub_css/contact_page.css" disabled />
+    <link id="extraStyle" rel="stylesheet" href="~/css/sub_css/extra_page.css" disabled />
     @await RenderSectionAsync("Styles", required: false)
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <meta name="csrf-token" content="@csrfToken" />
 </head>
 <body>
+    <div style="display:none;">
+        @Html.AntiForgeryToken()
+    </div>
     @RenderBody()
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
     @if (User.Identity?.IsAuthenticated == true)
     {
@@ -25,6 +33,7 @@
     <script src="~/js/contextMenu.js"></script>
     <script src="~/js/extraTabbar.js"></script>
     <script src="~/js/profile.js"></script>
+    <script src="~/js/editInfoCard.js"></script>
     <script src="~/js/sorttable.js"></script>
     <script src="~/js/sorttableObserver.js"></script>
     @await RenderSectionAsync("Scripts", required: false)

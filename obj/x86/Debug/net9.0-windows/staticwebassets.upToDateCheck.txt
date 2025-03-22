@@ -66,6 +66,7 @@ D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.css.map
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.min.css.map
 D:\Unity\VCS-DOCs\wwwroot\lib\jquery\dist\jquery.slim.js
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.css
+D:\Unity\VCS-DOCs\wwwroot\js\editInfoCard.js
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.min.css.map
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.css.map
 D:\Unity\VCS-DOCs\wwwroot\lib\jquery-validation\dist\additional-methods.min.js
@@ -108,7 +109,9 @@ wwwroot\images\logoVCS.png
 wwwroot\images\personalIcon.png
 wwwroot\images\projectsIcon.png
 wwwroot\images\ptkLogoTitel.png
+wwwroot\images\save_icon.png
 wwwroot\js\contextMenu.js
+wwwroot\js\editInfoCard.js
 wwwroot\js\extraTabbar.js
 wwwroot\js\horizontalResize.js
 wwwroot\js\loginScript.js

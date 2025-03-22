@@ -503,3 +503,21 @@ th {
     .content-scrollable::-webkit-scrollbar-track {
         background: rgba(0, 0, 0, 0.1);
     }
+.edit-input {
+    width: 100%;
+    padding: 5px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.save-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+    .save-button img {
+        width: 16px;
+        height: 16px;
+    }
