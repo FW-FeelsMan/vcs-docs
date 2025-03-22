@@ -73,8 +73,8 @@ builder.Services.AddControllersWithViews()
 
 builder.Services.Configure<IpRateLimitOptions>(options =>
 {
-	options.GeneralRules = new List<RateLimitRule>
-	{
+	options.GeneralRules =
+	[
 		new RateLimitRule
 		{
 			Endpoint = "*",
@@ -87,7 +87,7 @@ builder.Services.Configure<IpRateLimitOptions>(options =>
 			Limit = 0,
 			Period = "1s"
 		}
-	};
+	];
 });
 
 var app = builder.Build();

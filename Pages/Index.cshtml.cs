@@ -12,7 +12,7 @@ namespace VCS_DOCs.Pages
 	{
 		private readonly ApplicationDbContext _context;
 		private readonly ILogger<IndexModel> _logger;
-		public User CurrentUser { get; set; }
+		public User? CurrentUser { get; set; }
 
 		public IndexModel(ILogger<IndexModel> logger, ApplicationDbContext context)
 		{
@@ -22,31 +22,43 @@ namespace VCS_DOCs.Pages
 
 		public async Task<IActionResult> OnGetAsync()
 		{
-			if (!User.Identity.IsAuthenticated)
+			if (User.Identity == null || !User.Identity.IsAuthenticated)
 			{
 				return RedirectToPage("/Login");
 			}
 
 			var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+			if (string.IsNullOrEmpty(userId))
+			{
+				return RedirectToPage("/Login");
+			}
+
 			await UpdateUserStatus(userId, true);
 
-			ViewData["Username"] = User.Identity.Name;
+			ViewData["Username"] = User.Identity.Name ?? "Неизвестный пользователь";
 			CurrentUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == User.Identity.Name);
+
+			if (CurrentUser == null)
+			{
+				return RedirectToPage("/Error", new { message = "Пользователь не найден" });
+			}
+
 			return Page();
 		}
 
-		//[HttpPost]
-		//[ValidateAntiForgeryToken]
 		public async Task<IActionResult> OnPostLogoutAsync()
 		{
 			var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-			await UpdateUserStatus(userId, false);
+			if (!string.IsNullOrEmpty(userId))
+			{
+				await UpdateUserStatus(userId, false);
+			}
 
 			await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 			return RedirectToPage("/Login");
 		}
 
-		private async Task UpdateUserStatus(string userId, bool isOnline)
+		private async Task UpdateUserStatus(string? userId, bool isOnline)
 		{
 			if (!string.IsNullOrEmpty(userId) && int.TryParse(userId, out int id))
 			{

@@ -20,28 +20,28 @@ namespace VCS_DOCs.Pages
 	{
 		private readonly ApplicationDbContext _context;
 		private readonly ILogger<LoginModel> _logger;
-		private readonly ILogger<UserBackgroundService> _loggerUserBackgroundService; // Логирование для UserBackgroundService
+		private readonly ILogger<UserBackgroundService> _loggerUserBackgroundService;
 		private readonly IServiceProvider _serviceProvider;
 		private readonly IHubContext<UserStatusHub> _hubContext;
 		private readonly IUserService _userService;
-		private readonly IWebHostEnvironment _webHostEnvironment; // Добавляем IWebHostEnvironment
+		private readonly IWebHostEnvironment _webHostEnvironment;
 
 		public LoginModel(
 			ApplicationDbContext context,
 			ILogger<LoginModel> logger,
-			ILogger<UserBackgroundService> userBackgroundServiceLogger, // Для логирования в UserBackgroundService
+			ILogger<UserBackgroundService> userBackgroundServiceLogger,
 			IServiceProvider serviceProvider,
 			IHubContext<UserStatusHub> hubContext,
 			IUserService userService,
-			IWebHostEnvironment webHostEnvironment) // Передаем IWebHostEnvironment
+			IWebHostEnvironment webHostEnvironment)
 		{
 			_context = context;
 			_logger = logger;
-			_loggerUserBackgroundService = userBackgroundServiceLogger; // Для логирования
+			_loggerUserBackgroundService = userBackgroundServiceLogger;
 			_serviceProvider = serviceProvider;
 			_hubContext = hubContext;
 			_userService = userService;
-			_webHostEnvironment = webHostEnvironment; // Инициализируем
+			_webHostEnvironment = webHostEnvironment;
 			LoginErrors = new List<string>();
 			RegistrationErrors = new List<string>();
 			Specialities = new List<string>();
@@ -115,10 +115,10 @@ namespace VCS_DOCs.Pages
 			await _context.SaveChangesAsync();
 
 			var claims = new List<Claim>
-	{
-		new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-		new Claim(ClaimTypes.Name, user.Username)
-	};
+			{
+				new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+				new Claim(ClaimTypes.Name, user.Username)
+			};
 
 			var authProperties = new AuthenticationProperties
 			{
@@ -133,11 +133,9 @@ namespace VCS_DOCs.Pages
 
 			FailedLogins.TryRemove(ip, out _);
 
-			// Получаем или создаем сервис для пользователя
 			var userServiceManager = _serviceProvider.GetRequiredService<UserServiceManager>();
 			var userBackgroundService = userServiceManager.GetOrCreateService(user.Id.ToString());
 
-			// Логируем успешный вход
 			_logger.LogInformation($"Пользователь {user.Username} вошел в систему.");
 
 			return new JsonResult(new { success = true });
@@ -204,6 +202,13 @@ namespace VCS_DOCs.Pages
 					Directory.CreateDirectory(userDataPath);
 				}
 
+				string historyFilePath = Path.Combine(userDataPath, $"history_{Username}.ini");
+
+				if (!System.IO.File.Exists(historyFilePath))
+				{
+					System.IO.File.WriteAllText(historyFilePath, "");
+				}
+
 				IsRegistrationSuccessful = true;
 				return new JsonResult(new { success = true });
 			}
@@ -234,5 +239,64 @@ namespace VCS_DOCs.Pages
 			var configPath = Path.Combine(Directory.GetCurrentDirectory(), "Utilities", "Config.ini");
 			Specialities = ConfigReader.GetSpecialities(configPath);
 		}
+
+		public void RecordDocumentHistory(string username, string documentName, string documentVersion)
+		{
+			string userDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData", $"userData_{username}");
+			string historyFilePath = Path.Combine(userDataPath, $"history_{username}.ini");
+
+			if (System.IO.File.Exists(historyFilePath))
+			{
+				var lines = System.IO.File.ReadAllLines(historyFilePath).ToList();
+
+				var existingRecord = lines.FirstOrDefault(line => line.StartsWith(documentName));
+				if (existingRecord != null)
+				{
+					lines[lines.IndexOf(existingRecord)] = $"{documentName}={documentVersion}";
+				}
+				else
+				{
+					lines.Add($"{documentName}={documentVersion}");
+				}
+
+				System.IO.File.WriteAllLines(historyFilePath, lines);
+			}
+			else
+			{
+				System.IO.File.WriteAllText(historyFilePath, $"{documentName}={documentVersion}");
+			}
+		}
+
+		/*public string GetLastDownloadedVersion(string username, string documentName)
+		{
+			string userDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData", $"userData_{username}");
+			string historyFilePath = Path.Combine(userDataPath, $"history_{username}.ini");
+
+			if (System.IO.File.Exists(historyFilePath))
+			{
+				var lines = System.IO.File.ReadAllLines(historyFilePath);
+				var existingRecord = lines.FirstOrDefault(line => line.StartsWith(documentName));
+				if (existingRecord != null)
+				{
+					return existingRecord.Split('=')[1];
+				}
+			}
+
+			return null;
+		}
+
+		public IActionResult OnDownloadDocument(string username, string documentName, string currentVersion)
+		{
+			string lastDownloadedVersion = GetLastDownloadedVersion(username, documentName);
+
+			if (lastDownloadedVersion != null)
+			{
+				TempData["Message"] = $"Вы в последний раз скачивали {documentName} версию {lastDownloadedVersion}. Текущая версия {currentVersion}. Вы хотите скачать последнюю версию или сохранить предыдущую?";
+			}
+
+			string filePath = Path.Combine(_webHostEnvironment.ContentRootPath, "Documents", documentName, $"{documentName}_v{currentVersion}.pdf");
+
+			return File(filePath, "application/pdf", $"{documentName}_v{currentVersion}.pdf");
+		}*/
 	}
 }

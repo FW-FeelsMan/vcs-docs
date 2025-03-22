@@ -10,7 +10,7 @@ namespace VCS_DOCs
 		{
 		}
 
-		public DbSet<User> Users { get; set; }
+		public new DbSet<User> Users { get; set; }
 
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
@@ -20,12 +20,12 @@ namespace VCS_DOCs
 			}
 		}
 	}
-	
+
 	public class User
 	{
 		public int Id { get; set; }
-		public string Username { get; set; }
-		public string Password { get; set; }
+		public string Username { get; set; } = string.Empty;
+		public string Password { get; set; } = string.Empty; 
 		public string? Speciality { get; set; }
 		public int StatusOnline { get; set; }
 		public string? HardwareId { get; set; }
