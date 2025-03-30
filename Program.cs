@@ -101,6 +101,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapHub<UserStatusHub>("/Data/userStatusHub");
+app.MapHub<VCS_DOCs.Hubs.UserStorageHub>("/userStorageHub");
+
 app.MapRazorPages();
 
 var userServiceManager = app.Services.GetRequiredService<UserServiceManager>();

@@ -1,23 +1,30 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using VCS_DOCs.Data;
+using VCS_DOCs.Services;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 
 namespace VCS_DOCs.Pages.Content
 {
 	public class profile_pageModel : PageModel
 	{
 		private readonly ApplicationDbContext _context;
-		private static readonly Regex ValidInputRegex =	new Regex(@"^[a-zA-Zа-яА-Я0-9@'""\-\s]{1,30}$", RegexOptions.Compiled);
+		private readonly IWebHostEnvironment _webHostEnvironment;
+		private readonly UserServiceManager _userServiceManager;
+		private static readonly Regex ValidInputRegex = new Regex(@"^[a-zA-Zа-яА-Я0-9@'""\-\s]{1,30}$", RegexOptions.Compiled);
 
 		public User CurrentUser { get; set; }
 
-		public profile_pageModel(ApplicationDbContext context)
+		public profile_pageModel(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment, UserServiceManager userServiceManager)
 		{
 			_context = context;
+			_webHostEnvironment = webHostEnvironment;
+			_userServiceManager = userServiceManager;
 		}
 
 		public async Task OnGetAsync()
@@ -26,6 +33,11 @@ namespace VCS_DOCs.Pages.Content
 			if (!string.IsNullOrEmpty(username))
 			{
 				CurrentUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+				string appDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData");
+				string userFolderPath = Path.Combine(appDataPath, $"userData_{username}");
+				
+				// Запускаем микросервис мониторинга хранилища
+				_userServiceManager.GetOrCreateStorageService(username, userFolderPath);
 			}
 		}
 

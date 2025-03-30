@@ -1,4 +1,5 @@
-﻿@page 
+﻿@page
+
 @model profile_pageModel
 @{
     Layout = null;
@@ -73,7 +74,11 @@
 
                 <div id="storage" class="content-section">
                     <h2>Личное хранилище</h2>
-                    <h3>Содержимое личного хранилища пользователя</h3>
+                    <div class="storage-header" style="display: flex; align-items: center; justify-content: space-between;">
+                        <h3>Содержимое личного хранилища пользователя</h3>
+                        <button id="uploadFileButton" class="css-button-sliding-to-left--red">Загрузить файл</button>
+                    </div>
+                    <input type="file" id="hiddenFileInput" style="display: none;" />
                     <div class="content-scrollable">
                         <table class="sortable">
                             <thead>
@@ -101,18 +106,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>
-                                        <div class="cell-content">
-                                            filename_1filename_1filename_1filename_1filename_1filename_1filename_1filename_1filename_1filename_1filename_1filename_1filename_1.stp
-                                        </div>
-                                    </td>
-                                    <td>30.1</td>
-                                    <td>10.05.1993, 18:01</td>
-                                    <td>
-                                        <button class="delete-button">Удалить</button>
-                                    </td>
-                                </tr>
+                                <!-- Динамически добавляемые строки -->
                             </tbody>
                         </table>
                     </div>

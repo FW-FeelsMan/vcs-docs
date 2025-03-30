@@ -244,47 +244,6 @@ hr.solid {
         flex-direction: column;
         height: 100%;
     }
-
-table {
-    table-layout: fixed;
-}
-
-th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-    min-width: 50px;
-    max-width: 100px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    position: relative;
-}
-
-th {
-    cursor: pointer;
-    background-color: #f4f4f4;
-    user-select: none;
-}
-
-.sorttable_sorticon {
-    display: inline-block !important;
-    margin-left: 8px;
-    vertical-align: middle;
-    width: 0;
-    height: 0;
-    border-left: 5px solid transparent;
-    border-right: 5px solid transparent;
-}
-
-.sorttable_sortup {
-    border-bottom: 5px solid #666;
-}
-
-.sorttable_sortdown {
-    border-top: 5px solid #666;
-}
-
 .header-wrapper {
     display: flex;
     align-items: center;
@@ -292,14 +251,6 @@ th {
     width: 100%;
 }
 
-.cell-content {
-    display: inline-block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: calc(100% - 20px);
-    vertical-align: middle;
-}
 
 .delete-button {
     min-width: 100px;
@@ -339,9 +290,6 @@ th {
         background: var(--primary-color);
     }
 
-.resizer {
-    display: none;
-}
 
 .tasks-grid {
     display: grid;
@@ -484,25 +432,6 @@ th {
     margin-top: 15px;
 }
 
-.content-scrollable {
-    flex-grow: 1;
-    overflow-y: auto;
-    max-height: 100%;
-    padding-right: 10px;
-}
-
-    .content-scrollable::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .content-scrollable::-webkit-scrollbar-thumb {
-        background-color: rgba(0, 0, 0, 0.3);
-        border-radius: 3px;
-    }
-
-    .content-scrollable::-webkit-scrollbar-track {
-        background: rgba(0, 0, 0, 0.1);
-    }
 .edit-input {
     width: 100%;
     padding: 5px;
@@ -520,4 +449,52 @@ th {
     .save-button img {
         width: 16px;
         height: 16px;
+    }
+
+/* Убираем фиксированную верстку таблицы и задаем автоширину */
+table {
+    table-layout: auto;
+    width: 100%;
+}
+.cell-content {
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: calc(100% - 20px);
+    vertical-align: middle;
+}
+
+/* Стили для ячеек таблицы */
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+    min-width: 50px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    position: relative;
+}
+
+/* Стили для области со скроллом: скрываем горизонтальный скролл */
+.content-scrollable {
+    flex-grow: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 100%;
+    padding-right: 10px;
+}
+
+    .content-scrollable::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .content-scrollable::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.3);
+        border-radius: 3px;
+    }
+
+    .content-scrollable::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.1);
     }

@@ -157,8 +157,16 @@
       "PackagePath": "staticwebassets\\js\\sorttableObserver.js"
     },
     {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\uploadFileObserver.js",
+      "PackagePath": "staticwebassets\\js\\uploadFileObserver.js"
+    },
+    {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\userStatus.js",
       "PackagePath": "staticwebassets\\js\\userStatus.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\userStorageObserver.js",
+      "PackagePath": "staticwebassets\\js\\userStorageObserver.js"
     },
     {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\LICENSE",

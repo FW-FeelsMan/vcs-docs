@@ -1,6 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace VCS_DOCs.Services
 {
@@ -8,6 +10,7 @@ namespace VCS_DOCs.Services
 	{
 		private readonly IServiceProvider _serviceProvider;
 		private readonly ConcurrentDictionary<string, UserBackgroundService> _userServices = new();
+		private readonly ConcurrentDictionary<string, UserStorageMonitoringService> _userStorageServices = new();
 
 		public UserServiceManager(IServiceProvider serviceProvider)
 		{
@@ -18,17 +21,32 @@ namespace VCS_DOCs.Services
 		{
 			if (_userServices.ContainsKey(userId))
 			{
-				// Если сервис для пользователя уже существует, выводим сообщение и возвращаем текущий сервис
 				Console.WriteLine($"[UserServiceManager] Микросервис для пользователя {userId} уже запущен и продолжает работу.");
 				return _userServices[userId];
 			}
 
-			// Создаем новый сервис, если его нет
 			var logger = _serviceProvider.GetRequiredService<ILogger<UserBackgroundService>>();
 			var service = new UserBackgroundService(userId, logger);
 			_userServices[userId] = service;
 			Task.Run(() => service.StartAsync(CancellationToken.None));
 			Console.WriteLine($"[UserServiceManager] Запущен сервис для пользователя {userId}");
+			return service;
+		}
+
+		public UserStorageMonitoringService GetOrCreateStorageService(string userId, string userFolderPath)
+		{
+			if (_userStorageServices.ContainsKey(userId))
+			{
+				Console.WriteLine($"[UserServiceManager] Сервис мониторинга хранилища для пользователя {userId} уже запущен.");
+				return _userStorageServices[userId];
+			}
+
+			var logger = _serviceProvider.GetRequiredService<ILogger<UserStorageMonitoringService>>();
+			var hubContext = _serviceProvider.GetRequiredService<Microsoft.AspNetCore.SignalR.IHubContext<Hubs.UserStorageHub>>();
+			var service = new UserStorageMonitoringService(userId, userFolderPath, logger, hubContext);
+			_userStorageServices[userId] = service;
+			Task.Run(() => service.StartAsync(CancellationToken.None));
+			Console.WriteLine($"[UserServiceManager] Запущен сервис мониторинга хранилища для пользователя {userId}");
 			return service;
 		}
 	}
