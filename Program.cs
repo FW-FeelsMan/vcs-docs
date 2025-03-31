@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<UserServiceManager>();
+builder.Services.AddTransient<UserFileUploadService>();
 
 builder.Services.AddRazorPages(options => {
 	options.Conventions.ConfigureFilter(new AutoValidateAntiforgeryTokenAttribute());

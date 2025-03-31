@@ -1,11 +1,13 @@
 ﻿@page
-
 @model profile_pageModel
 @{
     Layout = null;
 }
 <form method="post" id="anti-forgery-form" style="display: none;">
     @Html.AntiForgeryToken()
+</form>
+<form method="post" enctype="multipart/form-data" asp-page-handler="UploadFile" id="uploadForm">
+    <input type="file" name="UploadFile" id="hiddenFileInput" style="display: none;" />
 </form>
 <!DOCTYPE html>
 <html lang="ru">
@@ -26,7 +28,6 @@
             <button class="css-button-sliding-to-left--red">Выйти</button>
         </div>
         <hr class="solid">
-
         <div class="profile-container">
             <div class="profile-sidebar">
                 <div class="avatar">
@@ -39,7 +40,6 @@
                     <li data-target="tasks">Задачи</li>
                 </ul>
             </div>
-
             <div class="profile-content">
                 <div id="personal-data" class="content-section active">
                     <h2>Персональные данные</h2>
@@ -71,14 +71,15 @@
                         </div>
                     </div>
                 </div>
-
                 <div id="storage" class="content-section">
                     <h2>Личное хранилище</h2>
                     <div class="storage-header" style="display: flex; align-items: center; justify-content: space-between;">
                         <h3>Содержимое личного хранилища пользователя</h3>
-                        <button id="uploadFileButton" class="css-button-sliding-to-left--red">Загрузить файл</button>
+                        <div style="display: flex; align-items: center;">
+                            <span id="storageCounter" style="margin-right: 10px;">0,0 Гб/10 Гб</span>
+                            <button id="uploadFileButton" type="button" class="css-button-sliding-to-left--red">Загрузить файл</button>
+                        </div>
                     </div>
-                    <input type="file" id="hiddenFileInput" style="display: none;" />
                     <div class="content-scrollable">
                         <table class="sortable">
                             <thead>
@@ -106,12 +107,10 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- Динамически добавляемые строки -->
                             </tbody>
                         </table>
                     </div>
                 </div>
-
                 <div id="tasks" class="content-section">
                     <h2>Задачи</h2>
                     <h3>Задачи пользователя, обрабатываемые на сервере</h3>
@@ -133,7 +132,6 @@
                                     <button class="task-cancel-button">Отменить</button>
                                 </div>
                             </div>
-
                             <div class="task-card completed">
                                 <div class="task-header">
                                     <span class="task-status completed">Завершено</span>
@@ -147,7 +145,6 @@
                                     <p class="task-details">Файл успешно обработан. <a href="#" class="download-link">Скачать результат</a></p>
                                 </div>
                             </div>
-
                             <div class="task-card cancelled">
                                 <div class="task-header">
                                     <span class="task-status cancelled">Отменено</span>

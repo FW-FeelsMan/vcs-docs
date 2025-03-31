@@ -498,3 +498,10 @@ th, td {
     .content-scrollable::-webkit-scrollbar-track {
         background: rgba(0, 0, 0, 0.1);
     }
+.css-button-sliding-to-left--red:disabled {
+    background-color: #ff0000;
+    border-color: #ff0000;
+    color: #fff;
+    cursor: not-allowed;
+    opacity: 0.5;
+}

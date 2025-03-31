@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 using VCS_DOCs.Data;
 using VCS_DOCs.Services;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 
 namespace VCS_DOCs.Pages.Content
 {
@@ -16,17 +17,18 @@ namespace VCS_DOCs.Pages.Content
 		private readonly ApplicationDbContext _context;
 		private readonly IWebHostEnvironment _webHostEnvironment;
 		private readonly UserServiceManager _userServiceManager;
+		private readonly UserFileUploadService _uploadService;
 		private static readonly Regex ValidInputRegex = new Regex(@"^[a-zA-Zа-яА-Я0-9@'""\-\s]{1,30}$", RegexOptions.Compiled);
-
 		public User CurrentUser { get; set; }
-
-		public profile_pageModel(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment, UserServiceManager userServiceManager)
+		[BindProperty]
+		public IFormFile UploadFile { get; set; }
+		public profile_pageModel(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment, UserServiceManager userServiceManager, UserFileUploadService uploadService)
 		{
 			_context = context;
 			_webHostEnvironment = webHostEnvironment;
 			_userServiceManager = userServiceManager;
+			_uploadService = uploadService;
 		}
-
 		public async Task OnGetAsync()
 		{
 			string username = User.Identity?.Name;
@@ -35,18 +37,26 @@ namespace VCS_DOCs.Pages.Content
 				CurrentUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 				string appDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData");
 				string userFolderPath = Path.Combine(appDataPath, $"userData_{username}");
-				
-				// Запускаем микросервис мониторинга хранилища
 				_userServiceManager.GetOrCreateStorageService(username, userFolderPath);
 			}
 		}
-
+		public async Task<IActionResult> OnPostUploadFileAsync()
+		{
+			string username = User.Identity?.Name;
+			if (string.IsNullOrEmpty(username) || UploadFile == null)
+			{
+				return new JsonResult(new { success = false, error = "Файл не выбран" });
+			}
+			string appDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData");
+			string userFolderPath = Path.Combine(appDataPath, $"userData_{username}");
+			bool result = await _uploadService.UploadFileAsync(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, userFolderPath, UploadFile);
+			return new JsonResult(new { success = result });
+		}
 		public class UpdateUserRequest
 		{
 			public string Field { get; set; }
 			public string Value { get; set; }
 		}
-
 		[ValidateAntiForgeryToken]
 		public async Task<IActionResult> OnPostUpdateUserDataAsync([FromBody] UpdateUserRequest request)
 		{
@@ -54,12 +64,10 @@ namespace VCS_DOCs.Pages.Content
 			{
 				return new JsonResult(new { success = false, error = "Пользователь не аутентифицирован" });
 			}
-
 			if (!ModelState.IsValid)
 			{
 				return new JsonResult(new { success = false, error = "Некорректная модель данных" });
 			}
-
 			if (string.IsNullOrWhiteSpace(request.Value))
 			{
 				return new JsonResult(new { success = false, error = "Поле не может быть пустым" });
@@ -72,13 +80,11 @@ namespace VCS_DOCs.Pages.Content
 			{
 				return new JsonResult(new { success = false, error = "Значение содержит недопустимые символы" });
 			}
-
 			var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == User.Identity.Name);
 			if (user == null)
 			{
 				return new JsonResult(new { success = false, error = "Пользователь не найден" });
 			}
-
 			switch (request.Field)
 			{
 				case "FullName":
@@ -99,7 +105,6 @@ namespace VCS_DOCs.Pages.Content
 				default:
 					return new JsonResult(new { success = false, error = "Недопустимое поле для обновления" });
 			}
-
 			try
 			{
 				user.UpdatedAt = DateTime.Now;

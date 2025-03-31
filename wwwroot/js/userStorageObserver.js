@@ -18,7 +18,9 @@
         const tableBody = document.querySelector("table.sortable tbody");
         if (!tableBody) return;
         tableBody.innerHTML = "";
+        let totalMb = 0;
         files.forEach(function (file) {
+            totalMb += parseFloat(file.sizeMb);
             let row = document.createElement("tr");
 
             let nameTd = document.createElement("td");
@@ -39,15 +41,27 @@
 
             tableBody.appendChild(row);
         });
+        let totalGb = (totalMb / 1024).toFixed(1);
+        const counter = document.getElementById("storageCounter");
+        if (counter) {
+            counter.textContent = `${totalGb} Гб/10 Гб`;
+        }
+        const uploadButton = document.getElementById("uploadFileButton");
+        if (uploadButton) {
+            if (parseFloat(totalGb) >= 10) {
+                uploadButton.disabled = true;
+            } else {
+                uploadButton.disabled = false;
+            }
+        }
     }
 
-    // Используем MutationObserver, чтобы отследить появление таблицы
     const observer = new MutationObserver((mutations, obs) => {
         const tableBody = document.querySelector("table.sortable tbody");
         if (tableBody) {
             console.log("Найдена таблица, инициирую обновление");
             connection.invoke("RequestCurrentFiles").catch(err => console.error(err.toString()));
-            obs.disconnect(); // отключаем наблюдатель, когда элемент найден
+            obs.disconnect();
         }
     });
 
