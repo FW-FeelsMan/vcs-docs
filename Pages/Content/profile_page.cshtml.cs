@@ -52,6 +52,30 @@ namespace VCS_DOCs.Pages.Content
 			bool result = await _uploadService.UploadFileAsync(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, userFolderPath, UploadFile);
 			return new JsonResult(new { success = result });
 		}
+		public async Task<IActionResult> OnPostDeleteFileAsync(string fileName)
+		{
+			string username = User.Identity?.Name;
+			if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(fileName))
+			{
+				return new JsonResult(new { success = false, error = "Неверные параметры" });
+			}
+			string appDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData");
+			string userFolderPath = Path.Combine(appDataPath, $"userData_{username}");
+			string filePath = Path.Combine(userFolderPath, fileName);
+			if (!System.IO.File.Exists(filePath))
+			{
+				return new JsonResult(new { success = false, error = "Файл не найден" });
+			}
+			try
+			{
+				System.IO.File.Delete(filePath);
+				return new JsonResult(new { success = true });
+			}
+			catch (Exception ex)
+			{
+				return new JsonResult(new { success = false, error = ex.Message });
+			}
+		}
 		public class UpdateUserRequest
 		{
 			public string Field { get; set; }

@@ -3,12 +3,16 @@
   "WorkspaceRootPath": "D:\\Unity\\VCS-DOCs\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\userstorageobserver.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\userstorageobserver.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\uploadfileobserver.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
       "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\uploadfileobserver.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\services\\userfileuploadservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:services\\userfileuploadservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\pages\\content\\profile_page.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -19,20 +23,16 @@
       "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:pages\\content\\profile_page.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\services\\userfileuploadservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:services\\userfileuploadservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\services\\userstoragemonitoringservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:services\\userstoragemonitoringservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\pages\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:pages\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\userstorageobserver.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\userstorageobserver.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\services\\userstoragemonitoringservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:services\\userstoragemonitoringservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\css\\sub_css\\profile_page.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
@@ -54,7 +54,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 7,
           "Children": [
             {
               "$type": "Bookmark",
@@ -71,77 +71,64 @@
             {
               "$type": "Document",
               "DocumentIndex": 1,
-              "Title": "Program.cs",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Program.cs",
-              "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\Program.cs",
-              "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAFgAAAAAAAAAAAAAAG0AAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-31T19:52:07.041Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
               "Title": "uploadFileObserver.js",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\uploadFileObserver.js",
               "RelativeDocumentMoniker": "wwwroot\\js\\uploadFileObserver.js",
               "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\uploadFileObserver.js",
               "RelativeToolTip": "wwwroot\\js\\uploadFileObserver.js",
-              "ViewState": "AgIAAA8AAAAAAAAAAAAAACQAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAABRAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
               "WhenOpened": "2025-03-31T19:39:00.462Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 2,
               "Title": "UserFileUploadService.cs",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Services\\UserFileUploadService.cs",
               "RelativeDocumentMoniker": "Services\\UserFileUploadService.cs",
               "ToolTip": "D:\\Unity\\VCS-DOCs\\Services\\UserFileUploadService.cs",
               "RelativeToolTip": "Services\\UserFileUploadService.cs",
-              "ViewState": "AgIAACgAAAAAAAAAAAAAAD0AAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAC4AAAAXAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-03-31T19:30:22.025Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "profile_page.cshtml",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml",
               "RelativeDocumentMoniker": "Pages\\Content\\profile_page.cshtml",
               "ToolTip": "D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml",
               "RelativeToolTip": "Pages\\Content\\profile_page.cshtml",
-              "ViewState": "AgIAAJEAAAAAAAAAAAAowJcAAAAmAAAAAAAAAA==",
+              "ViewState": "AgIAAJEAAAAAAAAAAAAowJYAAAAaAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2025-03-30T19:11:10.019Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "profile_page.cshtml.cs",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml.cs",
               "RelativeDocumentMoniker": "Pages\\Content\\profile_page.cshtml.cs",
               "ToolTip": "D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml.cs",
               "RelativeToolTip": "Pages\\Content\\profile_page.cshtml.cs",
-              "ViewState": "AgIAAGQAAAAAAAAAAAAAAHkAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAdAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-03-30T19:14:21.505Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 0,
               "Title": "userStorageObserver.js",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\userStorageObserver.js",
               "RelativeDocumentMoniker": "wwwroot\\js\\userStorageObserver.js",
               "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\userStorageObserver.js",
               "RelativeToolTip": "wwwroot\\js\\userStorageObserver.js",
-              "ViewState": "AgIAADAAAAAAAAAAAAAAAEUAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAHMAAAAAAAAAAAAAAIgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
               "WhenOpened": "2025-03-30T18:53:59.831Z",
               "EditorCaption": ""
@@ -149,6 +136,31 @@
             {
               "$type": "Document",
               "DocumentIndex": 5,
+              "Title": "UserStorageMonitoringService.cs",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Services\\UserStorageMonitoringService.cs",
+              "RelativeDocumentMoniker": "Services\\UserStorageMonitoringService.cs",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Services\\UserStorageMonitoringService.cs",
+              "RelativeToolTip": "Services\\UserStorageMonitoringService.cs",
+              "ViewState": "AgIAAEcAAAAAAAAAAAAuwFAAAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-30T18:20:26.715Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Program.cs",
+              "RelativeDocumentMoniker": "Program.cs",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAAFgAAAAAAAAAAAAAAG0AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-31T19:52:07.041Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
               "Title": "_Layout.cshtml",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Pages\\Shared\\_Layout.cshtml",
               "RelativeDocumentMoniker": "Pages\\Shared\\_Layout.cshtml",
@@ -156,8 +168,7 @@
               "RelativeToolTip": "Pages\\Shared\\_Layout.cshtml",
               "ViewState": "AgIAAB8AAAAAAAAAAAAowDIAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-03-30T18:52:22.698Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-03-30T18:52:22.698Z"
             },
             {
               "$type": "Document",
@@ -173,19 +184,6 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "UserStorageMonitoringService.cs",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Services\\UserStorageMonitoringService.cs",
-              "RelativeDocumentMoniker": "Services\\UserStorageMonitoringService.cs",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\Services\\UserStorageMonitoringService.cs",
-              "RelativeToolTip": "Services\\UserStorageMonitoringService.cs",
-              "ViewState": "AgIAAEcAAAAAAAAAAAAuwFMAAAADAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-03-30T18:20:26.715Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
               "DocumentIndex": 8,
               "Title": "profile_page.css",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\sub_css\\profile_page.css",
@@ -194,8 +192,7 @@
               "RelativeToolTip": "wwwroot\\css\\sub_css\\profile_page.css",
               "ViewState": "AgIAAO8BAAAAAAAAAAAowPsBAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
-              "WhenOpened": "2025-03-30T20:29:30.209Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-03-30T20:29:30.209Z"
             },
             {
               "$type": "Document",

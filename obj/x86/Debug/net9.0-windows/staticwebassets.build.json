@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "r/zoVz4WBp55CVNsLzYDXKIgy4wwUqC91RF+963Mc54=",
+  "Hash": "DNPyuD0Wfnk0OPIL7mOLqXUOvn8pw0YiMsVOA8sObmE=",
   "Source": "VCS-DOCs",
   "BasePath": "_content/VCS-DOCs",
   "Mode": "Default",
@@ -2558,12 +2558,12 @@
       "OriginalItemSpec": "D:\\Soft\\.nuget\\packages\\microsoft.aspnetcore.identity.ui\\9.0.3\\staticwebassets\\V5\\lib\\bootstrap\\dist\\js\\bootstrap.esm.js"
     },
     {
-      "Identity": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\i7pzvlt8d5-fhkuprs0cm.gz",
+      "Identity": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\i7pzvlt8d5-6byul4ud1u.gz",
       "SourceId": "VCS-DOCs",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\",
       "BasePath": "_content/VCS-DOCs",
-      "RelativePath": "js/userStorageObserver#[.{fingerprint=fhkuprs0cm}]?.js.gz",
+      "RelativePath": "js/userStorageObserver#[.{fingerprint=6byul4ud1u}]?.js.gz",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Alternative",
@@ -2572,8 +2572,8 @@
       "RelatedAsset": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\userStorageObserver.js",
       "AssetTraitName": "Content-Encoding",
       "AssetTraitValue": "gzip",
-      "Fingerprint": "49l7r2y7sq",
-      "Integrity": "WIqmduSsKVtItOJCSIdM0RW41gbCRw4uVwa2q9iNqtw=",
+      "Fingerprint": "nhfyk4ruc9",
+      "Integrity": "69YF0W69pbxYU/6VMEpBd62va/NlOIfXAHwyvvhxCcA=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\userStorageObserver.js"
@@ -5302,8 +5302,8 @@
       "RelatedAsset": "",
       "AssetTraitName": "",
       "AssetTraitValue": "",
-      "Fingerprint": "fhkuprs0cm",
-      "Integrity": "M4jvGRdrj8xxoQM5VhxDn184mjSwRE7EYNUPishqQ4A=",
+      "Fingerprint": "6byul4ud1u",
+      "Integrity": "zhGvpgD8hPjsVD414DUAA/TcTfKLLC4l9ZROROdWxz4=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\js\\userStorageObserver.js"
@@ -23975,13 +23975,13 @@
       ]
     },
     {
-      "Route": "js/userStorageObserver.fhkuprs0cm.js",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\i7pzvlt8d5-fhkuprs0cm.gz",
+      "Route": "js/userStorageObserver.6byul4ud1u.js",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\i7pzvlt8d5-6byul4ud1u.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.001050420168"
+          "Quality": "0.000631313131"
         }
       ],
       "ResponseHeaders": [
@@ -23991,15 +23991,15 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "951"
+          "Value": "1583"
         },
         {
           "Name": "ETag",
-          "Value": "\"WIqmduSsKVtItOJCSIdM0RW41gbCRw4uVwa2q9iNqtw=\""
+          "Value": "\"69YF0W69pbxYU/6VMEpBd62va/NlOIfXAHwyvvhxCcA=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Mon, 31 Mar 2025 19:23:51 GMT"
+          "Value": "Tue, 01 Apr 2025 20:21:53 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -24019,13 +24019,13 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"M4jvGRdrj8xxoQM5VhxDn184mjSwRE7EYNUPishqQ4A=\""
+          "Value": "W/\"zhGvpgD8hPjsVD414DUAA/TcTfKLLC4l9ZROROdWxz4=\""
         }
       ],
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "fhkuprs0cm"
+          "Value": "6byul4ud1u"
         },
         {
           "Name": "label",
@@ -24033,12 +24033,12 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-M4jvGRdrj8xxoQM5VhxDn184mjSwRE7EYNUPishqQ4A="
+          "Value": "sha256-zhGvpgD8hPjsVD414DUAA/TcTfKLLC4l9ZROROdWxz4="
         }
       ]
     },
     {
-      "Route": "js/userStorageObserver.fhkuprs0cm.js",
+      "Route": "js/userStorageObserver.6byul4ud1u.js",
       "AssetFile": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\userStorageObserver.js",
       "Selectors": [],
       "ResponseHeaders": [
@@ -24048,7 +24048,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "2656"
+          "Value": "5739"
         },
         {
           "Name": "Content-Type",
@@ -24056,11 +24056,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"M4jvGRdrj8xxoQM5VhxDn184mjSwRE7EYNUPishqQ4A=\""
+          "Value": "\"zhGvpgD8hPjsVD414DUAA/TcTfKLLC4l9ZROROdWxz4=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Mon, 31 Mar 2025 19:23:51 GMT"
+          "Value": "Tue, 01 Apr 2025 20:21:53 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -24070,7 +24070,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "fhkuprs0cm"
+          "Value": "6byul4ud1u"
         },
         {
           "Name": "label",
@@ -24078,13 +24078,13 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-M4jvGRdrj8xxoQM5VhxDn184mjSwRE7EYNUPishqQ4A="
+          "Value": "sha256-zhGvpgD8hPjsVD414DUAA/TcTfKLLC4l9ZROROdWxz4="
         }
       ]
     },
     {
-      "Route": "js/userStorageObserver.fhkuprs0cm.js.gz",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\i7pzvlt8d5-fhkuprs0cm.gz",
+      "Route": "js/userStorageObserver.6byul4ud1u.js.gz",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\i7pzvlt8d5-6byul4ud1u.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -24093,7 +24093,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "951"
+          "Value": "1583"
         },
         {
           "Name": "Content-Type",
@@ -24101,11 +24101,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"WIqmduSsKVtItOJCSIdM0RW41gbCRw4uVwa2q9iNqtw=\""
+          "Value": "\"69YF0W69pbxYU/6VMEpBd62va/NlOIfXAHwyvvhxCcA=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Mon, 31 Mar 2025 19:23:51 GMT"
+          "Value": "Tue, 01 Apr 2025 20:21:53 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -24123,7 +24123,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "fhkuprs0cm"
+          "Value": "6byul4ud1u"
         },
         {
           "Name": "label",
@@ -24131,18 +24131,18 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-WIqmduSsKVtItOJCSIdM0RW41gbCRw4uVwa2q9iNqtw="
+          "Value": "sha256-69YF0W69pbxYU/6VMEpBd62va/NlOIfXAHwyvvhxCcA="
         }
       ]
     },
     {
       "Route": "js/userStorageObserver.js",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\i7pzvlt8d5-fhkuprs0cm.gz",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\i7pzvlt8d5-6byul4ud1u.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.001050420168"
+          "Quality": "0.000631313131"
         }
       ],
       "ResponseHeaders": [
@@ -24152,15 +24152,15 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "951"
+          "Value": "1583"
         },
         {
           "Name": "ETag",
-          "Value": "\"WIqmduSsKVtItOJCSIdM0RW41gbCRw4uVwa2q9iNqtw=\""
+          "Value": "\"69YF0W69pbxYU/6VMEpBd62va/NlOIfXAHwyvvhxCcA=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Mon, 31 Mar 2025 19:23:51 GMT"
+          "Value": "Tue, 01 Apr 2025 20:21:53 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -24180,13 +24180,13 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"M4jvGRdrj8xxoQM5VhxDn184mjSwRE7EYNUPishqQ4A=\""
+          "Value": "W/\"zhGvpgD8hPjsVD414DUAA/TcTfKLLC4l9ZROROdWxz4=\""
         }
       ],
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-M4jvGRdrj8xxoQM5VhxDn184mjSwRE7EYNUPishqQ4A="
+          "Value": "sha256-zhGvpgD8hPjsVD414DUAA/TcTfKLLC4l9ZROROdWxz4="
         }
       ]
     },
@@ -24201,7 +24201,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "2656"
+          "Value": "5739"
         },
         {
           "Name": "Content-Type",
@@ -24209,11 +24209,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"M4jvGRdrj8xxoQM5VhxDn184mjSwRE7EYNUPishqQ4A=\""
+          "Value": "\"zhGvpgD8hPjsVD414DUAA/TcTfKLLC4l9ZROROdWxz4=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Mon, 31 Mar 2025 19:23:51 GMT"
+          "Value": "Tue, 01 Apr 2025 20:21:53 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -24223,13 +24223,13 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-M4jvGRdrj8xxoQM5VhxDn184mjSwRE7EYNUPishqQ4A="
+          "Value": "sha256-zhGvpgD8hPjsVD414DUAA/TcTfKLLC4l9ZROROdWxz4="
         }
       ]
     },
     {
       "Route": "js/userStorageObserver.js.gz",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\i7pzvlt8d5-fhkuprs0cm.gz",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\i7pzvlt8d5-6byul4ud1u.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -24238,7 +24238,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "951"
+          "Value": "1583"
         },
         {
           "Name": "Content-Type",
@@ -24246,11 +24246,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"WIqmduSsKVtItOJCSIdM0RW41gbCRw4uVwa2q9iNqtw=\""
+          "Value": "\"69YF0W69pbxYU/6VMEpBd62va/NlOIfXAHwyvvhxCcA=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Mon, 31 Mar 2025 19:23:51 GMT"
+          "Value": "Tue, 01 Apr 2025 20:21:53 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -24268,7 +24268,7 @@
       "EndpointProperties": [
         {
           "Name": "integrity",
-          "Value": "sha256-WIqmduSsKVtItOJCSIdM0RW41gbCRw4uVwa2q9iNqtw="
+          "Value": "sha256-69YF0W69pbxYU/6VMEpBd62va/NlOIfXAHwyvvhxCcA="
         }
       ]
     },
