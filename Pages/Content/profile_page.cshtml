@@ -107,6 +107,7 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                <!-- Динамически заполняется списком файлов -->
                             </tbody>
                         </table>
                     </div>
@@ -116,48 +117,7 @@
                     <h3>Задачи пользователя, обрабатываемые на сервере</h3>
                     <div class="tasks-container">
                         <div class="tasks-grid">
-                            <div class="task-card">
-                                <div class="task-header">
-                                    <span class="task-status processing">В обработке</span>
-                                    <span class="task-time">10:45, 25.10.2023</span>
-                                </div>
-                                <div class="task-content">
-                                    <h4>Обработка файла: <span class="task-filename">project_final.stp</span></h4>
-                                    <div class="task-progress">
-                                        <div class="progress-bar" style="width: 65%;"></div>
-                                    </div>
-                                    <p class="task-details">Файл находится в процессе обработки. Осталось примерно 2 минуты.</p>
-                                </div>
-                                <div class="task-actions">
-                                    <button class="task-cancel-button">Отменить</button>
-                                </div>
-                            </div>
-                            <div class="task-card completed">
-                                <div class="task-header">
-                                    <span class="task-status completed">Завершено</span>
-                                    <span class="task-time">09:30, 24.10.2023</span>
-                                </div>
-                                <div class="task-content">
-                                    <h4>Обработка файла: <span class="task-filename">design_v2.stp</span></h4>
-                                    <div class="task-progress">
-                                        <div class="progress-bar" style="width: 100%;"></div>
-                                    </div>
-                                    <p class="task-details">Файл успешно обработан. <a href="#" class="download-link">Скачать результат</a></p>
-                                </div>
-                            </div>
-                            <div class="task-card cancelled">
-                                <div class="task-header">
-                                    <span class="task-status cancelled">Отменено</span>
-                                    <span class="task-time">15:20, 23.10.2023</span>
-                                </div>
-                                <div class="task-content">
-                                    <h4>Обработка файла: <span class="task-filename">draft_project.stp</span></h4>
-                                    <div class="task-progress">
-                                        <div class="progress-bar" style="width: 30%;"></div>
-                                    </div>
-                                    <p class="task-details">Задача была отменена пользователем.</p>
-                                </div>
-                            </div>
+                            <!-- Динамически создаются задачи загрузки -->
                         </div>
                     </div>
                 </div>

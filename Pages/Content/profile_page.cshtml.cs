@@ -18,16 +18,18 @@ namespace VCS_DOCs.Pages.Content
 		private readonly IWebHostEnvironment _webHostEnvironment;
 		private readonly UserServiceManager _userServiceManager;
 		private readonly UserFileUploadService _uploadService;
+		private readonly FileUploadTaskService _taskService;
 		private static readonly Regex ValidInputRegex = new Regex(@"^[a-zA-Zà-ÿÀ-ß0-9@'""\-\s]{1,30}$", RegexOptions.Compiled);
 		public User CurrentUser { get; set; }
 		[BindProperty]
 		public IFormFile UploadFile { get; set; }
-		public profile_pageModel(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment, UserServiceManager userServiceManager, UserFileUploadService uploadService)
+		public profile_pageModel(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment, UserServiceManager userServiceManager, UserFileUploadService uploadService, FileUploadTaskService taskService)
 		{
 			_context = context;
 			_webHostEnvironment = webHostEnvironment;
 			_userServiceManager = userServiceManager;
 			_uploadService = uploadService;
+			_taskService = taskService;
 		}
 		public async Task OnGetAsync()
 		{
@@ -49,8 +51,25 @@ namespace VCS_DOCs.Pages.Content
 			}
 			string appDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData");
 			string userFolderPath = Path.Combine(appDataPath, $"userData_{username}");
-			bool result = await _uploadService.UploadFileAsync(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, userFolderPath, UploadFile);
-			return new JsonResult(new { success = result });
+			if (!Directory.Exists(userFolderPath))
+			{
+				Directory.CreateDirectory(userFolderPath);
+			}
+			string tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + Path.GetExtension(UploadFile.FileName));
+			using (var stream = new FileStream(tempFile, FileMode.Create))
+			{
+				await UploadFile.CopyToAsync(stream);
+			}
+			var fileTask = new FileUploadTask
+			{
+				UserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
+				DestinationFolder = userFolderPath,
+				TempFilePath = tempFile,
+				OriginalFileName = UploadFile.FileName,
+				FileLength = UploadFile.Length
+			};
+			_taskService.EnqueueTask(fileTask);
+			return new JsonResult(new { success = true });
 		}
 		public async Task<IActionResult> OnPostDeleteFileAsync(string fileName)
 		{

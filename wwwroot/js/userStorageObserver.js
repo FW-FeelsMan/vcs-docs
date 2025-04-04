@@ -7,15 +7,34 @@ if (userIsAuthenticated === true || userIsAuthenticated === "true") {
         .build();
 
     connection.on("ReceiveStorageUpdate", function (files) {
-        console.log("Получены файлы:", files);
         updateFileTable(files);
     });
 
-    connection.start().then(() => {
-        connection.invoke("RequestCurrentFiles").catch(err => console.error(err.toString()));
-    }).catch(function (err) {
-        console.error(err.toString());
+    connection.on("ReceiveUploadProgress", function (taskUpdate) {
+        updateTaskProgress(taskUpdate);
     });
+
+    connection.start().then(() => {
+        requestFiles();
+    }).catch(err => console.error("SignalR start error:", err));
+
+    function requestFiles() {
+        if (connection && connection.state === signalR.HubConnectionState.Connected) {
+            connection.invoke("RequestCurrentFiles").catch(err => console.error("RequestFiles error:", err));
+        } else if (connection && connection.state !== signalR.HubConnectionState.Connecting) {
+            connection.start().then(() => {
+                requestFiles();
+            }).catch(err => console.error("Re-start connection error:", err));
+        }
+    }
+
+    // Если таблица пуста, обновляем её каждые 5 секунд
+    setInterval(() => {
+        const tableBody = document.querySelector("table.sortable tbody");
+        if (tableBody && tableBody.children.length === 0) {
+            requestFiles();
+        }
+    }, 5000);
 
     function updateFileTable(files) {
         const tableBody = document.querySelector("table.sortable tbody");
@@ -58,7 +77,7 @@ if (userIsAuthenticated === true || userIsAuthenticated === "true") {
                         .then(data => {
                             if (data.success) {
                                 console.log("Файл успешно удален");
-                                connection.invoke("RequestCurrentFiles").catch(err => console.error(err.toString()));
+                                requestFiles();
                             } else {
                                 console.error("Ошибка при удалении файла", data.error);
                             }
@@ -84,11 +103,61 @@ if (userIsAuthenticated === true || userIsAuthenticated === "true") {
         }
     }
 
+    function updateTaskProgress(taskUpdate) {
+        // taskUpdate: { fileName: string, progress: number }
+        let taskCard = document.querySelector(`.task-card[data-filename="${taskUpdate.fileName}"]`);
+        if (!taskCard) {
+            taskCard = document.createElement("div");
+            taskCard.classList.add("task-card");
+            taskCard.setAttribute("data-filename", taskUpdate.fileName);
+
+            let header = document.createElement("div");
+            header.classList.add("task-header");
+            let status = document.createElement("span");
+            status.classList.add("task-status", "processing");
+            status.textContent = "В обработке";
+            let time = document.createElement("span");
+            time.classList.add("task-time");
+            let now = new Date();
+            time.textContent = now.getHours() + ":" + now.getMinutes() + ", " + now.toLocaleDateString();
+            header.appendChild(status);
+            header.appendChild(time);
+            taskCard.appendChild(header);
+
+            let content = document.createElement("div");
+            content.classList.add("task-content");
+            let title = document.createElement("h4");
+            title.innerHTML = `Загрузка файла: <span class="task-filename">${taskUpdate.fileName}</span>`;
+            content.appendChild(title);
+            let progressContainer = document.createElement("div");
+            progressContainer.classList.add("task-progress");
+            let progressBar = document.createElement("div");
+            progressBar.classList.add("progress-bar");
+            progressBar.style.width = "0%";
+            progressContainer.appendChild(progressBar);
+            content.appendChild(progressContainer);
+            taskCard.appendChild(content);
+
+            let tasksGrid = document.querySelector(".tasks-grid");
+            if (tasksGrid) {
+                tasksGrid.appendChild(taskCard);
+            }
+        }
+        let progressBar = taskCard.querySelector(".progress-bar");
+        progressBar.style.width = taskUpdate.progress + "%";
+        if (taskUpdate.progress >= 100) {
+            let status = taskCard.querySelector(".task-status");
+            status.textContent = "Завершено";
+            status.classList.remove("processing");
+            status.classList.add("completed");
+            // Здесь мы не удаляем карточку, оставляем ее для отображения
+        }
+    }
+
     const tableObserver = new MutationObserver((mutations, obs) => {
         const tableBody = document.querySelector("table.sortable tbody");
         if (tableBody) {
-            console.log("Найдена таблица, инициирую обновление");
-            connection.invoke("RequestCurrentFiles").catch(err => console.error(err.toString()));
+            requestFiles();
             obs.disconnect();
         }
     });
@@ -117,12 +186,17 @@ const fileUploadObserver = new MutationObserver((mutations) => {
                 },
                 body: formData
             })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => { throw new Error("HTTP error " + response.status + ": " + text); });
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     console.log("Файл успешно загружен", data);
                     fileInput.value = "";
                     if (connection) {
-                        connection.invoke("RequestCurrentFiles").catch(err => console.error(err.toString()));
+                        requestFiles();
                     }
                 })
                 .catch(error => {
@@ -134,3 +208,9 @@ const fileUploadObserver = new MutationObserver((mutations) => {
     }
 });
 fileUploadObserver.observe(document.body, { childList: true, subtree: true });
+
+window.addEventListener("load", function () {
+    if (connection) {
+        requestFiles();
+    }
+});
