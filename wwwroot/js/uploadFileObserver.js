@@ -1,36 +1,62 @@
-﻿const uploadFileObserver = new MutationObserver((mutations) => {
-    document.querySelectorAll('#uploadFileButton').forEach(button => {
-        if (!button.classList.contains('uploadFile-observed')) {
-            button.addEventListener('click', function () {
-                document.getElementById('hiddenFileInput').click();
-            });
-            button.classList.add('uploadFile-observed');
-        }
+﻿const MAX_CHUNK_SIZE = 2 * 1024 * 1024;
+
+function setupUpload() {
+    const uploadButton = document.getElementById("uploadFileButton");
+    const fileInput = document.getElementById("hiddenFileInput");
+
+    if (!uploadButton || !fileInput || uploadButton.dataset.initialized === "true") return;
+
+    uploadButton.dataset.initialized = "true";
+
+    uploadButton.addEventListener("click", () => {
+        fileInput.click();
     });
-    const fileInput = document.getElementById('hiddenFileInput');
-    if (fileInput && !fileInput.classList.contains('uploadFileInput-observed')) {
-        fileInput.addEventListener('change', function (e) {
-            e.preventDefault();
-            const formData = new FormData(document.getElementById('uploadForm'));
-            fetch("/Content/profile_page?handler=UploadFile", {
-                method: "POST",
-                headers: { "Accept": "application/json" },
-                body: formData
-            })
-                .then(response => response.json())
-                .then(data => {
-                    //console.log("Файл успешно загружен", data);
-                    fileInput.value = "";
-                })
-                .catch(error => {
-                    console.error("Ошибка при загрузке файла", error);
-                    fileInput.value = "";
+
+    fileInput.addEventListener("change", async () => {
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE);
+
+        for (let i = 0; i < totalChunks; i++) {
+            const chunk = file.slice(i * MAX_CHUNK_SIZE, (i + 1) * MAX_CHUNK_SIZE);
+            const formData = new FormData();
+            formData.append("chunk", chunk);
+            formData.append("metadata.FileName", file.name);
+            formData.append("metadata.ChunkIndex", i);
+            formData.append("metadata.TotalChunks", totalChunks);
+
+            try {
+                const response = await fetch("/Content/profile_page?handler=UploadChunk", {
+                    method: "POST",
+                    headers: {
+                        "Accept": "application/json",
+                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content")
+                    },
+                    body: formData
                 });
-        });
-        fileInput.classList.add('uploadFileInput-observed');
-    }
+
+                const result = await response.json();
+                if (!result.success) {
+                    console.error("Ошибка при загрузке чанка:", result.error);
+                    break;
+                }
+            } catch (err) {
+                console.error("Ошибка при отправке чанка:", err);
+                break;
+            }
+        }
+
+        fileInput.value = "";
+    });
+}
+
+// Сначала пробуем сразу
+setupUpload();
+
+// Затем следим через MutationObserver
+const uploadFileMutationObserver = new MutationObserver(() => {
+    setupUpload();
 });
-uploadFileObserver.observe(document.body, {
-    childList: true,
-    subtree: true
-});
+
+uploadFileMutationObserver.observe(document.body, { childList: true, subtree: true });

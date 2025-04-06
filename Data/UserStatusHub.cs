@@ -19,7 +19,7 @@ namespace VCS_DOCs.Data
 
 		public override async Task OnConnectedAsync()
 		{
-			var userId = Context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+			var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 			if (!string.IsNullOrEmpty(userId))
 			{
 				await _userService.UpdateUserStatusAsync(userId, true);
@@ -28,9 +28,9 @@ namespace VCS_DOCs.Data
 			await base.OnConnectedAsync();
 		}
 
-		public override async Task OnDisconnectedAsync(Exception exception)
+		public override async Task OnDisconnectedAsync(Exception? exception)
 		{
-			var userId = Context.User.FindFirstValue(ClaimTypes.NameIdentifier);
+			var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 			if (!string.IsNullOrEmpty(userId))
 			{
 				try

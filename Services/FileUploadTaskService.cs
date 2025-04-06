@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Collections.Concurrent;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using VCS_DOCs.Hubs;
 
 namespace VCS_DOCs.Services
@@ -40,23 +34,35 @@ namespace VCS_DOCs.Services
 		}
 		private async Task ProcessTaskAsync(FileUploadTask task, CancellationToken stoppingToken)
 		{
+			string[] chunkFiles = Directory.GetFiles(task.TempFilePath).OrderBy(f => f).ToArray();
 			string destinationFile = Path.Combine(task.DestinationFolder, task.OriginalFileName);
-			using (var sourceStream = File.OpenRead(task.TempFilePath))
+
 			using (var destinationStream = new FileStream(destinationFile, FileMode.Create))
 			{
-				byte[] buffer = new byte[81920];
-				long totalRead = 0;
-				int read;
-				while ((read = await sourceStream.ReadAsync(buffer, 0, buffer.Length, stoppingToken)) > 0)
+				foreach (var chunkFile in chunkFiles)
 				{
-					await destinationStream.WriteAsync(buffer, 0, read, stoppingToken);
-					totalRead += read;
-					double progress = (double)totalRead / task.FileLength * 100;
-					await _hubContext.Clients.Group(task.UserId).SendAsync("ReceiveUploadProgress", new { fileName = task.OriginalFileName, progress = progress });
+					using (var sourceStream = new FileStream(chunkFile, FileMode.Open))
+						await sourceStream.CopyToAsync(destinationStream, stoppingToken);
+
+					File.Delete(chunkFile);
 				}
 			}
+			Directory.Delete(task.TempFilePath);
+
 			await _hubContext.Clients.Group(task.UserId).SendAsync("ReceiveUploadProgress", new { fileName = task.OriginalFileName, progress = 100 });
-			File.Delete(task.TempFilePath);
+			string[] files = Directory.GetFiles(task.DestinationFolder);
+			var fileInfos = new List<object>();
+			foreach (string file in files)
+			{
+				var fileInfo = new FileInfo(file);
+				fileInfos.Add(new
+				{
+					name = fileInfo.Name,
+					sizeMb = Math.Round((double)fileInfo.Length / (1024 * 1024), 2),
+					lastWriteTime = fileInfo.LastWriteTime.ToString("dd.MM.yyyy, HH:mm")
+				});
+			}
+			await _hubContext.Clients.Group(task.UserId).SendAsync("ReceiveStorageUpdate", fileInfos);
 		}
 	}
 }

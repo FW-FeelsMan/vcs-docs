@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -11,8 +10,6 @@ using Microsoft.AspNetCore.SignalR;
 using System.Text.RegularExpressions;
 using VCS_DOCs.Services;
 using System.Collections.Concurrent;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace VCS_DOCs.Pages
 {
@@ -42,16 +39,16 @@ namespace VCS_DOCs.Pages
 			_hubContext = hubContext;
 			_userService = userService;
 			_webHostEnvironment = webHostEnvironment;
-			LoginErrors = new List<string>();
-			RegistrationErrors = new List<string>();
-			Specialities = new List<string>();
+			LoginErrors = [];
+			RegistrationErrors = [];
+			Specialities = [];
 		}
 
 		[BindProperty]
-		public string Username { get; set; }
+		public string Username { get; set; } = string.Empty;
 
 		[BindProperty]
-		public string Password { get; set; }
+		public string Password { get; set; } = string.Empty;
 
 		public List<string> LoginErrors { get; set; }
 		public List<string> RegistrationErrors { get; set; }
@@ -116,8 +113,8 @@ namespace VCS_DOCs.Pages
 
 			var claims = new List<Claim>
 			{
-				new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-				new Claim(ClaimTypes.Name, user.Username)
+				new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+				new(ClaimTypes.Name, user.Username)
 			};
 
 			var authProperties = new AuthenticationProperties

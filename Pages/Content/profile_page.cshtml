@@ -3,12 +3,10 @@
 @{
     Layout = null;
 }
-<form method="post" id="anti-forgery-form" style="display: none;">
+<div style="display:none;">
     @Html.AntiForgeryToken()
-</form>
-<form method="post" enctype="multipart/form-data" asp-page-handler="UploadFile" id="uploadForm">
-    <input type="file" name="UploadFile" id="hiddenFileInput" style="display: none;" />
-</form>
+</div>
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -19,6 +17,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <input type="file" id="hiddenFileInput" style="display: none;" />
+
     <div style="display:none;">
         @Html.AntiForgeryToken()
     </div>

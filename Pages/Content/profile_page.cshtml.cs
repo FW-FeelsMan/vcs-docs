@@ -1,16 +1,13 @@
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.IO;
-using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using VCS_DOCs.Data;
+using VCS_DOCs.Hubs;
 using VCS_DOCs.Services;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace VCS_DOCs.Pages.Content
 {
@@ -19,88 +16,57 @@ namespace VCS_DOCs.Pages.Content
 		private readonly ApplicationDbContext _context;
 		private readonly IWebHostEnvironment _webHostEnvironment;
 		private readonly UserServiceManager _userServiceManager;
-		private readonly UserFileUploadService _uploadService;
 		private readonly FileUploadTaskService _taskService;
 		private readonly IAntiforgery _antiforgery;
 
-		private static readonly Regex ValidInputRegex = new Regex(@"^[a-zA-Zа-яА-Я0-9@'""\-\s]{1,30}$", RegexOptions.Compiled);
+		private static readonly Regex ValidInputRegex = new(@"^[a-zA-Zа-яА-Я0-9@'""\-\s]{1,30}$", RegexOptions.Compiled);
 
-		public User CurrentUser { get; set; }
-
-		[BindProperty(SupportsGet = false, Name = "UploadFile")]
-		public IFormFile? UploadFile { get; set; }
+		public User? CurrentUser { get; private set; }
 
 		public profile_pageModel(ApplicationDbContext context,
 								 IWebHostEnvironment webHostEnvironment,
 								 UserServiceManager userServiceManager,
-								 UserFileUploadService uploadService,
 								 FileUploadTaskService taskService,
 								 IAntiforgery antiforgery)
 		{
 			_context = context;
 			_webHostEnvironment = webHostEnvironment;
 			_userServiceManager = userServiceManager;
-			_uploadService = uploadService;
 			_taskService = taskService;
 			_antiforgery = antiforgery;
 		}
 
 		public async Task OnGetAsync()
 		{
-			string username = User.Identity?.Name;
-			if (!string.IsNullOrEmpty(username))
+			string? username = User.Identity?.Name;
+			if (!string.IsNullOrWhiteSpace(username))
 			{
 				CurrentUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
-				string appDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData");
-				string userFolderPath = Path.Combine(appDataPath, $"userData_{username}");
+				string userFolderPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData", $"userData_{username}");
 				_userServiceManager.GetOrCreateStorageService(username, userFolderPath);
 			}
 		}
 
-		public async Task<IActionResult> OnPostUploadFileAsync()
+		public class UpdateUserRequest
 		{
-			string username = User.Identity?.Name;
-			if (string.IsNullOrEmpty(username) || UploadFile == null)
-				return new JsonResult(new { success = false, error = "Файл не выбран" });
-
-			string appDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData");
-			string userFolderPath = Path.Combine(appDataPath, $"userData_{username}");
-			if (!Directory.Exists(userFolderPath))
-				Directory.CreateDirectory(userFolderPath);
-
-			string tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + Path.GetExtension(UploadFile.FileName));
-			using (var stream = new FileStream(tempFile, FileMode.Create))
-				await UploadFile.CopyToAsync(stream);
-
-			var fileTask = new FileUploadTask
-			{
-				UserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
-				DestinationFolder = userFolderPath,
-				TempFilePath = tempFile,
-				OriginalFileName = UploadFile.FileName,
-				FileLength = UploadFile.Length
-			};
-
-			_taskService.EnqueueTask(fileTask);
-			return new JsonResult(new { success = true });
+			public string? Field { get; set; }
+			public string? Value { get; set; }
 		}
 
 		public async Task<IActionResult> OnPostDeleteFileAsync(string fileName)
 		{
-			string username = User.Identity?.Name;
-			if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(fileName))
+			string? username = User.Identity?.Name;
+			if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(fileName))
 				return new JsonResult(new { success = false, error = "Неверные параметры" });
 
-			string appDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData");
-			string userFolderPath = Path.Combine(appDataPath, $"userData_{username}");
-			string filePath = Path.Combine(userFolderPath, fileName);
+			string filePath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData", $"userData_{username}", fileName);
 
 			if (!System.IO.File.Exists(filePath))
 				return new JsonResult(new { success = false, error = "Файл не найден" });
 
 			try
 			{
-				System.IO.File.Delete(filePath);
+				await Task.Run(() => System.IO.File.Delete(filePath));
 				return new JsonResult(new { success = true });
 			}
 			catch (Exception ex)
@@ -109,15 +75,8 @@ namespace VCS_DOCs.Pages.Content
 			}
 		}
 
-		public class UpdateUserRequest
-		{
-			public string Field { get; set; }
-			public string Value { get; set; }
-		}
-
 		public async Task<IActionResult> OnPostUpdateUserDataAsync([FromBody] UpdateUserRequest request)
 		{
-			var antiforgeryToken = HttpContext.Request.Headers["X-CSRF-TOKEN"].FirstOrDefault();
 			try
 			{
 				await _antiforgery.ValidateRequestAsync(HttpContext);
@@ -127,33 +86,18 @@ namespace VCS_DOCs.Pages.Content
 				return new JsonResult(new { success = false, error = "Неверный токен безопасности" });
 			}
 
-			if (!User.Identity.IsAuthenticated)
+			if (User.Identity?.IsAuthenticated != true)
 				return new JsonResult(new { success = false, error = "Пользователь не аутентифицирован" });
+
 			if (!ModelState.IsValid)
 			{
 				var allErrors = ModelState
-					.Where(ms => ms.Value.Errors.Count > 0)
-					.SelectMany(ms => ms.Value.Errors)
+					.SelectMany(ms => ms.Value?.Errors ?? Enumerable.Empty<ModelError>())
 					.Select(e => e.ErrorMessage)
 					.ToList();
 
-				var exceptionErrors = ModelState
-					.Where(ms => ms.Value.Errors.Count > 0)
-					.SelectMany(ms => ms.Value.Errors)
-					.Select(e => e.Exception?.Message)
-					.Where(msg => msg != null)
-					.ToList();
-
-				// тут смотри переменные allErrors и exceptionErrors
-				return new JsonResult(new
-				{
-					success = false,
-					error = "Некорректная модель данных",
-					details = allErrors,
-					exceptions = exceptionErrors
-				});
+				return new JsonResult(new { success = false, error = "Некорректная модель данных", details = allErrors });
 			}
-
 
 			if (string.IsNullOrWhiteSpace(request.Value))
 				return new JsonResult(new { success = false, error = "Поле не может быть пустым" });
@@ -164,7 +108,11 @@ namespace VCS_DOCs.Pages.Content
 			if (!ValidInputRegex.IsMatch(request.Value))
 				return new JsonResult(new { success = false, error = "Значение содержит недопустимые символы" });
 
-			var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == User.Identity.Name);
+			string? username = User.Identity?.Name;
+			if (string.IsNullOrWhiteSpace(username))
+				return new JsonResult(new { success = false, error = "Пользователь не найден" });
+
+			var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 			if (user == null)
 				return new JsonResult(new { success = false, error = "Пользователь не найден" });
 
@@ -186,8 +134,56 @@ namespace VCS_DOCs.Pages.Content
 			}
 			catch (DbUpdateException ex)
 			{
-				return new JsonResult(new { success = false, error = $"Ошибка базы данных: {ex.InnerException?.Message}" });
+				return new JsonResult(new { success = false, error = $"Ошибка базы данных: {ex.InnerException?.Message ?? ex.Message}" });
 			}
+		}
+
+		public class ChunkMetadata
+		{
+			public string FileName { get; set; } = null!;
+			public int ChunkIndex { get; set; }
+			public int TotalChunks { get; set; }
+		}
+
+		public async Task<IActionResult> OnPostUploadChunkAsync([FromForm] IFormFile chunk, [FromForm] ChunkMetadata metadata)
+		{
+			string? username = User.Identity?.Name;
+			string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+			if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(userId) || chunk == null)
+				return new JsonResult(new { success = false, error = "Неверные параметры" });
+
+			string userFolderPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData", $"userData_{username}");
+			string tempFolder = Path.Combine(userFolderPath, metadata.FileName + "_chunks");
+
+			if (!Directory.Exists(tempFolder))
+				Directory.CreateDirectory(tempFolder);
+
+			string chunkPath = Path.Combine(tempFolder, $"chunk_{metadata.ChunkIndex:D6}.part");
+
+			await using (var stream = new FileStream(chunkPath, FileMode.Create))
+			{
+				await chunk.CopyToAsync(stream);
+			}
+
+			if (metadata.ChunkIndex == metadata.TotalChunks - 1)
+			{
+				var task = new FileUploadTask
+				{
+					UserId = userId,
+					DestinationFolder = userFolderPath,
+					TempFilePath = tempFolder,
+					OriginalFileName = metadata.FileName,
+					FileLength = metadata.TotalChunks
+				};
+				_taskService.EnqueueTask(task);
+			}
+
+			double progress = ((double)(metadata.ChunkIndex + 1) / metadata.TotalChunks) * 100;
+			var hubContext = HttpContext.RequestServices.GetRequiredService<IHubContext<UserStorageHub>>();
+			await hubContext.Clients.Group(username).SendAsync("ReceiveUploadProgress", new { fileName = metadata.FileName, progress });
+
+			return new JsonResult(new { success = true, progress });
 		}
 	}
 }

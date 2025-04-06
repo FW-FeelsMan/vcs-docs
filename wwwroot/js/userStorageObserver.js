@@ -4,7 +4,7 @@ var connection;
 if (userIsAuthenticated === true || userIsAuthenticated === "true") {
     connection = new signalR.HubConnectionBuilder()
         .withUrl("/userStorageHub")
-        .configureLogging(signalR.LogLevel.None) 
+        .configureLogging(signalR.LogLevel.None)
         .build();
 
     connection.on("ReceiveStorageUpdate", function (files) {
@@ -29,13 +29,12 @@ if (userIsAuthenticated === true || userIsAuthenticated === "true") {
         }
     }
 
-    // Если таблица пуста, обновляем её каждые 5 секунд
     setInterval(() => {
         const tableBody = document.querySelector("table.sortable tbody");
         if (tableBody && tableBody.children.length === 0) {
             requestFiles();
         }
-    }, 5000);
+    }, 1000);
 
     function updateFileTable(files) {
         const tableBody = document.querySelector("table.sortable tbody");
@@ -77,7 +76,6 @@ if (userIsAuthenticated === true || userIsAuthenticated === "true") {
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
-                                console.log("Файл успешно удален");
                                 requestFiles();
                             } else {
                                 console.error("Ошибка при удалении файла", data.error);
@@ -105,7 +103,6 @@ if (userIsAuthenticated === true || userIsAuthenticated === "true") {
     }
 
     function updateTaskProgress(taskUpdate) {
-        // taskUpdate: { fileName: string, progress: number }
         let taskCard = document.querySelector(`.task-card[data-filename="${taskUpdate.fileName}"]`);
         if (!taskCard) {
             taskCard = document.createElement("div");
@@ -116,7 +113,7 @@ if (userIsAuthenticated === true || userIsAuthenticated === "true") {
             header.classList.add("task-header");
             let status = document.createElement("span");
             status.classList.add("task-status", "processing");
-            status.textContent = "В обработке";
+            status.textContent = "Загрузка";
             let time = document.createElement("span");
             time.classList.add("task-time");
             let now = new Date();
@@ -128,7 +125,7 @@ if (userIsAuthenticated === true || userIsAuthenticated === "true") {
             let content = document.createElement("div");
             content.classList.add("task-content");
             let title = document.createElement("h4");
-            title.innerHTML = `Загрузка файла: <span class="task-filename">${taskUpdate.fileName}</span>`;
+            title.innerHTML = `Файл: <span class="task-filename">${taskUpdate.fileName}</span>`;
             content.appendChild(title);
             let progressContainer = document.createElement("div");
             progressContainer.classList.add("task-progress");
@@ -144,10 +141,12 @@ if (userIsAuthenticated === true || userIsAuthenticated === "true") {
                 tasksGrid.appendChild(taskCard);
             }
         }
+
         let progressBar = taskCard.querySelector(".progress-bar");
         progressBar.style.width = taskUpdate.progress + "%";
+
+        let status = taskCard.querySelector(".task-status");
         if (taskUpdate.progress >= 100) {
-            let status = taskCard.querySelector(".task-status");
             status.textContent = "Завершено";
             status.classList.remove("processing");
             status.classList.add("completed");
@@ -163,54 +162,3 @@ if (userIsAuthenticated === true || userIsAuthenticated === "true") {
     });
     tableObserver.observe(document.body, { childList: true, subtree: true });
 }
-
-const fileUploadObserver = new MutationObserver((mutations) => {
-    document.querySelectorAll('#uploadFileButton').forEach(button => {
-        if (!button.classList.contains('uploadFile-observed')) {
-            button.addEventListener('click', function () {
-                document.getElementById('hiddenFileInput').click();
-            });
-            button.classList.add('uploadFile-observed');
-        }
-    });
-    const fileInput = document.getElementById('hiddenFileInput');
-    if (fileInput && !fileInput.classList.contains('uploadFileInput-observed')) {
-        fileInput.addEventListener('change', function (e) {
-            e.preventDefault();
-            const formData = new FormData(document.getElementById('uploadForm'));
-            fetch("/Content/profile_page?handler=UploadFile", {
-                method: "POST",
-                headers: {
-                    "Accept": "application/json",
-                    "X-CSRF-TOKEN": token
-                },
-                body: formData
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.text().then(text => { throw new Error("HTTP error " + response.status + ": " + text); });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                   // console.log("Файл успешно загружен", data);
-                    fileInput.value = "";
-                    if (connection) {
-                        requestFiles();
-                    }
-                })
-                .catch(error => {
-                    console.error("Ошибка при загрузке файла", error);
-                    fileInput.value = "";
-                });
-        });
-        fileInput.classList.add('uploadFileInput-observed');
-    }
-});
-fileUploadObserver.observe(document.body, { childList: true, subtree: true });
-
-window.addEventListener("load", function () {
-    if (connection) {
-        requestFiles();
-    }
-});
