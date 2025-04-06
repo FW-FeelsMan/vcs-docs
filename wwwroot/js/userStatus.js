@@ -38,7 +38,7 @@
             window.location.href = "/Login";
         });
         connection.on("DebugResponse", function (message) {
-            console.log("Получено сообщение от сервера:", message);
+            //console.log("Получено сообщение от сервера:", message);
         });
 
         // Вызови метод с клиента после подключения

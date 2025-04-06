@@ -19,7 +19,7 @@
             })
                 .then(response => response.json())
                 .then(data => {
-                    console.log("Файл успешно загружен", data);
+                    //console.log("Файл успешно загружен", data);
                     fileInput.value = "";
                 })
                 .catch(error => {

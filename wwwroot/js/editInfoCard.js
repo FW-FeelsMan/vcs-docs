@@ -31,18 +31,18 @@ function handleEditClick() {
 
     saveButton.addEventListener("click", () => {
         const newValue = input.value.trim();
-        const tokenElement = document.querySelector("input[name='__RequestVerificationToken']");
+        const tokenElement = document.querySelector('meta[name="csrf-token"]');
         if (!tokenElement) {
             alert("Ошибка безопасности. Перезагрузите страницу.");
             return;
         }
-        const token = tokenElement.value;
+        const token = tokenElement.getAttribute('content');
 
         fetch("/Content/profile_page?handler=UpdateUserData", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "X-CSRF-TOKEN": token 
+                "X-CSRF-TOKEN": token
             },
             body: JSON.stringify({ Field: fieldName, Value: newValue })
         })

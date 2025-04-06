@@ -4,6 +4,7 @@ var connection;
 if (userIsAuthenticated === true || userIsAuthenticated === "true") {
     connection = new signalR.HubConnectionBuilder()
         .withUrl("/userStorageHub")
+        .configureLogging(signalR.LogLevel.None) 
         .build();
 
     connection.on("ReceiveStorageUpdate", function (files) {
@@ -150,7 +151,6 @@ if (userIsAuthenticated === true || userIsAuthenticated === "true") {
             status.textContent = "Завершено";
             status.classList.remove("processing");
             status.classList.add("completed");
-            // Здесь мы не удаляем карточку, оставляем ее для отображения
         }
     }
 
@@ -193,7 +193,7 @@ const fileUploadObserver = new MutationObserver((mutations) => {
                     return response.json();
                 })
                 .then(data => {
-                    console.log("Файл успешно загружен", data);
+                   // console.log("Файл успешно загружен", data);
                     fileInput.value = "";
                     if (connection) {
                         requestFiles();
