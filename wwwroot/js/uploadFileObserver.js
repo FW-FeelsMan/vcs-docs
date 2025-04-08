@@ -1,4 +1,4 @@
-﻿const MAX_CHUNK_SIZE = 2 * 1024 * 1024;
+﻿const MAX_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB
 
 function setupUpload() {
     const uploadButton = document.getElementById("uploadFileButton");
@@ -16,15 +16,34 @@ function setupUpload() {
         const file = fileInput.files[0];
         if (!file) return;
 
-        const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE);
+        const formData = new FormData();
+        formData.append("fileName", file.name);
+        formData.append("fileSize", file.size);
 
+        const reserveResponse = await fetch("/Content/profile_page?handler=TryReserve", {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content")
+            },
+            body: formData
+        });
+
+        const reserveResult = await reserveResponse.json();
+        if (!reserveResult.success) {
+            alert(reserveResult.error);
+            fileInput.value = "";
+            return;
+        }
+
+        const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE);
         for (let i = 0; i < totalChunks; i++) {
             const chunk = file.slice(i * MAX_CHUNK_SIZE, (i + 1) * MAX_CHUNK_SIZE);
-            const formData = new FormData();
-            formData.append("chunk", chunk);
-            formData.append("metadata.FileName", file.name);
-            formData.append("metadata.ChunkIndex", i);
-            formData.append("metadata.TotalChunks", totalChunks);
+            const chunkForm = new FormData();
+            chunkForm.append("chunk", chunk);
+            chunkForm.append("metadata.FileName", file.name);
+            chunkForm.append("metadata.ChunkIndex", i);
+            chunkForm.append("metadata.TotalChunks", totalChunks);
 
             try {
                 const response = await fetch("/Content/profile_page?handler=UploadChunk", {
@@ -33,7 +52,7 @@ function setupUpload() {
                         "Accept": "application/json",
                         "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content")
                     },
-                    body: formData
+                    body: chunkForm
                 });
 
                 const result = await response.json();
@@ -51,12 +70,11 @@ function setupUpload() {
     });
 }
 
-// Сначала пробуем сразу
+// Сразу при загрузке
 setupUpload();
 
-// Затем следим через MutationObserver
-const uploadFileMutationObserver = new MutationObserver(() => {
+// И на динамический DOM
+const uploadObserver = new MutationObserver(() => {
     setupUpload();
 });
-
-uploadFileMutationObserver.observe(document.body, { childList: true, subtree: true });
+uploadObserver.observe(document.body, { childList: true, subtree: true });

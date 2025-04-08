@@ -23,17 +23,22 @@ namespace VCS_DOCs.Pages.Content
 
 		public User? CurrentUser { get; private set; }
 
-		public profile_pageModel(ApplicationDbContext context,
-								 IWebHostEnvironment webHostEnvironment,
-								 UserServiceManager userServiceManager,
-								 FileUploadTaskService taskService,
-								 IAntiforgery antiforgery)
+		private readonly UserStorageQuotaService _quotaService;
+
+		public profile_pageModel(
+			ApplicationDbContext context,
+			IWebHostEnvironment webHostEnvironment,
+			UserServiceManager userServiceManager,
+			FileUploadTaskService taskService,
+			IAntiforgery antiforgery,
+			UserStorageQuotaService quotaService)
 		{
 			_context = context;
 			_webHostEnvironment = webHostEnvironment;
 			_userServiceManager = userServiceManager;
 			_taskService = taskService;
 			_antiforgery = antiforgery;
+			_quotaService = quotaService;
 		}
 
 		public async Task OnGetAsync()
@@ -168,14 +173,36 @@ namespace VCS_DOCs.Pages.Content
 
 			if (metadata.ChunkIndex == metadata.TotalChunks - 1)
 			{
+				long fileSize = Directory.GetFiles(tempFolder).Sum(f => new FileInfo(f).Length);
+
+				long usedBytes = Directory.Exists(userFolderPath)
+					? Directory.GetFiles(userFolderPath).Sum(f => new FileInfo(f).Length)
+					: 0;
+
+				bool reserved = _quotaService.TryReserve(userId, fileSize, usedBytes);
+
+				if (!reserved)
+				{
+					long reservedBytes = _quotaService.GetReservedBytes(userId);
+					long totalUsed = usedBytes + reservedBytes;
+					long remaining = UserStorageQuotaService.MaxUserStorageBytes - totalUsed;
+
+					return new JsonResult(new
+					{
+						success = false,
+						error = $"Недостаточно места. Занято (включая резервы): {Math.Round((double)totalUsed / 1024 / 1024 / 1024, 2)} ГБ. Доступно: {Math.Round((double)remaining / 1024 / 1024 / 1024, 2)} ГБ."
+					});
+				}
+
 				var task = new FileUploadTask
 				{
 					UserId = userId,
 					DestinationFolder = userFolderPath,
 					TempFilePath = tempFolder,
 					OriginalFileName = metadata.FileName,
-					FileLength = metadata.TotalChunks
+					FileLength = fileSize
 				};
+
 				_taskService.EnqueueTask(task);
 			}
 
@@ -185,5 +212,36 @@ namespace VCS_DOCs.Pages.Content
 
 			return new JsonResult(new { success = true, progress });
 		}
+		public async Task<IActionResult> OnPostTryReserveAsync([FromForm] string fileName, [FromForm] long fileSize)
+		{
+			string? username = User.Identity?.Name;
+			string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+			if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(userId) || fileSize <= 0 || string.IsNullOrWhiteSpace(fileName))
+				return new JsonResult(new { success = false, error = "Неверные параметры" });
+
+			string userFolderPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData", $"userData_{username}");
+			long usedBytes = Directory.Exists(userFolderPath)
+				? Directory.GetFiles(userFolderPath).Sum(f => new FileInfo(f).Length)
+				: 0;
+
+			bool reserved = _quotaService.TryReserve(userId, fileSize, usedBytes);
+
+			if (!reserved)
+			{
+				long reservedBytes = _quotaService.GetReservedBytes(userId);
+				long totalUsed = usedBytes + reservedBytes;
+				long remaining = UserStorageQuotaService.MaxUserStorageBytes - totalUsed;
+
+				return new JsonResult(new
+				{
+					success = false,
+					error = $"Недостаточно места. Уже зарезервировано: {Math.Round((double)reservedBytes / 1024 / 1024 / 1024, 2)} ГБ. Загружено: {Math.Round((double)usedBytes / 1024 / 1024 / 1024, 2)} ГБ. Осталось: {Math.Round((double)remaining / 1024 / 1024 / 1024, 2)} ГБ."
+				});
+			}
+
+			return new JsonResult(new { success = true });
+		}
+
 	}
 }

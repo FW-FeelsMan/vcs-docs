@@ -9,15 +9,23 @@ namespace VCS_DOCs.Services
 		private readonly IHubContext<UserStorageHub> _hubContext;
 		private readonly ILogger<FileUploadTaskService> _logger;
 		private readonly ConcurrentQueue<FileUploadTask> _tasks = new ConcurrentQueue<FileUploadTask>();
-		public FileUploadTaskService(IHubContext<UserStorageHub> hubContext, ILogger<FileUploadTaskService> logger)
+		private readonly UserStorageQuotaService _quotaService;
+
+		public FileUploadTaskService(
+			IHubContext<UserStorageHub> hubContext,
+			ILogger<FileUploadTaskService> logger,
+			UserStorageQuotaService quotaService)
 		{
 			_hubContext = hubContext;
 			_logger = logger;
+			_quotaService = quotaService;
 		}
+
 		public void EnqueueTask(FileUploadTask task)
 		{
 			_tasks.Enqueue(task);
 		}
+
 		protected override async Task ExecuteAsync(CancellationToken stoppingToken)
 		{
 			while (!stoppingToken.IsCancellationRequested)
@@ -32,6 +40,7 @@ namespace VCS_DOCs.Services
 				}
 			}
 		}
+
 		private async Task ProcessTaskAsync(FileUploadTask task, CancellationToken stoppingToken)
 		{
 			string[] chunkFiles = Directory.GetFiles(task.TempFilePath).OrderBy(f => f).ToArray();
@@ -49,7 +58,10 @@ namespace VCS_DOCs.Services
 			}
 			Directory.Delete(task.TempFilePath);
 
+			_quotaService.ReleaseReservation(task.UserId, task.FileLength);
+
 			await _hubContext.Clients.Group(task.UserId).SendAsync("ReceiveUploadProgress", new { fileName = task.OriginalFileName, progress = 100 });
+
 			string[] files = Directory.GetFiles(task.DestinationFolder);
 			var fileInfos = new List<object>();
 			foreach (string file in files)
@@ -62,6 +74,7 @@ namespace VCS_DOCs.Services
 					lastWriteTime = fileInfo.LastWriteTime.ToString("dd.MM.yyyy, HH:mm")
 				});
 			}
+
 			await _hubContext.Clients.Group(task.UserId).SendAsync("ReceiveStorageUpdate", fileInfos);
 		}
 	}

@@ -71,6 +71,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddMemoryCache();
 builder.Services.AddControllersWithViews()
 	.AddRazorRuntimeCompilation();
+builder.Services.AddSingleton<UserStorageQuotaService>();
 builder.Services.AddSingleton<FileUploadTaskService>();
 builder.Services.AddHostedService(provider => provider.GetRequiredService<FileUploadTaskService>());
 builder.WebHost.ConfigureKestrel(options =>
