@@ -153,13 +153,23 @@ namespace VCS_DOCs.Pages.Content
 		public async Task<IActionResult> OnPostUploadChunkAsync([FromForm] IFormFile chunk, [FromForm] ChunkMetadata metadata)
 		{
 			string? username = User.Identity?.Name;
-			string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;			
 
 			if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(userId) || chunk == null)
 				return new JsonResult(new { success = false, error = "Неверные параметры" });
 
+			metadata.FileName = Path.GetFileName(metadata.FileName);
+
 			string userFolderPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData", $"userData_{username}");
-			string tempFolder = Path.Combine(userFolderPath, metadata.FileName + "_chunks");
+			string safeUserFolderPath = Path.GetFullPath(userFolderPath);
+			string safeChunkPath = Path.GetFullPath(Path.Combine(safeUserFolderPath, metadata.FileName + "_chunks"));
+
+			if (!safeChunkPath.StartsWith(safeUserFolderPath))
+			{
+				return new JsonResult(new { success = false, error = "Недопустимый путь загрузки." });
+			}
+
+			string tempFolder = safeChunkPath;
 
 			if (!Directory.Exists(tempFolder))
 				Directory.CreateDirectory(tempFolder);
@@ -216,6 +226,18 @@ namespace VCS_DOCs.Pages.Content
 		{
 			string? username = User.Identity?.Name;
 			string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+			fileName = Path.GetFileName(fileName);
+			string extension = Path.GetExtension(fileName);
+
+			if (BlockedExtensions.Contains(extension))
+			{
+				return new JsonResult(new { success = false, error = "Загрузка исполняемых файлов запрещена." });
+			}
+			if (fileName.Contains("..") || fileName.Contains('/') || fileName.Contains('\\'))
+			{
+				return new JsonResult(new { success = false, error = "Имя файла содержит недопустимые символы." });
+			}
+
 
 			if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(userId) || fileSize <= 0 || string.IsNullOrWhiteSpace(fileName))
 				return new JsonResult(new { success = false, error = "Неверные параметры" });
@@ -242,6 +264,10 @@ namespace VCS_DOCs.Pages.Content
 
 			return new JsonResult(new { success = true });
 		}
-
+		private static readonly HashSet<string> BlockedExtensions = new(StringComparer.OrdinalIgnoreCase)
+		{
+			".exe", ".bat", ".cmd", ".sh", ".msi", ".dll", ".js", ".jar", ".vbs", ".ps1", ".scr", ".php", ".py", ".rb",
+			".com", ".cpl", ".gadget", ".msu", ".reg", ".vb", ".wsf", ".pif", ".app", ".apk", ".hta", ".pl", ".cgi"
+		};
 	}
 }
