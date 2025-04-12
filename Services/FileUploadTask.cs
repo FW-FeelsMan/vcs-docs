@@ -7,5 +7,6 @@
 		public string TempFilePath { get; set; }
 		public string OriginalFileName { get; set; }
 		public long FileLength { get; set; }
+		public string TaskId { get; set; } = Guid.NewGuid().ToString();
 	}
 }

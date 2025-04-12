@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Antiforgery;
+п»їusing Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.SignalR;
@@ -19,7 +19,7 @@ namespace VCS_DOCs.Pages.Content
 		private readonly FileUploadTaskService _taskService;
 		private readonly IAntiforgery _antiforgery;
 
-		private static readonly Regex ValidInputRegex = new(@"^[a-zA-Zа-яА-Я0-9@'""\-\s]{1,30}$", RegexOptions.Compiled);
+		private static readonly Regex ValidInputRegex = new(@"^[a-zA-ZР°-СЏРђ-РЇ0-9@'""\-\s]{1,30}$", RegexOptions.Compiled);
 
 		public User? CurrentUser { get; private set; }
 
@@ -62,12 +62,12 @@ namespace VCS_DOCs.Pages.Content
 		{
 			string? username = User.Identity?.Name;
 			if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(fileName))
-				return new JsonResult(new { success = false, error = "Неверные параметры" });
+				return new JsonResult(new { success = false, error = "РќРµРІРµСЂРЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹" });
 
 			string filePath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData", $"userData_{username}", fileName);
 
 			if (!System.IO.File.Exists(filePath))
-				return new JsonResult(new { success = false, error = "Файл не найден" });
+				return new JsonResult(new { success = false, error = "Р¤Р°Р№Р» РЅРµ РЅР°Р№РґРµРЅ" });
 
 			try
 			{
@@ -88,11 +88,11 @@ namespace VCS_DOCs.Pages.Content
 			}
 			catch (AntiforgeryValidationException)
 			{
-				return new JsonResult(new { success = false, error = "Неверный токен безопасности" });
+				return new JsonResult(new { success = false, error = "РќРµРІРµСЂРЅС‹Р№ С‚РѕРєРµРЅ Р±РµР·РѕРїР°СЃРЅРѕСЃС‚Рё" });
 			}
 
 			if (User.Identity?.IsAuthenticated != true)
-				return new JsonResult(new { success = false, error = "Пользователь не аутентифицирован" });
+				return new JsonResult(new { success = false, error = "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ Р°СѓС‚РµРЅС‚РёС„РёС†РёСЂРѕРІР°РЅ" });
 
 			if (!ModelState.IsValid)
 			{
@@ -101,25 +101,25 @@ namespace VCS_DOCs.Pages.Content
 					.Select(e => e.ErrorMessage)
 					.ToList();
 
-				return new JsonResult(new { success = false, error = "Некорректная модель данных", details = allErrors });
+				return new JsonResult(new { success = false, error = "РќРµРєРѕСЂСЂРµРєС‚РЅР°СЏ РјРѕРґРµР»СЊ РґР°РЅРЅС‹С…", details = allErrors });
 			}
 
 			if (string.IsNullOrWhiteSpace(request.Value))
-				return new JsonResult(new { success = false, error = "Поле не может быть пустым" });
+				return new JsonResult(new { success = false, error = "РџРѕР»Рµ РЅРµ РјРѕР¶РµС‚ Р±С‹С‚СЊ РїСѓСЃС‚С‹Рј" });
 
 			if (request.Value.Length > 30)
-				return new JsonResult(new { success = false, error = "Длина значения не должна превышать 30 символов" });
+				return new JsonResult(new { success = false, error = "Р”Р»РёРЅР° Р·РЅР°С‡РµРЅРёСЏ РЅРµ РґРѕР»Р¶РЅР° РїСЂРµРІС‹С€Р°С‚СЊ 30 СЃРёРјРІРѕР»РѕРІ" });
 
 			if (!ValidInputRegex.IsMatch(request.Value))
-				return new JsonResult(new { success = false, error = "Значение содержит недопустимые символы" });
+				return new JsonResult(new { success = false, error = "Р—РЅР°С‡РµРЅРёРµ СЃРѕРґРµСЂР¶РёС‚ РЅРµРґРѕРїСѓСЃС‚РёРјС‹Рµ СЃРёРјРІРѕР»С‹" });
 
 			string? username = User.Identity?.Name;
 			if (string.IsNullOrWhiteSpace(username))
-				return new JsonResult(new { success = false, error = "Пользователь не найден" });
+				return new JsonResult(new { success = false, error = "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ" });
 
 			var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
 			if (user == null)
-				return new JsonResult(new { success = false, error = "Пользователь не найден" });
+				return new JsonResult(new { success = false, error = "РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ РЅРµ РЅР°Р№РґРµРЅ" });
 
 			switch (request.Field)
 			{
@@ -128,7 +128,7 @@ namespace VCS_DOCs.Pages.Content
 				case "Organization": user.Organization = request.Value; break;
 				case "Department": user.Department = request.Value; break;
 				case "Speciality": user.Speciality = request.Value; break;
-				default: return new JsonResult(new { success = false, error = "Недопустимое поле для обновления" });
+				default: return new JsonResult(new { success = false, error = "РќРµРґРѕРїСѓСЃС‚РёРјРѕРµ РїРѕР»Рµ РґР»СЏ РѕР±РЅРѕРІР»РµРЅРёСЏ" });
 			}
 
 			try
@@ -139,7 +139,7 @@ namespace VCS_DOCs.Pages.Content
 			}
 			catch (DbUpdateException ex)
 			{
-				return new JsonResult(new { success = false, error = $"Ошибка базы данных: {ex.InnerException?.Message ?? ex.Message}" });
+				return new JsonResult(new { success = false, error = $"РћС€РёР±РєР° Р±Р°Р·С‹ РґР°РЅРЅС‹С…: {ex.InnerException?.Message ?? ex.Message}" });
 			}
 		}
 
@@ -153,10 +153,10 @@ namespace VCS_DOCs.Pages.Content
 		public async Task<IActionResult> OnPostUploadChunkAsync([FromForm] IFormFile chunk, [FromForm] ChunkMetadata metadata)
 		{
 			string? username = User.Identity?.Name;
-			string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;			
+			string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
 			if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(userId) || chunk == null)
-				return new JsonResult(new { success = false, error = "Неверные параметры" });
+				return new JsonResult(new { success = false, error = "РќРµРІРµСЂРЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹" });
 
 			metadata.FileName = Path.GetFileName(metadata.FileName);
 
@@ -166,7 +166,7 @@ namespace VCS_DOCs.Pages.Content
 
 			if (!safeChunkPath.StartsWith(safeUserFolderPath))
 			{
-				return new JsonResult(new { success = false, error = "Недопустимый путь загрузки." });
+				return new JsonResult(new { success = false, error = "РќРµРґРѕРїСѓСЃС‚РёРјС‹Р№ РїСѓС‚СЊ Р·Р°РіСЂСѓР·РєРё." });
 			}
 
 			string tempFolder = safeChunkPath;
@@ -180,6 +180,8 @@ namespace VCS_DOCs.Pages.Content
 			{
 				await chunk.CopyToAsync(stream);
 			}
+
+			var hubContext = HttpContext.RequestServices.GetRequiredService<IHubContext<UserStorageHub>>();
 
 			if (metadata.ChunkIndex == metadata.TotalChunks - 1)
 			{
@@ -200,7 +202,7 @@ namespace VCS_DOCs.Pages.Content
 					return new JsonResult(new
 					{
 						success = false,
-						error = $"Недостаточно места. Занято (включая резервы): {Math.Round((double)totalUsed / 1024 / 1024 / 1024, 2)} ГБ. Доступно: {Math.Round((double)remaining / 1024 / 1024 / 1024, 2)} ГБ."
+						error = $"РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РјРµСЃС‚Р°. Р—Р°РЅСЏС‚Рѕ (РІРєР»СЋС‡Р°СЏ СЂРµР·РµСЂРІС‹): {Math.Round((double)totalUsed / 1024 / 1024 / 1024, 2)} Р“Р‘. Р”РѕСЃС‚СѓРїРЅРѕ: {Math.Round((double)remaining / 1024 / 1024 / 1024, 2)} Р“Р‘."
 					});
 				}
 
@@ -214,14 +216,16 @@ namespace VCS_DOCs.Pages.Content
 				};
 
 				_taskService.EnqueueTask(task);
+
+				await hubContext.Clients.Group(username).SendAsync("NewTaskStarted", new { fileName = metadata.FileName, taskId = task.TaskId });
 			}
 
 			double progress = ((double)(metadata.ChunkIndex + 1) / metadata.TotalChunks) * 100;
-			var hubContext = HttpContext.RequestServices.GetRequiredService<IHubContext<UserStorageHub>>();
 			await hubContext.Clients.Group(username).SendAsync("ReceiveUploadProgress", new { fileName = metadata.FileName, progress });
 
 			return new JsonResult(new { success = true, progress });
 		}
+
 		public async Task<IActionResult> OnPostTryReserveAsync([FromForm] string fileName, [FromForm] long fileSize)
 		{
 			string? username = User.Identity?.Name;
@@ -231,21 +235,24 @@ namespace VCS_DOCs.Pages.Content
 
 			if (BlockedExtensions.Contains(extension))
 			{
-				return new JsonResult(new { success = false, error = "Загрузка исполняемых файлов запрещена." });
+				return new JsonResult(new { success = false, error = "Р—Р°РіСЂСѓР·РєР° РёСЃРїРѕР»РЅСЏРµРјС‹С… С„Р°Р№Р»РѕРІ Р·Р°РїСЂРµС‰РµРЅР°." });
 			}
 			if (fileName.Contains("..") || fileName.Contains('/') || fileName.Contains('\\'))
 			{
-				return new JsonResult(new { success = false, error = "Имя файла содержит недопустимые символы." });
+				return new JsonResult(new { success = false, error = "РРјСЏ С„Р°Р№Р»Р° СЃРѕРґРµСЂР¶РёС‚ РЅРµРґРѕРїСѓСЃС‚РёРјС‹Рµ СЃРёРјРІРѕР»С‹." });
 			}
 
-
 			if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(userId) || fileSize <= 0 || string.IsNullOrWhiteSpace(fileName))
-				return new JsonResult(new { success = false, error = "Неверные параметры" });
+				return new JsonResult(new { success = false, error = "РќРµРІРµСЂРЅС‹Рµ РїР°СЂР°РјРµС‚СЂС‹" });
 
 			string userFolderPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData", $"userData_{username}");
-			long usedBytes = Directory.Exists(userFolderPath)
-				? Directory.GetFiles(userFolderPath).Sum(f => new FileInfo(f).Length)
-				: 0;
+
+			long usedBytes = await Task.Run(() =>
+			{
+				return Directory.Exists(userFolderPath)
+					? Directory.GetFiles(userFolderPath).Sum(f => new FileInfo(f).Length)
+					: 0;
+			});
 
 			bool reserved = _quotaService.TryReserve(userId, fileSize, usedBytes);
 
@@ -258,16 +265,29 @@ namespace VCS_DOCs.Pages.Content
 				return new JsonResult(new
 				{
 					success = false,
-					error = $"Недостаточно места. Уже зарезервировано: {Math.Round((double)reservedBytes / 1024 / 1024 / 1024, 2)} ГБ. Загружено: {Math.Round((double)usedBytes / 1024 / 1024 / 1024, 2)} ГБ. Осталось: {Math.Round((double)remaining / 1024 / 1024 / 1024, 2)} ГБ."
+					error = $"РќРµРґРѕСЃС‚Р°С‚РѕС‡РЅРѕ РјРµСЃС‚Р°. РЈР¶Рµ Р·Р°СЂРµР·РµСЂРІРёСЂРѕРІР°РЅРѕ: {Math.Round((double)reservedBytes / 1024 / 1024 / 1024, 2)} Р“Р‘. Р—Р°РіСЂСѓР¶РµРЅРѕ: {Math.Round((double)usedBytes / 1024 / 1024 / 1024, 2)} Р“Р‘. РћСЃС‚Р°Р»РѕСЃСЊ: {Math.Round((double)remaining / 1024 / 1024 / 1024, 2)} Р“Р‘."
 				});
 			}
 
 			return new JsonResult(new { success = true });
 		}
+
 		private static readonly HashSet<string> BlockedExtensions = new(StringComparer.OrdinalIgnoreCase)
 		{
 			".exe", ".bat", ".cmd", ".sh", ".msi", ".dll", ".js", ".jar", ".vbs", ".ps1", ".scr", ".php", ".py", ".rb",
 			".com", ".cpl", ".gadget", ".msu", ".reg", ".vb", ".wsf", ".pif", ".app", ".apk", ".hta", ".pl", ".cgi"
 		};
+		public IActionResult OnPostCancelUpload([FromBody] CancelTaskRequest request)
+		{
+			if (string.IsNullOrWhiteSpace(request.TaskId)) return new JsonResult(new { success = false });
+
+			bool cancelled = _taskService.CancelTask(request.TaskId);
+			return new JsonResult(new { success = cancelled });
+		}
+
+		public class CancelTaskRequest
+		{
+			public string? TaskId { get; set; }
+		}
 	}
 }

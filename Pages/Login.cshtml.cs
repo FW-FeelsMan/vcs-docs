@@ -163,7 +163,11 @@ namespace VCS_DOCs.Pages
 				RegistrationErrors.Add("Пароль не должен превышать 20 символов.");
 				return new JsonResult(new { success = false, errors = RegistrationErrors });
 			}
-
+			if (Password.Length <= 6)
+			{
+				RegistrationErrors.Add("Пароль должен быть более 6 символов.");
+				return new JsonResult(new { success = false, errors = RegistrationErrors });
+			}
 			try
 			{
 				var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == Username);

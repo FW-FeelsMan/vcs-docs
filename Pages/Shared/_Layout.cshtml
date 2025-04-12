@@ -23,13 +23,18 @@
     <div style="display:none;">
         @Html.AntiForgeryToken()
     </div>
-
     @RenderBody()
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
     @if (User.Identity?.IsAuthenticated == true)
     {
         <script src="~/js/userStatus.js"></script>
+    }
+    <script>
+        var userIsAuthenticated = @User.Identity.IsAuthenticated.ToString().ToLower();
+    </script>
+    @if (User.Identity.IsAuthenticated)
+    {
+        <script src="~/js/userStorageObserver.js"></script>
     }
     <script src="~/js/sidebar.js"></script>
     <script src="~/js/contextMenu.js"></script>
@@ -39,16 +44,6 @@
     <script src="~/js/sorttable.js"></script>
     <script src="~/js/sorttableObserver.js"></script>
     <script src="~/js/uploadFileObserver.js"></script>
-
-    <script>
-        // Определяем переменную до подключения userStorageObserver.js
-        var userIsAuthenticated = @User.Identity.IsAuthenticated.ToString().ToLower();
-    </script>
-    @if (User.Identity.IsAuthenticated)
-    {
-        <script src="~/js/userStorageObserver.js"></script>
-    }
-
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

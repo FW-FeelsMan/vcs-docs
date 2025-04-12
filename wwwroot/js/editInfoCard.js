@@ -23,7 +23,7 @@ function handleEditClick() {
 
     const editButton = card.querySelector(".edit-button");
     const saveButton = document.createElement("button");
-    saveButton.className = "save-button";
+    saveButton.className = "edit-button"; // Используем тот же класс, что и у кнопки редактирования
     saveButton.innerHTML = '<img src="/images/save_icon.png" alt="Save">';
     saveButton.title = "Применить";
 

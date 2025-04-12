@@ -10,6 +10,8 @@ namespace VCS_DOCs.Services
 		private readonly ILogger<FileUploadTaskService> _logger;
 		private readonly ConcurrentQueue<FileUploadTask> _tasks = new ConcurrentQueue<FileUploadTask>();
 		private readonly UserStorageQuotaService _quotaService;
+		private readonly ConcurrentDictionary<string, FileUploadTask> _activeTasks = new();
+		private readonly ConcurrentBag<string> _cancelledTaskIds = new();
 
 		public FileUploadTaskService(
 			IHubContext<UserStorageHub> hubContext,
@@ -46,6 +48,17 @@ namespace VCS_DOCs.Services
 			string[] chunkFiles = Directory.GetFiles(task.TempFilePath).OrderBy(f => f).ToArray();
 			string destinationFile = Path.Combine(task.DestinationFolder, task.OriginalFileName);
 
+			if (_cancelledTaskIds.Contains(task.TaskId))
+			{
+				// Удаляем временные файлы
+				if (Directory.Exists(task.TempFilePath))
+					Directory.Delete(task.TempFilePath, true);
+
+				_quotaService.ReleaseReservation(task.UserId, task.FileLength);
+				_logger.LogInformation($"Загрузка отменена: {task.OriginalFileName}");
+				return;
+			}
+
 			using (var destinationStream = new FileStream(destinationFile, FileMode.Create))
 			{
 				foreach (var chunkFile in chunkFiles)
@@ -77,5 +90,11 @@ namespace VCS_DOCs.Services
 
 			await _hubContext.Clients.Group(task.UserId).SendAsync("ReceiveStorageUpdate", fileInfos);
 		}
+		public bool CancelTask(string taskId)
+		{
+			_cancelledTaskIds.Add(taskId);
+			return true;
+		}
+
 	}
 }
