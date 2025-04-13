@@ -22,6 +22,10 @@ namespace VCS_DOCs.Services
 			_logger = logger;
 			_quotaService = quotaService;
 		}
+		public bool IsTaskActiveForFolder(string folderPath)
+		{
+			return _tasks.ToArray().Any(task => task.TempFilePath == folderPath);
+		}
 
 		public void EnqueueTask(FileUploadTask task)
 		{

@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("VCS-DOCs")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c235f850df7314cecef7781f6391c4b21118eefe")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fc87bfff9194f5c4b7ffcd4b0f51a9bc14989a8a")]
 [assembly: System.Reflection.AssemblyProductAttribute("VCS-DOCs")]
 [assembly: System.Reflection.AssemblyTitleAttribute("VCS-DOCs")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

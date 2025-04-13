@@ -102,8 +102,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>5xq80yvs2j</Fingerprint>
-      <Integrity>tw3AqNzUxp3hbfKr4iD937vEtRvL6XtWh1Tk9O37giM=</Integrity>
+      <Fingerprint>w6uyh3ona9</Fingerprint>
+      <Integrity>WKrrQ0AZfANjmPXHY0fkXdOPQur5qmPx2NXU7tKt1Lo=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\css\sub_css\profile_page.css'))</OriginalItemSpec>
@@ -714,8 +714,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>mjyxwes8np</Fingerprint>
-      <Integrity>IgUE+ON4f2EDzRrMDsIcJQvfiLXDpgqPPMyQv7cVjU4=</Integrity>
+      <Fingerprint>3imwkqvq6f</Fingerprint>
+      <Integrity>6+WjbGTltcFH/0IeiBEyoECnQmI7sft07xlFoX1e2KY=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\uploadFileObserver.js'))</OriginalItemSpec>

@@ -1,5 +1,8 @@
 ﻿const MAX_CHUNK_SIZE = 2 * 1024 * 1024;
+let activeUploads = 0;
+
 console.log("Скрипт загружен");
+
 if (typeof userIsAuthenticated !== "undefined" && userIsAuthenticated === true) {
     if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", setupUpload);
@@ -10,6 +13,39 @@ if (typeof userIsAuthenticated !== "undefined" && userIsAuthenticated === true) 
     const uploadObserver = new MutationObserver(setupUpload);
     uploadObserver.observe(document.body, { childList: true, subtree: true });
 
+    window.addEventListener("beforeunload", function (e) {
+        if (activeUploads > 0) {
+            e.preventDefault();
+            e.returnValue = ""; // Отображает стандартное предупреждение браузера
+        }
+    });
+
+    function showUploadWarning() {
+        let notice = document.getElementById("upload-warning");
+        if (!notice) {
+            notice = document.createElement("div");
+            notice.id = "upload-warning";
+            notice.style.position = "fixed";
+            notice.style.bottom = "15px";
+            notice.style.right = "15px";
+            notice.style.backgroundColor = "#ffc107";
+            notice.style.padding = "10px 20px";
+            notice.style.borderRadius = "6px";
+            notice.style.boxShadow = "0 2px 6px rgba(0,0,0,0.2)";
+            notice.style.zIndex = "9999";
+            notice.style.fontWeight = "bold";
+            notice.textContent = "Загрузка файлов в процессе. Закрыв страницу вы потеряете прогресс загрузки.";
+            document.body.appendChild(notice);
+        }
+    }
+
+    function hideUploadWarning() {
+        const notice = document.getElementById("upload-warning");
+        if (notice) {
+            notice.remove();
+        }
+    }
+
     function setupUpload() {
         const uploadButton = document.getElementById("uploadFileButton");
         const fileInput = document.getElementById("hiddenFileInput");
@@ -19,7 +55,6 @@ if (typeof userIsAuthenticated !== "undefined" && userIsAuthenticated === true) 
         uploadButton.dataset.initialized = "true";
 
         uploadButton.addEventListener("click", () => {
-            console.log("Кнопка 'Загрузить файл' нажата");
             fileInput.click();
         });
 
@@ -50,6 +85,9 @@ if (typeof userIsAuthenticated !== "undefined" && userIsAuthenticated === true) 
             }
 
             const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE);
+            activeUploads++;
+            showUploadWarning();
+
             for (let i = 0; i < totalChunks; i++) {
                 const chunk = file.slice(i * MAX_CHUNK_SIZE, (i + 1) * MAX_CHUNK_SIZE);
                 const chunkForm = new FormData();
@@ -77,6 +115,12 @@ if (typeof userIsAuthenticated !== "undefined" && userIsAuthenticated === true) 
                     console.error("Ошибка при отправке чанка:", err);
                     break;
                 }
+            }
+
+            activeUploads--;
+            if (activeUploads <= 0) {
+                hideUploadWarning();
+                activeUploads = 0;
             }
 
             fileInput.value = "";

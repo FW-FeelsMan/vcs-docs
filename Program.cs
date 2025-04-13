@@ -98,6 +98,7 @@ builder.Services.Configure<IpRateLimitOptions>(options =>
 		}
 	];
 });
+builder.Services.AddHostedService<ChunkCleanupService>();
 
 var app = builder.Build();
 
