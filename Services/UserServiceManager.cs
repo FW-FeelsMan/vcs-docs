@@ -17,7 +17,7 @@ namespace VCS_DOCs.Services
 			_serviceProvider = serviceProvider;
 		}
 
-		public UserBackgroundService GetOrCreateService(string userId)
+		public UserBackgroundService GetOrCreateService(string userId, string username)
 		{
 			if (_userServices.ContainsKey(userId))
 			{
@@ -26,9 +26,27 @@ namespace VCS_DOCs.Services
 			}
 
 			var logger = _serviceProvider.GetRequiredService<ILogger<UserBackgroundService>>();
+			var cleanerLogger = _serviceProvider.GetRequiredService<ILogger<UserChunkCleanerService>>();
+			var quotaService = _serviceProvider.GetRequiredService<UserStorageQuotaService>();
+			var fileUploadTaskService = _serviceProvider.GetRequiredService<FileUploadTaskService>();
+			var env = _serviceProvider.GetRequiredService<IWebHostEnvironment>();
+
 			var service = new UserBackgroundService(userId, logger);
 			_userServices[userId] = service;
 			Task.Run(() => service.StartAsync(CancellationToken.None));
+
+			var userDataPath = Path.Combine(env.ContentRootPath, "Data", "userData", $"userData_{username}");
+
+			var chunkCleaner = new UserChunkCleanerService(
+				userId,
+				userDataPath,
+				fileUploadTaskService,
+				quotaService,
+				cleanerLogger
+			);
+
+			Task.Run(() => chunkCleaner.RunAsync(CancellationToken.None));
+
 			Console.WriteLine($"[UserServiceManager] Запущен сервис для пользователя {userId}");
 			return service;
 		}

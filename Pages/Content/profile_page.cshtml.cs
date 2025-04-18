@@ -161,15 +161,7 @@ namespace VCS_DOCs.Pages.Content
 			metadata.FileName = Path.GetFileName(metadata.FileName);
 
 			string userFolderPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData", $"userData_{username}");
-			string safeUserFolderPath = Path.GetFullPath(userFolderPath);
-			string safeChunkPath = Path.GetFullPath(Path.Combine(safeUserFolderPath, metadata.FileName + "_chunks"));
-
-			if (!safeChunkPath.StartsWith(safeUserFolderPath))
-			{
-				return new JsonResult(new { success = false, error = "Недопустимый путь загрузки." });
-			}
-
-			string tempFolder = safeChunkPath;
+			string tempFolder = Path.Combine(userFolderPath, metadata.FileName + "_chunks");
 
 			if (!Directory.Exists(tempFolder))
 				Directory.CreateDirectory(tempFolder);
@@ -183,6 +175,21 @@ namespace VCS_DOCs.Pages.Content
 
 			var hubContext = HttpContext.RequestServices.GetRequiredService<IHubContext<UserStorageHub>>();
 
+			// Добавляем задачу в список активных при первом чанке
+			if (metadata.ChunkIndex == 0)
+			{
+				var tempTask = new FileUploadTask
+				{
+					UserId = userId,
+					TempFilePath = tempFolder,
+					DestinationFolder = userFolderPath,
+					OriginalFileName = metadata.FileName,
+					FileLength = 0 // временно 0, корректируем после загрузки последнего чанка
+				};
+
+				_taskService.RegisterActiveTask(tempTask);
+			}
+
 			if (metadata.ChunkIndex == metadata.TotalChunks - 1)
 			{
 				long fileSize = Directory.GetFiles(tempFolder).Sum(f => new FileInfo(f).Length);
@@ -195,18 +202,15 @@ namespace VCS_DOCs.Pages.Content
 
 				if (!reserved)
 				{
-					long reservedBytes = _quotaService.GetReservedBytes(userId);
-					long totalUsed = usedBytes + reservedBytes;
-					long remaining = UserStorageQuotaService.MaxUserStorageBytes - totalUsed;
-
+					_taskService.RemoveActiveTask(tempFolder);
 					return new JsonResult(new
 					{
 						success = false,
-						error = $"Недостаточно места. Занято (включая резервы): {Math.Round((double)totalUsed / 1024 / 1024 / 1024, 2)} ГБ. Доступно: {Math.Round((double)remaining / 1024 / 1024 / 1024, 2)} ГБ."
+						error = $"Недостаточно места."
 					});
 				}
 
-				var task = new FileUploadTask
+				var finalTask = new FileUploadTask
 				{
 					UserId = userId,
 					DestinationFolder = userFolderPath,
@@ -215,9 +219,9 @@ namespace VCS_DOCs.Pages.Content
 					FileLength = fileSize
 				};
 
-				_taskService.EnqueueTask(task);
+				_taskService.EnqueueTask(finalTask);
 
-				await hubContext.Clients.Group(username).SendAsync("NewTaskStarted", new { fileName = metadata.FileName, taskId = task.TaskId });
+				await hubContext.Clients.Group(username).SendAsync("NewTaskStarted", new { fileName = metadata.FileName, taskId = finalTask.TaskId });
 			}
 
 			double progress = ((double)(metadata.ChunkIndex + 1) / metadata.TotalChunks) * 100;

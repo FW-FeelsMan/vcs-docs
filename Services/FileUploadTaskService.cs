@@ -8,10 +8,10 @@ namespace VCS_DOCs.Services
 	{
 		private readonly IHubContext<UserStorageHub> _hubContext;
 		private readonly ILogger<FileUploadTaskService> _logger;
-		private readonly ConcurrentQueue<FileUploadTask> _tasks = new ConcurrentQueue<FileUploadTask>();
+		private readonly ConcurrentQueue<FileUploadTask> _tasks = new();
 		private readonly UserStorageQuotaService _quotaService;
 		private readonly ConcurrentDictionary<string, FileUploadTask> _activeTasks = new();
-		private readonly ConcurrentBag<string> _cancelledTaskIds = new();
+		private readonly ConcurrentBag<string> _cancelledTaskIds = [];
 
 		public FileUploadTaskService(
 			IHubContext<UserStorageHub> hubContext,
@@ -22,14 +22,11 @@ namespace VCS_DOCs.Services
 			_logger = logger;
 			_quotaService = quotaService;
 		}
-		public bool IsTaskActiveForFolder(string folderPath)
-		{
-			return _tasks.ToArray().Any(task => task.TempFilePath == folderPath);
-		}
 
 		public void EnqueueTask(FileUploadTask task)
 		{
 			_tasks.Enqueue(task);
+			_activeTasks.TryAdd(task.TaskId, task);
 		}
 
 		protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -54,11 +51,11 @@ namespace VCS_DOCs.Services
 
 			if (_cancelledTaskIds.Contains(task.TaskId))
 			{
-				// Удаляем временные файлы
 				if (Directory.Exists(task.TempFilePath))
 					Directory.Delete(task.TempFilePath, true);
 
 				_quotaService.ReleaseReservation(task.UserId, task.FileLength);
+				RemoveActiveTask(task.TempFilePath);
 				_logger.LogInformation($"Загрузка отменена: {task.OriginalFileName}");
 				return;
 			}
@@ -73,32 +70,54 @@ namespace VCS_DOCs.Services
 					File.Delete(chunkFile);
 				}
 			}
-			Directory.Delete(task.TempFilePath);
 
+			Directory.Delete(task.TempFilePath);
 			_quotaService.ReleaseReservation(task.UserId, task.FileLength);
 
 			await _hubContext.Clients.Group(task.UserId).SendAsync("ReceiveUploadProgress", new { fileName = task.OriginalFileName, progress = 100 });
 
-			string[] files = Directory.GetFiles(task.DestinationFolder);
-			var fileInfos = new List<object>();
-			foreach (string file in files)
+			var fileInfos = Directory.GetFiles(task.DestinationFolder).Select(file => new
 			{
-				var fileInfo = new FileInfo(file);
-				fileInfos.Add(new
-				{
-					name = fileInfo.Name,
-					sizeMb = Math.Round((double)fileInfo.Length / (1024 * 1024), 2),
-					lastWriteTime = fileInfo.LastWriteTime.ToString("dd.MM.yyyy, HH:mm")
-				});
-			}
+				name = Path.GetFileName(file),
+				sizeMb = Math.Round(new FileInfo(file).Length / 1048576.0, 2),
+				lastWriteTime = File.GetLastWriteTime(file).ToString("dd.MM.yyyy, HH:mm")
+			});
 
 			await _hubContext.Clients.Group(task.UserId).SendAsync("ReceiveStorageUpdate", fileInfos);
+
+			RemoveActiveTask(task.TempFilePath);
 		}
+
 		public bool CancelTask(string taskId)
 		{
 			_cancelledTaskIds.Add(taskId);
 			return true;
 		}
+		public void RegisterActiveTask(FileUploadTask task)
+		{
+			_activeTasks.TryAdd(task.TempFilePath, task);
+		}
 
+		public void RemoveActiveTask(string tempFilePath)
+		{
+			var taskToRemove = _activeTasks.Values.FirstOrDefault(t => t.TempFilePath == tempFilePath);
+			if (taskToRemove != null)
+				_activeTasks.TryRemove(taskToRemove.TempFilePath, out _);
+		}
+				public bool IsTaskActiveForFolder(string folderPath)
+		{
+			if (_activeTasks.ContainsKey(folderPath))
+			{
+				var lastChunkTime = Directory.GetFiles(folderPath)
+					.Select(f => File.GetLastWriteTimeUtc(f))
+					.OrderByDescending(t => t)
+					.FirstOrDefault();
+
+				if (lastChunkTime == default) return false;
+
+				return (DateTime.UtcNow - lastChunkTime) < TimeSpan.FromSeconds(15);
+			}
+			return false;
+		}
 	}
 }
