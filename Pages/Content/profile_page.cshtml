@@ -62,9 +62,15 @@
             <div id="storage" class="content-section">
                 <h2>Личное хранилище</h2>
                 <div class="storage-header" style="display: flex; align-items: center; justify-content: space-between;">
-                    <h3>Содержимое личного хранилища пользователя</h3>
+                    <h3>Содержимое хранилища</h3>
                     <div style="display: flex; align-items: center;">
-                        <span id="storageCounter" style="margin-right: 10px;">0,0 Гб/10 Гб</span>
+                        <div style="margin-right: 10px;">
+                            <span>Загружается: @Model.ReservedGb Гб</span>
+                            &nbsp;
+                            <span>Свободно: @Model.FreeGb Гб из 10 Гб</span>
+                        </div>
+
+
                         <button id="uploadFileButton" type="button" class="css-button-sliding-to-left--red">Загрузить файл</button>
                     </div>
                 </div>

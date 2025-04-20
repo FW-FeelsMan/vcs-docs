@@ -714,8 +714,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>3imwkqvq6f</Fingerprint>
-      <Integrity>6+WjbGTltcFH/0IeiBEyoECnQmI7sft07xlFoX1e2KY=</Integrity>
+      <Fingerprint>eewy3n20me</Fingerprint>
+      <Integrity>emhJ7RCEHR21bYEkA3XppHZcAvNIECl6vyMj1Tn8+R4=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\uploadFileObserver.js'))</OriginalItemSpec>

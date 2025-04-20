@@ -10,7 +10,7 @@ namespace VCS_DOCs.Services
 		private readonly ILogger<FileUploadTaskService> _logger;
 		private readonly ConcurrentQueue<FileUploadTask> _tasks = new();
 		private readonly UserStorageQuotaService _quotaService;
-		private readonly ConcurrentDictionary<string, FileUploadTask> _activeTasks = new();
+		private readonly ConcurrentDictionary<string, FileUploadTask> _activeTasks = new(); // ключ = TempFilePath
 		private readonly ConcurrentBag<string> _cancelledTaskIds = [];
 
 		public FileUploadTaskService(
@@ -26,7 +26,7 @@ namespace VCS_DOCs.Services
 		public void EnqueueTask(FileUploadTask task)
 		{
 			_tasks.Enqueue(task);
-			_activeTasks.TryAdd(task.TaskId, task);
+			_activeTasks.TryAdd(task.TempFilePath, task); // ключ = TempFilePath
 		}
 
 		protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -60,32 +60,69 @@ namespace VCS_DOCs.Services
 				return;
 			}
 
-			using (var destinationStream = new FileStream(destinationFile, FileMode.Create))
+			try
 			{
-				foreach (var chunkFile in chunkFiles)
+				using (var destinationStream = new FileStream(destinationFile, FileMode.Create))
 				{
-					using (var sourceStream = new FileStream(chunkFile, FileMode.Open))
-						await sourceStream.CopyToAsync(destinationStream, stoppingToken);
+					foreach (var chunkFile in chunkFiles)
+					{
+						// явно указываем возможность совместного доступа при чтении чанков
+						using (var sourceStream = new FileStream(chunkFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+							await sourceStream.CopyToAsync(destinationStream, stoppingToken);
 
-					File.Delete(chunkFile);
+						TryDeleteFile(chunkFile);
+					}
 				}
+
+				TryDeleteDirectory(task.TempFilePath);
+
+				_quotaService.ReleaseReservation(task.UserId, task.FileLength);
+
+				await _hubContext.Clients.Group(task.UserId).SendAsync("ReceiveUploadProgress", new { fileName = task.OriginalFileName, progress = 100 });
+
+				var fileInfos = Directory.GetFiles(task.DestinationFolder).Select(file => new
+				{
+					name = Path.GetFileName(file),
+					sizeMb = Math.Round(new FileInfo(file).Length / 1048576.0, 2),
+					lastWriteTime = File.GetLastWriteTime(file).ToString("dd.MM.yyyy, HH:mm")
+				});
+
+				await _hubContext.Clients.Group(task.UserId).SendAsync("ReceiveStorageUpdate", fileInfos);
 			}
-
-			Directory.Delete(task.TempFilePath);
-			_quotaService.ReleaseReservation(task.UserId, task.FileLength);
-
-			await _hubContext.Clients.Group(task.UserId).SendAsync("ReceiveUploadProgress", new { fileName = task.OriginalFileName, progress = 100 });
-
-			var fileInfos = Directory.GetFiles(task.DestinationFolder).Select(file => new
+			catch (Exception ex)
 			{
-				name = Path.GetFileName(file),
-				sizeMb = Math.Round(new FileInfo(file).Length / 1048576.0, 2),
-				lastWriteTime = File.GetLastWriteTime(file).ToString("dd.MM.yyyy, HH:mm")
-			});
+				_logger.LogError(ex, $"Ошибка при обработке задачи {task.TaskId}: {ex.Message}");
+			}
+			finally
+			{
+				RemoveActiveTask(task.TempFilePath);
+			}
+		}
 
-			await _hubContext.Clients.Group(task.UserId).SendAsync("ReceiveStorageUpdate", fileInfos);
+		private void TryDeleteFile(string filePath)
+		{
+			try
+			{
+				if (File.Exists(filePath))
+					File.Delete(filePath);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogWarning($"Не удалось удалить файл чанка {filePath}: {ex.Message}");
+			}
+		}
 
-			RemoveActiveTask(task.TempFilePath);
+		private void TryDeleteDirectory(string dirPath)
+		{
+			try
+			{
+				if (Directory.Exists(dirPath))
+					Directory.Delete(dirPath, true);
+			}
+			catch (Exception ex)
+			{
+				_logger.LogWarning($"Не удалось удалить каталог чанков {dirPath}: {ex.Message}");
+			}
 		}
 
 		public bool CancelTask(string taskId)
@@ -93,20 +130,20 @@ namespace VCS_DOCs.Services
 			_cancelledTaskIds.Add(taskId);
 			return true;
 		}
+
 		public void RegisterActiveTask(FileUploadTask task)
 		{
-			_activeTasks.TryAdd(task.TempFilePath, task);
+			_activeTasks.TryAdd(task.TempFilePath, task); // ключ = TempFilePath
 		}
 
 		public void RemoveActiveTask(string tempFilePath)
 		{
-			var taskToRemove = _activeTasks.Values.FirstOrDefault(t => t.TempFilePath == tempFilePath);
-			if (taskToRemove != null)
-				_activeTasks.TryRemove(taskToRemove.TempFilePath, out _);
+			_activeTasks.TryRemove(tempFilePath, out _);
 		}
-				public bool IsTaskActiveForFolder(string folderPath)
+
+		public bool IsTaskActiveForFolder(string folderPath)
 		{
-			if (_activeTasks.ContainsKey(folderPath))
+			if (_activeTasks.TryGetValue(folderPath, out var task))
 			{
 				var lastChunkTime = Directory.GetFiles(folderPath)
 					.Select(f => File.GetLastWriteTimeUtc(f))

@@ -18,6 +18,11 @@ namespace VCS_DOCs.Pages.Content
 		private readonly UserServiceManager _userServiceManager;
 		private readonly FileUploadTaskService _taskService;
 		private readonly IAntiforgery _antiforgery;
+		public double ReservedGb { get; private set; }
+		public double UsedGb { get; private set; }
+		public double FreeGb { get; private set; }
+
+
 
 		private static readonly Regex ValidInputRegex = new(@"^[a-zA-Zа-яА-Я0-9@'""\-\s]{1,30}$", RegexOptions.Compiled);
 
@@ -44,13 +49,29 @@ namespace VCS_DOCs.Pages.Content
 		public async Task OnGetAsync()
 		{
 			string? username = User.Identity?.Name;
-			if (!string.IsNullOrWhiteSpace(username))
+			string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+			if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(userId))
 			{
 				CurrentUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
-				string userFolderPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData", $"userData_{username}");
-				_userServiceManager.GetOrCreateStorageService(username, userFolderPath);
+
+				_userServiceManager.StartUserServices(userId, username);
+
+				string userFolder = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData", $"userData_{username}");
+
+				long usedBytes = Directory.Exists(userFolder)
+					? Directory.GetFiles(userFolder).Sum(f => new FileInfo(f).Length)
+					: 0;
+
+				long reservedBytes = _quotaService.GetReservedBytes(userId);
+				long totalUsed = usedBytes + reservedBytes;
+
+				UsedGb = Math.Round((double)usedBytes / 1024 / 1024 / 1024, 2);
+				ReservedGb = Math.Round((double)reservedBytes / 1024 / 1024 / 1024, 2);
+				FreeGb = Math.Round((UserStorageQuotaService.MaxUserStorageBytes - totalUsed) / 1024.0 / 1024 / 1024, 2);
 			}
 		}
+
 
 		public class UpdateUserRequest
 		{
@@ -269,7 +290,7 @@ namespace VCS_DOCs.Pages.Content
 				return new JsonResult(new
 				{
 					success = false,
-					error = $"Недостаточно места. Уже зарезервировано: {Math.Round((double)reservedBytes / 1024 / 1024 / 1024, 2)} ГБ. Загружено: {Math.Round((double)usedBytes / 1024 / 1024 / 1024, 2)} ГБ. Осталось: {Math.Round((double)remaining / 1024 / 1024 / 1024, 2)} ГБ."
+					error = $"Недостаточно места. Уже загружается: {Math.Round((double)reservedBytes / 1024 / 1024 / 1024, 2)} ГБ. Загружено: {Math.Round((double)usedBytes / 1024 / 1024 / 1024, 2)} ГБ. Осталось: {Math.Round((double)remaining / 1024 / 1024 / 1024, 2)} ГБ."
 				});
 			}
 

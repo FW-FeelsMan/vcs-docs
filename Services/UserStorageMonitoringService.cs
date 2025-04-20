@@ -1,66 +1,84 @@
 ﻿using System;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using VCS_DOCs.Hubs;
 
 namespace VCS_DOCs.Services
 {
-	public class UserStorageMonitoringService : BackgroundService
+	public class UserStorageMonitoringService : IUserMicroservice
 	{
-		private readonly string _userId;
 		private readonly string _userFolderPath;
-		private readonly ILogger<UserStorageMonitoringService> _logger;
 		private readonly IHubContext<UserStorageHub> _hubContext;
 		private FileSystemWatcher _watcher;
+		private CancellationTokenSource _cts;
+
+		public string UserId { get; }
+
+		public bool ShouldKeepRunningAfterUserDisconnect => false;
+
 		private const long MaxFolderSizeBytes = 10L * 1024 * 1024 * 1024;
-		public UserStorageMonitoringService(string userId, string userFolderPath, ILogger<UserStorageMonitoringService> logger, IHubContext<UserStorageHub> hubContext)
+
+		public UserStorageMonitoringService(string userId, string userFolderPath, IHubContext<UserStorageHub> hubContext)
 		{
-			_userId = userId;
+			UserId = userId;
 			_userFolderPath = userFolderPath;
-			_logger = logger;
 			_hubContext = hubContext;
 		}
-		protected override Task ExecuteAsync(CancellationToken stoppingToken)
+
+		public Task StartAsync(CancellationToken cancellationToken)
 		{
-			_logger.LogInformation($"Запущен мониторинг хранилища пользователя {_userId} в папке {_userFolderPath}.");
+			_cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
 			_watcher = new FileSystemWatcher(_userFolderPath)
 			{
 				IncludeSubdirectories = false,
 				EnableRaisingEvents = true,
 				NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.Size
 			};
+
 			_watcher.Created += OnChanged;
 			_watcher.Deleted += OnChanged;
 			_watcher.Changed += OnChanged;
 			_watcher.Renamed += OnRenamed;
+
 			UpdateFileList();
+
 			return Task.CompletedTask;
 		}
+
+		public Task StopAsync(CancellationToken cancellationToken)
+		{
+			_watcher?.Dispose();
+			_cts?.Cancel();
+			return Task.CompletedTask;
+		}
+
 		private void OnChanged(object sender, FileSystemEventArgs e)
 		{
-			_logger.LogInformation($"Файл изменён: {e.FullPath} ({e.ChangeType})");
 			UpdateFileList();
 		}
+
 		private void OnRenamed(object sender, RenamedEventArgs e)
 		{
-			_logger.LogInformation($"Файл переименован: {e.OldFullPath} -> {e.FullPath}");
 			UpdateFileList();
 		}
+
 		private void UpdateFileList()
 		{
 			try
 			{
+				if (!Directory.Exists(_userFolderPath)) return;
+
 				string[] files = Directory.GetFiles(_userFolderPath);
 				var fileInfos = new List<object>();
 				long totalSizeBytes = 0;
+
 				foreach (string file in files)
 				{
-					FileInfo fileInfo = new FileInfo(file);
+					var fileInfo = new FileInfo(file);
 					totalSizeBytes += fileInfo.Length;
 					fileInfos.Add(new
 					{
@@ -69,24 +87,19 @@ namespace VCS_DOCs.Services
 						LastWriteTime = fileInfo.LastWriteTime.ToString("dd.MM.yyyy, HH:mm")
 					});
 				}
-				_hubContext.Clients.Group(_userId).SendAsync("ReceiveStorageUpdate", fileInfos);
+
+				_hubContext.Clients.Group(UserId).SendAsync("ReceiveStorageUpdate", fileInfos);
+
 				if (totalSizeBytes > MaxFolderSizeBytes)
 				{
 					double totalSizeGb = totalSizeBytes / (1024.0 * 1024 * 1024);
-					_logger.LogWarning($"Размер папки пользователя {_userId} превышает лимит: {totalSizeGb:F2} ГБ.");
-					_hubContext.Clients.Group(_userId).SendAsync("ReceiveStorageWarning", $"Превышен лимит хранилища (10 ГБ). Текущий размер: {totalSizeGb:F2} ГБ.");
+					_hubContext.Clients.Group(UserId).SendAsync("ReceiveStorageWarning", $"Превышен лимит хранилища (10 ГБ). Текущий размер: {totalSizeGb:F2} ГБ.");
 				}
 			}
-			catch (Exception ex)
+			catch(Exception ex)
 			{
-				_logger.LogError(ex, "Ошибка при обновлении списка файлов.");
+				Console.WriteLine(ex.ToString());
 			}
-		}
-		public override Task StopAsync(CancellationToken cancellationToken)
-		{
-			_logger.LogInformation($"Остановка мониторинга хранилища пользователя {_userId}.");
-			_watcher.Dispose();
-			return base.StopAsync(cancellationToken);
 		}
 	}
 }

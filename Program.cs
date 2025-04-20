@@ -57,6 +57,7 @@ builder.Services.AddAntiforgery(options =>
 });
 
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
+builder.Services.AddSingleton<UserServiceManager>();
 
 builder.Services.AddCors(options =>
 {

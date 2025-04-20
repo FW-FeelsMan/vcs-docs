@@ -16,7 +16,7 @@ if (typeof userIsAuthenticated !== "undefined" && userIsAuthenticated === true) 
     window.addEventListener("beforeunload", function (e) {
         if (activeUploads > 0) {
             e.preventDefault();
-            e.returnValue = ""; // Отображает стандартное предупреждение браузера
+            e.returnValue = "";
         }
     });
 

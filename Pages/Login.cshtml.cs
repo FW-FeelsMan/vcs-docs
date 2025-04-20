@@ -131,7 +131,7 @@ namespace VCS_DOCs.Pages
 			FailedLogins.TryRemove(ip, out _);
 
 			var userServiceManager = _serviceProvider.GetRequiredService<UserServiceManager>();
-			var userBackgroundService = userServiceManager.GetOrCreateService(user.Id.ToString(), user.Username);
+			userServiceManager.StartUserServices(user.Id.ToString(), user.Username);
 
 			_logger.LogInformation($"Пользователь {user.Username} вошел в систему.");
 
