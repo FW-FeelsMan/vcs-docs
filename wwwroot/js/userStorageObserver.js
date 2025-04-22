@@ -7,12 +7,9 @@ if (userIsAuthenticated === true || userIsAuthenticated === "true") {
         .configureLogging(signalR.LogLevel.None)
         .build();
 
+    // Пришло обновление списка файлов
     connection.on("ReceiveStorageUpdate", function (files) {
         updateFileTable(files);
-    });
-
-    connection.on("ReceiveUploadProgress", function (taskUpdate) {
-        updateTaskProgress(taskUpdate);
     });
 
     connection.start().then(() => {
@@ -29,6 +26,7 @@ if (userIsAuthenticated === true || userIsAuthenticated === "true") {
         }
     }
 
+    // Повторный запрос только если таблица пуста
     setInterval(() => {
         const tableBody = document.querySelector("table.sortable tbody");
         if (tableBody && tableBody.children.length === 0) {
@@ -40,9 +38,12 @@ if (userIsAuthenticated === true || userIsAuthenticated === "true") {
         const tableBody = document.querySelector("table.sortable tbody");
         if (!tableBody) return;
         tableBody.innerHTML = "";
-        let totalMb = 0;
+
         files.forEach(function (file) {
-            totalMb += parseFloat(file.sizeMb);
+            const lower = file.name.toLowerCase();
+            // Пропускаем ini и history_ файлы
+            if (lower.endsWith(".ini") || lower.startsWith("history_")) return;
+
             let row = document.createElement("tr");
 
             let nameTd = document.createElement("td");
@@ -91,66 +92,6 @@ if (userIsAuthenticated === true || userIsAuthenticated === "true") {
 
             tableBody.appendChild(row);
         });
-        let totalGb = (totalMb / 1024).toFixed(1);
-        const counter = document.getElementById("storageCounter");
-        if (counter) {
-            counter.textContent = `${totalGb} Гб/10 Гб`;
-        }
-        const uploadButton = document.getElementById("uploadFileButton");
-        if (uploadButton) {
-            uploadButton.disabled = parseFloat(totalGb) >= 10;
-        }
-    }
-
-    function updateTaskProgress(taskUpdate) {
-        let taskCard = document.querySelector(`.task-card[data-filename="${taskUpdate.fileName}"]`);
-        if (!taskCard) {
-            taskCard = document.createElement("div");
-            taskCard.classList.add("task-card");
-            taskCard.setAttribute("data-filename", taskUpdate.fileName);
-
-            let header = document.createElement("div");
-            header.classList.add("task-header");
-            let status = document.createElement("span");
-            status.classList.add("task-status", "processing");
-            status.textContent = "Загрузка";
-            let time = document.createElement("span");
-            time.classList.add("task-time");
-            let now = new Date();
-            time.textContent = now.getHours() + ":" + now.getMinutes() + ", " + now.toLocaleDateString();
-            header.appendChild(status);
-            header.appendChild(time);
-            taskCard.appendChild(header);
-
-            let content = document.createElement("div");
-            content.classList.add("task-content");
-            let title = document.createElement("h4");
-            title.innerHTML = `Файл: <span class="task-filename">${taskUpdate.fileName}</span>`;
-            content.appendChild(title);
-            let progressContainer = document.createElement("div");
-            progressContainer.classList.add("task-progress");
-            let progressBar = document.createElement("div");
-            progressBar.classList.add("progress-bar");
-            progressBar.style.width = "0%";
-            progressContainer.appendChild(progressBar);
-            content.appendChild(progressContainer);
-            taskCard.appendChild(content);
-
-            let tasksGrid = document.querySelector(".tasks-grid");
-            if (tasksGrid) {
-                tasksGrid.appendChild(taskCard);
-            }
-        }
-
-        let progressBar = taskCard.querySelector(".progress-bar");
-        progressBar.style.width = taskUpdate.progress + "%";
-
-        let status = taskCard.querySelector(".task-status");
-        if (taskUpdate.progress >= 100) {
-            status.textContent = "Завершено";
-            status.classList.remove("processing");
-            status.classList.add("completed");
-        }
     }
 
     const tableObserver = new MutationObserver((mutations, obs) => {

@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using System;
+using System.Collections.Concurrent;
 using System.Security.Claims;
 using VCS_DOCs.Services;
 
@@ -11,6 +13,7 @@ namespace VCS_DOCs.Data
 		private readonly IUserService _userService;
 		private readonly IHubContext<UserStatusHub> _hubContext;
 		private readonly UserServiceManager _userServiceManager;
+		private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, byte>> _connections = new ConcurrentDictionary<string, ConcurrentDictionary<string, byte>>();
 
 		public UserStatusHub(
 			IUserService userService,
@@ -26,35 +29,31 @@ namespace VCS_DOCs.Data
 		{
 			var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 			var username = Context.User?.Identity?.Name;
-
 			if (!string.IsNullOrEmpty(userId) && !string.IsNullOrEmpty(username))
 			{
-				await _userService.UpdateUserStatusAsync(userId, true);
-				await _hubContext.Clients.User(userId).SendAsync("InvalidateOtherSessions");
-
-				// Новый вызов запуска всех микросервисов
+				var conns = _connections.GetOrAdd(userId, _ => new ConcurrentDictionary<string, byte>());
+				conns[Context.ConnectionId] = 0;
+				if (conns.Count == 1)
+				{
+					await _userService.UpdateUserStatusAsync(userId, true);
+				}
 				_userServiceManager.StartUserServices(userId, username);
 			}
-
 			await base.OnConnectedAsync();
 		}
 
 		public override async Task OnDisconnectedAsync(Exception? exception)
 		{
 			var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-			if (!string.IsNullOrEmpty(userId))
+			if (!string.IsNullOrEmpty(userId) && _connections.TryGetValue(userId, out var conns))
 			{
-				try
+				conns.TryRemove(Context.ConnectionId, out _);
+				if (conns.IsEmpty)
 				{
+					_connections.TryRemove(userId, out _);
 					await _userService.UpdateUserStatusAsync(userId, false);
 					await _userService.ClearUserJwtIdAsync(userId);
-
-					Console.WriteLine($"[Hub] User {userId} отключился — остановка сервисов.");
 					await _userServiceManager.StopUserServicesAsync(userId);
-				}
-				catch (Exception ex)
-				{
-					Console.WriteLine($"Ошибка при обновлении статуса пользователя {userId}: {ex.Message}");
 				}
 			}
 			await base.OnDisconnectedAsync(exception);
@@ -62,10 +61,8 @@ namespace VCS_DOCs.Data
 
 		public async Task ForceLogoutUser(string userId)
 		{
-			Console.WriteLine($"Force logout initiated for user {userId}");
 			await _hubContext.Clients.User(userId).SendAsync("ForceLogout");
 			await _userService.ClearUserJwtIdAsync(userId);
-			Console.WriteLine($"JwtId cleared for user {userId}");
 		}
 
 		public async Task DebugMessage()

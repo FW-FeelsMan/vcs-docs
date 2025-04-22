@@ -1,13 +1,11 @@
 ﻿using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
-using VCS_DOCs.Hubs;
-using VCS_DOCs.Services;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using VCS_DOCs.Services;
 
 namespace VCS_DOCs.Pages.Content
 {
@@ -18,32 +16,30 @@ namespace VCS_DOCs.Pages.Content
 		private readonly UserServiceManager _userServiceManager;
 		private readonly FileUploadTaskService _taskService;
 		private readonly IAntiforgery _antiforgery;
-		public double ReservedGb { get; private set; }
+
 		public double UsedGb { get; private set; }
 		public double FreeGb { get; private set; }
-
-
-
-		private static readonly Regex ValidInputRegex = new(@"^[a-zA-Zа-яА-Я0-9@'""\-\s]{1,30}$", RegexOptions.Compiled);
-
 		public User? CurrentUser { get; private set; }
 
-		private readonly UserStorageQuotaService _quotaService;
+		private static readonly Regex ValidInputRegex = new(@"^[a-zA-Zа-яА-Я0-9@'""\-\s]{1,30}$", RegexOptions.Compiled);
+		private static readonly HashSet<string> BlockedExtensions = new(StringComparer.OrdinalIgnoreCase)
+		{
+			".exe", ".bat", ".cmd", ".sh", ".msi", ".dll", ".js", ".jar", ".vbs", ".ps1", ".scr", ".php", ".py", ".rb",
+			".com", ".cpl", ".gadget", ".msu", ".reg", ".vb", ".wsf", ".pif", ".app", ".apk", ".hta", ".pl", ".cgi"
+		};
 
 		public profile_pageModel(
 			ApplicationDbContext context,
 			IWebHostEnvironment webHostEnvironment,
 			UserServiceManager userServiceManager,
 			FileUploadTaskService taskService,
-			IAntiforgery antiforgery,
-			UserStorageQuotaService quotaService)
+			IAntiforgery antiforgery)
 		{
 			_context = context;
 			_webHostEnvironment = webHostEnvironment;
 			_userServiceManager = userServiceManager;
 			_taskService = taskService;
 			_antiforgery = antiforgery;
-			_quotaService = quotaService;
 		}
 
 		public async Task OnGetAsync()
@@ -53,25 +49,18 @@ namespace VCS_DOCs.Pages.Content
 
 			if (!string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(userId))
 			{
-				CurrentUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
-
+				CurrentUser = await _context.Users.FirstOrDefaultAsync(u => u.UserName == username);
 				_userServiceManager.StartUserServices(userId, username);
 
 				string userFolder = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData", $"userData_{username}");
-
 				long usedBytes = Directory.Exists(userFolder)
 					? Directory.GetFiles(userFolder).Sum(f => new FileInfo(f).Length)
 					: 0;
 
-				long reservedBytes = _quotaService.GetReservedBytes(userId);
-				long totalUsed = usedBytes + reservedBytes;
-
 				UsedGb = Math.Round((double)usedBytes / 1024 / 1024 / 1024, 2);
-				ReservedGb = Math.Round((double)reservedBytes / 1024 / 1024 / 1024, 2);
-				FreeGb = Math.Round((UserStorageQuotaService.MaxUserStorageBytes - totalUsed) / 1024.0 / 1024 / 1024, 2);
+				FreeGb = Math.Round((10L * 1024 * 1024 * 1024 - usedBytes) / 1024.0 / 1024 / 1024, 2);
 			}
 		}
-
 
 		public class UpdateUserRequest
 		{
@@ -92,7 +81,7 @@ namespace VCS_DOCs.Pages.Content
 
 			try
 			{
-				await Task.Run(() => System.IO.File.Delete(filePath));
+				System.IO.File.Delete(filePath);
 				return new JsonResult(new { success = true });
 			}
 			catch (Exception ex)
@@ -103,10 +92,7 @@ namespace VCS_DOCs.Pages.Content
 
 		public async Task<IActionResult> OnPostUpdateUserDataAsync([FromBody] UpdateUserRequest request)
 		{
-			try
-			{
-				await _antiforgery.ValidateRequestAsync(HttpContext);
-			}
+			try { await _antiforgery.ValidateRequestAsync(HttpContext); }
 			catch (AntiforgeryValidationException)
 			{
 				return new JsonResult(new { success = false, error = "Неверный токен безопасности" });
@@ -138,7 +124,7 @@ namespace VCS_DOCs.Pages.Content
 			if (string.IsNullOrWhiteSpace(username))
 				return new JsonResult(new { success = false, error = "Пользователь не найден" });
 
-			var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+			var user = await _context.Users.FirstOrDefaultAsync(u => u.UserName == username);
 			if (user == null)
 				return new JsonResult(new { success = false, error = "Пользователь не найден" });
 
@@ -164,147 +150,31 @@ namespace VCS_DOCs.Pages.Content
 			}
 		}
 
-		public class ChunkMetadata
-		{
-			public string FileName { get; set; } = null!;
-			public int ChunkIndex { get; set; }
-			public int TotalChunks { get; set; }
-		}
-
-		public async Task<IActionResult> OnPostUploadChunkAsync([FromForm] IFormFile chunk, [FromForm] ChunkMetadata metadata)
-		{
-			string? username = User.Identity?.Name;
-			string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-			if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(userId) || chunk == null)
-				return new JsonResult(new { success = false, error = "Неверные параметры" });
-
-			metadata.FileName = Path.GetFileName(metadata.FileName);
-
-			string userFolderPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData", $"userData_{username}");
-			string tempFolder = Path.Combine(userFolderPath, metadata.FileName + "_chunks");
-
-			if (!Directory.Exists(tempFolder))
-				Directory.CreateDirectory(tempFolder);
-
-			string chunkPath = Path.Combine(tempFolder, $"chunk_{metadata.ChunkIndex:D6}.part");
-
-			await using (var stream = new FileStream(chunkPath, FileMode.Create))
-			{
-				await chunk.CopyToAsync(stream);
-			}
-
-			var hubContext = HttpContext.RequestServices.GetRequiredService<IHubContext<UserStorageHub>>();
-
-			// Добавляем задачу в список активных при первом чанке
-			if (metadata.ChunkIndex == 0)
-			{
-				var tempTask = new FileUploadTask
-				{
-					UserId = userId,
-					TempFilePath = tempFolder,
-					DestinationFolder = userFolderPath,
-					OriginalFileName = metadata.FileName,
-					FileLength = 0 // временно 0, корректируем после загрузки последнего чанка
-				};
-
-				_taskService.RegisterActiveTask(tempTask);
-			}
-
-			if (metadata.ChunkIndex == metadata.TotalChunks - 1)
-			{
-				long fileSize = Directory.GetFiles(tempFolder).Sum(f => new FileInfo(f).Length);
-
-				long usedBytes = Directory.Exists(userFolderPath)
-					? Directory.GetFiles(userFolderPath).Sum(f => new FileInfo(f).Length)
-					: 0;
-
-				bool reserved = _quotaService.TryReserve(userId, fileSize, usedBytes);
-
-				if (!reserved)
-				{
-					_taskService.RemoveActiveTask(tempFolder);
-					return new JsonResult(new
-					{
-						success = false,
-						error = $"Недостаточно места."
-					});
-				}
-
-				var finalTask = new FileUploadTask
-				{
-					UserId = userId,
-					DestinationFolder = userFolderPath,
-					TempFilePath = tempFolder,
-					OriginalFileName = metadata.FileName,
-					FileLength = fileSize
-				};
-
-				_taskService.EnqueueTask(finalTask);
-
-				await hubContext.Clients.Group(username).SendAsync("NewTaskStarted", new { fileName = metadata.FileName, taskId = finalTask.TaskId });
-			}
-
-			double progress = ((double)(metadata.ChunkIndex + 1) / metadata.TotalChunks) * 100;
-			await hubContext.Clients.Group(username).SendAsync("ReceiveUploadProgress", new { fileName = metadata.FileName, progress });
-
-			return new JsonResult(new { success = true, progress });
-		}
-
 		public async Task<IActionResult> OnPostTryReserveAsync([FromForm] string fileName, [FromForm] long fileSize)
 		{
 			string? username = User.Identity?.Name;
 			string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
 			fileName = Path.GetFileName(fileName);
 			string extension = Path.GetExtension(fileName);
 
 			if (BlockedExtensions.Contains(extension))
-			{
 				return new JsonResult(new { success = false, error = "Загрузка исполняемых файлов запрещена." });
-			}
+
 			if (fileName.Contains("..") || fileName.Contains('/') || fileName.Contains('\\'))
-			{
 				return new JsonResult(new { success = false, error = "Имя файла содержит недопустимые символы." });
-			}
 
 			if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(userId) || fileSize <= 0 || string.IsNullOrWhiteSpace(fileName))
 				return new JsonResult(new { success = false, error = "Неверные параметры" });
 
-			string userFolderPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData", $"userData_{username}");
-
-			long usedBytes = await Task.Run(() =>
-			{
-				return Directory.Exists(userFolderPath)
-					? Directory.GetFiles(userFolderPath).Sum(f => new FileInfo(f).Length)
-					: 0;
-			});
-
-			bool reserved = _quotaService.TryReserve(userId, fileSize, usedBytes);
-
-			if (!reserved)
-			{
-				long reservedBytes = _quotaService.GetReservedBytes(userId);
-				long totalUsed = usedBytes + reservedBytes;
-				long remaining = UserStorageQuotaService.MaxUserStorageBytes - totalUsed;
-
-				return new JsonResult(new
-				{
-					success = false,
-					error = $"Недостаточно места. Уже загружается: {Math.Round((double)reservedBytes / 1024 / 1024 / 1024, 2)} ГБ. Загружено: {Math.Round((double)usedBytes / 1024 / 1024 / 1024, 2)} ГБ. Осталось: {Math.Round((double)remaining / 1024 / 1024 / 1024, 2)} ГБ."
-				});
-			}
-
+			// Здесь позже будет запись в INI: fileName=fileSize
 			return new JsonResult(new { success = true });
 		}
 
-		private static readonly HashSet<string> BlockedExtensions = new(StringComparer.OrdinalIgnoreCase)
-		{
-			".exe", ".bat", ".cmd", ".sh", ".msi", ".dll", ".js", ".jar", ".vbs", ".ps1", ".scr", ".php", ".py", ".rb",
-			".com", ".cpl", ".gadget", ".msu", ".reg", ".vb", ".wsf", ".pif", ".app", ".apk", ".hta", ".pl", ".cgi"
-		};
 		public IActionResult OnPostCancelUpload([FromBody] CancelTaskRequest request)
 		{
-			if (string.IsNullOrWhiteSpace(request.TaskId)) return new JsonResult(new { success = false });
+			if (string.IsNullOrWhiteSpace(request.TaskId))
+				return new JsonResult(new { success = false });
 
 			bool cancelled = _taskService.CancelTask(request.TaskId);
 			return new JsonResult(new { success = cancelled });

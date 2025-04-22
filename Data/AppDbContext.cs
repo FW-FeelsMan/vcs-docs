@@ -1,16 +1,20 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace VCS_DOCs
 {
-	public class ApplicationDbContext : IdentityDbContext<IdentityUser>
+	// Контекст приложения
+	public class ApplicationDbContext : IdentityDbContext<User>
 	{
-		public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
+		public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+			: base(options)
 		{
 		}
 
-		public new DbSet<User> Users { get; set; }
+		// Таблица для хранения резервации места под файлы
+		public DbSet<FileReservation> FileReservations { get; set; }
 
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
@@ -21,11 +25,13 @@ namespace VCS_DOCs
 		}
 	}
 
-	public class User
+	// Расширенная сущность пользователя
+	public class User : IdentityUser
 	{
-		public int Id { get; set; }
-		public string Username { get; set; } = string.Empty;
-		public string Password { get; set; } = string.Empty; 
+		public string FullName { get; set; } = "Не установлено";
+		public string DateOfBirth { get; set; } = "Не установлено";
+		public string Organization { get; set; } = "Не установлено";
+		public string Department { get; set; } = "Не установлено";
 		public string? Speciality { get; set; }
 		public int StatusOnline { get; set; }
 		public string? HardwareId { get; set; }
@@ -34,9 +40,17 @@ namespace VCS_DOCs
 		public DateTime UpdatedAt { get; set; }
 		public int Access { get; set; }
 		public string? JwtId { get; set; }
-		public string FullName { get; set; } = "Не установлено";
-		public string DateOfBirth { get; set; } = "Не установлено";
-		public string Organization { get; set; } = "Не установлено";
-		public string Department { get; set; } = "Не установлено";
+	}
+
+	// Сущность для хранения резервации байт под файлы
+	public class FileReservation
+	{
+		public int Id { get; set; }          // PK
+		public string UserId { get; set; } = null!; // FK → AspNetUsers(Id)
+		public User User { get; set; } = null!;
+		public string FileName { get; set; } = null!;
+		public long ReservedBytes { get; set; }          // Сколько байт зарезервировано
+		public bool IsReleased { get; set; }          // Флаг снятия резерва
+		public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 	}
 }

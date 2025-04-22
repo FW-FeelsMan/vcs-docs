@@ -11,12 +11,11 @@ namespace VCS_DOCs.Services
 		private readonly string _userDataPath;
 		private readonly FileUploadTaskService _uploadTaskService;
 		private readonly UserStorageQuotaService _quotaService;
+		private readonly string _username;
 		private CancellationTokenSource _cts;
 		private Task _backgroundTask;
-		private readonly string _username;
 
 		public string UserId { get; }
-
 		public bool ShouldKeepRunningAfterUserDisconnect => false;
 
 		public UserChunkCleanerService(
@@ -43,9 +42,7 @@ namespace VCS_DOCs.Services
 		public async Task StopAsync(CancellationToken cancellationToken)
 		{
 			_cts.Cancel();
-			Console.WriteLine($"[Cleaner:{UserId}] Стоп получен. Запуск контрольной очистки.");
 			await RunOneCleanupAsync();
-			Console.WriteLine($"[Cleaner:{UserId}] Контрольная очистка завершена.");
 		}
 
 		private async Task RunAsync(CancellationToken token)
@@ -69,39 +66,27 @@ namespace VCS_DOCs.Services
 			{
 				bool isActive = _uploadTaskService.IsTaskActiveForFolder(chunkDir);
 				long chunkSize = Directory.GetFiles(chunkDir).Sum(f => new FileInfo(f).Length);
-				sb.AppendLine($"{Path.GetFileName(chunkDir)}={chunkSize},{(isActive ? "active" : "inactive")}");
+				string chunkFolderName = Path.GetFileName(chunkDir);
+
+				sb.AppendLine($"{chunkFolderName}={chunkSize},{(isActive ? "active" : "inactive")}");
 
 				if (!isActive)
 				{
 					try
 					{
 						Directory.Delete(chunkDir, true);
-						_quotaService.ReleaseReservation(UserId, chunkSize);
 						_uploadTaskService.RemoveActiveTask(chunkDir);
+						_quotaService.ReleaseFileReservation(UserId, chunkFolderName);
 					}
 					catch (Exception ex)
 					{
-						Console.WriteLine(ex.ToString());
+						System.Console.WriteLine($"[Cleaner:{UserId}] Ошибка при удалении {chunkDir}: {ex}");
 					}
 				}
 			}
 
-			// Перерасчет остатка активных чанков
-			long correctedReservedBytes = Directory
-				.GetDirectories(_userDataPath, "*_chunks", SearchOption.TopDirectoryOnly)
-				.Where(d => _uploadTaskService.IsTaskActiveForFolder(d))
-				.SelectMany(d => Directory.GetFiles(d))
-				.Sum(f => new FileInfo(f).Length);
-
-			// Обновляем кэш вручную
-			_quotaService.ForceSetReservation(UserId, _username, correctedReservedBytes);
-
 			string iniPath = Path.Combine(_userDataPath, $"history_{_username}.ini");
-
 			var iniContent = new StringBuilder();
-			iniContent.AppendLine("[Quota]");
-			iniContent.AppendLine($"ReservedBytes={correctedReservedBytes}");
-			iniContent.AppendLine();
 			iniContent.AppendLine("[Chunks]");
 			iniContent.Append(sb.ToString());
 

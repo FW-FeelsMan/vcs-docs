@@ -1,15 +1,23 @@
+// Pages/Login.cshtml.cs
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.IO;
+using System.Security.Claims;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
-using VCS_DOCs.Utilities;
-using VCS_DOCs.Data;
 using Microsoft.AspNetCore.SignalR;
-using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using VCS_DOCs.Data;
 using VCS_DOCs.Services;
-using System.Collections.Concurrent;
+using VCS_DOCs.Utilities;
 
 namespace VCS_DOCs.Pages
 {
@@ -39,9 +47,9 @@ namespace VCS_DOCs.Pages
 			_hubContext = hubContext;
 			_userService = userService;
 			_webHostEnvironment = webHostEnvironment;
-			LoginErrors = [];
-			RegistrationErrors = [];
-			Specialities = [];
+			LoginErrors = new List<string>();
+			RegistrationErrors = new List<string>();
+			Specialities = new List<string>();
 		}
 
 		[BindProperty]
@@ -55,19 +63,18 @@ namespace VCS_DOCs.Pages
 		public bool IsRegistrationSuccessful { get; set; }
 		public string? ErrorMessage { get; set; }
 		public List<string> Specialities { get; set; }
-		private static readonly ConcurrentDictionary<string, (int Attempts, DateTime LastAttempt)> FailedLogins = new();
+		private static readonly ConcurrentDictionary<string, (int Attempts, DateTime LastAttempt)> FailedLogins = new ConcurrentDictionary<string, (int, DateTime)>();
 
 		public async Task<IActionResult> OnPostLoginAsync()
 		{
 			var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
-			if (ip == null) return new JsonResult(new { success = false, errors = new List<string> { "Ошибка авторизации." } });
+			if (ip == null)
+				return new JsonResult(new { success = false, errors = new List<string> { "Ошибка авторизации." } });
 
 			if (FailedLogins.TryGetValue(ip, out var data))
 			{
 				if (data.Attempts >= 5 && (DateTime.UtcNow - data.LastAttempt).TotalMinutes < 10)
-				{
 					return new JsonResult(new { success = false, errors = new List<string> { "Слишком много неудачных попыток. Попробуйте позже." } });
-				}
 			}
 
 			if (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password))
@@ -76,45 +83,48 @@ namespace VCS_DOCs.Pages
 				return new JsonResult(new { success = false, errors = new List<string> { "Имя пользователя и пароль обязательны." } });
 			}
 
-			var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == Username);
-			if (user == null || !BCrypt.Net.BCrypt.Verify(Password, user.Password))
+			var user = await _context.Users.FirstOrDefaultAsync(u => u.UserName == Username);
+			if (user == null || !BCrypt.Net.BCrypt.Verify(Password, user.PasswordHash))
 			{
 				FailedLogins[ip] = (data.Attempts + 1, DateTime.UtcNow);
 				return new JsonResult(new { success = false, errors = new List<string> { "Неверное имя пользователя или пароль." } });
 			}
 
 			if (user.Access == 0)
-			{
 				return new JsonResult(new { success = false, errors = new List<string> { "Учетная запись не активирована." } });
-			}
 
 			bool forceLogin = Request.Form["ForceLogin"].ToString().ToLower() == "true";
-			if (!string.IsNullOrEmpty(user.JwtId))
+
+			// Вот эта часть — проверка статуса онлайн:
+			if (user.StatusOnline == 1)
 			{
 				if (!forceLogin)
 				{
-					return new JsonResult(new { success = false, errors = new List<string> { "Этот аккаунт уже используется на другом устройстве." } });
+					return new JsonResult(new
+					{
+						success = false,
+						errors = new List<string> { "Этот аккаунт уже используется на другом устройстве." }
+					});
 				}
-				await _hubContext.Clients.User(user.Id.ToString()).SendAsync("ForceLogout");
-				await _userService.ClearUserJwtIdAsync(user.Id.ToString());
+				// если пришёл флаг принудительного входа — шлём ForceLogout старой сессии
+				await _hubContext.Clients.User(user.Id).SendAsync("ForceLogout");
+				await _userService.ClearUserJwtIdAsync(user.Id);
 				_context.Users.Update(user);
 				await _context.SaveChangesAsync();
 			}
 
 			user.JwtId = Guid.NewGuid().ToString();
-			string? hardwareId = Request.Form["hardwareId"];
-			if (!string.IsNullOrEmpty(hardwareId))
-			{
-				user.HardwareId = hardwareId;
-			}
+			user.HardwareId = Request.Form["hardwareId"].ToString() ?? user.HardwareId;
 			user.LastEntry = DateTime.UtcNow;
+			user.StatusOnline = 1;                        // помечаем что он теперь онлайн
 			_context.Users.Update(user);
 			await _context.SaveChangesAsync();
 
 			var claims = new List<Claim>
 			{
-				new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-				new(ClaimTypes.Name, user.Username)
+				new Claim(ClaimTypes.NameIdentifier, user.Id),
+				new Claim(ClaimTypes.Name,           user.UserName),
+				new Claim("JwtId",                   user.JwtId)
 			};
 
 			var authProperties = new AuthenticationProperties
@@ -131,12 +141,13 @@ namespace VCS_DOCs.Pages
 			FailedLogins.TryRemove(ip, out _);
 
 			var userServiceManager = _serviceProvider.GetRequiredService<UserServiceManager>();
-			userServiceManager.StartUserServices(user.Id.ToString(), user.Username);
+			userServiceManager.StartUserServices(user.Id, user.UserName);
 
-			_logger.LogInformation($"Пользователь {user.Username} вошел в систему.");
+			_logger.LogInformation($"Пользователь {user.UserName} вошел в систему.");
 
 			return new JsonResult(new { success = true });
 		}
+
 
 		public async Task<IActionResult> OnPostRegisterAsync()
 		{
@@ -163,14 +174,16 @@ namespace VCS_DOCs.Pages
 				RegistrationErrors.Add("Пароль не должен превышать 20 символов.");
 				return new JsonResult(new { success = false, errors = RegistrationErrors });
 			}
+
 			if (Password.Length <= 6)
 			{
 				RegistrationErrors.Add("Пароль должен быть более 6 символов.");
 				return new JsonResult(new { success = false, errors = RegistrationErrors });
 			}
+
 			try
 			{
-				var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Username == Username);
+				var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.UserName == Username);
 				if (existingUser != null)
 				{
 					RegistrationErrors.Add("Пользователь с таким логином уже существует.");
@@ -181,8 +194,8 @@ namespace VCS_DOCs.Pages
 
 				var newUser = new User
 				{
-					Username = Username,
-					Password = hashedPassword,
+					UserName = Username,
+					PasswordHash = hashedPassword,
 					Speciality = Request.Form["speciality"],
 					StatusOnline = 0,
 					HardwareId = null,
@@ -267,37 +280,5 @@ namespace VCS_DOCs.Pages
 				System.IO.File.WriteAllText(historyFilePath, $"{documentName}={documentVersion}");
 			}
 		}
-
-		/*public string GetLastDownloadedVersion(string username, string documentName)
-		{
-			string userDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData", $"userData_{username}");
-			string historyFilePath = Path.Combine(userDataPath, $"history_{username}.ini");
-
-			if (System.IO.File.Exists(historyFilePath))
-			{
-				var lines = System.IO.File.ReadAllLines(historyFilePath);
-				var existingRecord = lines.FirstOrDefault(line => line.StartsWith(documentName));
-				if (existingRecord != null)
-				{
-					return existingRecord.Split('=')[1];
-				}
-			}
-
-			return null;
-		}
-
-		public IActionResult OnDownloadDocument(string username, string documentName, string currentVersion)
-		{
-			string lastDownloadedVersion = GetLastDownloadedVersion(username, documentName);
-
-			if (lastDownloadedVersion != null)
-			{
-				TempData["Message"] = $"Вы в последний раз скачивали {documentName} версию {lastDownloadedVersion}. Текущая версия {currentVersion}. Вы хотите скачать последнюю версию или сохранить предыдущую?";
-			}
-
-			string filePath = Path.Combine(_webHostEnvironment.ContentRootPath, "Documents", documentName, $"{documentName}_v{currentVersion}.pdf");
-
-			return File(filePath, "application/pdf", $"{documentName}_v{currentVersion}.pdf");
-		}*/
 	}
 }

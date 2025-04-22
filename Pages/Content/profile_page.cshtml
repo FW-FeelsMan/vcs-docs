@@ -21,7 +21,7 @@
             <div class="avatar">
                 <img src="~/images/default_avatar.png" alt="Icon">
             </div>
-            <p data-field="FullName">@Model.CurrentUser?.Username</p>
+            <p data-field="FullName">@Model.CurrentUser?.UserName</p>
             <ul class="sidebar-menu">
                 <li class="active" data-target="personal-data">Персональные данные</li>
                 <li data-target="storage">Личное хранилище</li>
@@ -65,9 +65,9 @@
                     <h3>Содержимое хранилища</h3>
                     <div style="display: flex; align-items: center;">
                         <div style="margin-right: 10px;">
-                            <span>Загружается: @Model.ReservedGb Гб</span>
+                            <span>Загружается: ... Гб</span>
                             &nbsp;
-                            <span>Свободно: @Model.FreeGb Гб из 10 Гб</span>
+                            <span>Свободно:... Гб из 10 Гб</span>
                         </div>
 
 

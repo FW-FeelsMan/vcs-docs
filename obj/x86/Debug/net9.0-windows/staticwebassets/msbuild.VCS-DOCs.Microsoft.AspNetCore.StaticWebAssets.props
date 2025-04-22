@@ -750,8 +750,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>76d28x8uv2</Fingerprint>
-      <Integrity>0SRHPTscIl3GIG/uyc0SfOslhjpdF6aJDFlPW9io6yY=</Integrity>
+      <Fingerprint>nuekppw39s</Fingerprint>
+      <Integrity>0frQb5e/lSyBc8CUFi5DjQ3ZKz0knOgmNyWYuuC5UO4=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\userStorageObserver.js'))</OriginalItemSpec>

@@ -9,24 +9,21 @@ namespace VCS_DOCs.Services
 		private readonly IHubContext<UserStorageHub> _hubContext;
 		private readonly ILogger<FileUploadTaskService> _logger;
 		private readonly ConcurrentQueue<FileUploadTask> _tasks = new();
-		private readonly UserStorageQuotaService _quotaService;
-		private readonly ConcurrentDictionary<string, FileUploadTask> _activeTasks = new(); // ключ = TempFilePath
+		private readonly ConcurrentDictionary<string, FileUploadTask> _activeTasks = new();
 		private readonly ConcurrentBag<string> _cancelledTaskIds = [];
 
 		public FileUploadTaskService(
 			IHubContext<UserStorageHub> hubContext,
-			ILogger<FileUploadTaskService> logger,
-			UserStorageQuotaService quotaService)
+			ILogger<FileUploadTaskService> logger)
 		{
 			_hubContext = hubContext;
 			_logger = logger;
-			_quotaService = quotaService;
 		}
 
 		public void EnqueueTask(FileUploadTask task)
 		{
 			_tasks.Enqueue(task);
-			_activeTasks.TryAdd(task.TempFilePath, task); // ключ = TempFilePath
+			_activeTasks.TryAdd(task.TempFilePath, task);
 		}
 
 		protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -54,7 +51,6 @@ namespace VCS_DOCs.Services
 				if (Directory.Exists(task.TempFilePath))
 					Directory.Delete(task.TempFilePath, true);
 
-				_quotaService.ReleaseReservation(task.UserId, task.FileLength);
 				RemoveActiveTask(task.TempFilePath);
 				_logger.LogInformation($"Загрузка отменена: {task.OriginalFileName}");
 				return;
@@ -66,7 +62,6 @@ namespace VCS_DOCs.Services
 				{
 					foreach (var chunkFile in chunkFiles)
 					{
-						// явно указываем возможность совместного доступа при чтении чанков
 						using (var sourceStream = new FileStream(chunkFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
 							await sourceStream.CopyToAsync(destinationStream, stoppingToken);
 
@@ -75,8 +70,6 @@ namespace VCS_DOCs.Services
 				}
 
 				TryDeleteDirectory(task.TempFilePath);
-
-				_quotaService.ReleaseReservation(task.UserId, task.FileLength);
 
 				await _hubContext.Clients.Group(task.UserId).SendAsync("ReceiveUploadProgress", new { fileName = task.OriginalFileName, progress = 100 });
 
@@ -133,7 +126,7 @@ namespace VCS_DOCs.Services
 
 		public void RegisterActiveTask(FileUploadTask task)
 		{
-			_activeTasks.TryAdd(task.TempFilePath, task); // ключ = TempFilePath
+			_activeTasks.TryAdd(task.TempFilePath, task);
 		}
 
 		public void RemoveActiveTask(string tempFilePath)
