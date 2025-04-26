@@ -61,15 +61,23 @@ namespace VCS_DOCs.Services.Upload
 
 			var chunkDirs = Directory.GetDirectories(_userDataPath, "*_chunks", SearchOption.TopDirectoryOnly);
 
-
 			foreach (var chunkDir in chunkDirs)
 			{
 				bool isActive = _uploadTaskService.IsTaskActiveForFolder(chunkDir);
 				long chunkSize = Directory.GetFiles(chunkDir).Sum(f => new FileInfo(f).Length);
 				string folderName = Path.GetFileName(chunkDir);
+				string fileName = folderName.Replace("_chunks", ""); // <-- восстанавливаем имя исходного файла без "_chunks"
+
+				// Проверка через ActiveUploadsRegistry
+				if (ActiveUploadsRegistry.IsActive(UserId, fileName))
+				{
+					Console.WriteLine($"[Cleaner:{UserId}] Папка {chunkDir} активна (грузится файл {fileName}), пропускаем удаление.");
+					continue;
+				}
 
 				var existing = await _dbContext.ChunkStatuses
 					.FirstOrDefaultAsync(c => c.UserId == UserId && c.ChunkFolder == folderName);
+
 				Console.WriteLine($"[Cleaner:{UserId}] Проверка папки {chunkDir}, active={isActive}, chunkCount={Directory.GetFiles(chunkDir).Length}");
 
 				if (existing != null)
@@ -96,6 +104,7 @@ namespace VCS_DOCs.Services.Upload
 					{
 						Directory.Delete(chunkDir, true);
 						_uploadTaskService.RemoveActiveTask(chunkDir);
+						Console.WriteLine($"[Cleaner:{UserId}] Успешно удалена неактивная папка {chunkDir}");
 					}
 					catch (Exception ex)
 					{

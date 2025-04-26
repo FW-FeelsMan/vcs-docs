@@ -3,6 +3,30 @@
   "WorkspaceRootPath": "D:\\Unity\\VCS-DOCs\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\services\\efstoragequotaservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:services\\efstoragequotaservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\services\\istoragequotaservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:services\\istoragequotaservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:data\\appdbcontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\uploadfileobserver.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\uploadfileobserver.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\userstorageobserver.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\userstorageobserver.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\pages\\content\\profile_page.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:pages\\content\\profile_page.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
@@ -11,20 +35,40 @@
       "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:pages\\content\\profile_page.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\services\\upload\\userchunkcleanerservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:services\\upload\\userchunkcleanerservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\services\\upload\\fileuploadtaskservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:services\\upload\\fileuploadtaskservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\services\\upload\\fileuploadtask.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:services\\upload\\fileuploadtask.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\services\\upload\\activeuploadsregistry.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:services\\upload\\activeuploadsregistry.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\services\\microservices\\userstoragemonitoringservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:services\\microservices\\userstoragemonitoringservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\services\\microservices\\userbackgroundservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:services\\microservices\\userbackgroundservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\services\\microservices\\iusermicroservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:services\\microservices\\iusermicroservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\data\\hubs\\userstoragehub.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:data\\hubs\\userstoragehub.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\pages\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:pages\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\services\\efstoragequotaservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:services\\efstoragequotaservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\data\\hubs\\userstatushub.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:data\\hubs\\userstatushub.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\services\\user\\userservicemanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -42,7 +86,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 7,
           "Children": [
             {
               "$type": "Bookmark",
@@ -58,83 +102,240 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "profile_page.cshtml",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml",
-              "RelativeDocumentMoniker": "Pages\\Content\\profile_page.cshtml",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml",
-              "RelativeToolTip": "Pages\\Content\\profile_page.cshtml",
-              "ViewState": "AgIAAEoAAAAAAAAAAAAwwFoAAABHAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-26T12:08:50.416Z",
+              "DocumentIndex": 1,
+              "Title": "IStorageQuotaService.cs",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Services\\IStorageQuotaService.cs",
+              "RelativeDocumentMoniker": "Services\\IStorageQuotaService.cs",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Services\\IStorageQuotaService.cs",
+              "RelativeToolTip": "Services\\IStorageQuotaService.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAYwBMAAAApAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-26T16:12:17.987Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
+              "Title": "AppDbContext.cs",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Data\\AppDbContext.cs",
+              "RelativeDocumentMoniker": "Data\\AppDbContext.cs",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Data\\AppDbContext.cs",
+              "RelativeToolTip": "Data\\AppDbContext.cs",
+              "ViewState": "AgIAADIAAAAAAAAAAAA0wDsAAAAmAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-26T16:05:45.177Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "uploadFileObserver.js",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\uploadFileObserver.js",
+              "RelativeDocumentMoniker": "wwwroot\\js\\uploadFileObserver.js",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\uploadFileObserver.js",
+              "RelativeToolTip": "wwwroot\\js\\uploadFileObserver.js",
+              "ViewState": "AgIAAAoAAAAAAAAAAAAAALsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-04-26T16:05:00.286Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
               "Title": "profile_page.cshtml.cs",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml.cs",
               "RelativeDocumentMoniker": "Pages\\Content\\profile_page.cshtml.cs",
               "ToolTip": "D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml.cs",
               "RelativeToolTip": "Pages\\Content\\profile_page.cshtml.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAfAAAAAAAAAA==",
+              "ViewState": "AgIAABEBAAAAAAAAAAAQwEkBAAADAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-04-24T18:51:03.868Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "EfStorageQuotaService.cs",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Services\\EfStorageQuotaService.cs",
+              "RelativeDocumentMoniker": "Services\\EfStorageQuotaService.cs",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Services\\EfStorageQuotaService.cs",
+              "RelativeToolTip": "Services\\EfStorageQuotaService.cs",
+              "ViewState": "AgIAAG0AAAAAAAAAAAAQwHsAAAB6AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-24T18:49:32.851Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 2,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Program.cs",
+              "RelativeDocumentMoniker": "Program.cs",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Program.cs",
+              "RelativeToolTip": "Program.cs",
+              "ViewState": "AgIAAHMAAAAAAAAAAAAAwHcAAAAxAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-24T18:35:30.226Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "UserChunkCleanerService.cs",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Services\\Upload\\UserChunkCleanerService.cs",
+              "RelativeDocumentMoniker": "Services\\Upload\\UserChunkCleanerService.cs",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Services\\Upload\\UserChunkCleanerService.cs",
+              "RelativeToolTip": "Services\\Upload\\UserChunkCleanerService.cs",
+              "ViewState": "AgIAAGkAAAAAAAAAAAAQwHQAAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-26T15:35:32.542Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "FileUploadTaskService.cs",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Services\\Upload\\FileUploadTaskService.cs",
+              "RelativeDocumentMoniker": "Services\\Upload\\FileUploadTaskService.cs",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Services\\Upload\\FileUploadTaskService.cs",
+              "RelativeToolTip": "Services\\Upload\\FileUploadTaskService.cs",
+              "ViewState": "AgIAAIYAAAAAAAAAAAAAwIcAAAADAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-26T15:36:59.538Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "FileUploadTask.cs",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Services\\Upload\\FileUploadTask.cs",
+              "RelativeDocumentMoniker": "Services\\Upload\\FileUploadTask.cs",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Services\\Upload\\FileUploadTask.cs",
+              "RelativeToolTip": "Services\\Upload\\FileUploadTask.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAmAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-26T15:37:10.586Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "userStorageObserver.js",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\userStorageObserver.js",
+              "RelativeDocumentMoniker": "wwwroot\\js\\userStorageObserver.js",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\userStorageObserver.js",
+              "RelativeToolTip": "wwwroot\\js\\userStorageObserver.js",
+              "ViewState": "AgIAACUAAAAAAAAAAAAAAC0AAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-04-26T14:12:06.938Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "profile_page.cshtml",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml",
+              "RelativeDocumentMoniker": "Pages\\Content\\profile_page.cshtml",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml",
+              "RelativeToolTip": "Pages\\Content\\profile_page.cshtml",
+              "ViewState": "AgIAAE0AAAAAAAAAAAAwwFwAAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-04-26T12:08:50.416Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "ActiveUploadsRegistry.cs",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Services\\Upload\\ActiveUploadsRegistry.cs",
+              "RelativeDocumentMoniker": "Services\\Upload\\ActiveUploadsRegistry.cs",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Services\\Upload\\ActiveUploadsRegistry.cs",
+              "RelativeToolTip": "Services\\Upload\\ActiveUploadsRegistry.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAqAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-26T15:37:49.188Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "UserStorageMonitoringService.cs",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Services\\Microservices\\UserStorageMonitoringService.cs",
+              "RelativeDocumentMoniker": "Services\\Microservices\\UserStorageMonitoringService.cs",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Services\\Microservices\\UserStorageMonitoringService.cs",
+              "RelativeToolTip": "Services\\Microservices\\UserStorageMonitoringService.cs",
+              "ViewState": "AgIAAFgAAAAAAAAAAADwvwAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-26T15:35:13.941Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "UserBackgroundService.cs",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Services\\Microservices\\UserBackgroundService.cs",
+              "RelativeDocumentMoniker": "Services\\Microservices\\UserBackgroundService.cs",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Services\\Microservices\\UserBackgroundService.cs",
+              "RelativeToolTip": "Services\\Microservices\\UserBackgroundService.cs",
+              "ViewState": "AgIAABAAAAAAAAAAAAAQwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-26T15:35:04.658Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "IUserMicroservice.cs",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Services\\Microservices\\IUserMicroservice.cs",
+              "RelativeDocumentMoniker": "Services\\Microservices\\IUserMicroservice.cs",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Services\\Microservices\\IUserMicroservice.cs",
+              "RelativeToolTip": "Services\\Microservices\\IUserMicroservice.cs",
+              "ViewState": "AgIAAA0AAAAAAAAAAAA5wAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-26T15:34:54.743Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "UserStatusHub.cs",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Data\\Hubs\\UserStatusHub.cs",
+              "RelativeDocumentMoniker": "Data\\Hubs\\UserStatusHub.cs",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Data\\Hubs\\UserStatusHub.cs",
+              "RelativeToolTip": "Data\\Hubs\\UserStatusHub.cs",
+              "ViewState": "AgIAADUAAAAAAAAAAAAgwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-26T15:34:30.552Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
               "Title": "UserStorageHub.cs",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Data\\Hubs\\UserStorageHub.cs",
               "RelativeDocumentMoniker": "Data\\Hubs\\UserStorageHub.cs",
               "ToolTip": "D:\\Unity\\VCS-DOCs\\Data\\Hubs\\UserStorageHub.cs",
               "RelativeToolTip": "Data\\Hubs\\UserStorageHub.cs",
-              "ViewState": "AgIAAB0AAAAAAAAAAAAQwCUAAAAsAAAAAAAAAA==",
+              "ViewState": "AgIAADUAAAAAAAAAAAAgwDQAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-04-24T18:47:34.998Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "_Layout.cshtml",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Pages\\Shared\\_Layout.cshtml",
-              "RelativeDocumentMoniker": "Pages\\Shared\\_Layout.cshtml",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\Pages\\Shared\\_Layout.cshtml",
-              "RelativeToolTip": "Pages\\Shared\\_Layout.cshtml",
-              "ViewState": "AgIAABoAAAAAAAAAAAAwwCYAAAArAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-04-26T12:28:47.999Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "EfStorageQuotaService.cs",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Services\\EfStorageQuotaService.cs",
-              "RelativeDocumentMoniker": "Services\\EfStorageQuotaService.cs",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\Services\\EfStorageQuotaService.cs",
-              "RelativeToolTip": "Services\\EfStorageQuotaService.cs",
-              "ViewState": "AgIAAEgAAAAAAAAAAAAAwGQAAAADAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-04-24T18:49:32.851Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 17,
               "Title": "UserServiceManager.cs",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Services\\User\\UserServiceManager.cs",
               "RelativeDocumentMoniker": "Services\\User\\UserServiceManager.cs",
               "ToolTip": "D:\\Unity\\VCS-DOCs\\Services\\User\\UserServiceManager.cs",
               "RelativeToolTip": "Services\\User\\UserServiceManager.cs",
-              "ViewState": "AgIAAC4AAAAAAAAAAAA3wA0AAAAvAAAAAAAAAA==",
+              "ViewState": "AgIAABYAAAAAAAAAAAAAACMAAABJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-04-24T18:45:27.101Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 18,
               "Title": "UserDataPathOptions.cs",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Configuration\\UserDataPathOptions.cs",
               "RelativeDocumentMoniker": "Configuration\\UserDataPathOptions.cs",
@@ -143,18 +344,6 @@
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-04-24T18:44:05.229Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "Program.cs",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Program.cs",
-              "RelativeDocumentMoniker": "Program.cs",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\Program.cs",
-              "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAAwAAAAAAAAAAAAAABEAAAArAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-04-24T18:35:30.226Z"
             }
           ]
         }

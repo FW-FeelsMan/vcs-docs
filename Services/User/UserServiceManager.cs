@@ -33,7 +33,7 @@ namespace VCS_DOCs.Services.User
 			var dbContext = scopedProvider.GetRequiredService<ApplicationDbContext>();
 			var uploadService = scopedProvider.GetRequiredService<FileUploadTaskService>();
 
-			string userFolder = Path.Combine(_options.BasePath, $"userData_{username}");
+			string userFolder = Path.Combine(_options.BasePath, $"userData_{userId}");
 
 			services.Add(new UserStorageMonitoringService(userId, userFolder, hubContext));
 			services.Add(new UserChunkCleanerService(userId, userFolder, uploadService, dbContext));

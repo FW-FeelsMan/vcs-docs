@@ -15,5 +15,8 @@ namespace VCS_DOCs.Services
 
 		/// <summary>Сколько байт занято реально загруженными файлами на диске.</summary>
 		Task<long> GetUsedBytesAsync(string userId);
+
+		/// <summary>Очищает висящие незавершённые резервации файлов при старте сервера.</summary>
+		Task CleanUpBrokenReservationsAsync(); 
 	}
 }

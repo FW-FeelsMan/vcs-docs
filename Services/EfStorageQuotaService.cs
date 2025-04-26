@@ -82,7 +82,8 @@ namespace VCS_DOCs.Services
 				return 0;
 			}
 
-			string path = Path.Combine(_options.BasePath, $"userData_{user.UserName}");
+			string path = Path.Combine(_options.BasePath, $"userData_{user.Id}");
+
 			Console.WriteLine($"[GetUsedBytesAsync] Проверяем путь: {path}");
 
 			if (!Directory.Exists(path))
@@ -98,6 +99,33 @@ namespace VCS_DOCs.Services
 			Console.WriteLine($"[GetUsedBytesAsync] Общий объем: {totalBytes} байт");
 
 			return totalBytes;
+		}
+		public async Task CleanUpBrokenReservationsAsync()
+		{
+			var allUnreleased = await _db.FileReservations
+				.Where(r => !r.IsReleased)
+				.ToListAsync();
+
+			foreach (var r in allUnreleased)
+			{
+				var user = await _db.Users.FindAsync(r.UserId);
+				if (user == null)
+				{
+					r.IsReleased = true;
+					continue;
+				}
+
+				string userFolder = Path.Combine(_options.BasePath, $"userData_{user.Id}");
+				string filePath = Path.Combine(userFolder, r.FileName);
+
+				if (!System.IO.File.Exists(filePath))
+				{
+					r.IsReleased = true;
+					Console.WriteLine($"[Cleanup] Помечаем как освобожденную запись о файле {r.FileName} для пользователя ID={user.Id}");
+				}
+			}
+
+			await _db.SaveChangesAsync();
 		}
 	}
 }

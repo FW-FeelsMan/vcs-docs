@@ -121,6 +121,11 @@ app.MapHub<UserStatusHub>("/Data/userStatusHub");
 app.MapHub<UserStorageHub>("/userStorageHub");
 
 app.MapRazorPages();
-
+using (var scope = app.Services.CreateScope())
+{
+	var quotaService = scope.ServiceProvider.GetRequiredService<IStorageQuotaService>();
+	await quotaService.CleanUpBrokenReservationsAsync();
+	Console.WriteLine("[Startup] Очистка висящих зарезервированных файлов завершена.");
+}
 var userServiceManager = app.Services.GetRequiredService<UserServiceManager>();
 app.Run();

@@ -85,7 +85,7 @@ namespace VCS_DOCs.Pages.Content
 			if (user == null)
 				return new JsonResult(new { success = false, error = "Пользователь не найден" });
 
-			string userFolder = Path.Combine(_options.BasePath, $"userData_{user.UserName}");
+			string userFolder = Path.Combine(_options.BasePath, $"userData_{user.Id}"); // <-- тут поправка
 			string filePath = Path.Combine(userFolder, fileName);
 
 			if (!System.IO.File.Exists(filePath))
@@ -125,7 +125,6 @@ namespace VCS_DOCs.Pages.Content
 				return new JsonResult(new { success = false, error = ex.Message });
 			}
 		}
-
 
 		public async Task<IActionResult> OnPostUpdateUserDataAsync([FromBody] UpdateUserRequest request)
 		{
@@ -255,57 +254,76 @@ namespace VCS_DOCs.Pages.Content
 			var form = Request.Form;
 			var file = form.Files["chunk"];
 			var fileName = Path.GetFileName(form["metadata.FileName"]);
-			var chunkIndexStr = form["metadata.ChunkIndex"];
-			var totalChunksStr = form["metadata.TotalChunks"];
 
-			if (file == null || string.IsNullOrWhiteSpace(fileName) ||
-				!int.TryParse(chunkIndexStr, out var chunkIndex) ||
-				!int.TryParse(totalChunksStr, out var totalChunks))
+			if (!int.TryParse(form["metadata.ChunkIndex"], out var chunkIndex) ||
+				!int.TryParse(form["metadata.TotalChunks"], out var totalChunks) ||
+				file == null || string.IsNullOrWhiteSpace(fileName))
 			{
 				return new JsonResult(new { success = false, error = "Неверные метаданные" });
 			}
 
-			string? username = User.Identity?.Name;
 			string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-			if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(userId))
+			if (string.IsNullOrWhiteSpace(userId))
 				return new JsonResult(new { success = false, error = "Пользователь не авторизован" });
 
-			string userFolder = Path.Combine(_options.BasePath, $"userData_{username}");
+			string userFolder = Path.Combine(_options.BasePath, $"userData_{userId}");
 			string chunkFolder = Path.Combine(userFolder, $"{fileName}_chunks");
 
 			if (!Directory.Exists(chunkFolder))
 				Directory.CreateDirectory(chunkFolder);
 
-			if (!_taskService.IsTaskActiveForFolder(chunkFolder))
-			{
-				var registrationTask = new FileUploadTask
-				{
-					UserId = userId,
-					OriginalFileName = fileName,
-					TempFilePath = chunkFolder,
-					DestinationFolder = userFolder,
-					TaskId = Guid.NewGuid().ToString()
-				};
-				_taskService.RegisterActiveTask(registrationTask);
-			}
+			// === >>> Регистрируем активную загрузку в ActiveUploadsRegistry
+			ActiveUploadsRegistry.Register(userId, fileName);
 
+			// Сохраняем сам чанк
 			string chunkPath = Path.Combine(chunkFolder, $"chunk_{chunkIndex}");
-			using (var stream = new FileStream(chunkPath, FileMode.Create))
-			{
+			await using (var stream = new FileStream(chunkPath, FileMode.Create, FileAccess.Write))
 				await file.CopyToAsync(stream);
-			}
 
+			// Если это последний чанк — сразу собираем всё
 			if (chunkIndex == totalChunks - 1)
 			{
-				var finalTask = new FileUploadTask
+				try
 				{
-					UserId = userId,
-					OriginalFileName = fileName,
-					TempFilePath = chunkFolder,
-					DestinationFolder = userFolder,
-					TaskId = Guid.NewGuid().ToString()
-				};
-				_taskService.EnqueueTask(finalTask);				
+					string finalPath = Path.Combine(userFolder, fileName);
+					await using (var dest = new FileStream(finalPath, FileMode.Create, FileAccess.Write))
+					{
+						for (int i = 0; i < totalChunks; i++)
+						{
+							var partPath = Path.Combine(chunkFolder, $"chunk_{i}");
+							if (!System.IO.File.Exists(partPath))
+								throw new IOException($"Чанк {i} не найден в {chunkFolder}");
+
+							await using (var src = new FileStream(partPath, FileMode.Open, FileAccess.Read))
+								await src.CopyToAsync(dest);
+						}
+					}
+
+					Directory.Delete(chunkFolder, recursive: true);
+
+					// Уведомляем клиента об обновлённом списке файлов
+					var files = Directory
+						.GetFiles(userFolder)
+						.Select(f =>
+						{
+							var fi = new FileInfo(f);
+							return new
+							{
+								name = fi.Name,
+								sizeMb = Math.Round(fi.Length / 1048576.0, 2),
+								lastWriteTime = fi.LastWriteTime.ToString("dd.MM.yyyy, HH:mm")
+							};
+						})
+						.ToList();
+
+					await _hubContext.Clients.Group(userId)
+						.SendAsync("ReceiveStorageUpdate", files);
+				}
+				finally
+				{
+					// === >>> Разрегистрируем активную загрузку в ActiveUploadsRegistry даже если была ошибка
+					ActiveUploadsRegistry.Unregister(userId, fileName);
+				}
 			}
 
 			return new JsonResult(new { success = true });

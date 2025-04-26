@@ -32,11 +32,7 @@ namespace VCS_DOCs.Data.Hubs
 				return;
 
 			string basePath = Path.Combine(_env.ContentRootPath, "Data", "userData");
-			//string userFolder = Path.Combine(basePath, $"userData_{userId}");
-
-			var username = Context.User.Identity?.Name;
-			string userFolder = Path.Combine(basePath, $"userData_{username}");
-
+			string userFolder = Path.Combine(basePath, $"userData_{userId}");
 
 			var list = new List<object>();
 			if (Directory.Exists(userFolder))
