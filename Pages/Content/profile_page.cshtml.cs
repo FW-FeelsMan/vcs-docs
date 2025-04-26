@@ -301,7 +301,17 @@ namespace VCS_DOCs.Pages.Content
 
 					Directory.Delete(chunkFolder, recursive: true);
 
-					// Уведомляем клиента об обновлённом списке файлов
+					var fileInfo = new FileInfo(finalPath);
+					var reservation = new FileReservation
+					{
+						UserId = userId,
+						FileName = fileName,
+						ReservedBytes = fileInfo.Length,
+						IsReleased = false
+					};
+					_context.FileReservations.Add(reservation);
+					await _context.SaveChangesAsync();
+
 					var files = Directory
 						.GetFiles(userFolder)
 						.Select(f =>
@@ -321,12 +331,30 @@ namespace VCS_DOCs.Pages.Content
 				}
 				finally
 				{
-					// === >>> Разрегистрируем активную загрузку в ActiveUploadsRegistry даже если была ошибка
 					ActiveUploadsRegistry.Unregister(userId, fileName);
 				}
 			}
-
 			return new JsonResult(new { success = true });
+		}
+		public async Task<JsonResult> OnGetFilesAsync()
+		{
+			if (!User.Identity.IsAuthenticated)
+				return new JsonResult(new { success = false, message = "Not authenticated" });
+
+			var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+			if (string.IsNullOrEmpty(userId))
+				return new JsonResult(new { success = false, message = "User ID not found" });
+
+			var files = await _context.FileReservations
+				.Where(r => r.UserId == userId && !r.IsReleased)
+				.Select(r => new
+				{
+					name = r.FileName,
+					size = r.ReservedBytes
+				})
+				.ToListAsync();
+
+			return new JsonResult(new { success = true, files });
 		}
 	}
 }

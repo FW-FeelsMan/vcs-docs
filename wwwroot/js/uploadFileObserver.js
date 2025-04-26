@@ -1,10 +1,13 @@
-﻿const MAX_CHUNK_SIZE = 2 * 1024 * 1024;
+﻿const MAX_CHUNK_SIZE = 2 * 1024 * 1024; // 2 MB
 const MAX_WINDOWS_PATH = 260;
 const MAX_FILENAME_LENGTH = 120;
-
+const GUID_LENGTH = 36; // Стандартный GUID
 let activeUploads = 0;
 let setupInProgress = false;
 let previousActiveUploads = 0;
+let currentStorageFiles = [];
+let pendingUploadFile = null; // Для хранения выбранного файла при конфликте
+let pendingAction = null; // Что делать: "overwrite" или "new-version"
 
 async function refreshStorageStatusAndTable() {
     await refreshStorageStatus();
@@ -28,6 +31,40 @@ async function refreshStorageStatus() {
     } catch (err) {
         console.error("Ошибка при получении статуса хранилища:", err);
     }
+}
+
+function generateGuid() {
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === "x" ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+    });
+}
+
+function getFileNameWithoutExtension(name) {
+    const lastDotIndex = name.lastIndexOf(".");
+    if (lastDotIndex === -1) return name;
+    return name.substring(0, lastDotIndex);
+}
+
+function getFileExtension(name) {
+    const lastDotIndex = name.lastIndexOf(".");
+    if (lastDotIndex === -1) return "";
+    return name.substring(lastDotIndex);
+}
+
+function buildFinalFileName(baseName, extension, guid) {
+    return `${baseName}__${guid}${extension}`;
+}
+
+function isFinalPathTooLong(baseName, extension, guid) {
+    if (!window.userStorageBasePath || !window.userIdFromClaims) {
+        console.error("userStorageBasePath или userIdFromClaims не заданы!");
+        return false;
+    }
+    const fullPath = `${window.userStorageBasePath}\\userData_${window.userIdFromClaims}\\${baseName}__${guid}${extension}`;
+    console.log("[Upload] Вычисленный полный путь:", fullPath);
+    return fullPath.length >= MAX_WINDOWS_PATH;
 }
 
 async function reserveFile(fileName, fileSize) {
@@ -89,6 +126,91 @@ function hideUploadWarning() {
     if (notice) notice.remove();
 }
 
+function fileExistsInStorage(fileName) {
+    return currentStorageFiles.some(file => file.name.toLowerCase() === fileName.toLowerCase());
+}
+
+function showConflictModal(fileName) {
+    const modal = document.getElementById("uploadConflictModal");
+    const modalFilename = document.getElementById("modalFilename");
+    modalFilename.textContent = `Файл "${fileName}" уже существует.`;
+    modal.style.display = "block";
+}
+
+function hideConflictModal() {
+    const modal = document.getElementById("uploadConflictModal");
+    modal.style.display = "none";
+}
+
+async function uploadSelectedFile(file, action) {
+    let baseName = getFileNameWithoutExtension(file.name);
+    let extension = getFileExtension(file.name);
+    let finalFileName = file.name;
+
+    if (action === "new-version") {
+        const guid = generateGuid();
+        if (isFinalPathTooLong(baseName, extension, guid)) {
+            alert("Путь слишком длинный. Сократите имя файла.");
+            return;
+        }
+        finalFileName = buildFinalFileName(baseName, extension, guid);
+    }
+
+    const ok = await reserveFile(finalFileName, file.size);
+    if (!ok) {
+        alert("Недостаточно места для загрузки этого файла.");
+        return;
+    }
+
+    await refreshStorageStatus();
+    const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE);
+
+    activeUploads++;
+    if (activeUploads > previousActiveUploads) {
+        previousActiveUploads = activeUploads;
+        await refreshStorageStatus();
+    }
+
+    showUploadWarning();
+
+    for (let i = 0; i < totalChunks; i++) {
+        const chunk = file.slice(i * MAX_CHUNK_SIZE, (i + 1) * MAX_CHUNK_SIZE);
+        const chunkForm = new FormData();
+        chunkForm.append("chunk", chunk);
+        chunkForm.append("metadata.FileName", finalFileName);
+        chunkForm.append("metadata.ChunkIndex", i);
+        chunkForm.append("metadata.TotalChunks", totalChunks);
+
+        try {
+            const response = await fetch("/Content/profile_page?handler=UploadChunk", {
+                method: "POST",
+                headers: { "Accept": "application/json", "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content") },
+                body: chunkForm
+            });
+            const result = await response.json();
+            if (!result.success) {
+                console.error("Ошибка при загрузке чанка:", result.error);
+                break;
+            }
+        } catch (err) {
+            console.error("Ошибка при отправке чанка:", err);
+            break;
+        }
+    }
+
+    activeUploads--;
+    previousActiveUploads = activeUploads;
+
+    if (activeUploads <= 0) {
+        hideUploadWarning();
+        await releaseFile(finalFileName);
+    }
+
+    console.log("[Upload] Файл успешно загружен:", `${window.userStorageBasePath}\\userData_${window.userIdFromClaims}\\${finalFileName}`);
+
+    await refreshStorageStatusAndTable();
+}
+
 async function setupUpload() {
     if (setupInProgress) return;
     setupInProgress = true;
@@ -108,82 +230,37 @@ async function setupUpload() {
             const file = fileInput.files[0];
             if (!file) return;
 
-            // === Проверка длины имени файла ===
             if (file.name.length > MAX_FILENAME_LENGTH) {
-                alert(`Имя файла слишком длинное (${file.name.length} символов). Допустимо не более ${MAX_FILENAME_LENGTH}.`);
+                alert(`Имя файла слишком длинное (${file.name.length} символов).`);
                 fileInput.value = "";
                 return;
             }
 
-            // === Проверка общей длины пути ===
-            const fullPath = `${window.userStorageBasePath}\\userData_${userIdFromClaims}\\${file.name}`; // userIdFromClaims должен быть где-то глобально передан
-            console.log("[Upload] Полный путь для загрузки:", fullPath);
-
-            if (fullPath.length > MAX_WINDOWS_PATH) {
-                alert(`Слишком длинный путь к файлу (${fullPath.length} символов). Сократите имя файла.`);
-                fileInput.value = "";
-                return;
+            if (fileExistsInStorage(file.name)) {
+                pendingUploadFile = file;
+                showConflictModal(file.name);
+            } else {
+                await uploadSelectedFile(file, "overwrite");
             }
-
-            const ok = await reserveFile(file.name, file.size);
-            if (!ok) {
-                alert("Недостаточно места для загрузки этого файла.");
-                fileInput.value = "";
-                return;
-            }
-
-            await refreshStorageStatus();
-            const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE);
-
-            activeUploads++;
-            if (activeUploads > previousActiveUploads) {
-                previousActiveUploads = activeUploads;
-                await refreshStorageStatus();
-            }
-
-            showUploadWarning();
-
-            for (let i = 0; i < totalChunks; i++) {
-                const chunk = file.slice(i * MAX_CHUNK_SIZE, (i + 1) * MAX_CHUNK_SIZE);
-                const chunkForm = new FormData();
-                chunkForm.append("chunk", chunk);
-                chunkForm.append("metadata.FileName", file.name);
-                chunkForm.append("metadata.ChunkIndex", i);
-                chunkForm.append("metadata.TotalChunks", totalChunks);
-
-                try {
-                    const response = await fetch("/Content/profile_page?handler=UploadChunk", {
-                        method: "POST",
-                        headers: {
-                            "Accept": "application/json",
-                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content")
-                        },
-                        body: chunkForm
-                    });
-                    const result = await response.json();
-                    if (!result.success) {
-                        console.error("Ошибка при загрузке чанка:", result.error);
-                        break;
-                    }
-                } catch (err) {
-                    console.error("Ошибка при отправке чанка:", err);
-                    break;
-                }
-            }
-
-            activeUploads--;
-            previousActiveUploads = activeUploads;
-
-            if (activeUploads <= 0) {
-                hideUploadWarning();
-                await releaseFile(file.name);
-            }
-
-            fileInput.value = "";
-            console.log("[Upload] Файл успешно загружен:", fullPath);
-
-            await refreshStorageStatusAndTable();
         });
+
+        document.getElementById("overwriteButton").addEventListener("click", async () => {
+            hideConflictModal();
+            await uploadSelectedFile(pendingUploadFile, "overwrite");
+            pendingUploadFile = null;
+        });
+
+        document.getElementById("newVersionButton").addEventListener("click", async () => {
+            hideConflictModal();
+            await uploadSelectedFile(pendingUploadFile, "new-version");
+            pendingUploadFile = null;
+        });
+
+        document.getElementById("cancelUploadButton").addEventListener("click", () => {
+            hideConflictModal();
+            pendingUploadFile = null;
+        });
+
     } finally {
         setupInProgress = false;
     }
@@ -208,6 +285,7 @@ if (typeof userIsAuthenticated !== "undefined" && userIsAuthenticated === true) 
         .build();
 
     connection.on("ReceiveStorageUpdate", (files) => {
+        currentStorageFiles = files || [];
         updateFileTable(files);
         refreshStorageStatus();
     });
