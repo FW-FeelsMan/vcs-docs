@@ -131,29 +131,34 @@ function updateFileTable(files) {
         deleteButton.textContent = "Удалить";
         deleteButton.classList.add("delete-button");
 
-        deleteButton.addEventListener('click', () => {
+        deleteButton.addEventListener('click', async () => {
             if (confirm("Вы уверены, что хотите удалить этот файл?")) {
+                deleteButton.disabled = true; 
+
                 const formData = new FormData();
                 formData.append("fileName", file.name);
-                fetch("/Content/profile_page?handler=DeleteFile", {
-                    method: "POST",
-                    headers: {
-                        "Accept": "application/json",
-                        "X-CSRF-TOKEN": csrfToken
-                    },
-                    body: formData
-                })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            requestFiles();
-                        } else {
-                            console.error("Ошибка удаления файла:", data.error);
-                        }
-                    })
-                    .catch(error => {
-                        console.error("Ошибка при удалении файла:", error);
+
+                try {
+                    const response = await fetch("/Content/profile_page?handler=DeleteFile", {
+                        method: "POST",
+                        headers: {
+                            "Accept": "application/json",
+                            "X-CSRF-TOKEN": csrfToken
+                        },
+                        body: formData
                     });
+                    const data = await response.json();
+
+                    if (data.success) {
+                        requestFiles(); 
+                    } else {
+                        console.error("Ошибка удаления файла:", data.error);
+                        deleteButton.disabled = false; 
+                    }
+                } catch (error) {
+                    console.error("Ошибка при удалении файла:", error);
+                    deleteButton.disabled = false; 
+                }
             }
         });
 

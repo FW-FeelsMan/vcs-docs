@@ -1,4 +1,7 @@
 ﻿const MAX_CHUNK_SIZE = 2 * 1024 * 1024;
+const MAX_WINDOWS_PATH = 260;
+const MAX_FILENAME_LENGTH = 120;
+
 let activeUploads = 0;
 let setupInProgress = false;
 let previousActiveUploads = 0;
@@ -105,6 +108,23 @@ async function setupUpload() {
             const file = fileInput.files[0];
             if (!file) return;
 
+            // === Проверка длины имени файла ===
+            if (file.name.length > MAX_FILENAME_LENGTH) {
+                alert(`Имя файла слишком длинное (${file.name.length} символов). Допустимо не более ${MAX_FILENAME_LENGTH}.`);
+                fileInput.value = "";
+                return;
+            }
+
+            // === Проверка общей длины пути ===
+            const fullPath = `${window.userStorageBasePath}\\userData_${userIdFromClaims}\\${file.name}`; // userIdFromClaims должен быть где-то глобально передан
+            console.log("[Upload] Полный путь для загрузки:", fullPath);
+
+            if (fullPath.length > MAX_WINDOWS_PATH) {
+                alert(`Слишком длинный путь к файлу (${fullPath.length} символов). Сократите имя файла.`);
+                fileInput.value = "";
+                return;
+            }
+
             const ok = await reserveFile(file.name, file.size);
             if (!ok) {
                 alert("Недостаточно места для загрузки этого файла.");
@@ -160,6 +180,7 @@ async function setupUpload() {
             }
 
             fileInput.value = "";
+            console.log("[Upload] Файл успешно загружен:", fullPath);
 
             await refreshStorageStatusAndTable();
         });

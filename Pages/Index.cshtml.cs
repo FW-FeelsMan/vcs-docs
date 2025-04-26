@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using System.Security.Claims;
+using VCS_DOCs.Configuration;
 
 namespace VCS_DOCs.Pages
 {
@@ -11,38 +13,39 @@ namespace VCS_DOCs.Pages
 	{
 		private readonly ApplicationDbContext _context;
 		private readonly ILogger<IndexModel> _logger;
+		public string UserStorageRootPath { get; private set; } = "";
+		private readonly UserDataPathOptions _userDataOptions;
 
 		public User? CurrentUser { get; set; }
 
-		public IndexModel(ILogger<IndexModel> logger, ApplicationDbContext context)
+
+		public IndexModel(ILogger<IndexModel> logger, ApplicationDbContext context, IOptions<UserDataPathOptions> userDataOptions)
 		{
 			_context = context;
 			_logger = logger;
+			_userDataOptions = userDataOptions.Value;
 		}
 
 		public async Task<IActionResult> OnGetAsync()
-		{
-			// Если не аутентифицирован — сразу на логин
+		{		
+
 			if (User?.Identity?.IsAuthenticated != true)
 				return RedirectToPage("/Login");
 
-			// Берём userId из claim’ов
 			var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 			if (string.IsNullOrEmpty(userId))
 				return RedirectToPage("/Login");
 
-			// Обновляем статус «онлайн»
 			await UpdateUserStatus(userId, true);
-
 			ViewData["Username"] = User.Identity.Name ?? "";
 
-			// Ищем запись в БД по UserName
 			CurrentUser = await _context.Users
 				.FirstOrDefaultAsync(u => u.UserName == User.Identity.Name);
 
-			// Если пользователя вдруг нет — отправляем на логин
 			if (CurrentUser == null)
 				return RedirectToPage("/Login");
+			UserStorageRootPath = _userDataOptions.BasePath;
+			ViewData["UserStorageBasePath"] = _userDataOptions.BasePath;
 
 			return Page();
 		}

@@ -1,7 +1,12 @@
-﻿@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+﻿**_Layout.cshtml_ поправленный:**
+
+```cshtml
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@using System.Security.Claims
 @{
     var tokens = Antiforgery.GetAndStoreTokens(Context);
     var csrfToken = tokens.RequestToken;
+    var userIdFromClaims = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
 }
 <!DOCTYPE html>
 <html lang="ru">
@@ -23,19 +28,28 @@
     <div style="display:none;">
         @Html.AntiForgeryToken()
     </div>
+
     @RenderBody()
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
+
     @if (User.Identity?.IsAuthenticated == true)
     {
+        <script>
+            var userIsAuthenticated = true;
+            window.userStorageBasePath = "@(ViewData["UserStorageBasePath"]?.ToString().Replace("\\", "\\\\") ?? "")";
+            window.userIdFromClaims = "@userIdFromClaims";
+        </script>
         <script src="~/js/userStatus.js"></script>
-    }
-    <script>
-        var userIsAuthenticated = @User.Identity.IsAuthenticated.ToString().ToLower();
-    </script>
-    @if (User.Identity.IsAuthenticated)
-    {
         <script src="~/js/userStorageObserver.js"></script>
     }
+    else
+    {
+        <script>
+            var userIsAuthenticated = false;
+        </script>
+    }
+
     <script src="~/js/sidebar.js"></script>
     <script src="~/js/contextMenu.js"></script>
     <script src="~/js/extraTabbar.js"></script>
@@ -44,6 +58,7 @@
     <script src="~/js/sorttable.js"></script>
     <script src="~/js/sorttableObserver.js"></script>
     <script src="~/js/uploadFileObserver.js"></script>
+
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
