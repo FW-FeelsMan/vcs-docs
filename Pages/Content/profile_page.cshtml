@@ -1,9 +1,7 @@
 ﻿@page
 @model profile_pageModel
 @{
-    //Layout = null;
 }
-
 
 <input type="file" id="hiddenFileInput" style="display: none;" />
 
@@ -62,15 +60,11 @@
             <div id="storage" class="content-section">
                 <h2>Личное хранилище</h2>
                 <div class="storage-header" style="display: flex; align-items: center; justify-content: space-between;">
-                    <h3>Содержимое хранилища</h3>
+                    <h3>Содержимое:</h3>
                     <div style="display: flex; align-items: center;">
                         <div style="margin-right: 10px;">
-                            <span>Загружается: ... Гб</span>
-                            &nbsp;
-                            <span>Свободно:... Гб из 10 Гб</span>
+                            <span id="storageCounter"></span>
                         </div>
-
-
                         <button id="uploadFileButton" type="button" class="css-button-sliding-to-left--red">Загрузить файл</button>
                     </div>
                 </div>
@@ -84,7 +78,6 @@
                                     <th class="date-col">Дата и время загрузки</th>
                                     <th class="command-col">Команда</th>
                                 </tr>
-
                             </thead>
                             <tbody>
                                 <!-- Динамически заполняется -->
@@ -92,7 +85,6 @@
                         </table>
                     </div>
                 </div>
-
             </div>
             <div id="tasks" class="content-section">
                 <h2>Задачи</h2>

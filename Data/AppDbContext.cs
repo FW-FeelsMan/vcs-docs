@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace VCS_DOCs
 {
-	// Контекст приложения
 	public class ApplicationDbContext : IdentityDbContext<User>
 	{
 		public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
@@ -13,8 +12,8 @@ namespace VCS_DOCs
 		{
 		}
 
-		// Таблица для хранения резервации места под файлы
 		public DbSet<FileReservation> FileReservations { get; set; }
+		public DbSet<ChunkStatus> ChunkStatuses { get; set; }
 
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
@@ -25,7 +24,6 @@ namespace VCS_DOCs
 		}
 	}
 
-	// Расширенная сущность пользователя
 	public class User : IdentityUser
 	{
 		public string FullName { get; set; } = "Не установлено";
@@ -42,15 +40,25 @@ namespace VCS_DOCs
 		public string? JwtId { get; set; }
 	}
 
-	// Сущность для хранения резервации байт под файлы
 	public class FileReservation
 	{
-		public int Id { get; set; }          // PK
-		public string UserId { get; set; } = null!; // FK → AspNetUsers(Id)
+		public int Id { get; set; }
+		public string UserId { get; set; } = null!;
 		public User User { get; set; } = null!;
 		public string FileName { get; set; } = null!;
-		public long ReservedBytes { get; set; }          // Сколько байт зарезервировано
-		public bool IsReleased { get; set; }          // Флаг снятия резерва
+		public long ReservedBytes { get; set; }
+		public bool IsReleased { get; set; }
 		public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+	}
+
+	public class ChunkStatus
+	{
+		public int Id { get; set; }
+		public string UserId { get; set; } = null!;
+		public User User { get; set; } = null!;
+		public string ChunkFolder { get; set; } = null!;
+		public long TotalBytes { get; set; }
+		public bool IsActive { get; set; }
+		public DateTime UpdatedAt { get; set; }
 	}
 }

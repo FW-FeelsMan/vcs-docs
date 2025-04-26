@@ -7,7 +7,6 @@ if (userIsAuthenticated === true || userIsAuthenticated === "true") {
         .configureLogging(signalR.LogLevel.None)
         .build();
 
-    // Пришло обновление списка файлов
     connection.on("ReceiveStorageUpdate", function (files) {
         updateFileTable(files);
     });
@@ -25,23 +24,17 @@ if (userIsAuthenticated === true || userIsAuthenticated === "true") {
             }).catch(err => console.error("Re-start connection error:", err));
         }
     }
-
-    // Повторный запрос только если таблица пуста
-    setInterval(() => {
-        const tableBody = document.querySelector("table.sortable tbody");
-        if (tableBody && tableBody.children.length === 0) {
-            requestFiles();
-        }
-    }, 1000);
-
     function updateFileTable(files) {
+        console.log("ReceiveStorageUpdate:", files);
         const tableBody = document.querySelector("table.sortable tbody");
-        if (!tableBody) return;
+        if (!tableBody) {
+            setTimeout(() => updateFileTable(files), 100); 
+            return;
+        }
         tableBody.innerHTML = "";
 
         files.forEach(function (file) {
             const lower = file.name.toLowerCase();
-            // Пропускаем ini и history_ файлы
             if (lower.endsWith(".ini") || lower.startsWith("history_")) return;
 
             let row = document.createElement("tr");
@@ -76,6 +69,7 @@ if (userIsAuthenticated === true || userIsAuthenticated === "true") {
                     })
                         .then(response => response.json())
                         .then(data => {
+                            console.log("Ответ сервера при удалении файла:", data);
                             if (data.success) {
                                 requestFiles();
                             } else {
@@ -94,12 +88,15 @@ if (userIsAuthenticated === true || userIsAuthenticated === "true") {
         });
     }
 
-    const tableObserver = new MutationObserver((mutations, obs) => {
-        const tableBody = document.querySelector("table.sortable tbody");
-        if (tableBody) {
-            requestFiles();
-            obs.disconnect();
-        }
-    });
-    tableObserver.observe(document.body, { childList: true, subtree: true });
+   const tableObserver = new MutationObserver((mutations, observer) => {
+    const tableBody = document.querySelector("table.sortable tbody");
+    if (tableBody) {
+        console.log("Таблица найдена через MutationObserver, делаем запрос файлов");
+        requestFiles();
+        observer.disconnect();
+    }
+});
+
+tableObserver.observe(document.body, { childList: true, subtree: true });
+
 }

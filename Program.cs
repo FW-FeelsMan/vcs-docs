@@ -2,11 +2,14 @@ using AspNetCoreRateLimit;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using VCS_DOCs.Data;
-using VCS_DOCs.Services;
 using VCS_DOCs;
-using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using VCS_DOCs.Data.Hubs;
+using VCS_DOCs.Services.User;
+using VCS_DOCs.Services.Upload;
+using VCS_DOCs.Utilities;
+using VCS_DOCs.Services;
+using VCS_DOCs.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<UserServiceManager>();
@@ -19,7 +22,10 @@ builder.Services.AddRazorPages(options => {
 	jsonOptions.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
 	jsonOptions.JsonSerializerOptions.PropertyNamingPolicy = null;
 });
-
+builder.Services.Configure<UserDataPathOptions>(options =>
+{
+	options.BasePath = Path.Combine(builder.Environment.ContentRootPath, "Data", "userData");
+});
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 	options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
@@ -72,9 +78,10 @@ builder.Services.AddCors(options =>
 builder.Services.AddMemoryCache();
 builder.Services.AddControllersWithViews()
 	.AddRazorRuntimeCompilation();
-builder.Services.AddSingleton<UserStorageQuotaService>();
+
 builder.Services.AddSingleton<FileUploadTaskService>();
 builder.Services.AddHostedService(provider => provider.GetRequiredService<FileUploadTaskService>());
+builder.Services.AddScoped<IStorageQuotaService, EfStorageQuotaService>();
 builder.WebHost.ConfigureKestrel(options =>
 {
 	options.Limits.MaxRequestBodySize = 10L * 1024 * 1024 * 1024;
@@ -111,7 +118,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapHub<UserStatusHub>("/Data/userStatusHub");
-app.MapHub<VCS_DOCs.Hubs.UserStorageHub>("/userStorageHub");
+app.MapHub<UserStorageHub>("/userStorageHub");
 
 app.MapRazorPages();
 

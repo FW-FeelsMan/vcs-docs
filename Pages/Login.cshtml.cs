@@ -15,8 +15,9 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using VCS_DOCs.Data;
-using VCS_DOCs.Services;
+using VCS_DOCs.Data.Hubs;
+using VCS_DOCs.Services.Microservices;
+using VCS_DOCs.Services.User;
 using VCS_DOCs.Utilities;
 
 namespace VCS_DOCs.Pages
@@ -95,7 +96,6 @@ namespace VCS_DOCs.Pages
 
 			bool forceLogin = Request.Form["ForceLogin"].ToString().ToLower() == "true";
 
-			// ¬от эта часть Ч проверка статуса онлайн:
 			if (user.StatusOnline == 1)
 			{
 				if (!forceLogin)
@@ -106,7 +106,6 @@ namespace VCS_DOCs.Pages
 						errors = new List<string> { "Ётот аккаунт уже используетс€ на другом устройстве." }
 					});
 				}
-				// если пришЄл флаг принудительного входа Ч шлЄм ForceLogout старой сессии
 				await _hubContext.Clients.User(user.Id).SendAsync("ForceLogout");
 				await _userService.ClearUserJwtIdAsync(user.Id);
 				_context.Users.Update(user);
@@ -175,9 +174,9 @@ namespace VCS_DOCs.Pages
 				return new JsonResult(new { success = false, errors = RegistrationErrors });
 			}
 
-			if (Password.Length <= 6)
+			if (Password.Length < 6)
 			{
-				RegistrationErrors.Add("ѕароль должен быть более 6 символов.");
+				RegistrationErrors.Add("ѕароль должен быть не менее 6 символов.");
 				return new JsonResult(new { success = false, errors = RegistrationErrors });
 			}
 

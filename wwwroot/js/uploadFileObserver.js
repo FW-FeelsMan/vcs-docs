@@ -1,52 +1,97 @@
 ﻿const MAX_CHUNK_SIZE = 2 * 1024 * 1024;
 let activeUploads = 0;
+let setupInProgress = false;
+let previousActiveUploads = 0;
 
-console.log("Скрипт загружен");
+async function refreshStorageStatusAndTable() {
+    await refreshStorageStatus();
+}
 
-if (typeof userIsAuthenticated !== "undefined" && userIsAuthenticated === true) {
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", setupUpload);
-    } else {
-        setupUpload();
-    }
-
-    const uploadObserver = new MutationObserver(setupUpload);
-    uploadObserver.observe(document.body, { childList: true, subtree: true });
-
-    window.addEventListener("beforeunload", function (e) {
-        if (activeUploads > 0) {
-            e.preventDefault();
-            e.returnValue = "";
+async function refreshStorageStatus() {
+    const storageCounter = document.getElementById("storageCounter");
+    if (!storageCounter) return;
+    try {
+        const res = await fetch("/Content/profile_page?handler=StorageStatus");
+        if (!res.ok) {
+            console.error("StorageStatus returned HTTP", res.status);
+            return;
         }
-    });
-
-    function showUploadWarning() {
-        let notice = document.getElementById("upload-warning");
-        if (!notice) {
-            notice = document.createElement("div");
-            notice.id = "upload-warning";
-            notice.style.position = "fixed";
-            notice.style.bottom = "15px";
-            notice.style.right = "15px";
-            notice.style.backgroundColor = "#ffc107";
-            notice.style.padding = "10px 20px";
-            notice.style.borderRadius = "6px";
-            notice.style.boxShadow = "0 2px 6px rgba(0,0,0,0.2)";
-            notice.style.zIndex = "9999";
-            notice.style.fontWeight = "bold";
-            notice.textContent = "Загрузка файлов в процессе. Закрыв страницу вы потеряете прогресс загрузки.";
-            document.body.appendChild(notice);
+        const json = await res.json();
+        if (json.success) {
+            const loadingText = json.reservedMb > 0 ? `Загружается: ${json.reservedMb} МБ` : `Загружается: 0 МБ`;
+            const freeText = `Свободно: ${json.freeMb} МБ / 10240 МБ`;
+            storageCounter.textContent = `${loadingText}    ${freeText}`;
         }
+    } catch (err) {
+        console.error("Ошибка при получении статуса хранилища:", err);
     }
+}
 
-    function hideUploadWarning() {
-        const notice = document.getElementById("upload-warning");
-        if (notice) {
-            notice.remove();
-        }
+async function reserveFile(fileName, fileSize) {
+    const fd = new FormData();
+    fd.append("fileName", fileName);
+    fd.append("fileSize", fileSize);
+    const token = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+    try {
+        const res = await fetch("/Content/profile_page?handler=TryReserve", {
+            method: "POST",
+            headers: { "X-CSRF-TOKEN": token },
+            body: fd
+        });
+        if (!res.ok) return false;
+        const json = await res.json();
+        return json.success;
+    } catch (err) {
+        console.error("Ошибка при резервировании места:", err);
+        return false;
     }
+}
 
-    function setupUpload() {
+async function releaseFile(fileName) {
+    const fd = new FormData();
+    fd.append("fileName", fileName);
+    const token = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+    try {
+        await fetch("/Content/profile_page?handler=ReleaseFile", {
+            method: "POST",
+            headers: { "X-CSRF-TOKEN": token },
+            body: fd
+        });
+    } catch (err) {
+        console.error("Ошибка при освобождении места:", err);
+    }
+}
+
+function showUploadWarning() {
+    let notice = document.getElementById("upload-warning");
+    if (!notice) {
+        notice = document.createElement("div");
+        notice.id = "upload-warning";
+        notice.style.position = "fixed";
+        notice.style.bottom = "15px";
+        notice.style.right = "15px";
+        notice.style.backgroundColor = "#ffc107";
+        notice.style.padding = "10px 20px";
+        notice.style.borderRadius = "6px";
+        notice.style.boxShadow = "0 2px 6px rgba(0,0,0,0.2)";
+        notice.style.zIndex = "9999";
+        notice.style.fontWeight = "bold";
+        notice.textContent = "Загрузка файлов в процессе. Закрыв страницу вы потеряете прогресс.";
+        document.body.appendChild(notice);
+    }
+}
+
+function hideUploadWarning() {
+    const notice = document.getElementById("upload-warning");
+    if (notice) notice.remove();
+}
+
+async function setupUpload() {
+    if (setupInProgress) return;
+    setupInProgress = true;
+    try {
+        await refreshStorageStatus();
+
         const uploadButton = document.getElementById("uploadFileButton");
         const fileInput = document.getElementById("hiddenFileInput");
 
@@ -54,38 +99,28 @@ if (typeof userIsAuthenticated !== "undefined" && userIsAuthenticated === true) 
 
         uploadButton.dataset.initialized = "true";
 
-        uploadButton.addEventListener("click", () => {
-            fileInput.click();
-        });
+        uploadButton.addEventListener("click", () => fileInput.click());
 
         fileInput.addEventListener("change", async () => {
             const file = fileInput.files[0];
             if (!file) return;
 
-            const formData = new FormData();
-            formData.append("fileName", file.name);
-            formData.append("fileSize", file.size);
-
-            const token = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
-
-            const reserveResponse = await fetch("/Content/profile_page?handler=TryReserve", {
-                method: "POST",
-                headers: {
-                    "Accept": "application/json",
-                    "X-CSRF-TOKEN": token
-                },
-                body: formData
-            });
-
-            const reserveResult = await reserveResponse.json();
-            if (!reserveResult.success) {
-                alert(reserveResult.error);
+            const ok = await reserveFile(file.name, file.size);
+            if (!ok) {
+                alert("Недостаточно места для загрузки этого файла.");
                 fileInput.value = "";
                 return;
             }
 
+            await refreshStorageStatus();
             const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE);
+
             activeUploads++;
+            if (activeUploads > previousActiveUploads) {
+                previousActiveUploads = activeUploads;
+                await refreshStorageStatus();
+            }
+
             showUploadWarning();
 
             for (let i = 0; i < totalChunks; i++) {
@@ -101,11 +136,10 @@ if (typeof userIsAuthenticated !== "undefined" && userIsAuthenticated === true) 
                         method: "POST",
                         headers: {
                             "Accept": "application/json",
-                            "X-CSRF-TOKEN": token
+                            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content")
                         },
                         body: chunkForm
                     });
-
                     const result = await response.json();
                     if (!result.success) {
                         console.error("Ошибка при загрузке чанка:", result.error);
@@ -118,52 +152,43 @@ if (typeof userIsAuthenticated !== "undefined" && userIsAuthenticated === true) 
             }
 
             activeUploads--;
+            previousActiveUploads = activeUploads;
+
             if (activeUploads <= 0) {
                 hideUploadWarning();
-                activeUploads = 0;
+                await releaseFile(file.name);
             }
 
             fileInput.value = "";
-        });
-    }
 
-    function createTaskCard(fileName, taskId) {
-        const taskContainer = document.createElement("div");
-        taskContainer.classList.add("task-card");
-        taskContainer.setAttribute("data-filename", fileName);
-        taskContainer.innerHTML = `
-            <span>${fileName}</span>
-            <button class="cancel-btn">Отменить</button>
-        `;
-        taskContainer.querySelector(".cancel-btn").addEventListener("click", async () => {
-            const token = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
-            const response = await fetch("/Content/profile_page?handler=CancelUpload", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": token
-                },
-                body: JSON.stringify({ taskId })
-            });
-            const result = await response.json();
-            if (result.success) {
-                alert(`Загрузка "${fileName}" отменена`);
-                taskContainer.remove();
-            } else {
-                alert("Не удалось отменить задачу");
-            }
+            await refreshStorageStatusAndTable();
         });
-        const tasksContainer = document.querySelector(".tasks-grid");
-        if (tasksContainer) tasksContainer.appendChild(taskContainer);
+    } finally {
+        setupInProgress = false;
     }
+}
+
+if (typeof userIsAuthenticated !== "undefined" && userIsAuthenticated === true) {
+    document.addEventListener("DOMContentLoaded", setupUpload);
+
+    const uploadObserver = new MutationObserver(setupUpload);
+    uploadObserver.observe(document.body, { childList: true, subtree: true });
+
+    window.addEventListener("beforeunload", e => {
+        if (activeUploads > 0) {
+            e.preventDefault();
+            e.returnValue = "";
+        }
+    });
 
     const connection = new signalR.HubConnectionBuilder()
         .withUrl("/userStorageHub")
         .configureLogging(signalR.LogLevel.Information)
         .build();
 
-    connection.on("NewTaskStarted", ({ fileName, taskId }) => {
-        createTaskCard(fileName, taskId);
+    connection.on("ReceiveStorageUpdate", (files) => {
+        updateFileTable(files);
+        refreshStorageStatus();
     });
 
     connection.start().catch(err => console.error("Ошибка подключения SignalR:", err));
