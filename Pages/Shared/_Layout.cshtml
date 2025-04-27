@@ -1,7 +1,4 @@
-﻿**_Layout.cshtml_ поправленный:**
-
-```cshtml
-@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+﻿@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @using System.Security.Claims
 @{
     var tokens = Antiforgery.GetAndStoreTokens(Context);

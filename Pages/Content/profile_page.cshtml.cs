@@ -184,22 +184,28 @@ namespace VCS_DOCs.Pages.Content
 				return new JsonResult(new { success = false, error = $"Ошибка базы данных: {ex.InnerException?.Message ?? ex.Message}" });
 			}
 		}
-
 		public async Task<IActionResult> OnPostTryReserveAsync([FromForm] string fileName, [FromForm] long fileSize)
 		{
 			string? username = User.Identity?.Name;
 			string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-			fileName = Path.GetFileName(fileName);
-			string extension = Path.GetExtension(fileName);
+
+			if (string.IsNullOrWhiteSpace(fileName))
+				return new JsonResult(new { success = false, error = "Имя файла не может быть пустым." });
+
+			fileName = Path.GetFileName(fileName).Trim();
+			string? extension = Path.GetExtension(fileName);
 
 			if (BlockedExtensions.Contains(extension))
 				return new JsonResult(new { success = false, error = "Загрузка исполняемых файлов запрещена." });
 
-			if (fileName.Contains("..") || fileName.Contains('/') || fileName.Contains('\\'))
+			if (fileName.Length > 120)
+				return new JsonResult(new { success = false, error = "Имя файла слишком длинное (более 120 символов)." });
 
+			char[] invalidChars = Path.GetInvalidFileNameChars();
+			if (fileName.Any(c => invalidChars.Contains(c)))
 				return new JsonResult(new { success = false, error = "Имя файла содержит недопустимые символы." });
 
-			if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(userId) || fileSize <= 0 || string.IsNullOrWhiteSpace(fileName))
+			if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(userId) || fileSize <= 0)
 				return new JsonResult(new { success = false, error = "Неверные параметры" });
 
 			bool ok = await _quotaService.ReserveAsync(userId, fileName, fileSize);
@@ -272,15 +278,23 @@ namespace VCS_DOCs.Pages.Content
 			if (!Directory.Exists(chunkFolder))
 				Directory.CreateDirectory(chunkFolder);
 
-			// === >>> Регистрируем активную загрузку в ActiveUploadsRegistry
-			ActiveUploadsRegistry.Register(userId, fileName);
+			// === Проверка: если это первый чанк, убедимся, что файл не грузится уже
+			if (chunkIndex == 0)
+			{
+				if (ActiveUploadsRegistry.IsActive(userId, fileName))
+				{
+					return new JsonResult(new { success = false, error = "Файл уже загружается." });
+				}
 
-			// Сохраняем сам чанк
+				ActiveUploadsRegistry.Register(userId, fileName);
+			}
+
+			// Сохраняем чанк
 			string chunkPath = Path.Combine(chunkFolder, $"chunk_{chunkIndex}");
 			await using (var stream = new FileStream(chunkPath, FileMode.Create, FileAccess.Write))
 				await file.CopyToAsync(stream);
 
-			// Если это последний чанк — сразу собираем всё
+			// Если это последний чанк — собираем файл
 			if (chunkIndex == totalChunks - 1)
 			{
 				try
@@ -334,11 +348,12 @@ namespace VCS_DOCs.Pages.Content
 					ActiveUploadsRegistry.Unregister(userId, fileName);
 				}
 			}
+
 			return new JsonResult(new { success = true });
 		}
 		public async Task<JsonResult> OnGetFilesAsync()
 		{
-			if (!User.Identity.IsAuthenticated)
+			if (User.Identity == null || !User.Identity.IsAuthenticated)
 				return new JsonResult(new { success = false, message = "Not authenticated" });
 
 			var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;

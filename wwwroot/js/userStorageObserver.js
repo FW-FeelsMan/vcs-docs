@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (profileButton) {
         profileButton.addEventListener('click', () => {
-            console.log("Клик на кнопку Профиль, ждем появления раздела Хранилище...");
+            //console.log("Клик на кнопку Профиль, ждем появления раздела Хранилище...");
             waitForStorageTab();
         });
     } else {
@@ -18,14 +18,14 @@ function waitForStorageTab() {
     const storageTabLink = document.querySelector('li[data-target="storage"]');
 
     if (storageTabLink) {
-        console.log("Кнопка Личное хранилище найдена, вешаем обработчик");
+        //console.log("Кнопка Личное хранилище найдена, вешаем обработчик");
         storageTabLink.addEventListener('click', () => {
             ensureConnectionReady().then(() => {
                 requestFiles();
             });
         });
     } else {
-        console.log("Кнопка Личное хранилище пока не найдена, проверяем снова через 100мс...");
+        //console.log("Кнопка Личное хранилище пока не найдена, проверяем снова через 100мс...");
         setTimeout(waitForStorageTab, 100);
     }
 }
@@ -78,11 +78,16 @@ async function ensureConnectionReady() {
     connection.on("ReceiveStorageUpdate", (files) => {
         console.log("Получены файлы через SignalR:", files);
         updateFileTable(files);
+        currentStorageFiles = files || [];
+        if (typeof currentStorageFiles !== 'undefined') {
+            currentStorageFiles = files || [];
+        }
+        currentStorageFiles = files || [];
     });
 
     try {
         await connection.start();
-        console.log("SignalR соединение установлено.");
+        //console.log("SignalR соединение установлено.");
     } catch (err) {
         console.error("Ошибка подключения SignalR:", err);
     }
@@ -90,7 +95,7 @@ async function ensureConnectionReady() {
 
 function requestFiles() {
     if (connection && connection.state === signalR.HubConnectionState.Connected) {
-        console.log("Запрашиваем файлы через SignalR...");
+        //console.log("Запрашиваем файлы через SignalR...");
         connection.invoke("RequestCurrentFiles")
             .catch(err => console.error("Ошибка запроса файлов:", err));
     } else {

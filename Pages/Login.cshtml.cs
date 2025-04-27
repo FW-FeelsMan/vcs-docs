@@ -1,4 +1,4 @@
-// Pages/Login.cshtml.cs
+﻿// Pages/Login.cshtml.cs
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -70,29 +70,29 @@ namespace VCS_DOCs.Pages
 		{
 			var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
 			if (ip == null)
-				return new JsonResult(new { success = false, errors = new List<string> { "������ �����������." } });
+				return new JsonResult(new { success = false, errors = new List<string> { "Ошибка авторизации." } });
 
 			if (FailedLogins.TryGetValue(ip, out var data))
 			{
 				if (data.Attempts >= 5 && (DateTime.UtcNow - data.LastAttempt).TotalMinutes < 10)
-					return new JsonResult(new { success = false, errors = new List<string> { "������� ����� ��������� �������. ���������� �����." } });
+					return new JsonResult(new { success = false, errors = new List<string> { "Слишком много неудачных попыток. Попробуйте позже." } });
 			}
 
 			if (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password))
 			{
 				FailedLogins[ip] = (data.Attempts + 1, DateTime.UtcNow);
-				return new JsonResult(new { success = false, errors = new List<string> { "��� ������������ � ������ �����������." } });
+				return new JsonResult(new { success = false, errors = new List<string> { "Имя пользователя и пароль обязательны." } });
 			}
 
 			var user = await _context.Users.FirstOrDefaultAsync(u => u.UserName == Username);
 			if (user == null || !BCrypt.Net.BCrypt.Verify(Password, user.PasswordHash))
 			{
 				FailedLogins[ip] = (data.Attempts + 1, DateTime.UtcNow);
-				return new JsonResult(new { success = false, errors = new List<string> { "�������� ��� ������������ ��� ������." } });
+				return new JsonResult(new { success = false, errors = new List<string> { "Неверное имя пользователя или пароль." } });
 			}
 
 			if (user.Access == 0)
-				return new JsonResult(new { success = false, errors = new List<string> { "������� ������ �� ������������." } });
+				return new JsonResult(new { success = false, errors = new List<string> { "Учетная запись не активирована." } });
 
 			bool forceLogin = Request.Form["ForceLogin"].ToString().ToLower() == "true";
 
@@ -103,7 +103,7 @@ namespace VCS_DOCs.Pages
 					return new JsonResult(new
 					{
 						success = false,
-						errors = new List<string> { "���� ������� ��� ������������ �� ������ ����������." }
+						errors = new List<string> { "Этот аккаунт уже используется на другом устройстве." }
 					});
 				}
 				await _hubContext.Clients.User(user.Id).SendAsync("ForceLogout");
@@ -115,7 +115,7 @@ namespace VCS_DOCs.Pages
 			user.JwtId = Guid.NewGuid().ToString();
 			user.HardwareId = Request.Form["hardwareId"].ToString() ?? user.HardwareId;
 			user.LastEntry = DateTime.UtcNow;
-			user.StatusOnline = 1;                        // �������� ��� �� ������ ������
+			user.StatusOnline = 1;                        // помечаем что он теперь онлайн
 			_context.Users.Update(user);
 			await _context.SaveChangesAsync();
 
@@ -142,7 +142,7 @@ namespace VCS_DOCs.Pages
 			var userServiceManager = _serviceProvider.GetRequiredService<UserServiceManager>();
 			userServiceManager.StartUserServices(user.Id, user.UserName);
 
-			_logger.LogInformation($"������������ {user.UserName} ����� � �������.");
+			_logger.LogInformation($"Пользователь {user.UserName} вошел в систему.");
 
 			return new JsonResult(new { success = true });
 		}
@@ -150,44 +150,58 @@ namespace VCS_DOCs.Pages
 
 		public async Task<IActionResult> OnPostRegisterAsync()
 		{
+			const int MaxPathLength = 260;
+
+			Console.WriteLine("Начало регистрации пользователя...");
+
 			if (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password))
 			{
-				RegistrationErrors.Add("��� ������������ � ������ �����������.");
+				RegistrationErrors.Add("Имя пользователя и пароль обязательны.");
+				Console.WriteLine("Провал: Имя пользователя или пароль пустые.");
 				return new JsonResult(new { success = false, errors = RegistrationErrors });
 			}
 
 			if (Username.Length > 20)
 			{
-				RegistrationErrors.Add("��� ������������ �� ������ ��������� 20 ��������.");
+				RegistrationErrors.Add("Имя пользователя не должно превышать 20 символов.");
+				Console.WriteLine($"Провал: Имя пользователя длиной {Username.Length} символов больше 20.");
 				return new JsonResult(new { success = false, errors = RegistrationErrors });
 			}
 
 			if (!Regex.IsMatch(Username, @"^[a-zA-Z0-9]+$"))
 			{
-				RegistrationErrors.Add("��� ������������ ����� ��������� ������ ��������� ����� � �����.");
+				RegistrationErrors.Add("Имя пользователя может содержать только латинские буквы и цифры.");
+				Console.WriteLine("Провал: Имя пользователя содержит недопустимые символы.");
 				return new JsonResult(new { success = false, errors = RegistrationErrors });
 			}
 
 			if (Password.Length > 20)
 			{
-				RegistrationErrors.Add("������ �� ������ ��������� 20 ��������.");
+				RegistrationErrors.Add("Пароль не должен превышать 20 символов.");
+				Console.WriteLine($"Провал: Пароль длиной {Password.Length} символов больше 20.");
 				return new JsonResult(new { success = false, errors = RegistrationErrors });
 			}
 
 			if (Password.Length < 6)
 			{
-				RegistrationErrors.Add("������ ������ ���� �� ����� 6 ��������.");
+				RegistrationErrors.Add("Пароль должен быть не менее 6 символов.");
+				Console.WriteLine($"Провал: Пароль длиной {Password.Length} символов меньше 6.");
 				return new JsonResult(new { success = false, errors = RegistrationErrors });
 			}
 
 			try
 			{
+				Console.WriteLine("Проверка существующего пользователя...");
+
 				var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.UserName == Username);
 				if (existingUser != null)
 				{
-					RegistrationErrors.Add("������������ � ����� ������� ��� ����������.");
+					RegistrationErrors.Add("Пользователь с таким логином уже существует.");
+					Console.WriteLine("Провал: Такой пользователь уже есть.");
 					return new JsonResult(new { success = false, errors = RegistrationErrors });
 				}
+
+				Console.WriteLine("Создание нового пользователя...");
 
 				string hashedPassword = BCrypt.Net.BCrypt.HashPassword(Password);
 
@@ -207,28 +221,56 @@ namespace VCS_DOCs.Pages
 				_context.Users.Add(newUser);
 				await _context.SaveChangesAsync();
 
+				Console.WriteLine($"Пользователь сохранен в базу. Его ID: {newUser.Id}");
+
 				string appDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData");
-				string userDataPath = Path.Combine(appDataPath, $"userData_{Username}");
+				Console.WriteLine($"Базовый путь к данным: {appDataPath}");
+
+				string userFolderName = $"userData_{newUser.Id}";
+				string userDataPath = Path.Combine(appDataPath, userFolderName);
+				Console.WriteLine($"Путь к папке пользователя: {userDataPath}");
+
+				string historyFileName = $"history_{newUser.Id}.ini";
+				string historyFilePath = Path.Combine(userDataPath, historyFileName);
+				Console.WriteLine($"Путь к файлу истории: {historyFilePath}");
+
+				int fullFolderPathLength = Path.Combine(appDataPath, userFolderName).Length;
+				int fullHistoryPathLength = Path.Combine(userDataPath, historyFileName).Length;
+
+				Console.WriteLine($"Длина пути к папке: {fullFolderPathLength} символов");
+				Console.WriteLine($"Длина пути к истории: {fullHistoryPathLength} символов");
+
+				if (fullFolderPathLength >= MaxPathLength || fullHistoryPathLength >= MaxPathLength)
+				{
+					_context.Users.Remove(newUser);
+					await _context.SaveChangesAsync();
+
+					Console.WriteLine("Провал: Путь слишком длинный. Откат регистрации.");
+					RegistrationErrors.Add($"Не удалось создать пользователя: путь к папке или файлу слишком длинный ({fullHistoryPathLength} символов). Попробуйте использовать более короткий логин или другую базовую папку.");
+					return new JsonResult(new { success = false, errors = RegistrationErrors });
+				}
 
 				if (!Directory.Exists(userDataPath))
 				{
 					Directory.CreateDirectory(userDataPath);
+					Console.WriteLine("Папка пользователя создана.");
 				}
-
-				string historyFilePath = Path.Combine(userDataPath, $"history_{Username}.ini");
 
 				if (!System.IO.File.Exists(historyFilePath))
 				{
 					System.IO.File.WriteAllText(historyFilePath, "");
+					Console.WriteLine("Файл истории создан.");
 				}
 
 				IsRegistrationSuccessful = true;
+				Console.WriteLine("Регистрация завершена успешно.");
+
 				return new JsonResult(new { success = true });
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, "������ �� ����� �����������.");
-				RegistrationErrors.Add("��������� ������ ��� �����������.");
+				Console.WriteLine($"Ошибка во время регистрации: {ex.Message}");
+				RegistrationErrors.Add("Произошла ошибка при регистрации.");
 				return new JsonResult(new { success = false, errors = RegistrationErrors });
 			}
 		}
