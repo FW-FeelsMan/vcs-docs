@@ -1,27 +1,36 @@
-﻿// === Константы ===
+﻿// uploadFileObserver.js
 const MAX_CHUNK_SIZE = 2 * 1024 * 1024;
 const MAX_WINDOWS_PATH = 260;
 const MAX_FILENAME_LENGTH = 120;
 const GUID_LENGTH = 36;
 
-// === Переменные состояния ===
 let activeUploads = 0;
 let setupInProgress = false;
 let currentStorageFiles = [];
 let pendingUploadFile = null;
-const currentlyUploadingFiles = new Set();
+const cancelledUploads = new Set();
 
 // === Утилиты ===
 function isFileUploading(fileName) {
-    return currentlyUploadingFiles.has(fileName.toLowerCase());
+    return window.currentlyUploadingFiles.has(fileName.toLowerCase());
 }
 
-function markFileAsUploading(fileName) {
-    currentlyUploadingFiles.add(fileName.toLowerCase());
+function markFileAsUploading(fileName, fileSize) {
+    window.currentlyUploadingFiles.set(fileName.toLowerCase(), { total: fileSize, uploaded: 0 });
+    updateFileTable(currentStorageFiles);
 }
 
 function unmarkFileAsUploading(fileName) {
-    currentlyUploadingFiles.delete(fileName.toLowerCase());
+    window.currentlyUploadingFiles.delete(fileName.toLowerCase());
+    updateFileTable(currentStorageFiles);
+}
+
+function updateUploadingProgress(fileName, uploadedBytes) {
+    const entry = window.currentlyUploadingFiles.get(fileName.toLowerCase());
+    if (entry) {
+        entry.uploaded = uploadedBytes;
+        updateFileTable(currentStorageFiles);
+    }
 }
 
 async function refreshStorageStatus() {
@@ -107,7 +116,9 @@ async function reserveFile(fileName, fileSize) {
     fd.append("fileSize", fileSize);
     const token = document.querySelector('meta[name="csrf-token"]').content;
     const res = await fetch("/Content/profile_page?handler=TryReserve", {
-        method: "POST", headers: { "X-CSRF-TOKEN": token }, body: fd
+        method: "POST",
+        headers: { "X-CSRF-TOKEN": token },
+        body: fd
     });
     return res.ok && (await res.json()).success;
 }
@@ -117,7 +128,9 @@ async function releaseFile(fileName) {
     fd.append("fileName", fileName);
     const token = document.querySelector('meta[name="csrf-token"]').content;
     await fetch("/Content/profile_page?handler=ReleaseFile", {
-        method: "POST", headers: { "X-CSRF-TOKEN": token }, body: fd
+        method: "POST",
+        headers: { "X-CSRF-TOKEN": token },
+        body: fd
     });
 }
 
@@ -146,7 +159,7 @@ async function uploadSelectedFile(file, action) {
         return;
     }
 
-    markFileAsUploading(finalName);
+    markFileAsUploading(finalName, file.size);
     await refreshStorageStatus();
 
     activeUploads++;
@@ -155,6 +168,11 @@ async function uploadSelectedFile(file, action) {
     const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE);
     try {
         for (let i = 0; i < totalChunks; i++) {
+            if (cancelledUploads.has(finalName.toLowerCase())) {
+                console.warn(`[Upload] Загрузка отменена пользователем: ${finalName}`);
+                throw new Error("Загрузка отменена");
+            }
+
             const chunk = file.slice(i * MAX_CHUNK_SIZE, (i + 1) * MAX_CHUNK_SIZE);
             const form = new FormData();
             form.append("chunk", chunk);
@@ -173,23 +191,25 @@ async function uploadSelectedFile(file, action) {
                 console.error("Ошибка при загрузке чанка", result.error);
                 throw new Error(result.error);
             }
+
+            updateUploadingProgress(finalName, Math.min(file.size, (i + 1) * MAX_CHUNK_SIZE));
         }
 
         console.log(`[Upload] Файл успешно загружен: ${finalName}`);
 
     } catch (err) {
-        console.error("Ошибка загрузки файла:", err);
-        alert(`Ошибка загрузки файла \"${finalName}\": ${err.message}`);
-
+        if (err.message !== "Загрузка отменена") {
+            console.error("Ошибка загрузки файла:", err);
+        }
     } finally {
         activeUploads--;
         unmarkFileAsUploading(finalName);
+        cancelledUploads.delete(finalName.toLowerCase());
 
         if (activeUploads <= 0) {
             hideUploadWarning();
             await releaseFile(finalName);
             if (typeof connection !== "undefined" && connection.state === signalR.HubConnectionState.Connected) {
-                console.log("[Upload] Перезагружаем таблицу через SignalR...");
                 connection.invoke("RequestCurrentFiles").catch(err => console.error("Ошибка запроса файлов:", err));
             }
         }
@@ -197,6 +217,27 @@ async function uploadSelectedFile(file, action) {
         await refreshStorageStatus();
     }
 }
+
+// === Отмена загрузки ===
+window.cancelUploadingFile = async (fileName) => {
+    console.warn(`[Upload] Пользователь отменил загрузку файла: ${fileName}`);
+    cancelledUploads.add(fileName.toLowerCase());
+
+    try {
+        const fd = new FormData();
+        fd.append("fileName", fileName);
+
+        await fetch("/Content/profile_page?handler=CancelUploadAsync", {
+            method: "POST",
+            headers: { "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content },
+            body: fd
+        });
+    } catch (err) {
+        console.error("Ошибка при отмене загрузки на сервере:", err);
+    }
+
+    unmarkFileAsUploading(fileName);
+};
 
 // === Инициализация ===
 async function setupUpload() {

@@ -371,5 +371,15 @@ namespace VCS_DOCs.Pages.Content
 
 			return new JsonResult(new { success = true, files });
 		}
+		public async Task<IActionResult> OnPostCancelUploadAsync([FromForm] string fileName)
+		{
+			string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+			if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(fileName))
+				return new JsonResult(new { success = false });
+
+			ActiveUploadsRegistry.Unregister(userId, fileName);
+			await _quotaService.ReleaseAsync(userId, fileName); 
+			return new JsonResult(new { success = true });
+		}
 	}
 }

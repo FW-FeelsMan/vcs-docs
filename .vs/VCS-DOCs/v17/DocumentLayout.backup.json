@@ -7,6 +7,14 @@
       "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\uploadfileobserver.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\pages\\content\\profile_page.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:pages\\content\\profile_page.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\pages\\content\\profile_page.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:pages\\content\\profile_page.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\userstorageobserver.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
       "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\userstorageobserver.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     },
@@ -22,7 +30,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 6,
           "Children": [
             {
               "$type": "Bookmark",
@@ -38,7 +46,33 @@
             },
             {
               "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "profile_page.cshtml",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml",
+              "RelativeDocumentMoniker": "Pages\\Content\\profile_page.cshtml",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml",
+              "RelativeToolTip": "Pages\\Content\\profile_page.cshtml",
+              "ViewState": "AgIAAFoAAAAAAAAAAAAwwGMAAAAuAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-04-28T20:43:57.339Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 2,
+              "Title": "profile_page.cshtml.cs",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml.cs",
+              "RelativeDocumentMoniker": "Pages\\Content\\profile_page.cshtml.cs",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml.cs",
+              "RelativeToolTip": "Pages\\Content\\profile_page.cshtml.cs",
+              "ViewState": "AgIAAG0BAAAAAAAAAAAAwG8BAAAbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-04-28T20:17:13.607Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
               "Title": "profile_page.css",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\sub_css\\profile_page.css",
               "RelativeDocumentMoniker": "wwwroot\\css\\sub_css\\profile_page.css",
@@ -46,8 +80,7 @@
               "RelativeToolTip": "wwwroot\\css\\sub_css\\profile_page.css",
               "ViewState": "AgIAANEBAAAAAAAAAAAAANwBAAAEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
-              "WhenOpened": "2025-04-27T20:12:25.846Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-04-27T20:12:25.846Z"
             },
             {
               "$type": "Document",
@@ -55,22 +88,22 @@
               "Title": "uploadFileObserver.js",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\uploadFileObserver.js",
               "RelativeDocumentMoniker": "wwwroot\\js\\uploadFileObserver.js",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\uploadFileObserver.js*",
-              "RelativeToolTip": "wwwroot\\js\\uploadFileObserver.js*",
-              "ViewState": "AgIAAAgBAAAAAAAAAAAQwB0BAAAAAAAAAAAAAA==",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\uploadFileObserver.js",
+              "RelativeToolTip": "wwwroot\\js\\uploadFileObserver.js",
+              "ViewState": "AgIAADEBAAAAAAAAAAAQwDgBAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
               "WhenOpened": "2025-04-26T17:13:42.44Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
               "Title": "userStorageObserver.js",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\userStorageObserver.js",
               "RelativeDocumentMoniker": "wwwroot\\js\\userStorageObserver.js",
               "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\userStorageObserver.js",
               "RelativeToolTip": "wwwroot\\js\\userStorageObserver.js",
-              "ViewState": "AgIAAEsAAAAAAAAAAAAAwFQAAAAqAAAAAAAAAA==",
+              "ViewState": "AgIAAKsAAAAAAAAAAAAAwL8AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
               "WhenOpened": "2025-04-26T16:28:16.92Z",
               "EditorCaption": ""

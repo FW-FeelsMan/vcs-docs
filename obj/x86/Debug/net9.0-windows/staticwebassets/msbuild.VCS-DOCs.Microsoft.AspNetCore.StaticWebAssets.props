@@ -714,8 +714,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>mpxib7s7mz</Fingerprint>
-      <Integrity>KmLt7QUAAxQoLWD4/bTtaZa5A06JoZ0oqjmErxuXwMA=</Integrity>
+      <Fingerprint>qtvud0xq35</Fingerprint>
+      <Integrity>YkaikqpxU3njvGyaV1AAh9bnm3Kn5Q7or8ZlsZhr/sg=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\uploadFileObserver.js'))</OriginalItemSpec>
@@ -750,8 +750,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>fpavb96bpp</Fingerprint>
-      <Integrity>8xZ0zdqEoJFMTGF5KhY/GHfOHBPM6/6Hz5n15UVfEd0=</Integrity>
+      <Fingerprint>ert9q6a3ea</Fingerprint>
+      <Integrity>Fm+XDflo6YzynIBhwhxAttsutaXcWhCUCRymJldVZVA=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\userStorageObserver.js'))</OriginalItemSpec>
