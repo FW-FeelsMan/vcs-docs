@@ -1,18 +1,39 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Concurrent;
 
 namespace VCS_DOCs.Services.Upload
 {
 	public static class ActiveUploadsRegistry
 	{
-		private static readonly ConcurrentDictionary<string, byte> ActiveUploads = new();
+		private static readonly ConcurrentDictionary<string, DateTime> ActiveUploads = new();
+
+		private static string GetKey(string userId, string fileName)
+		{
+			return $"{userId}:{fileName.Trim().ToLowerInvariant()}";
+		}
 
 		public static void Register(string userId, string fileName)
 		{
 			if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(fileName))
 				return;
 
-			string key = $"{userId}:{fileName}";
-			ActiveUploads.TryAdd(key, 0);
+			ActiveUploads[GetKey(userId, fileName)] = DateTime.UtcNow;
+		}
+
+		public static void Touch(string userId, string fileName)
+		{
+			var key = GetKey(userId, fileName);
+			if (ActiveUploads.ContainsKey(key))
+				ActiveUploads[key] = DateTime.UtcNow;
+		}
+
+		public static bool IsActive(string userId, string fileName)
+		{
+			var key = GetKey(userId, fileName);
+			if (!ActiveUploads.TryGetValue(key, out var lastUpdate))
+				return false;
+
+			return (DateTime.UtcNow - lastUpdate) < TimeSpan.FromSeconds(5);
 		}
 
 		public static void Unregister(string userId, string fileName)
@@ -20,17 +41,7 @@ namespace VCS_DOCs.Services.Upload
 			if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(fileName))
 				return;
 
-			string key = $"{userId}:{fileName}";
-			ActiveUploads.TryRemove(key, out _);
-		}
-
-		public static bool IsActive(string userId, string fileName)
-		{
-			if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(fileName))
-				return false;
-
-			string key = $"{userId}:{fileName}";
-			return ActiveUploads.ContainsKey(key);
+			ActiveUploads.TryRemove(GetKey(userId, fileName), out _);
 		}
 	}
 }

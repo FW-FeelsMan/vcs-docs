@@ -744,6 +744,7 @@ D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\refint\VCS-DOCs.dll
 D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\VCS-DOCs.pdb
 D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\VCS-DOCs.genruntimeconfig.cache
 D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\ref\VCS-DOCs.dll
-D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\ao7l21c0ch-58r5mg6df5.gz
-D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\i7pzvlt8d5-ert9q6a3ea.gz
-D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\lfx5krbk6v-qtvud0xq35.gz
+D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\ao7l21c0ch-pdd0od5yt4.gz
+D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\3eljnc0afk-jjr73eim09.gz
+D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\lfx5krbk6v-i982635hou.gz
+D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\i7pzvlt8d5-x2yw8e3go6.gz

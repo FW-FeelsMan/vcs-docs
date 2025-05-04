@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using VCS_DOCs.Services.Upload;
 
 namespace VCS_DOCs.Data.Hubs
 {
@@ -37,8 +38,6 @@ namespace VCS_DOCs.Data.Hubs
 			var list = new List<object>();
 			if (Directory.Exists(userFolder))
 			{
-				Console.WriteLine($"[Debug] Looking in folder: {userFolder}");
-
 				foreach (var f in Directory.GetFiles(userFolder))
 				{
 					var fi = new FileInfo(f);
@@ -53,6 +52,18 @@ namespace VCS_DOCs.Data.Hubs
 				}
 			}
 			await Clients.Caller.SendAsync("ReceiveStorageUpdate", list);
+		}
+
+		public async Task CancelUpload(string fileName)
+		{
+			var userId = Context.User?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+			if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(fileName))
+				return;
+
+			ActiveUploadsRegistry.Unregister(userId, fileName);
+			// При необходимости здесь можно вызвать FileQuotaService.ReleaseAsync(...) через DI-сервис
+			// или отправить клиенту подтверждение:
+			await Clients.Caller.SendAsync("UploadCancelled", new { name = fileName });
 		}
 	}
 }

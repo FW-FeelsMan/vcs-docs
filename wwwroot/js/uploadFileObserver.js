@@ -1,51 +1,15 @@
-﻿// uploadFileObserver.js
+﻿//uploadFileObserver.js
 const MAX_CHUNK_SIZE = 2 * 1024 * 1024;
-const MAX_WINDOWS_PATH = 260;
 const MAX_FILENAME_LENGTH = 120;
-const GUID_LENGTH = 36;
 
-let activeUploads = 0;
-let setupInProgress = false;
-let currentStorageFiles = [];
-let pendingUploadFile = null;
+const uploadAbortControllers = new Map();
 const cancelledUploads = new Set();
+let activeUploads = 0;
+window.refreshStorageStatus = refreshStorageStatus;
 
-// === Утилиты ===
-function isFileUploading(fileName) {
-    return window.currentlyUploadingFiles.has(fileName.toLowerCase());
-}
-
-function markFileAsUploading(fileName, fileSize) {
-    window.currentlyUploadingFiles.set(fileName.toLowerCase(), { total: fileSize, uploaded: 0 });
-    updateFileTable(currentStorageFiles);
-}
-
-function unmarkFileAsUploading(fileName) {
-    window.currentlyUploadingFiles.delete(fileName.toLowerCase());
-    updateFileTable(currentStorageFiles);
-}
-
-function updateUploadingProgress(fileName, uploadedBytes) {
-    const entry = window.currentlyUploadingFiles.get(fileName.toLowerCase());
-    if (entry) {
-        entry.uploaded = uploadedBytes;
-        updateFileTable(currentStorageFiles);
-    }
-}
-
-async function refreshStorageStatus() {
-    const storageCounter = document.getElementById("storageCounter");
-    if (!storageCounter) return;
-    try {
-        const res = await fetch("/Content/profile_page?handler=StorageStatus");
-        if (!res.ok) return;
-        const json = await res.json();
-        if (json.success) {
-            storageCounter.textContent = `Загружается: ${json.reservedMb ?? 0} МБ    Свободно: ${json.freeMb} МБ / 10240 МБ`;
-        }
-    } catch (err) {
-        console.error("Ошибка получения статуса хранилища:", err);
-    }
+function getFileNameParts(name) {
+    const lastDot = name.lastIndexOf(".");
+    return lastDot === -1 ? [name, ""] : [name.slice(0, lastDot), name.slice(lastDot)];
 }
 
 function generateGuid() {
@@ -56,268 +20,190 @@ function generateGuid() {
     });
 }
 
-function getFileNameParts(name) {
-    const lastDot = name.lastIndexOf(".");
-    return lastDot === -1 ? [name, ""] : [name.slice(0, lastDot), name.slice(lastDot)];
-}
-
-function isFinalPathTooLong(baseName, extension, guid) {
-    if (!window.userStorageBasePath || !window.userIdFromClaims) return false;
-    const fullPath = `${window.userStorageBasePath}\\userData_${window.userIdFromClaims}\\${baseName}__${guid}${extension}`;
-    return fullPath.length >= MAX_WINDOWS_PATH;
-}
-
-function fileExistsInStorage(fileName) {
-    return currentStorageFiles.some(f => f.name.toLowerCase() === fileName.toLowerCase());
-}
-
-function showUploadWarning() {
-    if (!document.getElementById("upload-warning")) {
-        const div = document.createElement("div");
-        div.id = "upload-warning";
-        div.textContent = "Загрузка файлов в процессе. Закрыв страницу вы потеряете прогресс.";
-        Object.assign(div.style, {
-            position: "fixed", bottom: "15px", right: "15px", backgroundColor: "#ffc107",
-            padding: "10px 20px", borderRadius: "6px", boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-            fontWeight: "bold", zIndex: 9999
-        });
-        document.body.appendChild(div);
-    }
-}
-
-function hideUploadWarning() {
-    const div = document.getElementById("upload-warning");
-    if (div) div.remove();
-}
-
-function showConflictModal(fileName) {
-    const modal = document.getElementById("uploadConflictModal");
-    const filename = document.getElementById("modalFilename");
-    if (modal && filename) {
-        filename.textContent = `Файл \"${fileName}\" уже существует.`;
-        modal.style.display = "block";
-    }
-}
-
-function hideConflictModal() {
-    const modal = document.getElementById("uploadConflictModal");
-    if (modal) modal.style.display = "none";
-}
-
-function showRestartUploadModal(fileName, onConfirm) {
-    if (confirm(`Файл \"${fileName}\" уже загружается. Перезапустить загрузку?`)) {
-        onConfirm();
-    }
-}
-
 async function reserveFile(fileName, fileSize) {
     const fd = new FormData();
     fd.append("fileName", fileName);
     fd.append("fileSize", fileSize);
     const token = document.querySelector('meta[name="csrf-token"]').content;
-    const res = await fetch("/Content/profile_page?handler=TryReserve", {
-        method: "POST",
-        headers: { "X-CSRF-TOKEN": token },
-        body: fd
-    });
-    return res.ok && (await res.json()).success;
+    try {
+        const res = await fetch("/Content/profile_page?handler=TryReserve", {
+            method: "POST",
+            headers: { "X-CSRF-TOKEN": token },
+            body: fd
+        });
+        return await res.json();
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
 }
 
 async function releaseFile(fileName) {
     const fd = new FormData();
     fd.append("fileName", fileName);
     const token = document.querySelector('meta[name="csrf-token"]').content;
-    await fetch("/Content/profile_page?handler=ReleaseFile", {
-        method: "POST",
-        headers: { "X-CSRF-TOKEN": token },
-        body: fd
-    });
+    try {
+        await fetch("/Content/profile_page?handler=ReleaseFile", {
+            method: "POST",
+            headers: { "X-CSRF-TOKEN": token },
+            body: fd
+        });
+    } catch {
+        // Сервер не отвечает, но мы и так отменили
+    }
 }
 
-// === Основная логика загрузки ===
-async function uploadSelectedFile(file, action) {
+async function uploadSelectedFile(file, action = "overwrite") {
     const [baseName, extension] = getFileNameParts(file.name);
     let finalName = file.name;
 
     if (action === "new-version") {
-        const guid = generateGuid();
-        if (isFinalPathTooLong(baseName, extension, guid)) {
-            alert("Путь слишком длинный. Сократите имя файла.");
-            return;
-        }
-        finalName = `${baseName}__${guid}${extension}`;
+        finalName = `${baseName}__${generateGuid()}${extension}`;
     }
 
-    if (isFileUploading(finalName)) {
-        console.warn(`[Upload] Файл \"${finalName}\" уже загружается.`);
-        alert(`Файл \"${finalName}\" уже загружается.`);
+    const reserveResult = await reserveFile(finalName, file.size);
+    if (!reserveResult.success) {
+        alert(reserveResult.error || "Ошибка при резервировании файла.");
         return;
     }
-
-    if (!await reserveFile(finalName, file.size)) {
-        alert("Недостаточно места для загрузки.");
-        return;
-    }
-
-    markFileAsUploading(finalName, file.size);
-    await refreshStorageStatus();
 
     activeUploads++;
-    showUploadWarning();
-
     const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE);
+    const key = finalName.toLowerCase();
+    const controller = new AbortController();
+    uploadAbortControllers.set(key, controller);
+
     try {
         for (let i = 0; i < totalChunks; i++) {
-            if (cancelledUploads.has(finalName.toLowerCase())) {
-                console.warn(`[Upload] Загрузка отменена пользователем: ${finalName}`);
+            if (cancelledUploads.has(key)) {
                 throw new Error("Загрузка отменена");
             }
 
             const chunk = file.slice(i * MAX_CHUNK_SIZE, (i + 1) * MAX_CHUNK_SIZE);
-            const form = new FormData();
-            form.append("chunk", chunk);
-            form.append("metadata.FileName", finalName);
-            form.append("metadata.ChunkIndex", i);
-            form.append("metadata.TotalChunks", totalChunks);
-
             const res = await fetch("/Content/profile_page?handler=UploadChunk", {
                 method: "POST",
-                headers: { "Accept": "application/json", "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content },
-                body: form
+                headers: {
+                    "Accept": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                    "X-File-Name": encodeURIComponent(finalName),
+                    "X-Chunk-Index": i.toString(),
+                    "X-Total-Chunks": totalChunks.toString()
+                },
+                body: chunk,
+                signal: controller.signal
             });
 
             const result = await res.json();
             if (!result.success) {
-                console.error("Ошибка при загрузке чанка", result.error);
                 throw new Error(result.error);
             }
-
-            updateUploadingProgress(finalName, Math.min(file.size, (i + 1) * MAX_CHUNK_SIZE));
         }
-
-        console.log(`[Upload] Файл успешно загружен: ${finalName}`);
-
     } catch (err) {
-        if (err.message !== "Загрузка отменена") {
-            console.error("Ошибка загрузки файла:", err);
-        }
+        await releaseFile(finalName);
+        console.warn(`[Upload] Загрузка файла "${finalName}" была отменена или прервана: ${err.message}`);
     } finally {
         activeUploads--;
-        unmarkFileAsUploading(finalName);
-        cancelledUploads.delete(finalName.toLowerCase());
+        cancelledUploads.delete(key);
+        uploadAbortControllers.delete(key);
 
-        if (activeUploads <= 0) {
-            hideUploadWarning();
-            await releaseFile(finalName);
-            if (typeof connection !== "undefined" && connection.state === signalR.HubConnectionState.Connected) {
-                connection.invoke("RequestCurrentFiles").catch(err => console.error("Ошибка запроса файлов:", err));
-            }
+        if (window.currentlyUploadingFiles) {
+            window.currentlyUploadingFiles.delete(key);
         }
 
-        await refreshStorageStatus();
+        const row = document.getElementById(`uploading-${key}`);
+        if (row) row.remove();
+
+        if (typeof requestFiles === "function") {
+            requestFiles();
+        }
+        if (typeof refreshStorageStatus === "function") {
+            refreshStorageStatus(); 
+        }
     }
 }
 
-// === Отмена загрузки ===
 window.cancelUploadingFile = async (fileName) => {
-    console.warn(`[Upload] Пользователь отменил загрузку файла: ${fileName}`);
-    cancelledUploads.add(fileName.toLowerCase());
+    const key = fileName.toLowerCase();
+    cancelledUploads.add(key);
+
+    const controller = uploadAbortControllers.get(key);
+    if (controller) controller.abort();
 
     try {
         const fd = new FormData();
         fd.append("fileName", fileName);
-
-        await fetch("/Content/profile_page?handler=CancelUploadAsync", {
+        await fetch("/Content/profile_page?handler=CancelUpload", {
             method: "POST",
-            headers: { "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content },
+            headers: {
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+            },
             body: fd
         });
     } catch (err) {
-        console.error("Ошибка при отмене загрузки на сервере:", err);
+        console.warn(`[Cancel] Не удалось отменить загрузку на сервере: ${err.message}`);
     }
-
-    unmarkFileAsUploading(fileName);
 };
 
-// === Инициализация ===
-async function setupUpload() {
-    if (setupInProgress) return;
-    setupInProgress = true;
+function setupUploadBindings() {
+    const uploadButton = document.getElementById("uploadFileButton");
+    const fileInput = document.getElementById("hiddenFileInput");
 
-    try {
-        await refreshStorageStatus();
+    if (!uploadButton || !fileInput || uploadButton.dataset.initialized) return;
 
-        const uploadButton = document.getElementById("uploadFileButton");
-        const fileInput = document.getElementById("hiddenFileInput");
+    uploadButton.dataset.initialized = "true";
+    uploadButton.addEventListener("click", () => fileInput.click());
 
-        if (!uploadButton || !fileInput || uploadButton.dataset.initialized) return;
-        uploadButton.dataset.initialized = "true";
+    fileInput.addEventListener("change", async () => {
+        const file = fileInput.files[0];
+        if (!file) return;
 
-        uploadButton.addEventListener("click", () => fileInput.click());
-
-        fileInput.addEventListener("change", async () => {
-            const file = fileInput.files[0];
-            if (!file) return;
-
-            if (file.name.length > MAX_FILENAME_LENGTH) {
-                alert(`Имя файла слишком длинное: ${file.name.length}`);
-                fileInput.value = "";
-                return;
-            }
-
-            if (isFileUploading(file.name)) {
-                showRestartUploadModal(file.name, async () => {
-                    unmarkFileAsUploading(file.name);
-                    await uploadSelectedFile(file, "overwrite");
-                });
-                return;
-            }
-
-            if (fileExistsInStorage(file.name)) {
-                pendingUploadFile = file;
-                showConflictModal(file.name);
-            } else {
-                await uploadSelectedFile(file, "overwrite");
-            }
+        if (file.name.length > MAX_FILENAME_LENGTH) {
+            alert(`Имя файла слишком длинное: ${file.name.length}`);
             fileInput.value = "";
-        });
+            return;
+        }
+        const lowerName = file.name.toLowerCase();
 
-        document.getElementById("overwriteButton").addEventListener("click", async () => {
-            hideConflictModal();
-            if (pendingUploadFile) {
-                await uploadSelectedFile(pendingUploadFile, "overwrite");
-                pendingUploadFile = null;
-            }
-            document.getElementById("hiddenFileInput").value = "";
-        });
+        if (window.currentlyUploadingFiles?.has(lowerName)) {
+            showConflictModal(file.name, "uploading", {
+                onReplace: async () => {
+                    const lowerName = file.name.toLowerCase();
+                    if (window.cancelUploadingFile) {
+                        await window.cancelUploadingFile(file.name); // ждём отмену
+                    }
+                    // Подождем чуть-чуть, чтобы сервер успел отреагировать
+                    setTimeout(() => uploadSelectedFile(file), 300);
+                },
 
-        document.getElementById("newVersionButton").addEventListener("click", async () => {
-            hideConflictModal();
-            if (pendingUploadFile) {
-                await uploadSelectedFile(pendingUploadFile, "new-version");
-                pendingUploadFile = null;
-            }
-            document.getElementById("hiddenFileInput").value = "";
-        });
+                onCancel: () => console.log("Отмена загрузки"),
+            });
+            fileInput.value = "";
+            return;
+        }
 
-        document.getElementById("cancelUploadButton").addEventListener("click", () => {
-            hideConflictModal();
-            pendingUploadFile = null;
-            document.getElementById("hiddenFileInput").value = "";
-        });
+        const exists = currentStorageFiles?.some(f => f.name.toLowerCase() === lowerName);
 
-    } finally {
-        setupInProgress = false;
-    }
+        if (exists) {
+            showConflictModal(file.name, "exists", {
+                onReplace: () => uploadSelectedFile(file, "overwrite"),
+                onNewVersion: () => uploadSelectedFile(file, "new-version"),
+                onCancel: () => console.log("Отмена загрузки"),
+            });
+        } else {
+            await uploadSelectedFile(file);
+        }
+
+        fileInput.value = "";
+    });
 }
 
 if (typeof userIsAuthenticated !== "undefined" && userIsAuthenticated) {
-    document.addEventListener("DOMContentLoaded", setupUpload);
+    document.addEventListener("DOMContentLoaded", () => {
+        setupUploadBindings();
+        const observer = new MutationObserver(setupUploadBindings);
+        observer.observe(document.body, { childList: true, subtree: true });
+    });
 
-    const observer = new MutationObserver(setupUpload);
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    window.addEventListener("beforeunload", e => {
+    window.addEventListener("beforeunload", (e) => {
         if (activeUploads > 0) {
             e.preventDefault();
             e.returnValue = "";

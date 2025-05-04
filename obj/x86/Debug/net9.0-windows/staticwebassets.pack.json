@@ -157,6 +157,10 @@
       "PackagePath": "staticwebassets\\js\\sorttableObserver.js"
     },
     {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\uploadConflictModal.js",
+      "PackagePath": "staticwebassets\\js\\uploadConflictModal.js"
+    },
+    {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\uploadFileObserver.js",
       "PackagePath": "staticwebassets\\js\\uploadFileObserver.js"
     },

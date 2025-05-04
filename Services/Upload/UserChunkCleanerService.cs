@@ -42,7 +42,7 @@ namespace VCS_DOCs.Services.Upload
 		public async Task StopAsync(CancellationToken cancellationToken)
 		{
 			_cts.Cancel();
-			await RunOneCleanupAsync();
+			await RunOneCleanupAsync(force: true);
 		}
 
 		private async Task RunAsync(CancellationToken token)
@@ -54,7 +54,7 @@ namespace VCS_DOCs.Services.Upload
 			}
 		}
 
-		private async Task RunOneCleanupAsync()
+		private async Task RunOneCleanupAsync(bool force = false)
 		{
 			if (!Directory.Exists(_userDataPath))
 				return;
@@ -63,57 +63,28 @@ namespace VCS_DOCs.Services.Upload
 
 			foreach (var chunkDir in chunkDirs)
 			{
-				bool isActive = _uploadTaskService.IsTaskActiveForFolder(chunkDir);
-				long chunkSize = Directory.GetFiles(chunkDir).Sum(f => new FileInfo(f).Length);
 				string folderName = Path.GetFileName(chunkDir);
-				string fileName = folderName.Replace("_chunks", ""); // <-- восстанавливаем имя исходного файла без "_chunks"
+				string fileName = folderName.Replace("_chunks", "");
 
-				// Проверка через ActiveUploadsRegistry
-				if (ActiveUploadsRegistry.IsActive(UserId, fileName))
+				bool isActive = _uploadTaskService.IsTaskActiveForFolder(chunkDir);
+
+				if (!force && ActiveUploadsRegistry.IsActive(UserId, fileName))
 				{
-					Console.WriteLine($"[Cleaner:{UserId}] Папка {chunkDir} активна (грузится файл {fileName}), пропускаем удаление.");
+					Console.WriteLine($"[Cleaner:{UserId}] Папка {chunkDir} активна, пропускаем");
 					continue;
 				}
 
-				var existing = await _dbContext.ChunkStatuses
-					.FirstOrDefaultAsync(c => c.UserId == UserId && c.ChunkFolder == folderName);
-
-				Console.WriteLine($"[Cleaner:{UserId}] Проверка папки {chunkDir}, active={isActive}, chunkCount={Directory.GetFiles(chunkDir).Length}");
-
-				if (existing != null)
+				try
 				{
-					existing.TotalBytes = chunkSize;
-					existing.IsActive = isActive;
-					existing.UpdatedAt = DateTime.UtcNow;
+					Directory.Delete(chunkDir, recursive: true);
+					_uploadTaskService.RemoveActiveTask(chunkDir);
+					Console.WriteLine($"[Cleaner:{UserId}] Удалена {(force ? "насильно" : "по расписанию")} неактивная папка {chunkDir}");
 				}
-				else
+				catch (Exception ex)
 				{
-					_dbContext.ChunkStatuses.Add(new ChunkStatus
-					{
-						UserId = UserId,
-						ChunkFolder = folderName,
-						TotalBytes = chunkSize,
-						IsActive = isActive,
-						UpdatedAt = DateTime.UtcNow
-					});
-				}
-
-				if (!isActive)
-				{
-					try
-					{
-						Directory.Delete(chunkDir, true);
-						_uploadTaskService.RemoveActiveTask(chunkDir);
-						Console.WriteLine($"[Cleaner:{UserId}] Успешно удалена неактивная папка {chunkDir}");
-					}
-					catch (Exception ex)
-					{
-						Console.WriteLine($"[Cleaner:{UserId}] Ошибка при удалении {chunkDir}: {ex}");
-					}
+					Console.WriteLine($"[Cleaner:{UserId}] Ошибка при удалении {chunkDir}: {ex}");
 				}
 			}
-
-			await _dbContext.SaveChangesAsync();
 		}
 	}
 }

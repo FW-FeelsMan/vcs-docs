@@ -1,191 +1,217 @@
 ﻿//userStorageObserver.js
 let connection = null;
 let csrfToken = null;
-
-// Глобально доступный список загружаемых файлов
 window.currentlyUploadingFiles = window.currentlyUploadingFiles || new Map();
+window.cancelledUploads = window.cancelledUploads || new Set();
+let currentStorageFiles = [];
 
-document.addEventListener('DOMContentLoaded', () => {
-    const profileButton = document.querySelector('#button2');
+document.addEventListener("DOMContentLoaded", () => {
+	const profileBtn = document.querySelector("#button2");
+	if (!profileBtn) return console.warn("[userStorage] Кнопка профиля не найдена");
 
-    if (profileButton) {
-        profileButton.addEventListener('click', () => {
-            waitForStorageTab();
-        });
-    } else {
-        console.warn("Кнопка перехода на профиль не найдена.");
-    }
+	profileBtn.addEventListener("click", waitForStorageTab);
 });
 
 function waitForStorageTab() {
-    const storageTabLink = document.querySelector('li[data-target="storage"]');
-
-    if (storageTabLink) {
-        storageTabLink.addEventListener('click', () => {
-            ensureConnectionReady().then(() => {
-                requestFiles();
-            });
-        });
-    } else {
-        setTimeout(waitForStorageTab, 100);
-    }
+	const tab = document.querySelector('li[data-target="storage"]');
+	if (tab) {
+		tab.addEventListener("click", () => {
+			ensureConnectionReady().then(() => {
+				requestFiles();
+				refreshStorageStatus();
+			});
+		});
+	} else {
+		setTimeout(waitForStorageTab, 100);
+	}
 }
 
 async function ensureConnectionReady() {
-    if (connection && connection.state === signalR.HubConnectionState.Connected) {
-        return;
-    }
+	if (connection?.state === signalR.HubConnectionState.Connected) return;
 
-    if (!csrfToken) {
-        const tokenMeta = document.querySelector('meta[name="csrf-token"]');
-        if (!tokenMeta) {
-            console.error("CSRF токен не найден!");
-            throw new Error("Нет CSRF токена");
-        }
-        csrfToken = tokenMeta.getAttribute('content');
-    }
+	if (!csrfToken) {
+		const token = document.querySelector('meta[name="csrf-token"]');
+		if (!token) throw new Error("[userStorage] CSRF токен не найден");
+		csrfToken = token.content;
+	}
 
-    connection = new signalR.HubConnectionBuilder()
-        .withUrl("/userStorageHub")
-        .withAutomaticReconnect({
-            nextRetryDelayInMilliseconds: retryContext => {
-                if (retryContext.previousRetryCount < 1) {
-                    return 1000;
-                } else if (retryContext.previousRetryCount < 3) {
-                    return 3000;
-                } else {
-                    return 5000;
-                }
-            }
-        })
-        .configureLogging(signalR.LogLevel.None)
-        .build();
+	connection = new signalR.HubConnectionBuilder()
+		.withUrl("/userStorageHub")
+		.withAutomaticReconnect({
+			nextRetryDelayInMilliseconds: (ctx) => [1000, 3000, 5000][ctx.previousRetryCount] || 10000
+		})
+		.configureLogging(signalR.LogLevel.None)
+		.build();
 
-    connection.onreconnecting((error) => {
-        console.warn("Пытаемся переподключиться к серверу...", error);
-    });
+	connection.on("ReceiveStorageUpdate", (files) => {
+		currentStorageFiles = files || [];
+		const tableBody = document.querySelector("table.sortable tbody");
+		if (tableBody) updateNonUploadingRows(tableBody, currentStorageFiles);
+		refreshStorageStatus();
+	});
 
-    connection.onreconnected((connectionId) => {
-        console.log("Успешно переподключились к серверу:", connectionId);
-        requestFiles();
-    });
+	connection.on("UploadProgress", ({ name, uploadedBytes, totalBytes }) => {
+		const key = name.toLowerCase();
+		if (window.cancelledUploads.has(key)) return;
 
-    connection.onclose((error) => {
-        console.error("Соединение полностью закрыто", error);
-    });
+		window.currentlyUploadingFiles.set(key, { uploaded: uploadedBytes, total: totalBytes });
 
-    connection.on("ReceiveStorageUpdate", (files) => {
-        console.log("Получены файлы через SignalR:", files);
-        updateFileTable(files);
-        currentStorageFiles = files || [];
-    });
+		const tableBody = document.querySelector("table.sortable tbody");
+		if (tableBody) renderUploadingFiles(tableBody);
+	});
 
-    try {
-        await connection.start();
-    } catch (err) {
-        console.error("Ошибка подключения SignalR:", err);
-    }
+	connection.on("UploadCancelled", ({ name }) => {
+		const key = name.toLowerCase();
+		window.currentlyUploadingFiles.delete(key);
+		window.cancelledUploads.delete(key);
+		const row = document.getElementById(`uploading-${key}`);
+		if (row) row.remove();
+		refreshStorageStatus();
+	});
+
+	connection.onreconnecting(err => console.warn("[SignalR] Переподключение...", err));
+	connection.onreconnected(() => {
+		requestFiles();
+		refreshStorageStatus();
+	});
+	connection.onclose(err => console.warn("[SignalR] Соединение закрыто", err));
+
+	try {
+		await connection.start();
+	} catch (err) {
+		console.error("[SignalR] Ошибка подключения:", err);
+	}
 }
 
 function requestFiles() {
-    if (connection && connection.state === signalR.HubConnectionState.Connected) {
-        connection.invoke("RequestCurrentFiles")
-            .catch(err => console.error("Ошибка запроса файлов:", err));
-    } else {
-        console.error("Нет активного соединения для запроса файлов.");
-    }
+	if (connection?.state !== signalR.HubConnectionState.Connected) {
+		console.error("[userStorage] Соединение неактивно для запроса файлов.");
+		return;
+	}
+	connection.invoke("RequestCurrentFiles").catch(err =>
+		console.error("[userStorage] Ошибка запроса файлов:", err)
+	);
 }
 
-function updateFileTable(files) {
-    const tableBody = document.querySelector("table.sortable tbody");
-    if (!tableBody) {
-        setTimeout(() => updateFileTable(files), 100);
-        return;
-    }
+function updateNonUploadingRows(tableBody, files) {
+	tableBody.querySelectorAll("tr:not([id^='uploading-'])").forEach(row => row.remove());
 
-    tableBody.innerHTML = "";
+	for (const file of files) {
+		const lower = file.name.toLowerCase();
+		if (lower.endsWith(".ini") || lower.startsWith("history_")) continue;
 
-    files.forEach(file => {
-        const lower = file.name.toLowerCase();
-        if (lower.endsWith(".ini") || lower.startsWith("history_")) return;
+		const row = document.createElement("tr");
+		row.innerHTML = `
+			<td><div class="cell-content">${file.name}</div></td>
+			<td>${file.sizeMb}</td>
+			<td>${file.lastWriteTime}</td>
+			<td><button class="delete-button">Удалить</button></td>
+		`;
 
-        const row = createFileRow(file.name, file.sizeMb, file.lastWriteTime, false);
-        tableBody.appendChild(row);
-    });
+		row.querySelector("button.delete-button").addEventListener("click", () => {
+			if (confirm("Удалить файл?")) deleteFile(file.name);
+		});
 
-    renderUploadingFiles(tableBody);
-}
-
-function createFileRow(name, size, date, isUploading) {
-    const row = document.createElement("tr");
-    if (isUploading) row.style.backgroundColor = "#f0f0f0"; // Серый фон для загружаемых
-
-    const nameTd = document.createElement("td");
-    nameTd.innerHTML = `<div class="cell-content">${name}</div>`;
-    row.appendChild(nameTd);
-
-    const sizeTd = document.createElement("td");
-    sizeTd.textContent = size;
-    row.appendChild(sizeTd);
-
-    const dateTd = document.createElement("td");
-    dateTd.textContent = date;
-    row.appendChild(dateTd);
-
-    const commandTd = document.createElement("td");
-    if (isUploading) {
-        const cancelButton = document.createElement("button");
-        cancelButton.textContent = "Отмена";
-        cancelButton.classList.add("cancel-button");
-        cancelButton.onclick = () => {
-            if (window.cancelUploadingFile) {
-                window.cancelUploadingFile(name);
-            }
-        };
-        commandTd.appendChild(cancelButton);
-    } else {
-        const deleteButton = document.createElement("button");
-        deleteButton.textContent = "Удалить";
-        deleteButton.classList.add("delete-button");
-        deleteButton.onclick = async () => {
-            if (confirm("Удалить файл?")) {
-                const formData = new FormData();
-                formData.append("fileName", name);
-
-                try {
-                    const response = await fetch("/Content/profile_page?handler=DeleteFile", {
-                        method: "POST",
-                        headers: { "Accept": "application/json", "X-CSRF-TOKEN": csrfToken },
-                        body: formData
-                    });
-                    const data = await response.json();
-                    if (data.success) {
-                        requestFiles();
-                    } else {
-                        console.error("Ошибка удаления файла:", data.error);
-                    }
-                } catch (error) {
-                    console.error("Ошибка удаления файла:", error);
-                }
-            }
-        };
-        commandTd.appendChild(deleteButton);
-    }
-
-    row.appendChild(commandTd);
-    return row;
+		tableBody.appendChild(row);
+	}
 }
 
 function renderUploadingFiles(tableBody) {
-    if (!window.currentlyUploadingFiles) return;
+	for (const [fileName, fileInfo] of window.currentlyUploadingFiles.entries()) {
+		const key = fileName.toLowerCase();
+		if (window.cancelledUploads.has(key)) continue;
+		if (currentStorageFiles?.some(f => f.name.toLowerCase() === key)) continue;
 
-    for (const [fileName, fileInfo] of window.currentlyUploadingFiles.entries()) {
-        const row = createFileRow(
-            fileName,
-            fileInfo ? `${Math.round(fileInfo.uploaded / 1024 / 1024)} МБ из ${Math.round(fileInfo.total / 1024 / 1024)} МБ` : "В процессе...",
-            "Загружается...",
-            true
-        );
-        tableBody.appendChild(row);
-    }
+		const size = fileInfo
+			? `${Math.round(fileInfo.uploaded / 1048576)}/${Math.round(fileInfo.total / 1048576)} МБ`
+			: "В процессе...";
+
+		let row = document.getElementById(`uploading-${key}`);
+		if (row) {
+			row.querySelector(".size-cell").textContent = size;
+			continue;
+		}
+
+		row = document.createElement("tr");
+		row.id = `uploading-${key}`;
+		row.style.backgroundColor = "#f0f0f0";
+		row.innerHTML = `
+			<td><div class="cell-content">${fileName}</div></td>
+			<td class="size-cell">${size}</td>
+			<td>Загружается...</td>
+			<td><button class="cancel-button">Отмена</button></td>
+		`;
+
+		row.querySelector("button.cancel-button").addEventListener("click", function () {
+			const btn = this;
+			btn.disabled = true;
+			btn.textContent = "Отмена...";
+			window.cancelledUploads.add(key);
+			const rowEl = btn.closest("tr");
+			if (rowEl) rowEl.remove();
+			if (window.cancelUploadingFile) window.cancelUploadingFile(fileName);
+		});
+
+		tableBody.appendChild(row);
+	}
+}
+
+async function deleteFile(name) {
+	const formData = new FormData();
+	formData.append("fileName", name);
+
+	try {
+		const res = await fetch("/Content/profile_page?handler=DeleteFile", {
+			method: "POST",
+			headers: {
+				"Accept": "application/json",
+				"X-CSRF-TOKEN": csrfToken
+			},
+			body: formData
+		});
+		const json = await res.json();
+		console.log("[StorageStatus]", JSON.stringify(json));
+		if (json.success) {
+			requestFiles();
+			refreshStorageStatus();
+		} else {
+			console.error("[userStorage] Ошибка удаления:", json.error);
+		}
+	} catch (err) {
+		console.error("[userStorage] Ошибка удаления файла:", err);
+	}
+}
+
+window.cancelUploadingFile = async function (fileName) {
+	if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
+		console.warn("[userStorage] SignalR неактивен, отмена невозможна.");
+		return;
+	}
+	try {
+		await connection.invoke("CancelUpload", fileName);
+	} catch (err) {
+		console.error("[userStorage] Ошибка отмены загрузки через SignalR:", err);
+	}
+};
+
+async function refreshStorageStatus() {
+	const storageCounter = document.getElementById("storageCounter");
+	if (!storageCounter) return;
+	try {
+		const res = await fetch("/Content/profile_page?handler=StorageStatus");
+		if (!res.ok) {
+			console.error("StorageStatus returned HTTP", res.status);
+			return;
+		}
+		const json = await res.json();
+		if (json.success) {
+			const loadingText = json.reservedMb > 0
+				? `Загружается: ${json.reservedMb.toFixed(2)} МБ`
+				: `Загружается: 0 МБ`;
+			const freeText = `Свободно: ${json.freeMb.toFixed(2)} МБ / 10240 МБ`;
+			storageCounter.textContent = `${loadingText}    ${freeText}`;
+		}
+	} catch (err) {
+		console.error("Ошибка при получении статуса хранилища:", err);
+	}
 }

@@ -4,6 +4,7 @@ D:\Unity\VCS-DOCs\wwwroot\js\sidebar.js
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.min.css
 D:\Unity\VCS-DOCs\wwwroot\lib\jquery-validation\LICENSE.md
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.js
+D:\Unity\VCS-DOCs\wwwroot\js\uploadConflictModal.js
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.css
 D:\Unity\VCS-DOCs\wwwroot\css\sub_css\contact_page.css
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.min.css
@@ -122,6 +123,7 @@ wwwroot\js\sidebar.js
 wwwroot\js\sorttable.js
 wwwroot\js\sorttableObserver.js
 wwwroot\js\StatusOnlineController.js
+wwwroot\js\uploadConflictModal.js
 wwwroot\js\uploadFileObserver.js
 wwwroot\js\userStatus.js
 wwwroot\js\userStorageObserver.js

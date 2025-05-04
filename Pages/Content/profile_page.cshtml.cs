@@ -24,7 +24,7 @@ namespace VCS_DOCs.Pages.Content
 		private readonly IStorageQuotaService _quotaService;
 		private readonly IHubContext<UserStorageHub> _hubContext;
 		private readonly UserDataPathOptions _options;
-
+		private const long MAX_CHUNK_SIZE = 2 * 1024 * 1024;
 		public double UsedGb { get; private set; }
 		public double FreeGb { get; private set; }
 		public User? CurrentUser { get; private set; }
@@ -212,14 +212,7 @@ namespace VCS_DOCs.Pages.Content
 			return new JsonResult(new { success = ok });
 		}
 
-		public IActionResult OnPostCancelUpload([FromBody] CancelTaskRequest request)
-		{
-			if (string.IsNullOrWhiteSpace(request.TaskId))
-				return new JsonResult(new { success = false });
 
-			bool cancelled = _taskService.CancelTask(request.TaskId);
-			return new JsonResult(new { success = cancelled });
-		}
 
 		public class CancelTaskRequest
 		{
@@ -244,7 +237,6 @@ namespace VCS_DOCs.Pages.Content
 				freeMb = Math.Round(free / 1024.0 / 1024, 2)
 			});
 		}
-
 		public async Task<IActionResult> OnPostReleaseFileAsync(string fileName)
 		{
 			string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -257,15 +249,21 @@ namespace VCS_DOCs.Pages.Content
 
 		public async Task<IActionResult> OnPostUploadChunkAsync()
 		{
-			var form = Request.Form;
-			var file = form.Files["chunk"];
-			var fileName = Path.GetFileName(form["metadata.FileName"]);
+			var headers = Request.Headers;
 
-			if (!int.TryParse(form["metadata.ChunkIndex"], out var chunkIndex) ||
-				!int.TryParse(form["metadata.TotalChunks"], out var totalChunks) ||
-				file == null || string.IsNullOrWhiteSpace(fileName))
+			if (!headers.ContainsKey("X-File-Name") ||
+				!headers.ContainsKey("X-Chunk-Index") ||
+				!headers.ContainsKey("X-Total-Chunks"))
 			{
-				return new JsonResult(new { success = false, error = "Неверные метаданные" });
+				return new JsonResult(new { success = false, error = "Отсутствуют необходимые заголовки." });
+			}
+
+			string? fileName = Uri.UnescapeDataString(headers["X-File-Name"]);
+			if (!int.TryParse(headers["X-Chunk-Index"], out var chunkIndex) ||
+				!int.TryParse(headers["X-Total-Chunks"], out var totalChunks) ||
+				string.IsNullOrWhiteSpace(fileName))
+			{
+				return new JsonResult(new { success = false, error = "Неверные заголовки." });
 			}
 
 			string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -278,53 +276,61 @@ namespace VCS_DOCs.Pages.Content
 			if (!Directory.Exists(chunkFolder))
 				Directory.CreateDirectory(chunkFolder);
 
-			// === Проверка: если это первый чанк, убедимся, что файл не грузится уже
-			if (chunkIndex == 0)
+			try
 			{
-				if (ActiveUploadsRegistry.IsActive(userId, fileName))
+				if (chunkIndex == 0)
 				{
-					return new JsonResult(new { success = false, error = "Файл уже загружается." });
+					if (ActiveUploadsRegistry.IsActive(userId, fileName))
+						return new JsonResult(new { success = false, error = "Файл уже загружается." });
+
+					ActiveUploadsRegistry.Register(userId, fileName);
+				}
+				else
+				{
+					if (!ActiveUploadsRegistry.IsActive(userId, fileName))
+						return new JsonResult(new { success = false, error = "Загрузка отменена пользователем" });
+				}
+				ActiveUploadsRegistry.Touch(userId, fileName);
+
+				string chunkPath = Path.Combine(chunkFolder, $"chunk_{chunkIndex}");
+				await using (var fs = new FileStream(chunkPath, FileMode.Create, FileAccess.Write))
+				{
+					await Request.Body.CopyToAsync(fs);
 				}
 
-				ActiveUploadsRegistry.Register(userId, fileName);
-			}
+				long uploadedBytes = Directory
+					.EnumerateFiles(chunkFolder, "chunk_*")
+					.Sum(f => new FileInfo(f).Length);
 
-			// Сохраняем чанк
-			string chunkPath = Path.Combine(chunkFolder, $"chunk_{chunkIndex}");
-			await using (var stream = new FileStream(chunkPath, FileMode.Create, FileAccess.Write))
-				await file.CopyToAsync(stream);
+				double totalApproxBytes = uploadedBytes + (totalChunks - chunkIndex - 1) * MAX_CHUNK_SIZE;
 
-			// Если это последний чанк — собираем файл
-			if (chunkIndex == totalChunks - 1)
-			{
-				try
+				await _hubContext.Clients.Group(userId).SendAsync("UploadProgress", new
+				{
+					name = fileName,
+					uploadedBytes,
+					totalBytes = totalApproxBytes
+				});
+
+				if (chunkIndex == totalChunks - 1)
 				{
 					string finalPath = Path.Combine(userFolder, fileName);
 					await using (var dest = new FileStream(finalPath, FileMode.Create, FileAccess.Write))
 					{
 						for (int i = 0; i < totalChunks; i++)
 						{
-							var partPath = Path.Combine(chunkFolder, $"chunk_{i}");
+							string partPath = Path.Combine(chunkFolder, $"chunk_{i}");
 							if (!System.IO.File.Exists(partPath))
 								throw new IOException($"Чанк {i} не найден в {chunkFolder}");
 
-							await using (var src = new FileStream(partPath, FileMode.Open, FileAccess.Read))
-								await src.CopyToAsync(dest);
+							await using var src = new FileStream(partPath, FileMode.Open, FileAccess.Read);
+							await src.CopyToAsync(dest);
 						}
 					}
 
 					Directory.Delete(chunkFolder, recursive: true);
 
-					var fileInfo = new FileInfo(finalPath);
-					var reservation = new FileReservation
-					{
-						UserId = userId,
-						FileName = fileName,
-						ReservedBytes = fileInfo.Length,
-						IsReleased = false
-					};
-					_context.FileReservations.Add(reservation);
-					await _context.SaveChangesAsync();
+					// FIX: Снимаем резерв после успешной загрузки
+					await _quotaService.ReleaseAsync(userId, fileName);
 
 					var files = Directory
 						.GetFiles(userFolder)
@@ -342,15 +348,21 @@ namespace VCS_DOCs.Pages.Content
 
 					await _hubContext.Clients.Group(userId)
 						.SendAsync("ReceiveStorageUpdate", files);
-				}
-				finally
-				{
-					ActiveUploadsRegistry.Unregister(userId, fileName);
-				}
-			}
 
-			return new JsonResult(new { success = true });
+					ActiveUploadsRegistry.Unregister(userId, fileName);
+					Console.WriteLine($"[UploadComplete] Файл '{fileName}' успешно загружен и собран.");
+				}
+
+				return new JsonResult(new { success = true });
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine($"[UploadChunk] Ошибка: {ex.Message}");
+				ActiveUploadsRegistry.Unregister(userId, fileName);
+				return new JsonResult(new { success = false, error = ex.Message });
+			}
 		}
+
 		public async Task<JsonResult> OnGetFilesAsync()
 		{
 			if (User.Identity == null || !User.Identity.IsAuthenticated)
@@ -374,12 +386,66 @@ namespace VCS_DOCs.Pages.Content
 		public async Task<IActionResult> OnPostCancelUploadAsync([FromForm] string fileName)
 		{
 			string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+			Console.WriteLine($"[CancelUpload] Поступил запрос на отмену загрузки: {fileName}, user: {userId}");
+
 			if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(fileName))
 				return new JsonResult(new { success = false });
 
 			ActiveUploadsRegistry.Unregister(userId, fileName);
-			await _quotaService.ReleaseAsync(userId, fileName); 
-			return new JsonResult(new { success = true });
+			await _quotaService.ReleaseAsync(userId, fileName);
+
+			string chunkFolder = Path.Combine(_options.BasePath, $"userData_{userId}", $"{fileName}_chunks");
+			if (Directory.Exists(chunkFolder))
+			{
+				bool deleted = await SafeFileUtils.TryDeleteDirectoryWithRetries(chunkFolder);
+				Console.WriteLine(deleted
+					? $"[CancelUpload] Папка удалена успешно: {chunkFolder}"
+					: $"[CancelUpload] Не удалось удалить папку: {chunkFolder}");
+			}
+
+			await _hubContext.Clients.Group(userId)
+				.SendAsync("UploadCancelled", fileName);
+
+			return new JsonResult(new { success = true, fileName });
+		}
+		public async Task<IActionResult> OnGetIsFileUploadingAsync(string fileName)
+		{
+			string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+			if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(fileName))
+				return new JsonResult(new { uploading = false });
+
+			bool uploading = ActiveUploadsRegistry.IsActive(userId, fileName);
+			return new JsonResult(new { uploading });
 		}
 	}
 }
+public static class SafeFileUtils
+{
+	public static async Task<bool> TryDeleteDirectoryWithRetries(string path, int retries = 5, int delayMs = 300)
+	{
+		if (!Directory.Exists(path))
+			return true;
+
+		for (int attempt = 1; attempt <= retries; attempt++)
+		{
+			try
+			{
+				Directory.Delete(path, recursive: true);
+				return true;
+			}
+			catch (IOException)
+			{
+				// файл всё ещё занят
+			}
+			catch (UnauthorizedAccessException)
+			{
+				// Windows ещё держит файл
+			}
+
+			await Task.Delay(delayMs);
+		}
+
+		return false;
+	}
+}
+
