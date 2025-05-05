@@ -5,7 +5,7 @@ const MAX_FILENAME_LENGTH = 120;
 const uploadAbortControllers = new Map();
 const cancelledUploads = new Set();
 let activeUploads = 0;
-window.refreshStorageStatus = refreshStorageStatus;
+//window.refreshStorageStatus = refreshStorageStatus;
 
 function getFileNameParts(name) {
     const lastDot = name.lastIndexOf(".");
@@ -48,7 +48,7 @@ async function releaseFile(fileName) {
             body: fd
         });
     } catch {
-        // Сервер не отвечает, но мы и так отменили
+       
     }
 }
 
@@ -66,9 +66,11 @@ async function uploadSelectedFile(file, action = "overwrite") {
         return;
     }
 
+    const key = finalName.toLowerCase();
+    //cancelledUploads.delete(key); 
+
     activeUploads++;
     const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE);
-    const key = finalName.toLowerCase();
     const controller = new AbortController();
     uploadAbortControllers.set(key, controller);
 
@@ -168,9 +170,8 @@ function setupUploadBindings() {
                 onReplace: async () => {
                     const lowerName = file.name.toLowerCase();
                     if (window.cancelUploadingFile) {
-                        await window.cancelUploadingFile(file.name); // ждём отмену
+                        await window.cancelUploadingFile(file.name); 
                     }
-                    // Подождем чуть-чуть, чтобы сервер успел отреагировать
                     setTimeout(() => uploadSelectedFile(file), 300);
                 },
 

@@ -105,12 +105,15 @@ function updateNonUploadingRows(tableBody, files) {
 			<td><div class="cell-content">${file.name}</div></td>
 			<td>${file.sizeMb}</td>
 			<td>${file.lastWriteTime}</td>
-			<td><button class="delete-button">Удалить</button></td>
+			<td><button class="button-sliding danger delete-button">Удалить</button></td>
 		`;
 
-		row.querySelector("button.delete-button").addEventListener("click", () => {
-			if (confirm("Удалить файл?")) deleteFile(file.name);
-		});
+		const deleteBtn = row.querySelector(".delete-button");
+		if (deleteBtn) {
+			deleteBtn.addEventListener("click", () => {
+				if (confirm("Удалить файл?")) deleteFile(file.name);
+			});
+		}
 
 		tableBody.appendChild(row);
 	}
@@ -139,18 +142,21 @@ function renderUploadingFiles(tableBody) {
 			<td><div class="cell-content">${fileName}</div></td>
 			<td class="size-cell">${size}</td>
 			<td>Загружается...</td>
-			<td><button class="cancel-button">Отмена</button></td>
+			<td><button class="button-sliding danger cancel-button">Отмена</button></td>
 		`;
 
-		row.querySelector("button.cancel-button").addEventListener("click", function () {
-			const btn = this;
-			btn.disabled = true;
-			btn.textContent = "Отмена...";
-			window.cancelledUploads.add(key);
-			const rowEl = btn.closest("tr");
-			if (rowEl) rowEl.remove();
-			if (window.cancelUploadingFile) window.cancelUploadingFile(fileName);
-		});
+		const cancelBtn = row.querySelector(".cancel-button");
+		if (cancelBtn) {
+			cancelBtn.addEventListener("click", function () {
+				const btn = this;
+				btn.disabled = true;
+				btn.textContent = "Отмена...";
+				window.cancelledUploads.add(key);
+				const rowEl = btn.closest("tr");
+				if (rowEl) rowEl.remove();
+				if (window.cancelUploadingFile) window.cancelUploadingFile(fileName);
+			});
+		}
 
 		tableBody.appendChild(row);
 	}
@@ -215,3 +221,5 @@ async function refreshStorageStatus() {
 		console.error("Ошибка при получении статуса хранилища:", err);
 	}
 }
+
+window.refreshStorageStatus = refreshStorageStatus;

@@ -91,10 +91,12 @@ hr.solid {
     width: 100%;
 }
 
-.css-button-sliding-to-left--red {
+.button-sliding {
+    --btn-color: var(--primary-color);
+    --btn-color-hover: var(--primary-hover);
+    --btn-border: var(--btn-color);
     min-width: 130px;
     height: 40px;
-    color: var(--primary-color);
     padding: 5px 10px;
     font-weight: bold;
     cursor: pointer;
@@ -106,18 +108,11 @@ hr.solid {
     z-index: 0;
     background: #fff;
     overflow: hidden;
-    border: 2px solid var(--primary-color);
+    border: 2px solid var(--btn-border);
+    color: var(--btn-color);
 }
 
-    .css-button-sliding-to-left--red:hover {
-        color: #fff;
-    }
-
-        .css-button-sliding-to-left--red:hover:after {
-            width: 100%;
-        }
-
-    .css-button-sliding-to-left--red:after {
+    .button-sliding:after {
         content: "";
         position: absolute;
         z-index: -1;
@@ -126,15 +121,44 @@ hr.solid {
         top: 0;
         width: 0;
         height: 100%;
-        background: var(--primary-color);
+        background: var(--btn-color);
     }
 
-    .css-button-sliding-to-left--red:disabled {
-        background-color: #ff0000;
-        border-color: #ff0000;
+    .button-sliding:hover {
         color: #fff;
+    }
+
+        .button-sliding:hover:after {
+            width: 100%;
+        }
+
+    .button-sliding:disabled {
         cursor: not-allowed;
         opacity: 0.5;
+        background-color: #ccc;
+        border-color: #ccc;
+        color: #fff;
+    }
+
+    /* Цветовые модификаторы */
+    .button-sliding.primary {
+        --btn-color: var(--primary-color);
+        --btn-border: var(--primary-color);
+    }
+
+    .button-sliding.danger {
+        --btn-color: #ff4444;
+        --btn-border: #ff4444;
+    }
+
+    .button-sliding.success {
+        --btn-color: #28a745;
+        --btn-border: #28a745;
+    }
+
+    .button-sliding.info {
+        --btn-color: #17a2b8;
+        --btn-border: #17a2b8;
     }
 
 .profile-container {
@@ -331,44 +355,6 @@ hr.solid {
             width: 20%;
         }
 
-/* Кнопка удаления */
-.delete-button {
-    min-width: 100px;
-    height: 30px;
-    color: var(--primary-color);
-    padding: 5px 10px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    position: relative;
-    display: inline-block;
-    outline: none;
-    border-radius: 5px;
-    z-index: 0;
-    background: #fff;
-    overflow: hidden;
-    border: 2px solid var(--primary-color);
-}
-
-    .delete-button:hover {
-        color: #fff;
-    }
-
-        .delete-button:hover:after {
-            width: 100%;
-        }
-
-    .delete-button:after {
-        content: "";
-        position: absolute;
-        z-index: -1;
-        transition: all 0.3s ease;
-        left: 0;
-        top: 0;
-        width: 0;
-        height: 100%;
-        background: var(--primary-color);
-    }
 
 th.sorttable_sorted::after {
     content: " ▲";
@@ -501,3 +487,37 @@ th.sorttable_sorted_reverse::after {
         cursor: pointer;
         font-weight: bold;
     }
+/* Removes the clear button from date inputs */
+input[type="date"]::-webkit-clear-button {
+    display: none;
+}
+
+/* Removes the spin button */
+input[type="date"]::-webkit-inner-spin-button {
+    display: none;
+}
+
+/* Always display the drop down caret */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    color: #2c3e50;
+}
+
+input[type="date"] {
+    appearance: none;
+    -webkit-appearance: none;
+    color: #95a5a6;
+    font-family: "Helvetica", arial, sans-serif;
+    font-size: 18px;
+    border: 1px solid #ecf0f1;
+    background: #ecf0f1;
+    padding: 5px;
+    display: inline-block !important;
+    visibility: visible !important;
+}
+
+input[type="date"], focus {
+    color: #95a5a6;
+    box-shadow: none;
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+}

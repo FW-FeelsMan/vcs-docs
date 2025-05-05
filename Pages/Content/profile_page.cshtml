@@ -11,7 +11,7 @@
 <div class="profile_background">
     <div class="button-container">
         <h2>VCS-DOSc Account</h2>
-        <button class="css-button-sliding-to-left--red">Выйти</button>
+        <button class="button-sliding primary">Выйти</button>
     </div>
     <hr class="solid">
     <div class="profile-container">
@@ -37,7 +37,7 @@
                     </div>
                     <div class="info-card">
                         <h4>Дата рождения <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>
-                        <p data-field="DateOfBirth">@Model.CurrentUser?.DateOfBirth</p>
+                        <input type="date" required="@Model.CurrentUser?.DateOfBirth"/>
                     </div>
                     <div class="info-card">
                         <h4>Организация <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>
@@ -53,7 +53,7 @@
                     </div>
                     <div class="info-card">
                         <h4>Удаление аккаунта</h4>
-                        <button class="css-button-sliding-to-left--red">Удалить</button>
+                        <button class="button-sliding primary">Удалить</button>
                     </div>
                 </div>
             </div>
@@ -65,7 +65,7 @@
                         <div style="margin-right: 10px;">
                             <span id="storageCounter"></span>
                         </div>
-                        <button id="uploadFileButton" type="button" class="css-button-sliding-to-left--red">Загрузить файл</button>
+                        <button id="uploadFileButton" type="button" class="button-sliding primary">Загрузить файл</button>
                     </div>
                 </div>
                 <div class="content-scrollable">
