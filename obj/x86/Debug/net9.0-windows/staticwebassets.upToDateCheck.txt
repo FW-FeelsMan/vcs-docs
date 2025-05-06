@@ -14,7 +14,6 @@ D:\Unity\VCS-DOCs\wwwroot\ifcjs\wasm\web-ifc.wasm
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\css\bootstrap.css.map
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.min.css
 D:\Unity\VCS-DOCs\wwwroot\js\extraTabbar.js
-D:\Unity\VCS-DOCs\wwwroot\js\horizontalResize.js
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.min.js
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\js\bootstrap.esm.min.js
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.min.js.map
@@ -116,7 +115,6 @@ wwwroot\images\save_icon.png
 wwwroot\js\contextMenu.js
 wwwroot\js\editInfoCard.js
 wwwroot\js\extraTabbar.js
-wwwroot\js\horizontalResize.js
 wwwroot\js\loginScript.js
 wwwroot\js\profile.js
 wwwroot\js\sidebar.js

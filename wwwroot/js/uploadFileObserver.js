@@ -67,7 +67,20 @@ async function uploadSelectedFile(file, action = "overwrite") {
     }
 
     const key = finalName.toLowerCase();
-    //cancelledUploads.delete(key); 
+    cancelledUploads.delete(key); // Убираем из отменённых
+
+    // ВОТ ЭТО — КЛЮЧЕВОЙ МОМЕНТ
+    if (window.currentlyUploadingFiles) {
+        window.currentlyUploadingFiles.set(key, {
+            uploaded: 0,
+            total: file.size
+        });
+    }
+
+    const tableBody = document.querySelector("table.sortable tbody");
+    if (tableBody && typeof renderUploadingFiles === "function") {
+        renderUploadingFiles(tableBody); // Отрисовать новую строку сразу
+    }
 
     activeUploads++;
     const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE);
@@ -76,9 +89,7 @@ async function uploadSelectedFile(file, action = "overwrite") {
 
     try {
         for (let i = 0; i < totalChunks; i++) {
-            if (cancelledUploads.has(key)) {
-                throw new Error("Загрузка отменена");
-            }
+            if (cancelledUploads.has(key)) throw new Error("Загрузка отменена");
 
             const chunk = file.slice(i * MAX_CHUNK_SIZE, (i + 1) * MAX_CHUNK_SIZE);
             const res = await fetch("/Content/profile_page?handler=UploadChunk", {
@@ -95,8 +106,13 @@ async function uploadSelectedFile(file, action = "overwrite") {
             });
 
             const result = await res.json();
-            if (!result.success) {
-                throw new Error(result.error);
+            if (!result.success) throw new Error(result.error);
+
+            if (window.currentlyUploadingFiles.has(key)) {
+                window.currentlyUploadingFiles.set(key, {
+                    uploaded: (i + 1) * MAX_CHUNK_SIZE,
+                    total: file.size
+                });
             }
         }
     } catch (err) {
@@ -106,20 +122,13 @@ async function uploadSelectedFile(file, action = "overwrite") {
         activeUploads--;
         cancelledUploads.delete(key);
         uploadAbortControllers.delete(key);
-
-        if (window.currentlyUploadingFiles) {
-            window.currentlyUploadingFiles.delete(key);
-        }
+        if (window.currentlyUploadingFiles) window.currentlyUploadingFiles.delete(key);
 
         const row = document.getElementById(`uploading-${key}`);
         if (row) row.remove();
 
-        if (typeof requestFiles === "function") {
-            requestFiles();
-        }
-        if (typeof refreshStorageStatus === "function") {
-            refreshStorageStatus(); 
-        }
+        if (typeof requestFiles === "function") requestFiles();
+        if (typeof refreshStorageStatus === "function") refreshStorageStatus();
     }
 }
 

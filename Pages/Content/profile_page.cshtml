@@ -2,6 +2,7 @@
 @model profile_pageModel
 @{
 }
+@using System.Globalization
 
 <input type="file" id="hiddenFileInput" style="display: none;" />
 
@@ -37,7 +38,13 @@
                     </div>
                     <div class="info-card">
                         <h4>Дата рождения <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>
-                        <input type="date" required="@Model.CurrentUser?.DateOfBirth"/>
+                        <input type="text"
+                               class="date-input"
+                               data-field="DateOfBirth"
+                               value="@($"{Model.CurrentUser?.DateOfBirth:dd.MM.yyyy}")"
+                               placeholder="ДД.ММ.ГГГГ"
+                               pattern="\d{2}\.\d{2}\.\d{4}"
+                               disabled />
                     </div>
                     <div class="info-card">
                         <h4>Организация <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>

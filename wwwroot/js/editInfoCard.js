@@ -1,4 +1,21 @@
-﻿document.addEventListener("click", function (e) {
+﻿function applyDateMask(el) {
+    el.removeAttribute('disabled');
+    el.setAttribute('maxlength', '10');
+    el.setAttribute('inputmode', 'numeric');
+
+    el.addEventListener('input', function (e) {
+        let v = e.target.value.replace(/[^\d]/g, '');
+        if (v.length > 2) v = v.slice(0, 2) + '.' + v.slice(2);
+        if (v.length > 5) v = v.slice(0, 5) + '.' + v.slice(5, 9);
+        e.target.value = v;
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.date-input').forEach(applyDateMask);
+});
+
+document.addEventListener("click", function (e) {
     const editBtn = e.target.closest(".edit-button");
     if (editBtn) handleEditClick.call(editBtn);
 });
@@ -8,24 +25,40 @@ function handleEditClick() {
     if (!card) return;
 
     const textElement = card.querySelector("p[data-field]");
-    if (!textElement) return;
+    const inputElement = card.querySelector("input[data-field]");
+    let fieldName, currentValue;
 
-    const currentText = textElement.innerText.trim();
-    const fieldName = textElement.dataset.field;
+    if (textElement) {
+        fieldName = textElement.dataset.field;
+        currentValue = textElement.textContent.trim();
+    } else if (inputElement) {
+        fieldName = inputElement.dataset.field;
+        currentValue = inputElement.value.trim();
+    } else {
+        return;
+    }
+
+    const isDate = inputElement?.classList.contains("date-input")
+        || fieldName.toLowerCase().includes("birth");
 
     const input = document.createElement("input");
     input.type = "text";
-    input.value = currentText;
-    input.classList.add("edit-input");
+    input.className = isDate ? "date-input" : "edit-input";
+    input.value = currentValue;
+    input.dataset.field = fieldName;
 
-    textElement.replaceWith(input);
+    if (isDate) applyDateMask(input);
+
+    if (textElement) textElement.replaceWith(input);
+    else inputElement.replaceWith(input);
+
     input.focus();
 
     const editButton = card.querySelector(".edit-button");
     const saveButton = document.createElement("button");
-    saveButton.className = "edit-button"; // Используем тот же класс, что и у кнопки редактирования
+    saveButton.className = "edit-button";
     saveButton.innerHTML = '<img src="/images/save_icon.png" alt="Save">';
-    saveButton.title = "Применить";
+    saveButton.title = "Сохранить";
 
     editButton.replaceWith(saveButton);
 
@@ -36,7 +69,7 @@ function handleEditClick() {
             alert("Ошибка безопасности. Перезагрузите страницу.");
             return;
         }
-        const token = tokenElement.getAttribute('content');
+        const token = tokenElement.getAttribute("content");
 
         fetch("/Content/profile_page?handler=UpdateUserData", {
             method: "POST",
@@ -51,14 +84,24 @@ function handleEditClick() {
                 return response.json();
             })
             .then(data => {
-                if (!data.success) throw new Error(data.error);
-                textElement.textContent = newValue;
+                if (!data.success) throw new Error(data.error || "Ошибка обновления");
+
+                const newText = document.createElement("p");
+                newText.dataset.field = fieldName;
+                newText.textContent = newValue;
+
+                input.replaceWith(newText);
+                saveButton.replaceWith(editButton);
             })
-            .catch(error => {
-                alert(error.message);
-            })
-            .finally(() => {
-                input.replaceWith(textElement);
+            .catch(err => {
+                alert(err.message);
+                if (textElement) {
+                    input.replaceWith(textElement);
+                } else {
+                    inputElement.value = currentValue;
+                    inputElement.disabled = true;
+                    card.appendChild(inputElement);
+                }
                 saveButton.replaceWith(editButton);
             });
     });

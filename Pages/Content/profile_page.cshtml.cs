@@ -12,6 +12,7 @@ using VCS_DOCs.Services.User;
 using VCS_DOCs.Services;
 using VCS_DOCs.Data.Hubs;
 using VCS_DOCs.Configuration;
+using System.Globalization;
 
 namespace VCS_DOCs.Pages.Content
 {
@@ -128,6 +129,8 @@ namespace VCS_DOCs.Pages.Content
 
 		public async Task<IActionResult> OnPostUpdateUserDataAsync([FromBody] UpdateUserRequest request)
 		{
+			DateTime parsedDate = DateTime.MinValue;   // дефолтное значение
+
 			try { await _antiforgery.ValidateRequestAsync(HttpContext); }
 			catch (AntiforgeryValidationException)
 			{
@@ -152,9 +155,6 @@ namespace VCS_DOCs.Pages.Content
 			if (request.Value.Length > 30)
 				return new JsonResult(new { success = false, error = "Длина значения не должна превышать 30 символов" });
 
-			if (!ValidInputRegex.IsMatch(request.Value))
-				return new JsonResult(new { success = false, error = "Значение содержит недопустимые символы" });
-
 			string? username = User.Identity?.Name;
 			if (string.IsNullOrWhiteSpace(username))
 				return new JsonResult(new { success = false, error = "Пользователь не найден" });
@@ -165,12 +165,45 @@ namespace VCS_DOCs.Pages.Content
 
 			switch (request.Field)
 			{
-				case "FullName": user.FullName = request.Value; break;
-				case "DateOfBirth": user.DateOfBirth = request.Value; break;
-				case "Organization": user.Organization = request.Value; break;
-				case "Department": user.Department = request.Value; break;
-				case "Speciality": user.Speciality = request.Value; break;
-				default: return new JsonResult(new { success = false, error = "Недопустимое поле для обновления" });
+				case "DateOfBirth":
+					if (!DateTime.TryParseExact(
+							request.Value!,
+							"dd.MM.yyyy",
+							CultureInfo.InvariantCulture,
+							DateTimeStyles.None,
+							out parsedDate))
+					{
+						return new JsonResult(new { success = false, error = "Неверный формат даты. Используйте ДД.MM.ГГГГ" });
+					}
+					user.DateOfBirth = parsedDate.ToString("dd.MM.yyyy");
+					break;
+
+				case "FullName":
+					if (!ValidInputRegex.IsMatch(request.Value!))
+						return new JsonResult(new { success = false, error = "Значение содержит недопустимые символы" });
+					user.FullName = request.Value;
+					break;
+
+				case "Organization":
+					if (!ValidInputRegex.IsMatch(request.Value!))
+						return new JsonResult(new { success = false, error = "Значение содержит недопустимые символы" });
+					user.Organization = request.Value;
+					break;
+
+				case "Department":
+					if (!ValidInputRegex.IsMatch(request.Value!))
+						return new JsonResult(new { success = false, error = "Значение содержит недопустимые символы" });
+					user.Department = request.Value;
+					break;
+
+				case "Speciality":
+					if (!ValidInputRegex.IsMatch(request.Value!))
+						return new JsonResult(new { success = false, error = "Значение содержит недопустимые символы" });
+					user.Speciality = request.Value;
+					break;
+
+				default:
+					return new JsonResult(new { success = false, error = "Недопустимое поле для обновления" });
 			}
 
 			try
@@ -184,6 +217,7 @@ namespace VCS_DOCs.Pages.Content
 				return new JsonResult(new { success = false, error = $"Ошибка базы данных: {ex.InnerException?.Message ?? ex.Message}" });
 			}
 		}
+
 		public async Task<IActionResult> OnPostTryReserveAsync([FromForm] string fileName, [FromForm] long fileSize)
 		{
 			string? username = User.Identity?.Name;

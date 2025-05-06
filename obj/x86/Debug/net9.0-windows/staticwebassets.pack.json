@@ -133,10 +133,6 @@
       "PackagePath": "staticwebassets\\js\\extraTabbar.js"
     },
     {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\horizontalResize.js",
-      "PackagePath": "staticwebassets\\js\\horizontalResize.js"
-    },
-    {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\loginScript.js",
       "PackagePath": "staticwebassets\\js\\loginScript.js"
     },

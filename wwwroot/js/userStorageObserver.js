@@ -52,13 +52,20 @@ async function ensureConnectionReady() {
 
 	connection.on("UploadProgress", ({ name, uploadedBytes, totalBytes }) => {
 		const key = name.toLowerCase();
-		if (window.cancelledUploads.has(key)) return;
 
-		window.currentlyUploadingFiles.set(key, { uploaded: uploadedBytes, total: totalBytes });
+		if (window.cancelledUploads.has(key)) {
+			window.cancelledUploads.delete(key);
+		}
+
+		window.currentlyUploadingFiles.set(key, {
+			uploaded: uploadedBytes,
+			total: totalBytes
+		});
 
 		const tableBody = document.querySelector("table.sortable tbody");
 		if (tableBody) renderUploadingFiles(tableBody);
 	});
+
 
 	connection.on("UploadCancelled", ({ name }) => {
 		const key = name.toLowerCase();

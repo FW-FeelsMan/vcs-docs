@@ -102,8 +102,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>uhcsifl1zv</Fingerprint>
-      <Integrity>Qqw6LDBk4VgVwJqI05RKEe3wKI+8phc1c/IIHrvqbPs=</Integrity>
+      <Fingerprint>u21x9dwmlz</Fingerprint>
+      <Integrity>tgAVEBYir8MGcaQGlANtirNGTjq+NwM7SkiGI2/BUAc=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\css\sub_css\profile_page.css'))</OriginalItemSpec>
@@ -552,8 +552,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>8813sn8vik</Fingerprint>
-      <Integrity>+MD4HrpdRR1ZjquScc8s6RHDALFwTMmKtnxSm/VfvKo=</Integrity>
+      <Fingerprint>4dl0chvlwm</Fingerprint>
+      <Integrity>2PPQozM8dBGiUsRGVOB2dPC+yRncB1NdVtA90SzZkfc=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\editInfoCard.js'))</OriginalItemSpec>
@@ -575,24 +575,6 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\extraTabbar.js'))</OriginalItemSpec>
-    </StaticWebAsset>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\horizontalResize.js'))">
-      <SourceType>Package</SourceType>
-      <SourceId>VCS-DOCs</SourceId>
-      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
-      <BasePath>_content/VCS-DOCs</BasePath>
-      <RelativePath>js/horizontalResize.js</RelativePath>
-      <AssetKind>All</AssetKind>
-      <AssetMode>All</AssetMode>
-      <AssetRole>Primary</AssetRole>
-      <RelatedAsset></RelatedAsset>
-      <AssetTraitName></AssetTraitName>
-      <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>gbfs1u4sm1</Fingerprint>
-      <Integrity>jFUyuPpoKUc/jm6yGGUwtt4EpCLtoj4K4hoFkfnra+c=</Integrity>
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\horizontalResize.js'))</OriginalItemSpec>
     </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\loginScript.js'))">
       <SourceType>Package</SourceType>
@@ -732,8 +714,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>j8fz3s8skh</Fingerprint>
-      <Integrity>44qPaM3rn29oi723c/pGku+2DxmzHsp4RQ/PMHbeV3A=</Integrity>
+      <Fingerprint>iezeymmw4a</Fingerprint>
+      <Integrity>RntUEHxcKSjaSELZYEyE7Yzf9yuT5zNR5isU2dRYyx4=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\uploadFileObserver.js'))</OriginalItemSpec>
@@ -768,8 +750,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>uudvulmff2</Fingerprint>
-      <Integrity>5sneF3ZZjIRUpU7vzBv46sUdncKKwuWOM+XXg9t4vTw=</Integrity>
+      <Fingerprint>fupfbog8b1</Fingerprint>
+      <Integrity>l3vW8Y6HowBJ0bt4sn6h0JztaDYA5Nlq+H8zqHYO2fQ=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\userStorageObserver.js'))</OriginalItemSpec>
