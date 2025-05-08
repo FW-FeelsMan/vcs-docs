@@ -552,8 +552,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>4dl0chvlwm</Fingerprint>
-      <Integrity>2PPQozM8dBGiUsRGVOB2dPC+yRncB1NdVtA90SzZkfc=</Integrity>
+      <Fingerprint>z0u98jbujt</Fingerprint>
+      <Integrity>Q2R2hCPEcSZnkUaavugDC3lREDy44BQRG+c2mGeXQb4=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\editInfoCard.js'))</OriginalItemSpec>

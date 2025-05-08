@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "T5R72X2HM1fY/+7w+O8w8YPTxDsneSNmz5E6SLMnRHE=",
+  "Hash": "zcNYsVz7muFjbl8SiPF/Rq4BnFWZDWIaZoKSwryL2uU=",
   "Source": "VCS-DOCs",
   "BasePath": "_content/VCS-DOCs",
   "Mode": "Default",
@@ -3860,12 +3860,12 @@
       "OriginalItemSpec": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\dist\\css\\bootstrap-utilities.css"
     },
     {
-      "Identity": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\uljhbzk97z-4dl0chvlwm.gz",
+      "Identity": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\uljhbzk97z-z0u98jbujt.gz",
       "SourceId": "VCS-DOCs",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\",
       "BasePath": "_content/VCS-DOCs",
-      "RelativePath": "js/editInfoCard#[.{fingerprint=4dl0chvlwm}]?.js.gz",
+      "RelativePath": "js/editInfoCard#[.{fingerprint=z0u98jbujt}]?.js.gz",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Alternative",
@@ -3874,8 +3874,8 @@
       "RelatedAsset": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\editInfoCard.js",
       "AssetTraitName": "Content-Encoding",
       "AssetTraitValue": "gzip",
-      "Fingerprint": "ami3goao77",
-      "Integrity": "ApGLdCYbkmB73jWzpXmxT2StXqHoWDGMS473XIkAgNM=",
+      "Fingerprint": "gzrhu6ncty",
+      "Integrity": "FDI4kdxWWnj7vQb58d5oUsCOcZRYXHcCa32wN6XwZi4=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\editInfoCard.js"
@@ -5071,8 +5071,8 @@
       "RelatedAsset": "",
       "AssetTraitName": "",
       "AssetTraitValue": "",
-      "Fingerprint": "4dl0chvlwm",
-      "Integrity": "2PPQozM8dBGiUsRGVOB2dPC+yRncB1NdVtA90SzZkfc=",
+      "Fingerprint": "z0u98jbujt",
+      "Integrity": "Q2R2hCPEcSZnkUaavugDC3lREDy44BQRG+c2mGeXQb4=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\js\\editInfoCard.js"
@@ -20660,13 +20660,13 @@
       ]
     },
     {
-      "Route": "js/editInfoCard.4dl0chvlwm.js",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\uljhbzk97z-4dl0chvlwm.gz",
+      "Route": "js/editInfoCard.js",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\uljhbzk97z-z0u98jbujt.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.000747384155"
+          "Quality": "0.000600961538"
         }
       ],
       "ResponseHeaders": [
@@ -20676,19 +20676,19 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "1337"
+          "Value": "1663"
         },
         {
           "Name": "ETag",
-          "Value": "\"ApGLdCYbkmB73jWzpXmxT2StXqHoWDGMS473XIkAgNM=\""
+          "Value": "\"FDI4kdxWWnj7vQb58d5oUsCOcZRYXHcCa32wN6XwZi4=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 06 May 2025 20:56:15 GMT"
+          "Value": "Thu, 08 May 2025 16:44:03 GMT"
         },
         {
           "Name": "Cache-Control",
-          "Value": "max-age=31536000, immutable"
+          "Value": "no-cache"
         },
         {
           "Name": "Content-Encoding",
@@ -20704,26 +20704,18 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"2PPQozM8dBGiUsRGVOB2dPC+yRncB1NdVtA90SzZkfc=\""
+          "Value": "W/\"Q2R2hCPEcSZnkUaavugDC3lREDy44BQRG+c2mGeXQb4=\""
         }
       ],
       "EndpointProperties": [
         {
-          "Name": "fingerprint",
-          "Value": "4dl0chvlwm"
-        },
-        {
-          "Name": "label",
-          "Value": "js/editInfoCard.js"
-        },
-        {
           "Name": "integrity",
-          "Value": "sha256-2PPQozM8dBGiUsRGVOB2dPC+yRncB1NdVtA90SzZkfc="
+          "Value": "sha256-Q2R2hCPEcSZnkUaavugDC3lREDy44BQRG+c2mGeXQb4="
         }
       ]
     },
     {
-      "Route": "js/editInfoCard.4dl0chvlwm.js",
+      "Route": "js/editInfoCard.js",
       "AssetFile": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\editInfoCard.js",
       "Selectors": [],
       "ResponseHeaders": [
@@ -20733,7 +20725,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "3877"
+          "Value": "5591"
         },
         {
           "Name": "Content-Type",
@@ -20741,11 +20733,156 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"2PPQozM8dBGiUsRGVOB2dPC+yRncB1NdVtA90SzZkfc=\""
+          "Value": "\"Q2R2hCPEcSZnkUaavugDC3lREDy44BQRG+c2mGeXQb4=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 06 May 2025 20:56:15 GMT"
+          "Value": "Thu, 08 May 2025 16:44:03 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-Q2R2hCPEcSZnkUaavugDC3lREDy44BQRG+c2mGeXQb4="
+        }
+      ]
+    },
+    {
+      "Route": "js/editInfoCard.js.gz",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\uljhbzk97z-z0u98jbujt.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1663"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"FDI4kdxWWnj7vQb58d5oUsCOcZRYXHcCa32wN6XwZi4=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 08 May 2025 16:44:03 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-FDI4kdxWWnj7vQb58d5oUsCOcZRYXHcCa32wN6XwZi4="
+        }
+      ]
+    },
+    {
+      "Route": "js/editInfoCard.z0u98jbujt.js",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\uljhbzk97z-z0u98jbujt.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000600961538"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1663"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"FDI4kdxWWnj7vQb58d5oUsCOcZRYXHcCa32wN6XwZi4=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 08 May 2025 16:44:03 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"Q2R2hCPEcSZnkUaavugDC3lREDy44BQRG+c2mGeXQb4=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "z0u98jbujt"
+        },
+        {
+          "Name": "label",
+          "Value": "js/editInfoCard.js"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-Q2R2hCPEcSZnkUaavugDC3lREDy44BQRG+c2mGeXQb4="
+        }
+      ]
+    },
+    {
+      "Route": "js/editInfoCard.z0u98jbujt.js",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\editInfoCard.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "5591"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"Q2R2hCPEcSZnkUaavugDC3lREDy44BQRG+c2mGeXQb4=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Thu, 08 May 2025 16:44:03 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -20755,7 +20892,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "4dl0chvlwm"
+          "Value": "z0u98jbujt"
         },
         {
           "Name": "label",
@@ -20763,13 +20900,13 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-2PPQozM8dBGiUsRGVOB2dPC+yRncB1NdVtA90SzZkfc="
+          "Value": "sha256-Q2R2hCPEcSZnkUaavugDC3lREDy44BQRG+c2mGeXQb4="
         }
       ]
     },
     {
-      "Route": "js/editInfoCard.4dl0chvlwm.js.gz",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\uljhbzk97z-4dl0chvlwm.gz",
+      "Route": "js/editInfoCard.z0u98jbujt.js.gz",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\uljhbzk97z-z0u98jbujt.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -20778,7 +20915,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "1337"
+          "Value": "1663"
         },
         {
           "Name": "Content-Type",
@@ -20786,11 +20923,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"ApGLdCYbkmB73jWzpXmxT2StXqHoWDGMS473XIkAgNM=\""
+          "Value": "\"FDI4kdxWWnj7vQb58d5oUsCOcZRYXHcCa32wN6XwZi4=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Tue, 06 May 2025 20:56:15 GMT"
+          "Value": "Thu, 08 May 2025 16:44:03 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -20808,7 +20945,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "4dl0chvlwm"
+          "Value": "z0u98jbujt"
         },
         {
           "Name": "label",
@@ -20816,144 +20953,7 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-ApGLdCYbkmB73jWzpXmxT2StXqHoWDGMS473XIkAgNM="
-        }
-      ]
-    },
-    {
-      "Route": "js/editInfoCard.js",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\uljhbzk97z-4dl0chvlwm.gz",
-      "Selectors": [
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip",
-          "Quality": "0.000747384155"
-        }
-      ],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "1337"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"ApGLdCYbkmB73jWzpXmxT2StXqHoWDGMS473XIkAgNM=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Tue, 06 May 2025 20:56:15 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "no-cache"
-        },
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip"
-        },
-        {
-          "Name": "Vary",
-          "Value": "Content-Encoding"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/javascript"
-        },
-        {
-          "Name": "ETag",
-          "Value": "W/\"2PPQozM8dBGiUsRGVOB2dPC+yRncB1NdVtA90SzZkfc=\""
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "integrity",
-          "Value": "sha256-2PPQozM8dBGiUsRGVOB2dPC+yRncB1NdVtA90SzZkfc="
-        }
-      ]
-    },
-    {
-      "Route": "js/editInfoCard.js",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\editInfoCard.js",
-      "Selectors": [],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "3877"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/javascript"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"2PPQozM8dBGiUsRGVOB2dPC+yRncB1NdVtA90SzZkfc=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Tue, 06 May 2025 20:56:15 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "no-cache"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "integrity",
-          "Value": "sha256-2PPQozM8dBGiUsRGVOB2dPC+yRncB1NdVtA90SzZkfc="
-        }
-      ]
-    },
-    {
-      "Route": "js/editInfoCard.js.gz",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\uljhbzk97z-4dl0chvlwm.gz",
-      "Selectors": [],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "1337"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/javascript"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"ApGLdCYbkmB73jWzpXmxT2StXqHoWDGMS473XIkAgNM=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Tue, 06 May 2025 20:56:15 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "no-cache"
-        },
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip"
-        },
-        {
-          "Name": "Vary",
-          "Value": "Content-Encoding"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "integrity",
-          "Value": "sha256-ApGLdCYbkmB73jWzpXmxT2StXqHoWDGMS473XIkAgNM="
+          "Value": "sha256-FDI4kdxWWnj7vQb58d5oUsCOcZRYXHcCa32wN6XwZi4="
         }
       ]
     },

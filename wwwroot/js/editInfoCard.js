@@ -11,18 +11,43 @@
     });
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.date-input').forEach(applyDateMask);
-});
+function createEditButton() {
+    const button = document.createElement("button");
+    button.className = "edit-button";
+    button.innerHTML = '<img src="/images/edit_icon.png" alt="Edit">';
+    button.title = "Редактировать";
+    button.addEventListener("click", handleEditClick);
+    return button;
+}
 
-document.addEventListener("click", function (e) {
-    const editBtn = e.target.closest(".edit-button");
-    if (editBtn) handleEditClick.call(editBtn);
-});
+function handleEditClick(event) {
+    const button = event.target.closest(".edit-button");
+    if (!button) return;
 
-function handleEditClick() {
-    const card = this.closest(".info-card");
+    const card = button.closest(".info-card");
     if (!card) return;
+
+    // Сброс других редактируемых карточек
+    document.querySelectorAll(".info-card").forEach(otherCard => {
+        if (otherCard === card) return;
+
+        const input = otherCard.querySelector("input[data-field]");
+        const saveBtn = otherCard.querySelector(".edit-button img[src*='save_icon']");
+
+        if (input && saveBtn) {
+            const value = input.dataset.originalValue || input.value;
+            const field = input.dataset.field;
+
+            const revertedText = document.createElement("p");
+            revertedText.dataset.field = field;
+            revertedText.textContent = value;
+
+            input.replaceWith(revertedText);
+
+            const revertButton = createEditButton();
+            saveBtn.closest("button").replaceWith(revertButton);
+        }
+    });
 
     const textElement = card.querySelector("p[data-field]");
     const inputElement = card.querySelector("input[data-field]");
@@ -46,6 +71,7 @@ function handleEditClick() {
     input.className = isDate ? "date-input" : "edit-input";
     input.value = currentValue;
     input.dataset.field = fieldName;
+    input.dataset.originalValue = currentValue;
 
     if (isDate) applyDateMask(input);
 
@@ -90,19 +116,37 @@ function handleEditClick() {
                 newText.dataset.field = fieldName;
                 newText.textContent = newValue;
 
-                input.replaceWith(newText);
-                saveButton.replaceWith(editButton);
+                const currentInput = card.querySelector("input[data-field]");
+                if (currentInput) {
+                    currentInput.replaceWith(newText);
+                }
+
+                const newEditButton = createEditButton();
+                const currentButton = card.querySelector(".edit-button");
+                if (currentButton) {
+                    currentButton.replaceWith(newEditButton);
+                } else {
+                    const h4 = card.querySelector("h4");
+                    if (h4) h4.appendChild(newEditButton);
+                }
             })
             .catch(err => {
                 alert(err.message);
-                if (textElement) {
-                    input.replaceWith(textElement);
-                } else {
-                    inputElement.value = currentValue;
-                    inputElement.disabled = true;
-                    card.appendChild(inputElement);
-                }
-                saveButton.replaceWith(editButton);
+
+                const fallbackText = document.createElement("p");
+                fallbackText.dataset.field = fieldName;
+                fallbackText.textContent = input.dataset.originalValue || input.value;
+
+                input.replaceWith(fallbackText);
+
+                const fallbackButton = createEditButton();
+                saveButton.replaceWith(fallbackButton);
             });
     });
 }
+
+document.addEventListener("click", function (e) {
+    const button = e.target.closest(".edit-button");
+    if (!button) return;
+    handleEditClick(e);
+});

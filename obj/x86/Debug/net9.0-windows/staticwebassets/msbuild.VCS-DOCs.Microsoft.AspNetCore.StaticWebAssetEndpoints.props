@@ -360,17 +360,17 @@
       <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"qlqdwag0x7"},{"Name":"integrity","Value":"sha256-7k\u002BmW6sJIOR0EF8XHV1EIaZFmMg3KrP7jx8YLPXLNnY="},{"Name":"label","Value":"_content/VCS-DOCs/js/contextMenu.js"}]]]></EndpointProperties>
       <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"1376"},{"Name":"Content-Type","Value":"text/javascript"},{"Name":"ETag","Value":"\u00227k\u002BmW6sJIOR0EF8XHV1EIaZFmMg3KrP7jx8YLPXLNnY=\u0022"},{"Name":"Last-Modified","Value":"Fri, 17 Jan 2025 19:07:25 GMT"}]]]></ResponseHeaders>
     </StaticWebAssetEndpoint>
-    <StaticWebAssetEndpoint Include="_content/VCS-DOCs/js/editInfoCard.4dl0chvlwm.js">
-      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\editInfoCard.js'))</AssetFile>
-      <Selectors><![CDATA[[]]]></Selectors>
-      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"4dl0chvlwm"},{"Name":"integrity","Value":"sha256-2PPQozM8dBGiUsRGVOB2dPC\u002ByRncB1NdVtA90SzZkfc="},{"Name":"label","Value":"_content/VCS-DOCs/js/editInfoCard.js"}]]]></EndpointProperties>
-      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"3877"},{"Name":"Content-Type","Value":"text/javascript"},{"Name":"ETag","Value":"\u00222PPQozM8dBGiUsRGVOB2dPC\u002ByRncB1NdVtA90SzZkfc=\u0022"},{"Name":"Last-Modified","Value":"Tue, 06 May 2025 20:56:15 GMT"}]]]></ResponseHeaders>
-    </StaticWebAssetEndpoint>
     <StaticWebAssetEndpoint Include="_content/VCS-DOCs/js/editInfoCard.js">
       <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\editInfoCard.js'))</AssetFile>
       <Selectors><![CDATA[[]]]></Selectors>
-      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-2PPQozM8dBGiUsRGVOB2dPC\u002ByRncB1NdVtA90SzZkfc="}]]]></EndpointProperties>
-      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"3877"},{"Name":"Content-Type","Value":"text/javascript"},{"Name":"ETag","Value":"\u00222PPQozM8dBGiUsRGVOB2dPC\u002ByRncB1NdVtA90SzZkfc=\u0022"},{"Name":"Last-Modified","Value":"Tue, 06 May 2025 20:56:15 GMT"}]]]></ResponseHeaders>
+      <EndpointProperties><![CDATA[[{"Name":"integrity","Value":"sha256-Q2R2hCPEcSZnkUaavugDC3lREDy44BQRG\u002Bc2mGeXQb4="}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"no-cache"},{"Name":"Content-Length","Value":"5591"},{"Name":"Content-Type","Value":"text/javascript"},{"Name":"ETag","Value":"\u0022Q2R2hCPEcSZnkUaavugDC3lREDy44BQRG\u002Bc2mGeXQb4=\u0022"},{"Name":"Last-Modified","Value":"Thu, 08 May 2025 16:44:03 GMT"}]]]></ResponseHeaders>
+    </StaticWebAssetEndpoint>
+    <StaticWebAssetEndpoint Include="_content/VCS-DOCs/js/editInfoCard.z0u98jbujt.js">
+      <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\editInfoCard.js'))</AssetFile>
+      <Selectors><![CDATA[[]]]></Selectors>
+      <EndpointProperties><![CDATA[[{"Name":"fingerprint","Value":"z0u98jbujt"},{"Name":"integrity","Value":"sha256-Q2R2hCPEcSZnkUaavugDC3lREDy44BQRG\u002Bc2mGeXQb4="},{"Name":"label","Value":"_content/VCS-DOCs/js/editInfoCard.js"}]]]></EndpointProperties>
+      <ResponseHeaders><![CDATA[[{"Name":"Accept-Ranges","Value":"bytes"},{"Name":"Cache-Control","Value":"max-age=31536000, immutable"},{"Name":"Content-Length","Value":"5591"},{"Name":"Content-Type","Value":"text/javascript"},{"Name":"ETag","Value":"\u0022Q2R2hCPEcSZnkUaavugDC3lREDy44BQRG\u002Bc2mGeXQb4=\u0022"},{"Name":"Last-Modified","Value":"Thu, 08 May 2025 16:44:03 GMT"}]]]></ResponseHeaders>
     </StaticWebAssetEndpoint>
     <StaticWebAssetEndpoint Include="_content/VCS-DOCs/js/extraTabbar.js">
       <AssetFile>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\extraTabbar.js'))</AssetFile>
