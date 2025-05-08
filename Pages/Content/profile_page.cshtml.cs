@@ -13,6 +13,7 @@ using VCS_DOCs.Services;
 using VCS_DOCs.Data.Hubs;
 using VCS_DOCs.Configuration;
 using System.Globalization;
+using Microsoft.AspNetCore.Authentication;
 
 namespace VCS_DOCs.Pages.Content
 {
@@ -451,6 +452,32 @@ namespace VCS_DOCs.Pages.Content
 			bool uploading = ActiveUploadsRegistry.IsActive(userId, fileName);
 			return new JsonResult(new { uploading });
 		}
+		public async Task<IActionResult> OnPostDeleteAccountAsync()
+		{
+			string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+			if (string.IsNullOrWhiteSpace(userId))
+				return new JsonResult(new { success = false, error = "Пользователь не найден" });
+
+			var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+			if (user == null)
+				return new JsonResult(new { success = false, error = "Пользователь не найден" });
+
+			user.IsDeleted = true;
+			user.UpdatedAt = DateTime.UtcNow;
+
+			try
+			{
+				await _context.SaveChangesAsync();
+				await HttpContext.SignOutAsync(); 
+
+				return new JsonResult(new { success = true });
+			}
+			catch (Exception ex)
+			{
+				return new JsonResult(new { success = false, error = $"Ошибка при удалении: {ex.Message}" });
+			}
+		}
+
 	}
 }
 public static class SafeFileUtils

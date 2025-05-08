@@ -38,6 +38,7 @@ namespace VCS_DOCs
 		public DateTime UpdatedAt { get; set; }
 		public int Access { get; set; }
 		public string? JwtId { get; set; }
+		public bool IsDeleted { get; set; } = false;
 	}
 
 	public class FileReservation

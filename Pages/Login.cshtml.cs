@@ -1,20 +1,13 @@
 ﻿// Pages/Login.cshtml.cs
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using VCS_DOCs.Data.Hubs;
 using VCS_DOCs.Services.Microservices;
 using VCS_DOCs.Services.User;
@@ -85,10 +78,11 @@ namespace VCS_DOCs.Pages
 			}
 
 			var user = await _context.Users.FirstOrDefaultAsync(u => u.UserName == Username);
-			if (user == null || !BCrypt.Net.BCrypt.Verify(Password, user.PasswordHash))
+
+			if (user == null || user.IsDeleted || !BCrypt.Net.BCrypt.Verify(Password, user.PasswordHash))
 			{
 				FailedLogins[ip] = (data.Attempts + 1, DateTime.UtcNow);
-				return new JsonResult(new { success = false, errors = new List<string> { "Неверное имя пользователя или пароль." } });
+				return new JsonResult(new { success = false, errors = new List<string> { "Неверное имя пользователя, пароль или аккаунт был удалён." } });
 			}
 
 			if (user.Access == 0)

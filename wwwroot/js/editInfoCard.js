@@ -150,3 +150,25 @@ document.addEventListener("click", function (e) {
     if (!button) return;
     handleEditClick(e);
 });
+document.addEventListener("click", function (e) {
+    const deleteButton = e.target.closest(".info-card .button-sliding.primary");
+    if (deleteButton && deleteButton.textContent.includes("Удалить")) {
+        if (!confirm("Вы уверены, что хотите удалить аккаунт?")) return;
+
+        fetch("/Content/profile_page?handler=DeleteAccount", {
+            method: "POST",
+            headers: {
+                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
+            }
+        })
+            .then(res => {
+                if (!res.ok) throw new Error("Ошибка при удалении аккаунта.");
+                return res.text();
+            })
+            .then(() => {
+                alert("Аккаунт удалён.");
+                location.href = "/Login";
+            })
+            .catch(err => alert(err.message));
+    }
+});

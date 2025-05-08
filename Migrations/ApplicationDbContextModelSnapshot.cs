@@ -245,6 +245,9 @@ namespace VCS_DOCs.Migrations
                     b.Property<string>("HardwareId")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("JwtId")
                         .HasColumnType("TEXT");
 
