@@ -358,3 +358,10 @@ button[type="submit"]:disabled {
 .checkbox {
     margin: 10px;
 }
+.overlay-left {
+    left: 0;
+}
+
+.overlay-right {
+    right: 0;
+}

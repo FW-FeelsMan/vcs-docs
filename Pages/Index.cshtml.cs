@@ -65,7 +65,6 @@ namespace VCS_DOCs.Pages
 			if (string.IsNullOrEmpty(userId))
 				return;
 
-			// Теперь таблица AspNetUsers ключится по строковому UserId
 			var user = await _context.Users.FindAsync(userId);
 			if (user != null)
 			{

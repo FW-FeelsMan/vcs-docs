@@ -109,7 +109,7 @@ namespace VCS_DOCs.Pages
 			user.JwtId = Guid.NewGuid().ToString();
 			user.HardwareId = Request.Form["hardwareId"].ToString() ?? user.HardwareId;
 			user.LastEntry = DateTime.UtcNow;
-			user.StatusOnline = 1;                        // помечаем что он теперь онлайн
+			user.StatusOnline = 1;                       
 			_context.Users.Update(user);
 			await _context.SaveChangesAsync();
 
@@ -209,6 +209,7 @@ namespace VCS_DOCs.Pages
 					LastEntry = null,
 					CreatedAt = DateTime.Now,
 					UpdatedAt = DateTime.Now,
+					IsDeleted = false,
 					Access = 0
 				};
 

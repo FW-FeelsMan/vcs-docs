@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "5fVf/iahXeWNWprB4pn3Gu2+AHmqnBOXrG8a9bnBVF4=",
+  "Hash": "gJ8Kb9IOFcuM72oB5Q2r/QCTBlmxvZInQyM+FJY8gCo=",
   "Source": "VCS-DOCs",
   "BasePath": "_content/VCS-DOCs",
   "Mode": "Default",
@@ -3020,12 +3020,12 @@
       "OriginalItemSpec": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\sorttable.js"
     },
     {
-      "Identity": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\mivt6u010q-sljnuluhj3.gz",
+      "Identity": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\mivt6u010q-8vyhn9ohqv.gz",
       "SourceId": "VCS-DOCs",
       "SourceType": "Discovered",
       "ContentRoot": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\",
       "BasePath": "_content/VCS-DOCs",
-      "RelativePath": "css/main_css/loginStyle#[.{fingerprint=sljnuluhj3}]?.css.gz",
+      "RelativePath": "css/main_css/loginStyle#[.{fingerprint=8vyhn9ohqv}]?.css.gz",
       "AssetKind": "All",
       "AssetMode": "All",
       "AssetRole": "Alternative",
@@ -3034,8 +3034,8 @@
       "RelatedAsset": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\main_css\\loginStyle.css",
       "AssetTraitName": "Content-Encoding",
       "AssetTraitValue": "gzip",
-      "Fingerprint": "6frpdqsuww",
-      "Integrity": "7pNaHpvp6nHz5CKSLyTRokN4SXQe1mqT4xeySHIS8M8=",
+      "Fingerprint": "lz9oiciig4",
+      "Integrity": "kertkxSz3UEAe2+QAKuL2f1kNiPpvSCB8eDexBo2dP8=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\main_css\\loginStyle.css"
@@ -4441,8 +4441,8 @@
       "RelatedAsset": "",
       "AssetTraitName": "",
       "AssetTraitValue": "",
-      "Fingerprint": "sljnuluhj3",
-      "Integrity": "AMuJBVgU3KPTEm20g0qA9q8EPMZA92JvnGSFFuQnl54=",
+      "Fingerprint": "8vyhn9ohqv",
+      "Integrity": "xMULfPXH/bNW3SAbud3LpR1uiRC3OVeq/vg6Y+eCz/w=",
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\css\\main_css\\loginStyle.css"
@@ -6571,13 +6571,13 @@
   ],
   "Endpoints": [
     {
-      "Route": "css/main_css/loginStyle.css",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\mivt6u010q-sljnuluhj3.gz",
+      "Route": "css/main_css/loginStyle.8vyhn9ohqv.css",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\mivt6u010q-8vyhn9ohqv.gz",
       "Selectors": [
         {
           "Name": "Content-Encoding",
           "Value": "gzip",
-          "Quality": "0.000533333333"
+          "Quality": "0.000530503979"
         }
       ],
       "ResponseHeaders": [
@@ -6587,19 +6587,19 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "1874"
+          "Value": "1884"
         },
         {
           "Name": "ETag",
-          "Value": "\"7pNaHpvp6nHz5CKSLyTRokN4SXQe1mqT4xeySHIS8M8=\""
+          "Value": "\"kertkxSz3UEAe2+QAKuL2f1kNiPpvSCB8eDexBo2dP8=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sat, 08 Mar 2025 16:22:06 GMT"
+          "Value": "Fri, 09 May 2025 18:06:56 GMT"
         },
         {
           "Name": "Cache-Control",
-          "Value": "no-cache"
+          "Value": "max-age=31536000, immutable"
         },
         {
           "Name": "Content-Encoding",
@@ -6615,18 +6615,26 @@
         },
         {
           "Name": "ETag",
-          "Value": "W/\"AMuJBVgU3KPTEm20g0qA9q8EPMZA92JvnGSFFuQnl54=\""
+          "Value": "W/\"xMULfPXH/bNW3SAbud3LpR1uiRC3OVeq/vg6Y+eCz/w=\""
         }
       ],
       "EndpointProperties": [
         {
+          "Name": "fingerprint",
+          "Value": "8vyhn9ohqv"
+        },
+        {
+          "Name": "label",
+          "Value": "css/main_css/loginStyle.css"
+        },
+        {
           "Name": "integrity",
-          "Value": "sha256-AMuJBVgU3KPTEm20g0qA9q8EPMZA92JvnGSFFuQnl54="
+          "Value": "sha256-xMULfPXH/bNW3SAbud3LpR1uiRC3OVeq/vg6Y+eCz/w="
         }
       ]
     },
     {
-      "Route": "css/main_css/loginStyle.css",
+      "Route": "css/main_css/loginStyle.8vyhn9ohqv.css",
       "AssetFile": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\main_css\\loginStyle.css",
       "Selectors": [],
       "ResponseHeaders": [
@@ -6636,7 +6644,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "7392"
+          "Value": "7466"
         },
         {
           "Name": "Content-Type",
@@ -6644,121 +6652,21 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"AMuJBVgU3KPTEm20g0qA9q8EPMZA92JvnGSFFuQnl54=\""
+          "Value": "\"xMULfPXH/bNW3SAbud3LpR1uiRC3OVeq/vg6Y+eCz/w=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sat, 08 Mar 2025 16:22:06 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "no-cache"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "integrity",
-          "Value": "sha256-AMuJBVgU3KPTEm20g0qA9q8EPMZA92JvnGSFFuQnl54="
-        }
-      ]
-    },
-    {
-      "Route": "css/main_css/loginStyle.css.gz",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\mivt6u010q-sljnuluhj3.gz",
-      "Selectors": [],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "1874"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/css"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"7pNaHpvp6nHz5CKSLyTRokN4SXQe1mqT4xeySHIS8M8=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Sat, 08 Mar 2025 16:22:06 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "no-cache"
-        },
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip"
-        },
-        {
-          "Name": "Vary",
-          "Value": "Content-Encoding"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "integrity",
-          "Value": "sha256-7pNaHpvp6nHz5CKSLyTRokN4SXQe1mqT4xeySHIS8M8="
-        }
-      ]
-    },
-    {
-      "Route": "css/main_css/loginStyle.sljnuluhj3.css",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\mivt6u010q-sljnuluhj3.gz",
-      "Selectors": [
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip",
-          "Quality": "0.000533333333"
-        }
-      ],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "1874"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"7pNaHpvp6nHz5CKSLyTRokN4SXQe1mqT4xeySHIS8M8=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Sat, 08 Mar 2025 16:22:06 GMT"
+          "Value": "Fri, 09 May 2025 18:06:56 GMT"
         },
         {
           "Name": "Cache-Control",
           "Value": "max-age=31536000, immutable"
-        },
-        {
-          "Name": "Content-Encoding",
-          "Value": "gzip"
-        },
-        {
-          "Name": "Vary",
-          "Value": "Content-Encoding"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/css"
-        },
-        {
-          "Name": "ETag",
-          "Value": "W/\"AMuJBVgU3KPTEm20g0qA9q8EPMZA92JvnGSFFuQnl54=\""
         }
       ],
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "sljnuluhj3"
+          "Value": "8vyhn9ohqv"
         },
         {
           "Name": "label",
@@ -6766,13 +6674,13 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-AMuJBVgU3KPTEm20g0qA9q8EPMZA92JvnGSFFuQnl54="
+          "Value": "sha256-xMULfPXH/bNW3SAbud3LpR1uiRC3OVeq/vg6Y+eCz/w="
         }
       ]
     },
     {
-      "Route": "css/main_css/loginStyle.sljnuluhj3.css",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\main_css\\loginStyle.css",
+      "Route": "css/main_css/loginStyle.8vyhn9ohqv.css.gz",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\mivt6u010q-8vyhn9ohqv.gz",
       "Selectors": [],
       "ResponseHeaders": [
         {
@@ -6781,7 +6689,7 @@
         },
         {
           "Name": "Content-Length",
-          "Value": "7392"
+          "Value": "1884"
         },
         {
           "Name": "Content-Type",
@@ -6789,56 +6697,11 @@
         },
         {
           "Name": "ETag",
-          "Value": "\"AMuJBVgU3KPTEm20g0qA9q8EPMZA92JvnGSFFuQnl54=\""
+          "Value": "\"kertkxSz3UEAe2+QAKuL2f1kNiPpvSCB8eDexBo2dP8=\""
         },
         {
           "Name": "Last-Modified",
-          "Value": "Sat, 08 Mar 2025 16:22:06 GMT"
-        },
-        {
-          "Name": "Cache-Control",
-          "Value": "max-age=31536000, immutable"
-        }
-      ],
-      "EndpointProperties": [
-        {
-          "Name": "fingerprint",
-          "Value": "sljnuluhj3"
-        },
-        {
-          "Name": "label",
-          "Value": "css/main_css/loginStyle.css"
-        },
-        {
-          "Name": "integrity",
-          "Value": "sha256-AMuJBVgU3KPTEm20g0qA9q8EPMZA92JvnGSFFuQnl54="
-        }
-      ]
-    },
-    {
-      "Route": "css/main_css/loginStyle.sljnuluhj3.css.gz",
-      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\mivt6u010q-sljnuluhj3.gz",
-      "Selectors": [],
-      "ResponseHeaders": [
-        {
-          "Name": "Accept-Ranges",
-          "Value": "bytes"
-        },
-        {
-          "Name": "Content-Length",
-          "Value": "1874"
-        },
-        {
-          "Name": "Content-Type",
-          "Value": "text/css"
-        },
-        {
-          "Name": "ETag",
-          "Value": "\"7pNaHpvp6nHz5CKSLyTRokN4SXQe1mqT4xeySHIS8M8=\""
-        },
-        {
-          "Name": "Last-Modified",
-          "Value": "Sat, 08 Mar 2025 16:22:06 GMT"
+          "Value": "Fri, 09 May 2025 18:06:56 GMT"
         },
         {
           "Name": "Cache-Control",
@@ -6856,7 +6719,7 @@
       "EndpointProperties": [
         {
           "Name": "fingerprint",
-          "Value": "sljnuluhj3"
+          "Value": "8vyhn9ohqv"
         },
         {
           "Name": "label",
@@ -6864,7 +6727,144 @@
         },
         {
           "Name": "integrity",
-          "Value": "sha256-7pNaHpvp6nHz5CKSLyTRokN4SXQe1mqT4xeySHIS8M8="
+          "Value": "sha256-kertkxSz3UEAe2+QAKuL2f1kNiPpvSCB8eDexBo2dP8="
+        }
+      ]
+    },
+    {
+      "Route": "css/main_css/loginStyle.css",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\mivt6u010q-8vyhn9ohqv.gz",
+      "Selectors": [
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip",
+          "Quality": "0.000530503979"
+        }
+      ],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1884"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kertkxSz3UEAe2+QAKuL2f1kNiPpvSCB8eDexBo2dP8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 09 May 2025 18:06:56 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "W/\"xMULfPXH/bNW3SAbud3LpR1uiRC3OVeq/vg6Y+eCz/w=\""
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-xMULfPXH/bNW3SAbud3LpR1uiRC3OVeq/vg6Y+eCz/w="
+        }
+      ]
+    },
+    {
+      "Route": "css/main_css/loginStyle.css",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\main_css\\loginStyle.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "7466"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"xMULfPXH/bNW3SAbud3LpR1uiRC3OVeq/vg6Y+eCz/w=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 09 May 2025 18:06:56 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-xMULfPXH/bNW3SAbud3LpR1uiRC3OVeq/vg6Y+eCz/w="
+        }
+      ]
+    },
+    {
+      "Route": "css/main_css/loginStyle.css.gz",
+      "AssetFile": "D:\\Unity\\VCS-DOCs\\obj\\x86\\Debug\\net9.0-windows\\compressed\\mivt6u010q-8vyhn9ohqv.gz",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "1884"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"kertkxSz3UEAe2+QAKuL2f1kNiPpvSCB8eDexBo2dP8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 09 May 2025 18:06:56 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        },
+        {
+          "Name": "Content-Encoding",
+          "Value": "gzip"
+        },
+        {
+          "Name": "Vary",
+          "Value": "Content-Encoding"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-kertkxSz3UEAe2+QAKuL2f1kNiPpvSCB8eDexBo2dP8="
         }
       ]
     },
