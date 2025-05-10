@@ -385,14 +385,12 @@ namespace VCS_DOCs.Pages.Content
 						.SendAsync("ReceiveStorageUpdate", files);
 
 					ActiveUploadsRegistry.Unregister(userId, fileName);
-					Console.WriteLine($"[UploadComplete] Файл '{fileName}' успешно загружен и собран.");
 				}
 
 				return new JsonResult(new { success = true });
 			}
 			catch (Exception ex)
 			{
-				Console.WriteLine($"[UploadChunk] Ошибка: {ex.Message}");
 				ActiveUploadsRegistry.Unregister(userId, fileName);
 				return new JsonResult(new { success = false, error = ex.Message });
 			}
@@ -421,7 +419,6 @@ namespace VCS_DOCs.Pages.Content
 		public async Task<IActionResult> OnPostCancelUploadAsync([FromForm] string fileName)
 		{
 			string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-			Console.WriteLine($"[CancelUpload] Поступил запрос на отмену загрузки: {fileName}, user: {userId}");
 
 			if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(fileName))
 				return new JsonResult(new { success = false });
@@ -433,9 +430,6 @@ namespace VCS_DOCs.Pages.Content
 			if (Directory.Exists(chunkFolder))
 			{
 				bool deleted = await SafeFileUtils.TryDeleteDirectoryWithRetries(chunkFolder);
-				Console.WriteLine(deleted
-					? $"[CancelUpload] Папка удалена успешно: {chunkFolder}"
-					: $"[CancelUpload] Не удалось удалить папку: {chunkFolder}");
 			}
 
 			await _hubContext.Clients.Group(userId)

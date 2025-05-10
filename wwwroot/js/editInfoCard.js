@@ -1,4 +1,5 @@
-﻿function applyDateMask(el) {
+﻿//editInfoCard.js скрипт редактирования личных данных пользователя
+function applyDateMask(el) {
     el.removeAttribute('disabled');
     el.setAttribute('maxlength', '10');
     el.setAttribute('inputmode', 'numeric');

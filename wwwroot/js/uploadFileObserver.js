@@ -1,11 +1,10 @@
-﻿//uploadFileObserver.js
+﻿//uploadFileObserver.js скрипт для загрузки файлов в личное хранилище
 const MAX_CHUNK_SIZE = 2 * 1024 * 1024;
 const MAX_FILENAME_LENGTH = 120;
 
 const uploadAbortControllers = new Map();
 const cancelledUploads = new Set();
 let activeUploads = 0;
-//window.refreshStorageStatus = refreshStorageStatus;
 
 function getFileNameParts(name) {
     const lastDot = name.lastIndexOf(".");

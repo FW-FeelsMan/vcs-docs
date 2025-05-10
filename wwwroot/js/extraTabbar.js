@@ -1,4 +1,5 @@
-﻿document.addEventListener('DOMContentLoaded', () => {
+﻿//extraTabbar.js скрипт таббара раздела "Дополнительно"
+document.addEventListener('DOMContentLoaded', () => {
     const tabBar = document.getElementById('tabBar');
 
     function setActiveTab(tab) {

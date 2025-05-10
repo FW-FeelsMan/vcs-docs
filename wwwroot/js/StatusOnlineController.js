@@ -1,4 +1,5 @@
-﻿// Установка онлайн-статуса при загрузке страницы
+﻿//StatusOnlineController.js отслеживание состояния онлайн клиента
+// Установка онлайн-статуса при загрузке страницы
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const response = await fetch('/Index?handler=SetUserOnline', {

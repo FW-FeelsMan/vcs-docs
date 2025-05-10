@@ -1,4 +1,5 @@
-﻿const contentCache = new Map(); // Кеш только для extra_page
+﻿//sidebar.js скрипт сайдбара на главной и подгрузки контента
+const contentCache = new Map(); 
 let currentContentId = null;
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -20,7 +21,6 @@ window.selectButton = function (button) {
 
     if (currentContentId === contentId) return;
 
-    // Сохраняем состояние только для extra_page
     if (currentContentId === 'extra_page') {
         const contentElement = document.querySelector(`[data-cached-content="extra_page"]`);
         if (contentElement) {
@@ -31,11 +31,9 @@ window.selectButton = function (button) {
         }
     }
 
-    // Активируем стиль
     loadStyles(styleId);
     showLoader();
 
-    // Для extra_page используем кеш, остальные грузим заново
     if (contentId === 'extra_page' && contentCache.has('extra_page')) {
         showCachedContent(contentId);
         hideLoader();
@@ -90,7 +88,6 @@ function showCachedContent(contentId) {
 
     contentContainer.innerHTML = cachedData.html;
 
-    // Для extra_page
     if (contentId === 'extra_page') {
         initExtraPage();
         if (cachedData.state?.model) {
@@ -106,17 +103,15 @@ function restoreModel(modelData) {
     }
 
     try {
-        // Ваша логика восстановления модели
         viewer.innerHTML = `<iframe src="/ifcjs/index.html?model=${encodeURIComponent(modelData)}"></iframe>`;
     } catch (error) {
         console.error('Ошибка восстановления модели:', error);
     }
 }
 function getPageState(contentId) {
-    // Сохраняем состояние только для extra_page
     if (contentId === 'extra_page') {
         return {
-            model: window.uploadedModel // Пример: сохраняем загруженную модель
+            model: window.uploadedModel 
         };
     }
     return null;
@@ -126,35 +121,28 @@ function restorePageState(contentId, container) {
     const state = contentCache.get(contentId).state;
     if (!state) return;
 
-    // Восстанавливаем состояние только для extra_page
     if (contentId === 'extra_page' && state.model) {
         window.uploadedModel = state.model;
-        restoreModel(container); // Функция восстановления модели
+        restoreModel(container); 
     }
 }
 
-// Функция для загрузки стилей
 function loadStyles(styleId) {
     document.querySelectorAll("link[rel=stylesheet][id]").forEach(link => {
         link.disabled = link.id !== styleId;
     });
 }
 
-// Функция для показа лоадера
 function showLoader() {
     const loader = document.getElementById('loader');
     if (loader) loader.classList.remove('hidden');
 }
-
-// Функция для скрытия лоадера
 function hideLoader() {
     const loader = document.getElementById('loader');
     if (loader) loader.classList.add('hidden');
 }
 
-// Инициализация для extra_page
 function initExtraPage() {
-    // Ждем пока браузер обработает новый HTML
     setTimeout(() => {
         const uploader = document.querySelector('#extra_page input[type="file"]');
         if (!uploader) {
@@ -165,14 +153,13 @@ function initExtraPage() {
 
         uploader.addEventListener('change', handleFileUpload);
         console.log('Инициализация extra_page успешна');
-    }, 50); // Небольшая задержка для обработки DOM
+    }, 50); 
 }
 
 function handleFileUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Логика загрузки и отображения модели
-    window.uploadedModel = processFile(file); // Пример обработки файла
+    window.uploadedModel = processFile(file);
     console.log('Модель загружена:', window.uploadedModel);
 }

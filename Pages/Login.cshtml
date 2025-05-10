@@ -23,7 +23,7 @@
             <h1>Вход</h1>
             <p>Введите Ваши данные для входа в систему</p>
             <input type="text" name="Username" placeholder="Номер табеля" value="@Model.Username" required />
-            <input type="password" name="Password" placeholder="Пароль" required />
+            <input type="password" name="Password" autocomplete="on" placeholder="Пароль" required />
 
             <div class="error-message" style="display:none;"></div>
 
@@ -53,7 +53,7 @@
                     <option value="@speciality">@speciality</option>
                 }
             </select>
-            <input type="password" name="Password" placeholder="Пароль" required />
+            <input type="password" name="Password" autocomplete="on" placeholder="Пароль" required />
 
             @if (Model.RegistrationErrors.Any())
             {

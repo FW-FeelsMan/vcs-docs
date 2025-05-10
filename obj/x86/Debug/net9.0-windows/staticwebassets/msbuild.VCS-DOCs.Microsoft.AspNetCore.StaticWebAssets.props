@@ -534,8 +534,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>qlqdwag0x7</Fingerprint>
-      <Integrity>7k+mW6sJIOR0EF8XHV1EIaZFmMg3KrP7jx8YLPXLNnY=</Integrity>
+      <Fingerprint>tbnuow0yi1</Fingerprint>
+      <Integrity>Zxak47MCU3OXLjOlS+FgmyXbA763k8LZfUMqGbD/cwE=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\contextMenu.js'))</OriginalItemSpec>
@@ -552,8 +552,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>w41on0faes</Fingerprint>
-      <Integrity>wAKNBUFWGLh6C2/9BC00ngUQeHXFcAN8uFp88Khkf/E=</Integrity>
+      <Fingerprint>5xw6mqtvjc</Fingerprint>
+      <Integrity>1wVB4QQgNpf3/+49ifpaawFICX24lyJVxBRZ8EuMnQI=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\editInfoCard.js'))</OriginalItemSpec>
@@ -570,8 +570,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>v8fss1chrt</Fingerprint>
-      <Integrity>0YO9GhMoWU3eWQIH+grpgNqZnLZc10Ws2sDVEr1rzfg=</Integrity>
+      <Fingerprint>wgf60pp46g</Fingerprint>
+      <Integrity>MNgpInPJEdDZknV7XjMgrFymdJ/Tf6SfiNGgiNyYYKI=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\extraTabbar.js'))</OriginalItemSpec>
@@ -588,11 +588,29 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>f2oc1jg7mn</Fingerprint>
-      <Integrity>15EjB6ndX3gio+2fiev3k4AEY00MDnrEXEI99BqdT1k=</Integrity>
+      <Fingerprint>lnzjj2em9d</Fingerprint>
+      <Integrity>QdaTqCBjbI5gp7tV0U2HcrOW4jhZbuTEF6srV2b1FsA=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\loginScript.js'))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\orttableObserver.js'))">
+      <SourceType>Package</SourceType>
+      <SourceId>VCS-DOCs</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/VCS-DOCs</BasePath>
+      <RelativePath>js/orttableObserver.js</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>mkljv3c4nt</Fingerprint>
+      <Integrity>CuHe8P7pq9/zIjvdGU147+nFmH5Bt7srFNWOIuUFwbg=</Integrity>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\orttableObserver.js'))</OriginalItemSpec>
     </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\profile.js'))">
       <SourceType>Package</SourceType>
@@ -606,8 +624,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>5op80qqoiy</Fingerprint>
-      <Integrity>9XtSc5V3B215udF53qIFUdGz6qxM+rMbH8K8kI7h2Rg=</Integrity>
+      <Fingerprint>7kpj37nri7</Fingerprint>
+      <Integrity>J5eu7AhXT2NSyuAiMYLeJOurG4yoBXwLIklRv21o5rg=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\profile.js'))</OriginalItemSpec>
@@ -624,8 +642,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>hh45lw5gd5</Fingerprint>
-      <Integrity>C1U9SqGk8pXtDEUihb7VlJvj2cjHo5lbdDvBGD+F8Bo=</Integrity>
+      <Fingerprint>ewj9fczgtq</Fingerprint>
+      <Integrity>AuSgfoD0NMzW2s1KptdzOlwKJ2IahvFeEEnXUghuQrk=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\sidebar.js'))</OriginalItemSpec>
@@ -642,29 +660,11 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>bzbf2nek8p</Fingerprint>
-      <Integrity>mTeBl/593NaWIBIqdrffQPefOoZns8HbJrcIh4RU67Q=</Integrity>
+      <Fingerprint>5ua5wff69q</Fingerprint>
+      <Integrity>HfKf+BWBrrYGtzQXUzliSrh54bTR3eSbAQgetr5ZKZo=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\sorttable.js'))</OriginalItemSpec>
-    </StaticWebAsset>
-    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\sorttableObserver.js'))">
-      <SourceType>Package</SourceType>
-      <SourceId>VCS-DOCs</SourceId>
-      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
-      <BasePath>_content/VCS-DOCs</BasePath>
-      <RelativePath>js/sorttableObserver.js</RelativePath>
-      <AssetKind>All</AssetKind>
-      <AssetMode>All</AssetMode>
-      <AssetRole>Primary</AssetRole>
-      <RelatedAsset></RelatedAsset>
-      <AssetTraitName></AssetTraitName>
-      <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>0bdeooiz3l</Fingerprint>
-      <Integrity>3JKJRncRV7RTtf3QYWCyMc+6ddRDDU61i046p/jZFbo=</Integrity>
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\sorttableObserver.js'))</OriginalItemSpec>
     </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\StatusOnlineController.js'))">
       <SourceType>Package</SourceType>

@@ -1,5 +1,5 @@
-﻿let pendingUploadFile = null;
-
+﻿//uploadConflictModal.js скрипт модального окна личного хранилища
+let pendingUploadFile = null;
 function showConflictModal(fileName, conflictType, { onReplace, onNewVersion, onCancel }) {
 	const modal = document.getElementById("upload-conflict-modal");
 	const message = document.getElementById("conflict-message");
@@ -12,7 +12,7 @@ function showConflictModal(fileName, conflictType, { onReplace, onNewVersion, on
 	if (conflictType === "uploading") {
 		message.textContent = `Файл "${fileName}" уже загружается. Что вы хотите сделать?`;
 		replaceBtn.textContent = "Загрузить заново";
-		newVersionBtn.style.display = "none"; // не предлагать новую версию, если файл еще загружается
+		newVersionBtn.style.display = "none"; 
 	} else if (conflictType === "exists") {
 		message.textContent = `Файл "${fileName}" уже существует. Что вы хотите сделать?`;
 		replaceBtn.textContent = "Заменить";

@@ -1,14 +1,13 @@
-﻿const observer = new MutationObserver(function (mutationsList) {
+﻿//profile.js скрипт для сайдбара в личном кабинете
+const observer = new MutationObserver(function (mutationsList) {
     handleDomChanges();
 });
 
-// Добавляем ResizeObserver для отслеживания изменений размеров
 const resizeObserver = new ResizeObserver(entries => {
     updateTooltips();
 });
 
 function handleDomChanges() {
-    // Обработка меню
     const menuItems = document.querySelectorAll('.sidebar-menu li');
     const contentSections = document.querySelectorAll('.content-section');
 
@@ -21,7 +20,6 @@ function handleDomChanges() {
             if (targetSection) {
                 targetSection.classList.add('active');
 
-                // Форсируем обновление после изменения контента
                 requestAnimationFrame(() => {
                     updateTooltips(true);
                 });
@@ -29,7 +27,6 @@ function handleDomChanges() {
         });
     });
 
-    // Обновление подсказок
     requestAnimationFrame(() => {
         updateTooltips(true);
     });
@@ -46,25 +43,21 @@ function updateTooltips(force = false) {
     });
 }
 
-// Инициализация
 observer.observe(document.body, {
     childList: true,
     subtree: true
 });
 
-// Отслеживаем изменения размеров для всех таблиц
 document.querySelectorAll('table').forEach(table => {
     resizeObserver.observe(table);
 });
 
-// Первоначальная настройка с задержкой
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         updateTooltips(true);
-    }, 300); // Даем время на полную отрисовку
+    }, 300); 
 });
 
-// Обновление при изменении размера окна
 window.addEventListener('resize', () => {
     updateTooltips(true);
 });

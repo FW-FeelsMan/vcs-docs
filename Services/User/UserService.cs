@@ -13,7 +13,6 @@ namespace VCS_DOCs.Services.User
 
 		public async Task UpdateUserStatusAsync(string userId, bool isOnline)
 		{
-			// теперь просто ищем по строковому ключу
 			var user = await _context.Users.FindAsync(userId);
 			if (user != null)
 			{
@@ -25,7 +24,6 @@ namespace VCS_DOCs.Services.User
 
 		public async Task ClearUserJwtIdAsync(string userId)
 		{
-			// опять-таки просто ищем пользователя по строковому Id
 			var user = await _context.Users.FindAsync(userId);
 			if (user != null)
 			{

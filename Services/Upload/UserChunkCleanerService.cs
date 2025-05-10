@@ -70,15 +70,13 @@ namespace VCS_DOCs.Services.Upload
 
 				if (!force && ActiveUploadsRegistry.IsActive(UserId, fileName))
 				{
-					Console.WriteLine($"[Cleaner:{UserId}] Папка {chunkDir} активна, пропускаем");
 					continue;
 				}
 
 				try
 				{
 					Directory.Delete(chunkDir, recursive: true);
-					_uploadTaskService.RemoveActiveTask(chunkDir);
-					Console.WriteLine($"[Cleaner:{UserId}] Удалена {(force ? "насильно" : "по расписанию")} неактивная папка {chunkDir}");
+					_uploadTaskService.RemoveActiveTask(chunkDir);					
 				}
 				catch (Exception ex)
 				{

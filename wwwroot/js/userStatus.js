@@ -1,4 +1,5 @@
-﻿(function () {
+﻿//userStatus.js скрипт для отслеживания принудительного входа
+(function () {
     const initializeSignalR = () => {
         if (window.location.pathname.toLowerCase() === '/login') return;
 

@@ -137,6 +137,10 @@
       "PackagePath": "staticwebassets\\js\\loginScript.js"
     },
     {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\orttableObserver.js",
+      "PackagePath": "staticwebassets\\js\\orttableObserver.js"
+    },
+    {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\profile.js",
       "PackagePath": "staticwebassets\\js\\profile.js"
     },
@@ -147,10 +151,6 @@
     {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\sorttable.js",
       "PackagePath": "staticwebassets\\js\\sorttable.js"
-    },
-    {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\sorttableObserver.js",
-      "PackagePath": "staticwebassets\\js\\sorttableObserver.js"
     },
     {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\uploadConflictModal.js",

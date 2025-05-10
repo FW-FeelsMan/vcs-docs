@@ -1,4 +1,4 @@
-﻿//userStorageObserver.js
+﻿//userStorageObserver.js скрипт обновления таблицы файлов в личном хранилище
 let connection = null;
 let csrfToken = null;
 window.currentlyUploadingFiles = window.currentlyUploadingFiles || new Map();

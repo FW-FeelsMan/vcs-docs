@@ -54,8 +54,6 @@ namespace VCS_DOCs.Services.User
 			}
 
 			entry.Scope.Dispose();
-
-			Console.WriteLine($"[UserServiceManager] Все микросервисы пользователя {userId} остановлены");
 		}
 	}
 }

@@ -70,6 +70,7 @@
     <Folder Include="Data\Entities\" />
     <Folder Include="Services\Storage\" />
     <Folder Include="wwwroot\js\Content\profileJS\" />
+    <Folder Include="wwwroot\js\UI\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Moq" Version="4.20.72" />

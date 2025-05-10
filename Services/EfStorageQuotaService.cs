@@ -78,26 +78,18 @@ namespace VCS_DOCs.Services
 			var user = await _db.Users.FindAsync(userId);
 			if (user == null)
 			{
-				Console.WriteLine($"[GetUsedBytesAsync] Пользователь не найден: userId={userId}");
 				return 0;
 			}
 
 			string path = Path.Combine(_options.BasePath, $"userData_{user.Id}");
 
-			Console.WriteLine($"[GetUsedBytesAsync] Проверяем путь: {path}");
-
 			if (!Directory.Exists(path))
 			{
-				Console.WriteLine($"[GetUsedBytesAsync] Директория не существует: {path}");
 				return 0;
 			}
 
 			var files = Directory.GetFiles(path);
-			Console.WriteLine($"[GetUsedBytesAsync] Найдено файлов: {files.Length}");
-
 			long totalBytes = files.Sum(f => new FileInfo(f).Length);
-			Console.WriteLine($"[GetUsedBytesAsync] Общий объем: {totalBytes} байт");
-
 			return totalBytes;
 		}
 		public async Task CleanUpBrokenReservationsAsync()
@@ -121,7 +113,6 @@ namespace VCS_DOCs.Services
 				if (!System.IO.File.Exists(filePath))
 				{
 					r.IsReleased = true;
-					Console.WriteLine($"[Cleanup] Помечаем как освобожденную запись о файле {r.FileName} для пользователя ID={user.Id}");
 				}
 			}
 
