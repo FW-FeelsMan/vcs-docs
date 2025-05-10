@@ -117,56 +117,48 @@
       "PackagePath": "staticwebassets\\images\\save_icon.png"
     },
     {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\StatusOnlineController.js",
-      "PackagePath": "staticwebassets\\js\\StatusOnlineController.js"
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\auth\\auth-login.js",
+      "PackagePath": "staticwebassets\\js\\auth\\auth-login.js"
     },
     {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\contextMenu.js",
-      "PackagePath": "staticwebassets\\js\\contextMenu.js"
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\profile\\profile-edit-info.js",
+      "PackagePath": "staticwebassets\\js\\profile\\profile-edit-info.js"
     },
     {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\editInfoCard.js",
-      "PackagePath": "staticwebassets\\js\\editInfoCard.js"
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\profile\\profile.js",
+      "PackagePath": "staticwebassets\\js\\profile\\profile.js"
     },
     {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\extraTabbar.js",
-      "PackagePath": "staticwebassets\\js\\extraTabbar.js"
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\profile\\userStatus.js",
+      "PackagePath": "staticwebassets\\js\\profile\\userStatus.js"
     },
     {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\loginScript.js",
-      "PackagePath": "staticwebassets\\js\\loginScript.js"
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage\\sorttable.js",
+      "PackagePath": "staticwebassets\\js\\storage\\sorttable.js"
     },
     {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\orttableObserver.js",
-      "PackagePath": "staticwebassets\\js\\orttableObserver.js"
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage\\upload-conflict-modal.js",
+      "PackagePath": "staticwebassets\\js\\storage\\upload-conflict-modal.js"
     },
     {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\profile.js",
-      "PackagePath": "staticwebassets\\js\\profile.js"
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage\\upload-file.js",
+      "PackagePath": "staticwebassets\\js\\storage\\upload-file.js"
     },
     {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\sidebar.js",
-      "PackagePath": "staticwebassets\\js\\sidebar.js"
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage\\user-storage.js",
+      "PackagePath": "staticwebassets\\js\\storage\\user-storage.js"
     },
     {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\sorttable.js",
-      "PackagePath": "staticwebassets\\js\\sorttable.js"
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\ui\\context-menu.js",
+      "PackagePath": "staticwebassets\\js\\ui\\context-menu.js"
     },
     {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\uploadConflictModal.js",
-      "PackagePath": "staticwebassets\\js\\uploadConflictModal.js"
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\ui\\extra-tabbar.js",
+      "PackagePath": "staticwebassets\\js\\ui\\extra-tabbar.js"
     },
     {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\uploadFileObserver.js",
-      "PackagePath": "staticwebassets\\js\\uploadFileObserver.js"
-    },
-    {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\userStatus.js",
-      "PackagePath": "staticwebassets\\js\\userStatus.js"
-    },
-    {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\userStorageObserver.js",
-      "PackagePath": "staticwebassets\\js\\userStorageObserver.js"
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\ui\\sidebar.js",
+      "PackagePath": "staticwebassets\\js\\ui\\sidebar.js"
     },
     {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\lib\\bootstrap\\LICENSE",

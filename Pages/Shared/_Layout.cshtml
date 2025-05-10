@@ -25,7 +25,7 @@
     <div style="display:none;">
         @Html.AntiForgeryToken()
     </div>
-    <script src="~/js/uploadConflictModal.js"></script>
+    <script src="~/js/storage/upload-conflict-modal.js"></script>
     @RenderBody()
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
@@ -37,8 +37,8 @@
             window.userStorageBasePath = "@(ViewData["UserStorageBasePath"]?.ToString().Replace("\\", "\\\\") ?? "")";
             window.userIdFromClaims = "@userIdFromClaims";
         </script>
-        <script src="~/js/userStatus.js"></script>
-        <script src="~/js/userStorageObserver.js"></script>
+        <script src="~/js/profile/userStatus.js"></script>
+        <script src="~/js/storage/user-storage.js"></script>
     }
     else
     {
@@ -47,13 +47,13 @@
         </script>
     }
 
-    <script src="~/js/sidebar.js"></script>
-    <script src="~/js/contextMenu.js"></script>
-    <script src="~/js/extraTabbar.js"></script>
-    <script src="~/js/profile.js"></script>
-    <script src="~/js/editInfoCard.js"></script>
-    <script src="~/js/sorttable.js"></script>
-    <script src="~/js/uploadFileObserver.js"></script>
+    <script src="~/js/ui/sidebar.js"></script>
+    <script src="~/js/ui/context-menu.js"></script>
+    <script src="~/js/ui/extra-tabbar.js"></script>
+    <script src="~/js/profile/profile.js"></script>
+    <script src="~/js/profile/profile-edit-info.js"></script>
+    <script src="~/js/storage/sorttable.js"></script>
+    <script src="~/js/storage/upload-file.js"></script>
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
