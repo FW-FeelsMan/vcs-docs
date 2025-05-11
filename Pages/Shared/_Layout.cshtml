@@ -4,7 +4,9 @@
     var tokens = Antiforgery.GetAndStoreTokens(Context);
     var csrfToken = tokens.RequestToken;
     var userIdFromClaims = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
 }
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -12,32 +14,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - VCS-DOCs</title>
 
+    <!-- Базовые стили проекта -->
     @await Html.PartialAsync("~/Pages/Shared/Styles/Styles_Layout.cshtml")
+
+    <!-- Дополнительные стили страницы -->
     @await RenderSectionAsync("Styles", required: false)
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <!-- Библиотеки -->
+    @await Html.PartialAsync("~/Pages/Shared/Scripts/Scripts_Libraries.cshtml")
+
+    <!-- CSRF Token -->
     <meta name="csrf-token" content="@csrfToken" />
 </head>
 <body>
     <div style="display:none;">
         @Html.AntiForgeryToken()
     </div>
+
+    <!-- Основное содержимое -->
     @RenderBody()
+
+    <!-- SignalR -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
-    @if (User.Identity?.IsAuthenticated == true)
+
+    <!-- Глобальные переменные -->
+    <script>
+        var userIsAuthenticated = @(isAuthenticated.ToString().ToLower());
+        @if (isAuthenticated)
+        {
+            <text>
+                window.userStorageBasePath = "@((ViewData["UserStorageBasePath"] as string)?.Replace("\\", "\\\\") ?? "")";
+                window.userIdFromClaims = "@userIdFromClaims";
+            </text>
+        }
+    </script>
+
+    <!-- Скрипты для аутентифицированных пользователей -->
+    @if (isAuthenticated)
     {
-        <script>
-            var userIsAuthenticated = true;
-            window.userStorageBasePath = "@(ViewData["UserStorageBasePath"]?.ToString().Replace("\\", "\\\\") ?? "")";
-            window.userIdFromClaims = "@userIdFromClaims";
-        </script>
         @await Html.PartialAsync("~/Pages/Shared/Scripts/Scripts_Auth.cshtml")
     }
-    else
-    {
-        <script>
-            var userIsAuthenticated = false;
-        </script>
-    }
+
+    <!-- Скрипты страницы -->
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

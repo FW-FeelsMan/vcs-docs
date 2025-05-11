@@ -73,6 +73,10 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXFNjcmlwdHNcU2NyaXB0c19JbmRleC5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/Unity/VCS-DOCs/Pages/Shared/Scripts/Scripts_Libraries.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXFNjcmlwdHNcU2NyaXB0c19MaWJyYXJpZXMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Unity/VCS-DOCs/Pages/Shared/Scripts/Scripts_Login.cshtml]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXFNjcmlwdHNcU2NyaXB0c19Mb2dpbi5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 

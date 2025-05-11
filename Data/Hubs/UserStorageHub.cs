@@ -47,7 +47,8 @@ namespace VCS_DOCs.Data.Hubs
 					{
 						name,
 						sizeMb = Math.Round(fi.Length / 1048576.0, 2),
-						lastWriteTime = fi.LastWriteTime.ToString("dd.MM.yyyy, HH:mm")
+						lastWriteTime = fi.LastWriteTime.ToString("dd.MM.yyyy, HH:mm"),
+						version = "1.0"
 					});
 				}
 			}
@@ -61,8 +62,6 @@ namespace VCS_DOCs.Data.Hubs
 				return;
 
 			ActiveUploadsRegistry.Unregister(userId, fileName);
-			// При необходимости здесь можно вызвать FileQuotaService.ReleaseAsync(...) через DI-сервис
-			// или отправить клиенту подтверждение:
 			await Clients.Caller.SendAsync("UploadCancelled", new { name = fileName });
 		}
 	}

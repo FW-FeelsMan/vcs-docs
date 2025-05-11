@@ -3,56 +3,20 @@
   "WorkspaceRootPath": "D:\\Unity\\VCS-DOCs\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\auth\\auth-login.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\auth\\auth-login.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\ui\\sidebar.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\ui\\sidebar.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\ui\\extra-tabbar.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\ui\\extra-tabbar.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\ui\\context-menu.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\ui\\context-menu.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\storage\\user-storage.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
       "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\storage\\user-storage.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\storage\\upload-file.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\storage\\upload-file.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\css\\sub_css\\profile_page.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\css\\sub_css\\profile_page.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\storage\\upload-conflict-modal.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\storage\\upload-conflict-modal.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\pages\\content\\profile_page.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:pages\\content\\profile_page.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\storage\\sorttable.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\storage\\sorttable.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\profile\\userstatus.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\profile\\userstatus.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\profile\\profile-edit-info.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\profile\\profile-edit-info.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\profile\\profile.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\profile\\profile.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\pages\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:pages\\shared\\_layout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\pages\\shared\\scripts\\scripts_auth.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:pages\\shared\\scripts\\scripts_auth.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\data\\hubs\\userstoragehub.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:data\\hubs\\userstoragehub.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -62,7 +26,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 5,
           "Children": [
             {
               "$type": "Bookmark",
@@ -78,171 +42,54 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "auth-login.js",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\auth\\auth-login.js",
-              "RelativeDocumentMoniker": "wwwroot\\js\\auth\\auth-login.js",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\auth\\auth-login.js",
-              "RelativeToolTip": "wwwroot\\js\\auth\\auth-login.js",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAA3AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-05-11T13:18:10.822Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "extra-tabbar.js",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\ui\\extra-tabbar.js",
-              "RelativeDocumentMoniker": "wwwroot\\js\\ui\\extra-tabbar.js",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\ui\\extra-tabbar.js",
-              "RelativeToolTip": "wwwroot\\js\\ui\\extra-tabbar.js",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAA4AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-05-11T13:18:00.935Z",
+              "DocumentIndex": 1,
+              "Title": "profile_page.css",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\sub_css\\profile_page.css",
+              "RelativeDocumentMoniker": "wwwroot\\css\\sub_css\\profile_page.css",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\sub_css\\profile_page.css",
+              "RelativeToolTip": "wwwroot\\css\\sub_css\\profile_page.css",
+              "ViewState": "AgIAAEoCAAAAAAAAAAAwwFQCAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2025-05-11T13:59:29.848Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
               "DocumentIndex": 3,
-              "Title": "context-menu.js",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\ui\\context-menu.js",
-              "RelativeDocumentMoniker": "wwwroot\\js\\ui\\context-menu.js",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\ui\\context-menu.js",
-              "RelativeToolTip": "wwwroot\\js\\ui\\context-menu.js",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAA7AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-05-11T13:17:55.505Z",
+              "Title": "UserStorageHub.cs",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Data\\Hubs\\UserStorageHub.cs",
+              "RelativeDocumentMoniker": "Data\\Hubs\\UserStorageHub.cs",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Data\\Hubs\\UserStorageHub.cs",
+              "RelativeToolTip": "Data\\Hubs\\UserStorageHub.cs",
+              "ViewState": "AgIAACAAAAAAAAAAAAAgwDIAAAAHAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-11T13:50:57.674Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "upload-file.js",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage\\upload-file.js",
-              "RelativeDocumentMoniker": "wwwroot\\js\\storage\\upload-file.js",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage\\upload-file.js",
-              "RelativeToolTip": "wwwroot\\js\\storage\\upload-file.js",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-05-11T13:17:43.878Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "upload-conflict-modal.js",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage\\upload-conflict-modal.js",
-              "RelativeDocumentMoniker": "wwwroot\\js\\storage\\upload-conflict-modal.js",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage\\upload-conflict-modal.js",
-              "RelativeToolTip": "wwwroot\\js\\storage\\upload-conflict-modal.js",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAABDAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-05-11T13:17:40.721Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 7,
-              "Title": "sorttable.js",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage\\sorttable.js",
-              "RelativeDocumentMoniker": "wwwroot\\js\\storage\\sorttable.js",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage\\sorttable.js",
-              "RelativeToolTip": "wwwroot\\js\\storage\\sorttable.js",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAABKAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-05-11T13:17:36.463Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "userStatus.js",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\profile\\userStatus.js",
-              "RelativeDocumentMoniker": "wwwroot\\js\\profile\\userStatus.js",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\profile\\userStatus.js",
-              "RelativeToolTip": "wwwroot\\js\\profile\\userStatus.js",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAA9AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-05-11T13:17:33.401Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "profile-edit-info.js",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\profile\\profile-edit-info.js",
-              "RelativeDocumentMoniker": "wwwroot\\js\\profile\\profile-edit-info.js",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\profile\\profile-edit-info.js",
-              "RelativeToolTip": "wwwroot\\js\\profile\\profile-edit-info.js",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAABHAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-05-11T13:17:30.176Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 10,
-              "Title": "profile.js",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\profile\\profile.js",
-              "RelativeDocumentMoniker": "wwwroot\\js\\profile\\profile.js",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\profile\\profile.js",
-              "RelativeToolTip": "wwwroot\\js\\profile\\profile.js",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAyAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-05-11T13:17:23.902Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 0,
               "Title": "user-storage.js",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage\\user-storage.js",
               "RelativeDocumentMoniker": "wwwroot\\js\\storage\\user-storage.js",
               "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage\\user-storage.js",
               "RelativeToolTip": "wwwroot\\js\\storage\\user-storage.js",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAABFAAAAAAAAAA==",
+              "ViewState": "AgIAAP4AAAAAAAAAAAAAwAgBAAAYAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-05-11T13:07:25.22Z",
+              "WhenOpened": "2025-05-11T13:50:15.178Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
-              "Title": "Scripts_Auth.cshtml",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Pages\\Shared\\Scripts\\Scripts_Auth.cshtml",
-              "RelativeDocumentMoniker": "Pages\\Shared\\Scripts\\Scripts_Auth.cshtml",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\Pages\\Shared\\Scripts\\Scripts_Auth.cshtml",
-              "RelativeToolTip": "Pages\\Shared\\Scripts\\Scripts_Auth.cshtml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAyAAAAAAAAAA==",
+              "DocumentIndex": 2,
+              "Title": "profile_page.cshtml",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml",
+              "RelativeDocumentMoniker": "Pages\\Content\\profile_page.cshtml",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml",
+              "RelativeToolTip": "Pages\\Content\\profile_page.cshtml",
+              "ViewState": "AgIAAFIAAAAAAAAAAAAwwGoAAAAKAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-05-11T12:57:52.76Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "sidebar.js",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\ui\\sidebar.js",
-              "RelativeDocumentMoniker": "wwwroot\\js\\ui\\sidebar.js",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\ui\\sidebar.js",
-              "RelativeToolTip": "wwwroot\\js\\ui\\sidebar.js",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAA8AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-05-11T12:48:53.607Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 11,
-              "Title": "_Layout.cshtml",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Pages\\Shared\\_Layout.cshtml",
-              "RelativeDocumentMoniker": "Pages\\Shared\\_Layout.cshtml",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\Pages\\Shared\\_Layout.cshtml",
-              "RelativeToolTip": "Pages\\Shared\\_Layout.cshtml",
-              "ViewState": "AgIAABQAAAAAAAAAAAAwwBwAAAAoAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-05-11T12:22:51.745Z",
+              "WhenOpened": "2025-05-11T13:36:33.3Z",
               "EditorCaption": ""
             }
           ]

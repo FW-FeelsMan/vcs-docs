@@ -110,10 +110,21 @@ function updateNonUploadingRows(tableBody, files) {
 		const row = document.createElement("tr");
 		row.innerHTML = `
 			<td><div class="cell-content">${file.name}</div></td>
+			<td>${file.version || "—"}</td>
 			<td>${file.sizeMb}</td>
 			<td>${file.lastWriteTime}</td>
-			<td><button class="button-sliding danger delete-button">Удалить</button></td>
+			<td>
+				<div class="multi-button">
+					<button class="button-sliding primary action-button">Удалить</button>
+					<div class="dropdown-arrow">&#9662;</div>
+				</div>
+			</td>
+
 		`;
+		const multiButton = row.querySelector('.multi-button');
+		if (multiButton) {
+			setupMultiButtonEvents(multiButton);
+		}
 
 		const deleteBtn = row.querySelector(".delete-button");
 		if (deleteBtn) {
@@ -147,6 +158,7 @@ function renderUploadingFiles(tableBody) {
 		row.style.backgroundColor = "#f0f0f0";
 		row.innerHTML = `
 			<td><div class="cell-content">${fileName}</div></td>
+			<td>—</td>
 			<td class="size-cell">${size}</td>
 			<td>Загружается...</td>
 			<td><button class="button-sliding danger cancel-button">Отмена</button></td>
@@ -247,4 +259,58 @@ window.initUserStorage = async function () {
 		refreshStorageStatus();
 	}
 };
+function setupMultiButtonEvents(multiButton) {
+	const actionButton = multiButton.querySelector('.action-button');
+	const dropdownArrow = multiButton.querySelector('.dropdown-arrow');
+	let isMenuOpen = false;
 
+	dropdownArrow.addEventListener('click', (e) => {
+		e.stopPropagation();
+
+		let existingMenu = document.getElementById('global-dropdown-menu');
+		if (!existingMenu) {
+			existingMenu = document.createElement('div');
+			existingMenu.id = 'global-dropdown-menu';
+			existingMenu.className = 'dropdown-menu';
+			existingMenu.innerHTML = `
+                <div class="dropdown-item" data-action="Удалить">Удалить</div>
+                <div class="dropdown-item" data-action="Скачать">Скачать</div>
+            `;
+			document.body.appendChild(existingMenu);
+		}
+
+		if (isMenuOpen) {
+			existingMenu.style.display = 'none';
+			existingMenu.style.animation = '';
+			isMenuOpen = false;
+			return;
+		}
+
+		const rect = multiButton.getBoundingClientRect();
+		existingMenu.style.position = 'absolute';
+		existingMenu.style.left = rect.left + 'px';
+		existingMenu.style.top = (rect.bottom + window.scrollY) + 'px';
+		existingMenu.style.width = rect.width + 'px';
+		existingMenu.style.display = 'block';
+		existingMenu.style.animation = 'dropdown-fade-slide 0.2s ease-out forwards';
+		isMenuOpen = true;
+
+		existingMenu.querySelectorAll('.dropdown-item').forEach(item => {
+			item.onclick = () => {
+				actionButton.textContent = item.dataset.action;
+				existingMenu.style.display = 'none';
+				existingMenu.style.animation = '';
+				isMenuOpen = false;
+			};
+		});
+	});
+
+	document.addEventListener('click', (e) => {
+		const existingMenu = document.getElementById('global-dropdown-menu');
+		if (existingMenu && !multiButton.contains(e.target)) {
+			existingMenu.style.display = 'none';
+			existingMenu.style.animation = '';
+			isMenuOpen = false;
+		}
+	});
+}
