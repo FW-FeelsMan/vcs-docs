@@ -204,6 +204,9 @@ function setupUploadBindings() {
         fileInput.value = "";
     });
 }
+window.initUploadFile = function () {
+    setupUploadBindings();
+}
 
 if (typeof userIsAuthenticated !== "undefined" && userIsAuthenticated) {
     document.addEventListener("DOMContentLoaded", () => {

@@ -65,6 +65,26 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJpdmFjeS5jc2h0bWw=
 build_metadata.AdditionalFiles.CssScope = 
 
+[D:/Unity/VCS-DOCs/Pages/Shared/Scripts/Scripts_Auth.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXFNjcmlwdHNcU2NyaXB0c19BdXRoLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Unity/VCS-DOCs/Pages/Shared/Scripts/Scripts_Index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXFNjcmlwdHNcU2NyaXB0c19JbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Unity/VCS-DOCs/Pages/Shared/Scripts/Scripts_Login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXFNjcmlwdHNcU2NyaXB0c19Mb2dpbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Unity/VCS-DOCs/Pages/Shared/Scripts/Scripts_profile_page.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXFNjcmlwdHNcU2NyaXB0c19wcm9maWxlX3BhZ2UuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[D:/Unity/VCS-DOCs/Pages/Shared/Styles/Styles_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXFN0eWxlc1xTdHlsZXNfTGF5b3V0LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [D:/Unity/VCS-DOCs/Pages/Shared/_Layout.cshtml]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXF9MYXlvdXQuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 

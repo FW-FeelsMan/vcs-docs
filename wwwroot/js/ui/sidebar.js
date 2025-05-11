@@ -68,6 +68,13 @@ async function loadContent(contentId) {
         const html = await response.text();
 
         contentContainer.innerHTML = html;
+        if (contentId === 'profile_page') {
+            loadProfileScripts().then(async () => {
+                if (typeof window.initUploadFile === "function") {
+                    window.initUploadFile();
+                }
+            });
+        }
     } catch (error) {
         console.error('Ошибка загрузки:', error);
         if (contentContainer) {
@@ -77,6 +84,43 @@ async function loadContent(contentId) {
         hideLoader();
     }
 }
+async function loadProfileScripts() {
+    const scripts = [
+        "/js/profile/profile.js",
+        "/js/profile/profile-edit-info.js",
+        "/js/storage/sorttable.js",
+        "/js/storage/upload-file.js",
+        "/js/storage/upload-conflict-modal.js",
+        "/js/storage/user-storage.js"
+    ];
+    if (typeof window.initUserStorage === "function") {
+        window.initUserStorage();
+    }
+
+    const promises = scripts.map(src => {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = src;
+            script.defer = true;
+            script.onload = () => {
+                console.log(`Подключён скрипт: ${src}`);
+                resolve();
+            };
+            script.onerror = () => {
+                console.error(`Ошибка загрузки скрипта: ${src}`);
+                reject(new Error(`Ошибка загрузки: ${src}`));
+            };
+            document.body.appendChild(script);
+        });
+    });
+
+    await Promise.all(promises);
+
+    if (typeof window.initUserStorage === "function") {
+        window.initUserStorage();
+    }
+}
+
 function showCachedContent(contentId) {
     const contentContainer = document.getElementById('content');
     const cachedData = contentCache.get(contentId);

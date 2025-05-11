@@ -230,3 +230,21 @@ async function refreshStorageStatus() {
 }
 
 window.refreshStorageStatus = refreshStorageStatus;
+window.initUserStorage = async function () {
+	console.log("Инициализация личного хранилища пользователя...");
+
+	await ensureConnectionReady();
+
+	if (connection?.state !== signalR.HubConnectionState.Connected) {
+		console.warn("[userStorage] Соединение не установлено. Пропуск запроса файлов.");
+		return;
+	}
+
+	if (typeof requestFiles === "function") {
+		requestFiles();
+	}
+	if (typeof refreshStorageStatus === "function") {
+		refreshStorageStatus();
+	}
+};
+

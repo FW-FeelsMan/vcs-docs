@@ -11,12 +11,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - VCS-DOCs</title>
-    <link rel="stylesheet" href="~/css/main_css/mainStyle.css" />
-    <link id="projectsStyle" rel="stylesheet" href="~/css/sub_css/project_page.css" disabled />
-    <link id="profileStyle" rel="stylesheet" href="~/css/sub_css/profile_page.css" disabled />
-    <link id="infographicsStyle" rel="stylesheet" href="~/css/sub_css/infographics_page.css" disabled />
-    <link id="contactStyle" rel="stylesheet" href="~/css/sub_css/contact_page.css" disabled />
-    <link id="extraStyle" rel="stylesheet" href="~/css/sub_css/extra_page.css" disabled />
+
+    @await Html.PartialAsync("~/Pages/Shared/Styles/Styles_Layout.cshtml")
     @await RenderSectionAsync("Styles", required: false)
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <meta name="csrf-token" content="@csrfToken" />
@@ -25,11 +21,8 @@
     <div style="display:none;">
         @Html.AntiForgeryToken()
     </div>
-    <script src="~/js/storage/upload-conflict-modal.js"></script>
     @RenderBody()
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
-
     @if (User.Identity?.IsAuthenticated == true)
     {
         <script>
@@ -37,8 +30,7 @@
             window.userStorageBasePath = "@(ViewData["UserStorageBasePath"]?.ToString().Replace("\\", "\\\\") ?? "")";
             window.userIdFromClaims = "@userIdFromClaims";
         </script>
-        <script src="~/js/profile/userStatus.js"></script>
-        <script src="~/js/storage/user-storage.js"></script>
+        @await Html.PartialAsync("~/Pages/Shared/Scripts/Scripts_Auth.cshtml")
     }
     else
     {
@@ -46,15 +38,6 @@
             var userIsAuthenticated = false;
         </script>
     }
-
-    <script src="~/js/ui/sidebar.js"></script>
-    <script src="~/js/ui/context-menu.js"></script>
-    <script src="~/js/ui/extra-tabbar.js"></script>
-    <script src="~/js/profile/profile.js"></script>
-    <script src="~/js/profile/profile-edit-info.js"></script>
-    <script src="~/js/storage/sorttable.js"></script>
-    <script src="~/js/storage/upload-file.js"></script>
-
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
