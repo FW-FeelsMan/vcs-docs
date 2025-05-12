@@ -26,6 +26,8 @@ namespace VCS_DOCs.Pages.Content
 		private readonly IStorageQuotaService _quotaService;
 		private readonly IHubContext<UserStorageHub> _hubContext;
 		private readonly UserDataPathOptions _options;
+		public string AvatarPath { get; private set; } = "/images/default_avatar.png";
+
 		private const long MAX_CHUNK_SIZE = 2 * 1024 * 1024;
 		public double UsedGb { get; private set; }
 		public double FreeGb { get; private set; }
@@ -55,7 +57,6 @@ namespace VCS_DOCs.Pages.Content
 			_hubContext = hubContext;
 			_options = options.Value;
 		}
-
 		public async Task OnGetAsync()
 		{
 			string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -69,6 +70,23 @@ namespace VCS_DOCs.Pages.Content
 				long free = 10L * 1024 * 1024 * 1024 - used - reserved;
 				UsedGb = Math.Round(used / 1024.0 / 1024, 2);
 				FreeGb = Math.Round(free / 1024.0 / 1024, 2);
+
+				string avatarFolder = Path.Combine(_options.BasePath, $"userData_{userId}", "Avatars");
+				if (Directory.Exists(avatarFolder))
+				{
+					var avatarFile = Directory.GetFiles(avatarFolder)
+						.FirstOrDefault(f =>
+							f.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
+							f.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
+							f.EndsWith(".png", StringComparison.OrdinalIgnoreCase));
+
+					if (avatarFile != null)
+					{
+						var avatarFileName = Path.GetFileName(avatarFile);
+						//AvatarPath = $"/userData_{userId}/Avatars/{avatarFileName}";
+						AvatarPath = $"/userdata/userData_{userId}/Avatars/{avatarFileName}";
+					}
+				}
 			}
 		}
 
@@ -471,7 +489,86 @@ namespace VCS_DOCs.Pages.Content
 				return new JsonResult(new { success = false, error = $"Ошибка при удалении: {ex.Message}" });
 			}
 		}
+		public async Task<IActionResult> OnPostUploadAvatarAsync(IFormFile avatar)
+		{
+			try
+			{
+				await _antiforgery.ValidateRequestAsync(HttpContext);
+			}
+			catch (AntiforgeryValidationException)
+			{
+				return new JsonResult(new { success = false, error = "Неверный токен безопасности" });
+			}
 
+			if (avatar == null || avatar.Length == 0)
+				return new JsonResult(new { success = false, error = "Файл не выбран." });
+
+			var allowedExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png" };
+			var maxAvatarSizeBytes = 15L * 1024 * 1024; // 15 MB
+
+			var extension = Path.GetExtension(avatar.FileName);
+			if (string.IsNullOrEmpty(extension) || !allowedExtensions.Contains(extension))
+				return new JsonResult(new { success = false, error = "Допустимы только файлы JPG и PNG." });
+
+			if (avatar.Length > maxAvatarSizeBytes)
+				return new JsonResult(new { success = false, error = "Файл слишком большой. Максимальный размер — 15 МБ." });
+
+			string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+			if (string.IsNullOrWhiteSpace(userId))
+				return new JsonResult(new { success = false, error = "Пользователь не найден." });
+
+			var userFolder = Path.Combine(_options.BasePath, $"userData_{userId}");
+			var avatarFolder = Path.Combine(userFolder, "Avatars");
+
+			if (!Directory.Exists(avatarFolder))
+				Directory.CreateDirectory(avatarFolder);
+
+			var finalFilePath = Path.Combine(avatarFolder, "avatar.jpg");
+
+			try
+			{
+				using (var sourceStream = avatar.OpenReadStream())
+				using (var targetStream = new FileStream(finalFilePath, FileMode.Create, FileAccess.Write, FileShare.None))
+				{
+					await sourceStream.CopyToAsync(targetStream);
+				}
+			}
+			catch (Exception)
+			{
+				//return new JsonResult(new { success = false, error = $"Ошибка при сохранении аватара: {ex.Message}" });
+			}
+
+			var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+			return new JsonResult(new
+			{
+				success = true,
+				userId,
+				fileName = "avatar.jpg",
+				timestamp
+			});
+		}
+		public async Task<IActionResult> OnGetDownloadFileAsync(string fileName, string userId)
+		{
+			if (User.Identity == null || !User.Identity.IsAuthenticated)
+				return Unauthorized();
+
+			string? currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+			if (string.IsNullOrWhiteSpace(currentUserId) || currentUserId != userId)
+				return Forbid(); 
+
+			if (string.IsNullOrWhiteSpace(fileName))
+				return BadRequest("Неверное имя файла");
+
+			var userFolder = Path.Combine(_options.BasePath, $"userData_{userId}");
+			var filePath = Path.Combine(userFolder, fileName);
+
+			if (!System.IO.File.Exists(filePath))
+				return NotFound("Файл не найден");
+
+			var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+			return File(fileStream, "application/octet-stream", fileName);
+		}
 	}
 }
 public static class SafeFileUtils

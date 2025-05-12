@@ -17,10 +17,15 @@
     <hr class="solid">
     <div class="profile-container">
         <div class="profile-sidebar">
-            <div class="avatar">
-                <img src="~/images/default_avatar.png" alt="Icon">
+            <input type="file" id="avatarFileInput" style="display: none;" accept="image/*" />
+
+            <div class="avatar-wrapper">
+                <label for="avatarFileInput" class="avatar-upload-label">
+                    <img id="avatarImage" src="@($"{Model.AvatarPath}?v={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}")" alt="Avatar" />
+                </label>
+                <p data-field="FullName" class="username">@Model.CurrentUser?.UserName</p>
             </div>
-            <p data-field="FullName">@Model.CurrentUser?.UserName</p>
+
             <ul class="sidebar-menu">
                 <li class="active" data-target="personal-data">Персональные данные</li>
                 <li data-target="storage">Личное хранилище</li>

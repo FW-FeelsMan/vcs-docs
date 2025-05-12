@@ -61,3 +61,64 @@ document.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('resize', () => {
     updateTooltips(true);
 });
+document.getElementById('avatarFileInput').addEventListener('change', function (event) {
+    const file = event.target.files[0];
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    fetch('/Content/profile_page?handler=UploadAvatar', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value
+        }
+    })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                const avatarImage = document.getElementById('avatarImage');
+                avatarImage.src = `/userdata/userData_${result.userId}/Avatars/avatar.jpg?v=${result.timestamp}`;
+                console.log('Аватарка успешно загружена:', avatarImage.src);
+            } else {
+                alert('Ошибка: ' + result.error);
+            }
+        })
+        .catch(err => {
+            console.error('Ошибка при отправке файла:', err);
+        });
+});
+function initAvatarUpload() {
+    const avatarInput = document.getElementById('avatarFileInput');
+    const avatarImage = document.getElementById('avatarImage');
+
+    if (!avatarInput || !avatarImage) {
+        console.warn('[Avatar Upload] Элементы не найдены!');
+        return;
+    }
+
+    avatarInput.onchange = function (event) {
+        const file = event.target.files[0];
+        const formData = new FormData();
+        formData.append('avatar', file);
+
+        fetch('/Content/profile_page?handler=UploadAvatar', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]').value
+            }
+        })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    avatarImage.src = `/userdata/userData_${result.userId}/Avatars/avatar.jpg?v=${result.timestamp}`;
+                    console.log('Аватарка успешно загружена:', avatarImage.src);
+                } else {
+                    alert('Ошибка: ' + result.error);
+                }
+            })
+            .catch(err => {
+                console.error('Ошибка при отправке файла:', err);
+            });
+    };
+}

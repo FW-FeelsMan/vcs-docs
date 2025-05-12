@@ -63,7 +63,11 @@ async function loadContent(contentId) {
     try {
         contentContainer.innerHTML = '';
 
-        const response = await fetch(`/Content/${contentId}`);
+        const url = contentId === 'profile_page'
+            ? `/Content/${contentId}?ts=${Date.now()}`
+            : `/Content/${contentId}`;
+
+        const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP error! ${response.status}`);
         const html = await response.text();
 
@@ -84,6 +88,7 @@ async function loadContent(contentId) {
         hideLoader();
     }
 }
+
 async function loadProfileScripts() {
     const scripts = [
         "/js/profile/profile.js",
@@ -115,6 +120,7 @@ async function loadProfileScripts() {
     });
 
     await Promise.all(promises);
+    initAvatarUpload();
 
     if (typeof window.initUserStorage === "function") {
         window.initUserStorage();

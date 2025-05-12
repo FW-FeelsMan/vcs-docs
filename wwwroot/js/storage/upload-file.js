@@ -47,7 +47,7 @@ async function releaseFile(fileName) {
             body: fd
         });
     } catch {
-       
+
     }
 }
 
@@ -178,7 +178,7 @@ function setupUploadBindings() {
                 onReplace: async () => {
                     const lowerName = file.name.toLowerCase();
                     if (window.cancelUploadingFile) {
-                        await window.cancelUploadingFile(file.name); 
+                        await window.cancelUploadingFile(file.name);
                     }
                     setTimeout(() => uploadSelectedFile(file), 300);
                 },

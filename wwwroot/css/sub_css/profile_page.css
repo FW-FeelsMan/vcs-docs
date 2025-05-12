@@ -1,4 +1,6 @@
-﻿:root {
+﻿/* ========== Переменные ==========
+*/
+:root {
     --primary-color: #5a9bd5;
     --primary-hover: #3d7bbf;
     --background-light: #dddedf;
@@ -9,6 +11,8 @@
     --shadow-dark: rgba(0, 0, 0, 0.15);
 }
 
+/* ========== Анимации ==========
+*/
 @keyframes slideInRight {
     from {
         opacity: 0;
@@ -45,6 +49,20 @@
     }
 }
 
+@keyframes dropdown-fade-slide {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========== Основной фон ==========
+*/
 .profile_background {
     background-color: var(--background-dark);
     border-radius: 6px;
@@ -84,6 +102,8 @@ hr.solid {
     border-radius: 50%;
 }
 
+/* ========== Кнопки ==========
+*/
 .button-container {
     display: flex;
     justify-content: space-between;
@@ -93,35 +113,32 @@ hr.solid {
 
 .button-sliding {
     --btn-color: var(--primary-color);
-    --btn-color-hover: var(--primary-hover);
     --btn-border: var(--btn-color);
     min-width: 130px;
     height: 40px;
     padding: 5px 10px;
     font-weight: bold;
     cursor: pointer;
-    transition: all 0.3s ease;
     position: relative;
-    display: inline-block;
-    outline: none;
-    border-radius: 5px;
-    z-index: 0;
-    background: #fff;
     overflow: hidden;
+    background: transparent;
     border: 2px solid var(--btn-border);
     color: var(--btn-color);
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    z-index: 0;
 }
 
     .button-sliding:after {
         content: "";
         position: absolute;
-        z-index: -1;
-        transition: all 0.3s ease;
         left: 0;
         top: 0;
-        width: 0;
         height: 100%;
+        width: 0;
         background: var(--btn-color);
+        z-index: -1; 
+        transition: all 0.3s ease;
     }
 
     .button-sliding:hover {
@@ -131,7 +148,6 @@ hr.solid {
         .button-sliding:hover:after {
             width: 100%;
         }
-
     .button-sliding:disabled {
         cursor: not-allowed;
         opacity: 0.5;
@@ -140,7 +156,6 @@ hr.solid {
         color: #fff;
     }
 
-    /* Цветовые модификаторы */
     .button-sliding.primary {
         --btn-color: var(--primary-color);
         --btn-border: var(--primary-color);
@@ -189,35 +204,43 @@ hr.solid {
     }
 
         .multi-button .dropdown-arrow:hover {
-            background: var(--primary-color);
-            border-color: var(--primary-hover);
+            background: var(--primary-hover);
         }
 
-    .multi-button .dropdown-menu {
-        display: none;
-        position: absolute;
-        top: 42px;
-        left: 0;
-        background: white;
-        border: 1px solid var(--primary-color);
-        border-radius: 5px;
-        width: 100%;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        z-index: 9999;
-    }
+#global-dropdown-menu {
+    position: absolute;
+    background: white;
+    border: 2px solid var(--primary-color);
+    border-radius: 5px;
+    width: 130px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    display: none;
+    z-index: 99999;
+    overflow: hidden;
+    animation: dropdown-fade-slide 0.2s ease-out forwards;
+}
 
-    .multi-button .dropdown-item {
-        padding: 10px;
+    #global-dropdown-menu .dropdown-item {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 5px 10px;
+        height: 40px;
+        font-weight: bold;
         cursor: pointer;
-        color: var(--text-dark);
-        transition: background 0.3s;
-        text-align: center;
+        color: var(--btn-color, var(--primary-color));
+        transition: background 0.3s, color 0.3s;
+        background: #fff;
+        font-size: 14px;
     }
 
-        .multi-button .dropdown-item:hover {
-            background: var(--background-light);
+        #global-dropdown-menu .dropdown-item:hover {
+            background: var(--primary-hover);
+            color: #fff;
         }
 
+/* ========== Сайдбар ==========
+*/
 .profile-container {
     display: flex;
     gap: 20px;
@@ -240,11 +263,6 @@ hr.solid {
         border-radius: 50%;
         display: block;
         margin: 0 auto 10px;
-    }
-
-    .profile-sidebar h3,
-    .profile-sidebar p {
-        text-align: center;
     }
 
 .sidebar-menu {
@@ -293,13 +311,6 @@ hr.solid {
         height: 100%;
     }
 
-.header-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-}
-
 .info-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -340,6 +351,11 @@ hr.solid {
         filter: brightness(1.5);
     }
 
+.date-input[disabled] {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
+}
+
 .cell-content {
     display: block;
     overflow: hidden;
@@ -347,7 +363,6 @@ hr.solid {
     white-space: nowrap;
 }
 
-/* Scrollable content block */
 .content-scrollable {
     flex-grow: 1;
     overflow-y: auto;
@@ -356,20 +371,8 @@ hr.solid {
     padding-right: 10px;
 }
 
-    .content-scrollable::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .content-scrollable::-webkit-scrollbar-thumb {
-        background-color: rgba(0, 0, 0, 0.3);
-        border-radius: 3px;
-    }
-
-    .content-scrollable::-webkit-scrollbar-track {
-        background: rgba(0, 0, 0, 0.1);
-    }
-
-/* Таблица */
+/* ========== Таблица ==========
+*/
 .table-scroll-wrapper {
     position: relative;
     width: 100%;
@@ -383,8 +386,7 @@ hr.solid {
     border-collapse: collapse;
 }
 
-    .fixed-width-table th,
-    .fixed-width-table td {
+    .fixed-width-table th, .fixed-width-table td {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -413,12 +415,11 @@ hr.solid {
         .fixed-width-table td.command-col {
             width: 25%;
         }
+
         .fixed-width-table th.version-col,
         .fixed-width-table td.version-col {
             width: 10%;
         }
-
-
 
 th.sorttable_sorted::after {
     content: " ▲";
@@ -433,88 +434,43 @@ th.sorttable_sorted_reverse::after {
     color: var(--primary-color);
     margin-left: 4px;
 }
+
 #sorttable_sortfwdind,
 #sorttable_sortrevind {
     display: none !important;
 }
-.tasks-grid {
+.avatar-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 15px;
-    margin-top: 20px;
-    overflow-y: auto;
+    align-items: center;
 }
 
-.task-card {
-    display: flex;
-    flex-direction: column;
-    background: linear-gradient(to bottom, #fcfcfc, #f8f8f8);
-    border: 1px solid #ccc;
-    padding: 15px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.3s ease;
-    animation: fadeInScale 0.4s ease-out;
+.avatar-upload-label {
+    cursor: pointer;
+    display: inline-block;
+    border-radius: 50%;
+    overflow: hidden;
+    transition: transform 0.3s ease;
 }
 
-    .task-card:hover {
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    .avatar-upload-label:hover {
+        transform: scale(1.05);
     }
 
-.task-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 10px;
+#avatarImage {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 2px solid var(--primary-color);
+}
+
+.username {
+    font-size: 1.2em;
     font-weight: bold;
     color: var(--text-dark);
+    text-align: center;
 }
-
-.task-progress {
-    height: 14px;
-    background-color: #eee;
-    border-radius: 7px;
-    overflow: hidden;
-    margin-top: 8px;
-}
-
-.task-progress-bar {
-    height: 100%;
-    width: 0;
-    background-color: var(--primary-color);
-    transition: width 0.3s ease;
-}
-
-.task-meta {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.85em;
-    color: var(--text-light);
-    margin-top: 5px;
-}
-
-.task-cancel {
-    align-self: flex-end;
-    margin-top: 10px;
-}
-
-    .task-cancel button {
-        min-width: 130px;
-        height: 40px;
-        color: var(--primary-color);
-        padding: 5px 10px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        position: relative;
-        display: inline-block;
-        outline: none;
-        border-radius: 5px;
-        z-index: 0;
-        background: #fff;
-        overflow: hidden;
-        border: 2px solid var(--primary-color);
-    }
 .modal {
     position: fixed;
     z-index: 9999;
@@ -551,84 +507,3 @@ th.sorttable_sorted_reverse::after {
         cursor: pointer;
         font-weight: bold;
     }
-/* Removes the clear button from date inputs */
-input[type="date"]::-webkit-clear-button {
-    display: none;
-}
-
-/* Removes the spin button */
-input[type="date"]::-webkit-inner-spin-button {
-    display: none;
-}
-
-/* Always display the drop down caret */
-input[type="date"]::-webkit-calendar-picker-indicator {
-    color: #2c3e50;
-}
-
-input[type="date"] {
-    appearance: none;
-    -webkit-appearance: none;
-    color: #95a5a6;
-    font-family: "Helvetica", arial, sans-serif;
-    font-size: 18px;
-    border: 1px solid #ecf0f1;
-    background: #ecf0f1;
-    padding: 5px;
-    display: inline-block !important;
-    visibility: visible !important;
-}
-
-input[type="date"], focus {
-    color: #95a5a6;
-    box-shadow: none;
-    -webkit-box-shadow: none;
-    -moz-box-shadow: none;
-}
-.date-input[disabled] {
-    background-color: #f5f5f5;
-    cursor: not-allowed;
-}
-#global-dropdown-menu {
-    position: absolute;
-    background: white;
-    border: 2px solid var(--primary-color);
-    border-radius: 5px;
-    width: 130px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    display: none;
-    z-index: 99999;
-    overflow: hidden;
-    animation: dropdown-fade-slide 0.2s ease-out forwards;
-}
-
-    #global-dropdown-menu .dropdown-item {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 5px 10px;
-        height: 40px;
-        font-weight: bold;
-        cursor: pointer;
-        color: var(--btn-color, var(--primary-color)); 
-        transition: background 0.3s, color 0.3s;
-        background: #fff;
-        font-size: 14px;
-    }
-
-        #global-dropdown-menu .dropdown-item:hover {
-            background: var(--primary-hover);
-            color: #fff;
-        }
-
-@keyframes dropdown-fade-slide {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}

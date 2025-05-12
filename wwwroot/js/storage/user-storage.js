@@ -123,7 +123,7 @@ function updateNonUploadingRows(tableBody, files) {
 		`;
 		const multiButton = row.querySelector('.multi-button');
 		if (multiButton) {
-			setupMultiButtonEvents(multiButton);
+			setupMultiButtonEvents(multiButton, file.name);
 		}
 
 		const deleteBtn = row.querySelector(".delete-button");
@@ -196,14 +196,13 @@ async function deleteFile(name) {
 		});
 		const json = await res.json();
 		console.log("[StorageStatus]", JSON.stringify(json));
-		if (json.success) {
-			requestFiles();
-			refreshStorageStatus();
-		} else {
+		if (!json.success) {
 			console.error("[userStorage] Ошибка удаления:", json.error);
+			alert("Ошибка при удалении файла: " + (json.error || "Неизвестная ошибка"));
 		}
 	} catch (err) {
 		console.error("[userStorage] Ошибка удаления файла:", err);
+		alert("Ошибка сети при удалении файла.");
 	}
 }
 
@@ -259,7 +258,7 @@ window.initUserStorage = async function () {
 		refreshStorageStatus();
 	}
 };
-function setupMultiButtonEvents(multiButton) {
+function setupMultiButtonEvents(multiButton, fileName, userId) {
 	const actionButton = multiButton.querySelector('.action-button');
 	const dropdownArrow = multiButton.querySelector('.dropdown-arrow');
 	let isMenuOpen = false;
@@ -273,9 +272,9 @@ function setupMultiButtonEvents(multiButton) {
 			existingMenu.id = 'global-dropdown-menu';
 			existingMenu.className = 'dropdown-menu';
 			existingMenu.innerHTML = `
-                <div class="dropdown-item" data-action="Удалить">Удалить</div>
-                <div class="dropdown-item" data-action="Скачать">Скачать</div>
-            `;
+				<div class="dropdown-item" data-action="Удалить">Удалить</div>
+				<div class="dropdown-item" data-action="Скачать">Скачать</div>
+			`;
 			document.body.appendChild(existingMenu);
 		}
 
@@ -297,13 +296,38 @@ function setupMultiButtonEvents(multiButton) {
 
 		existingMenu.querySelectorAll('.dropdown-item').forEach(item => {
 			item.onclick = () => {
-				actionButton.textContent = item.dataset.action;
+				const action = item.dataset.action;
+				actionButton.textContent = action;
+				actionButton.dataset.action = action;
 				existingMenu.style.display = 'none';
 				existingMenu.style.animation = '';
 				isMenuOpen = false;
 			};
 		});
 	});
+
+	actionButton.addEventListener('click', async () => {
+		const action = actionButton.dataset.action || 'Удалить';
+		if (action === "Удалить") {
+			if (confirm(`Точно удалить файл ${fileName}?`)) {
+				actionButton.textContent = "Удаляется...";
+				actionButton.disabled = true;
+
+				setTimeout(async () => {
+					await deleteFile(fileName);
+
+					const row = multiButton.closest('tr');
+					if (row) row.remove();
+				}, 3000);
+			}
+		}
+		else if (action === "Скачать") {
+			downloadFile(fileName, userId);
+		} else {
+			console.warn("Неизвестное действие:", action);
+		}
+	});
+
 
 	document.addEventListener('click', (e) => {
 		const existingMenu = document.getElementById('global-dropdown-menu');
@@ -313,4 +337,15 @@ function setupMultiButtonEvents(multiButton) {
 			isMenuOpen = false;
 		}
 	});
+}
+
+function downloadFile(fileName, userId) {
+	const url = `/Content/profile_page?handler=DownloadFile&fileName=${encodeURIComponent(fileName)}&userId=${encodeURIComponent(userId)}`;
+
+	const link = document.createElement('a');
+	link.href = url;
+	link.download = fileName;
+	document.body.appendChild(link);
+	link.click();
+	document.body.removeChild(link);
 }
