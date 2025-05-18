@@ -102,8 +102,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>vhk2ojb63i</Fingerprint>
-      <Integrity>Q0ipE/R0tWIxzD2qDtALQwUEz457jOdWvcoilJaotGo=</Integrity>
+      <Fingerprint>j31g7xha0b</Fingerprint>
+      <Integrity>j4ToJBW9qhYWuEKgXM9UCulgi+knTMEYpJoXL1/ZgyE=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\css\sub_css\profile_page.css'))</OriginalItemSpec>
@@ -552,8 +552,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>m8ufbx1prk</Fingerprint>
-      <Integrity>KlqNsH3L5zDJMc5aMCfz5miwdOVOC+R/RlITbMGPUnk=</Integrity>
+      <Fingerprint>wk8mpzkb47</Fingerprint>
+      <Integrity>EAbBpEw3HRz1BqdSbN4txow5q66on9OLDsEMUdP8mek=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\profile\profile.js'))</OriginalItemSpec>
@@ -575,6 +575,24 @@
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\profile\profile-edit-info.js'))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\profile\profile-sidebar-popup.js'))">
+      <SourceType>Package</SourceType>
+      <SourceId>VCS-DOCs</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/VCS-DOCs</BasePath>
+      <RelativePath>js/profile/profile-sidebar-popup.js</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>luqt603ilh</Fingerprint>
+      <Integrity>LaPlviThvgAU29CQC/9FBIxmU0Kw0HhfE9Ba7oTdFzo=</Integrity>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\profile\profile-sidebar-popup.js'))</OriginalItemSpec>
     </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\profile\userStatus.js'))">
       <SourceType>Package</SourceType>
@@ -612,6 +630,24 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\storage\sorttable.js'))</OriginalItemSpec>
     </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\storage\storage-model.js'))">
+      <SourceType>Package</SourceType>
+      <SourceId>VCS-DOCs</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>_content/VCS-DOCs</BasePath>
+      <RelativePath>js/storage/storage-model.js</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>3he6vevbyn</Fingerprint>
+      <Integrity>OUq+1qTmQlXKxI3euVWhGFFmjhG4mKrzaJ+5EAw5Syo=</Integrity>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\storage\storage-model.js'))</OriginalItemSpec>
+    </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\storage\upload-conflict-modal.js'))">
       <SourceType>Package</SourceType>
       <SourceId>VCS-DOCs</SourceId>
@@ -642,8 +678,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>09i1n4l2os</Fingerprint>
-      <Integrity>XBYGLOJ+kR/pTIyl3/1AgLAsbtUSEpzEeMkO0W6OzkU=</Integrity>
+      <Fingerprint>y1wowmmavw</Fingerprint>
+      <Integrity>ui/Xjy3IbqSQPHz3MRB2H/8QI1TqWugaQCNNSqoVP1o=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\storage\upload-file.js'))</OriginalItemSpec>
@@ -660,8 +696,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>l79tuj70rf</Fingerprint>
-      <Integrity>H7IP4y4KIeb7dMSKvS/0OVD5Yir8gNBLqqoVTkgkRj8=</Integrity>
+      <Fingerprint>h9mfpp5wa8</Fingerprint>
+      <Integrity>i9QMOo1yLoelcJYkyf9waQtWAvv4xNiggUCeBko4iOc=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\storage\user-storage.js'))</OriginalItemSpec>
@@ -714,8 +750,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>ypos0k4kl4</Fingerprint>
-      <Integrity>Jnx3W8Mxq3deBqG8a4GqUEGDhyh3G4mBUUb+f9vtcEU=</Integrity>
+      <Fingerprint>hxt4vnc5rm</Fingerprint>
+      <Integrity>hasx7Gr8HWkuf+MJEN+W42xSHh5d4OP/VppqTTmXWkU=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\ui\sidebar.js'))</OriginalItemSpec>

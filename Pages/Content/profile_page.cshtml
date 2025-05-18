@@ -8,6 +8,10 @@
 
 <div style="display:none;">
     @Html.AntiForgeryToken()
+    @if (Model.CurrentUser != null)
+    {
+        <meta name="user-id" content="@Model.CurrentUser.Id" />
+    }
 </div>
 <div class="profile_background">
     <div class="button-container">
@@ -31,6 +35,16 @@
                 <li data-target="storage">Личное хранилище</li>
                 <li data-target="tasks">Задачи</li>
             </ul>
+
+            <div class="sidebar-upload-popup">
+                <div class="sidebar-upload-header">
+                    <div class="sidebar-upload-title">Загрузка файлов</div>
+                    <button class="sidebar-upload-toggle" title="Свернуть"><span>↹</span></button>
+                </div>
+                <div class="sidebar-upload-content"></div>
+            </div>
+
+
         </div>
         <div class="profile-content">
             <div id="personal-data" class="content-section active">

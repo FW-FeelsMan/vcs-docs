@@ -18,6 +18,7 @@ D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\js\bootstrap.bundle.min.js.map
 D:\Unity\VCS-DOCs\wwwroot\css\sub_css\profile_page.css
 D:\Unity\VCS-DOCs\wwwroot\js\ui\sidebar.js
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\css\bootstrap-grid.rtl.css.map
+D:\Unity\VCS-DOCs\wwwroot\js\storage\storage-model.js
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\css\bootstrap-utilities.rtl.min.css.map
 D:\Unity\VCS-DOCs\wwwroot\css\sub_css\infographics_page.css
 D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\css\bootstrap-reboot.rtl.min.css
@@ -32,6 +33,7 @@ D:\Unity\VCS-DOCs\wwwroot\lib\bootstrap\dist\js\bootstrap.esm.min.js.map
 D:\Unity\VCS-DOCs\wwwroot\lib\jquery-validation-unobtrusive\LICENSE.txt
 D:\Unity\VCS-DOCs\wwwroot\lib\jquery-validation-unobtrusive\dist\jquery.validate.unobtrusive.js
 D:\Unity\VCS-DOCs\wwwroot\ifcjs\bundle.js.map
+D:\Unity\VCS-DOCs\wwwroot\js\profile\profile-sidebar-popup.js
 D:\Unity\VCS-DOCs\wwwroot\lib\jquery\dist\jquery.min.map
 D:\Unity\VCS-DOCs\wwwroot\js\profile\profile-edit-info.js
 D:\Unity\VCS-DOCs\wwwroot\favicon.ico
@@ -113,8 +115,10 @@ wwwroot\images\save_icon.png
 wwwroot\js\auth\auth-login.js
 wwwroot\js\profile\profile.js
 wwwroot\js\profile\profile-edit-info.js
+wwwroot\js\profile\profile-sidebar-popup.js
 wwwroot\js\profile\userStatus.js
 wwwroot\js\storage\sorttable.js
+wwwroot\js\storage\storage-model.js
 wwwroot\js\storage\upload-conflict-modal.js
 wwwroot\js\storage\upload-file.js
 wwwroot\js\storage\user-storage.js

@@ -53,17 +53,17 @@ namespace VCS_DOCs.Services
 		public async Task ReleaseAsync(string userId, string fileName)
 		{
 			var reservations = await _db.FileReservations
-				.Where(r => r.UserId == userId && r.FileName == fileName && !r.IsReleased)
+				.Where(r => r.UserId == userId && r.FileName == fileName)
 				.ToListAsync();
 
-			foreach (var r in reservations)
+			if (reservations.Any())
 			{
-				r.IsReleased = true;
+				_db.FileReservations.RemoveRange(reservations);
+				await _db.SaveChangesAsync();
 			}
+			Console.WriteLine($"[Release] Trying to release reservation for {userId} -> {fileName}");
 
-			await _db.SaveChangesAsync();
 		}
-
 		public async Task<long> GetReservedBytesAsync(string userId)
 		{
 			var sum = await _db.FileReservations

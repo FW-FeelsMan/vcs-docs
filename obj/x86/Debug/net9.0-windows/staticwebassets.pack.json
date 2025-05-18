@@ -125,6 +125,10 @@
       "PackagePath": "staticwebassets\\js\\profile\\profile-edit-info.js"
     },
     {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\profile\\profile-sidebar-popup.js",
+      "PackagePath": "staticwebassets\\js\\profile\\profile-sidebar-popup.js"
+    },
+    {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\profile\\profile.js",
       "PackagePath": "staticwebassets\\js\\profile\\profile.js"
     },
@@ -135,6 +139,10 @@
     {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage\\sorttable.js",
       "PackagePath": "staticwebassets\\js\\storage\\sorttable.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage\\storage-model.js",
+      "PackagePath": "staticwebassets\\js\\storage\\storage-model.js"
     },
     {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage\\upload-conflict-modal.js",

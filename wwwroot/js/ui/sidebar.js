@@ -91,7 +91,9 @@ async function loadContent(contentId) {
 
 async function loadProfileScripts() {
     const scripts = [
+        "/js/storage/storage-model.js", 
         "/js/profile/profile.js",
+        "/js/profile/profile-sidebar-popup.js",
         "/js/profile/profile-edit-info.js",
         "/js/storage/sorttable.js",
         "/js/storage/upload-file.js",
@@ -108,7 +110,7 @@ async function loadProfileScripts() {
             script.src = src;
             script.defer = true;
             script.onload = () => {
-                console.log(`Подключён скрипт: ${src}`);
+                //console.log(`Подключён скрипт: ${src}`);
                 resolve();
             };
             script.onerror = () => {

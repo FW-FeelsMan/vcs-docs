@@ -7,16 +7,28 @@
       "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\storage\\user-storage.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\pages\\content\\profile_page.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:pages\\content\\profile_page.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\storage\\upload-file.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\storage\\upload-file.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\pages\\content\\profile_page.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:pages\\content\\profile_page.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\profile\\profile-sidebar-popup.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\profile\\profile-sidebar-popup.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\profile\\profile.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
-      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\profile\\profile.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Pages\\Content\\profile_page.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\services\\efstoragequotaservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:services\\efstoragequotaservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:Pages\\Content\\profile_page.cshtml.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\js\\ui\\sidebar.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}",
+      "RelativeMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|solutionrelative:wwwroot\\js\\ui\\sidebar.js||{14D17961-FE51-464D-9111-C4AF11D7D99A}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{9566BA0E-432F-4AF1-805F-13760BB7CD8E}|VCS-DOCs.csproj|d:\\unity\\vcs-docs\\wwwroot\\css\\sub_css\\profile_page.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
@@ -30,7 +42,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 4,
+          "SelectedChildIndex": 10,
           "Children": [
             {
               "$type": "Bookmark",
@@ -46,15 +58,92 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 4,
+              "Title": "EfStorageQuotaService.cs",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Services\\EfStorageQuotaService.cs",
+              "RelativeDocumentMoniker": "Services\\EfStorageQuotaService.cs",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Services\\EfStorageQuotaService.cs",
+              "RelativeToolTip": "Services\\EfStorageQuotaService.cs",
+              "ViewState": "AgIAAGUAAAAAAAAAAAAiwHkAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-05-18T17:10:06.088Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "sidebar.js",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\ui\\sidebar.js",
+              "RelativeDocumentMoniker": "wwwroot\\js\\ui\\sidebar.js",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\ui\\sidebar.js",
+              "RelativeToolTip": "wwwroot\\js\\ui\\sidebar.js",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-05-18T17:14:38.48Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
               "Title": "profile_page.cshtml.cs",
               "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml.cs",
               "RelativeDocumentMoniker": "Pages\\Content\\profile_page.cshtml.cs",
               "ToolTip": "D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml.cs",
               "RelativeToolTip": "Pages\\Content\\profile_page.cshtml.cs",
-              "ViewState": "AgIAACkCAAAAAAAAAAAQwC0CAAAVAAAAAAAAAA==",
+              "ViewState": "AgIAAGgBAAAAAAAAAAAqwHMBAAAGAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-05-12T18:14:21.773Z",
+              "WhenOpened": "2025-05-18T15:08:26.515Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "profile_page.cshtml",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml",
+              "RelativeDocumentMoniker": "Pages\\Content\\profile_page.cshtml",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml",
+              "RelativeToolTip": "Pages\\Content\\profile_page.cshtml",
+              "ViewState": "AgIAAHQAAAAAAAAAAAAwwIAAAABAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2025-05-18T12:18:38.651Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "profile-sidebar-popup.js",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\profile\\profile-sidebar-popup.js",
+              "RelativeDocumentMoniker": "wwwroot\\js\\profile\\profile-sidebar-popup.js",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\profile\\profile-sidebar-popup.js",
+              "RelativeToolTip": "wwwroot\\js\\profile\\profile-sidebar-popup.js",
+              "ViewState": "AgIAAAABAAAAAAAAAAAiwBQBAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-05-18T12:18:26.679Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "profile_page.css",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\sub_css\\profile_page.css",
+              "RelativeDocumentMoniker": "wwwroot\\css\\sub_css\\profile_page.css",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\sub_css\\profile_page.css",
+              "RelativeToolTip": "wwwroot\\css\\sub_css\\profile_page.css",
+              "ViewState": "AgIAANQCAAAAAAAAAAAwwN0CAAAWAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2025-05-18T11:37:26.599Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "upload-file.js",
+              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage\\upload-file.js",
+              "RelativeDocumentMoniker": "wwwroot\\js\\storage\\upload-file.js",
+              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage\\upload-file.js",
+              "RelativeToolTip": "wwwroot\\js\\storage\\upload-file.js",
+              "ViewState": "AgIAAOUAAAAAAAAAAAAiwOwAAAA2AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
+              "WhenOpened": "2025-05-12T20:21:11.585Z",
               "EditorCaption": ""
             },
             {
@@ -65,48 +154,9 @@
               "RelativeDocumentMoniker": "wwwroot\\js\\storage\\user-storage.js",
               "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage\\user-storage.js",
               "RelativeToolTip": "wwwroot\\js\\storage\\user-storage.js",
-              "ViewState": "AgIAADYBAAAAAAAAAAAQwD8BAAAbAAAAAAAAAA==",
+              "ViewState": "AgIAAPwBAAAAAAAAAAAcwAcCAAARAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
               "WhenOpened": "2025-05-12T17:46:42.375Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "profile_page.css",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\sub_css\\profile_page.css",
-              "RelativeDocumentMoniker": "wwwroot\\css\\sub_css\\profile_page.css",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\css\\sub_css\\profile_page.css",
-              "RelativeToolTip": "wwwroot\\css\\sub_css\\profile_page.css",
-              "ViewState": "AgIAAOsBAAAAAAAAAAAwwPwBAAAFAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
-              "WhenOpened": "2025-05-12T17:29:06.666Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
-              "Title": "profile.js",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\profile\\profile.js",
-              "RelativeDocumentMoniker": "wwwroot\\js\\profile\\profile.js",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\profile\\profile.js",
-              "RelativeToolTip": "wwwroot\\js\\profile\\profile.js",
-              "ViewState": "AgIAAHUAAAAAAAAAAAAYwAAAAAAJAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001646|",
-              "WhenOpened": "2025-05-11T15:57:51.342Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "profile_page.cshtml",
-              "DocumentMoniker": "D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml",
-              "RelativeDocumentMoniker": "Pages\\Content\\profile_page.cshtml",
-              "ToolTip": "D:\\Unity\\VCS-DOCs\\Pages\\Content\\profile_page.cshtml",
-              "RelativeToolTip": "Pages\\Content\\profile_page.cshtml",
-              "ViewState": "AgIAACMAAAAAAAAAAAAgwHEAAAAhAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2025-05-11T13:36:33.3Z",
               "EditorCaption": ""
             }
           ]

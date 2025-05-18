@@ -60,16 +60,20 @@ namespace VCS_DOCs.Pages.Content
 		public async Task OnGetAsync()
 		{
 			string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-			string? username = User.Identity?.Name;
-			if (!string.IsNullOrWhiteSpace(userId) && !string.IsNullOrWhiteSpace(username))
+
+			if (!string.IsNullOrWhiteSpace(userId))
 			{
-				CurrentUser = await _context.Users.FirstOrDefaultAsync(u => u.UserName == username);
-				_userServiceManager.StartUserServices(userId, username);
+				CurrentUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+				_userServiceManager.StartUserServices(userId, CurrentUser?.UserName ?? "Unknown");
+
 				long used = await _quotaService.GetUsedBytesAsync(userId);
 				long reserved = await _quotaService.GetReservedBytesAsync(userId);
 				long free = 10L * 1024 * 1024 * 1024 - used - reserved;
+
 				UsedGb = Math.Round(used / 1024.0 / 1024, 2);
 				FreeGb = Math.Round(free / 1024.0 / 1024, 2);
+
+				Console.WriteLine($"CurrentUser: {CurrentUser?.UserName}, Id: {CurrentUser?.Id}");
 
 				string avatarFolder = Path.Combine(_options.BasePath, $"userData_{userId}", "Avatars");
 				if (Directory.Exists(avatarFolder))
@@ -83,12 +87,12 @@ namespace VCS_DOCs.Pages.Content
 					if (avatarFile != null)
 					{
 						var avatarFileName = Path.GetFileName(avatarFile);
-						//AvatarPath = $"/userData_{userId}/Avatars/{avatarFileName}";
 						AvatarPath = $"/userdata/userData_{userId}/Avatars/{avatarFileName}";
 					}
 				}
 			}
 		}
+
 
 		public class UpdateUserRequest
 		{
@@ -105,7 +109,7 @@ namespace VCS_DOCs.Pages.Content
 			if (user == null)
 				return new JsonResult(new { success = false, error = "Пользователь не найден" });
 
-			string userFolder = Path.Combine(_options.BasePath, $"userData_{user.Id}"); // <-- тут поправка
+			string userFolder = Path.Combine(_options.BasePath, $"userData_{user.Id}"); 
 			string filePath = Path.Combine(userFolder, fileName);
 
 			if (!System.IO.File.Exists(filePath))
@@ -148,7 +152,7 @@ namespace VCS_DOCs.Pages.Content
 
 		public async Task<IActionResult> OnPostUpdateUserDataAsync([FromBody] UpdateUserRequest request)
 		{
-			DateTime parsedDate = DateTime.MinValue;   // дефолтное значение
+			DateTime parsedDate = DateTime.MinValue;  
 
 			try { await _antiforgery.ValidateRequestAsync(HttpContext); }
 			catch (AntiforgeryValidationException)
@@ -264,14 +268,10 @@ namespace VCS_DOCs.Pages.Content
 			bool ok = await _quotaService.ReserveAsync(userId, fileName, fileSize);
 			return new JsonResult(new { success = ok });
 		}
-
-
-
 		public class CancelTaskRequest
 		{
 			public string? TaskId { get; set; }
 		}
-
 		public async Task<IActionResult> OnGetStorageStatusAsync()
 		{
 			string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -299,7 +299,6 @@ namespace VCS_DOCs.Pages.Content
 			await _quotaService.ReleaseAsync(userId, fileName);
 			return new JsonResult(new { success = true });
 		}
-
 		public async Task<IActionResult> OnPostUploadChunkAsync()
 		{
 			var headers = Request.Headers;
@@ -366,7 +365,15 @@ namespace VCS_DOCs.Pages.Content
 
 				if (chunkIndex == totalChunks - 1)
 				{
+					if (!System.Text.RegularExpressions.Regex.IsMatch(fileName, "_v\\d+\\.0", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+					{
+						var nameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
+						var extension = Path.GetExtension(fileName);
+						fileName = $"{nameWithoutExtension}_v1.0{extension}";
+					}
+
 					string finalPath = Path.Combine(userFolder, fileName);
+
 					await using (var dest = new FileStream(finalPath, FileMode.Create, FileAccess.Write))
 					{
 						for (int i = 0; i < totalChunks; i++)
@@ -382,25 +389,21 @@ namespace VCS_DOCs.Pages.Content
 
 					Directory.Delete(chunkFolder, recursive: true);
 
-					// FIX: Снимаем резерв после успешной загрузки
 					await _quotaService.ReleaseAsync(userId, fileName);
 
-					var files = Directory
-						.GetFiles(userFolder)
-						.Select(f =>
-						{
-							var fi = new FileInfo(f);
-							return new
-							{
-								name = fi.Name,
-								sizeMb = Math.Round(fi.Length / 1048576.0, 2),
-								lastWriteTime = fi.LastWriteTime.ToString("dd.MM.yyyy, HH:mm")
-							};
-						})
-						.ToList();
+					var entries = GetUserFiles(userFolder);
+					await _hubContext.Clients.Group(userId).SendAsync("ReceiveStorageUpdate", entries);
 
+					int retries = 0;
+					while (retries < 3 && !System.IO.File.Exists(finalPath))
+					{
+						await Task.Delay(500);
+						retries++;
+					}
+
+					//var entries = GetUserFiles(userFolder);
 					await _hubContext.Clients.Group(userId)
-						.SendAsync("ReceiveStorageUpdate", files);
+						.SendAsync("ReceiveStorageUpdate", entries);
 
 					ActiveUploadsRegistry.Unregister(userId, fileName);
 				}
@@ -413,6 +416,7 @@ namespace VCS_DOCs.Pages.Content
 				return new JsonResult(new { success = false, error = ex.Message });
 			}
 		}
+
 
 		public async Task<JsonResult> OnGetFilesAsync()
 		{
@@ -569,8 +573,75 @@ namespace VCS_DOCs.Pages.Content
 			var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
 			return File(fileStream, "application/octet-stream", fileName);
 		}
+		private List<UserFileEntry> GetUserFiles(string userFolder)
+		{
+			var files = new DirectoryInfo(userFolder)
+				.GetFiles()
+				.Where(f => !f.Name.EndsWith(".tmp", StringComparison.OrdinalIgnoreCase) &&
+							!f.Name.Contains("_chunks") &&
+							!f.Name.EndsWith("_incomplete", StringComparison.OrdinalIgnoreCase)) // если используешь такие
+				.ToList();
+
+			var groups = files
+				.GroupBy(file =>
+				{
+					var nameWithoutExt = Path.GetFileNameWithoutExtension(file.Name);
+					var baseName = Regex.Replace(nameWithoutExt, "_v\\d+\\.0$", "", RegexOptions.IgnoreCase);
+					return baseName.ToLowerInvariant();
+				});
+
+			var entries = new List<UserFileEntry>();
+
+			foreach (var group in groups)
+			{
+				var versions = group
+					.Select(file =>
+					{
+						var match = Regex.Match(file.Name, "_v(\\d+)\\.0", RegexOptions.IgnoreCase);
+						return match.Success ? $"v{match.Groups[1].Value}.0" : "v1.0";
+					})
+					.OrderBy(v => v)
+					.ToList();
+
+				var newestFile = group
+					.OrderByDescending(f => f.LastWriteTimeUtc)
+					.First();
+
+				var matchInNewest = Regex.Match(newestFile.Name, "_v(\\d+)\\.0", RegexOptions.IgnoreCase);
+				var baseFileName = Path.GetFileNameWithoutExtension(newestFile.Name);
+				var displayName = matchInNewest.Success && !string.IsNullOrEmpty(matchInNewest.Value)
+					? baseFileName.Replace(matchInNewest.Value, "")
+					: baseFileName;
+
+				var entry = new UserFileEntry
+				{
+					BaseName = group.Key,
+					Extension = newestFile.Extension,
+					DisplayName = displayName,
+					CurrentVersion = versions.LastOrDefault() ?? "v1.0",
+					AllVersions = versions,
+					SizeMb = Math.Round(newestFile.Length / 1048576.0, 2),
+					LastWriteTime = newestFile.LastWriteTime.ToString("dd.MM.yyyy, HH:mm")
+				};
+
+				entries.Add(entry);
+			}
+
+			return entries;
+		}
 	}
 }
+public class UserFileEntry
+{
+	public string BaseName { get; set; } = "";
+	public string Extension { get; set; } = "";
+	public string DisplayName { get; set; } = ""; 
+	public string CurrentVersion { get; set; } = "v1.0";
+	public List<string> AllVersions { get; set; } = new();
+	public double SizeMb { get; set; }
+	public string LastWriteTime { get; set; } = "";
+}
+
 public static class SafeFileUtils
 {
 	public static async Task<bool> TryDeleteDirectoryWithRetries(string path, int retries = 5, int delayMs = 300)
