@@ -1,12 +1,22 @@
-﻿//userStatus.js скрипт для отслеживания принудительного входа
+﻿// userStatus.js — отслеживание подключения и статуса пользователя 
 (function () {
     const initializeSignalR = () => {
         if (window.location.pathname.toLowerCase() === '/login') return;
 
         if (typeof signalR === 'undefined') {
-            console.error('SignalR не загружен');
+            console.error('[SignalR] Не загружен');
             return;
         }
+
+        const getUserStatusEl = () => document.querySelector(".user-status");
+
+        const setUserStatus = (text, className) => {
+            const el = getUserStatusEl();
+            if (!el) return;
+            el.textContent = text;
+            el.classList.remove("online", "offline", "connecting", "error");
+            if (className) el.classList.add(className);
+        };
 
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("/Data/userStatusHub", {
@@ -22,31 +32,58 @@
         });
 
         connection.on("ForceLogout", () => {
-            console.log("Received ForceLogout command");
+            console.warn("[SignalR] Получена команда ForceLogout");
+            alert("Связь с сервером разорвана. Причина: вход с другого устройства");
             localStorage.removeItem('token');
             window.location.href = '/Login?message=session_terminated';
         });
 
         connection.onclose(error => {
-            if (error?.statusCode === 401) {
-                window.location.href = '/Login';
-            }
-            console.error('Соединение закрыто:', error);
-        });
-        connection.on("ForceLogout", function () {
-            console.log("Received ForceLogout command");
-            alert("Связь с сервером разорвана. Причина: принудительный вход с другого устройства");
-            window.location.href = "/Login";
-        });
-        connection.on("DebugResponse", function (message) {
-            //console.log("Получено сообщение от сервера:", message);
+            console.error('[SignalR] Соединение закрыто:', error);
+            setUserStatus("Оффлайн", "offline");
         });
 
-        // Вызови метод с клиента после подключения
-        connection.start().then(() => {
-            connection.invoke("DebugMessage");
+        connection.onreconnecting(() => {
+            console.warn("[SignalR] Переподключение...");
+            setUserStatus("Переподключение...", "connecting");
         });
+
+        connection.onreconnected(() => {
+            console.log("[SignalR] Переподключение завершено");
+            setUserStatus("В сети", "online");
+        });
+
+        connection.start()
+            .then(() => {
+                console.log("[SignalR] Подключено");
+                setUserStatus("В сети", "online");
+            })
+            .catch(err => {
+                console.error("[SignalR] Ошибка подключения:", err);
+                setUserStatus("Ошибка", "error");
+            });
+
+        // Резервная проверка, если соединение молча отвалилось
+        setInterval(() => {
+            switch (connection.state) {
+                case "Connected":
+                    setUserStatus("В сети", "online");
+                    break;
+                case "Disconnected":
+                    setUserStatus("Оффлайн", "offline");
+                    break;
+                case "Reconnecting":
+                    setUserStatus("Переподключение...", "connecting");
+                    break;
+                default:
+                    setUserStatus("Ошибка", "error");
+                    break;
+            }
+        }, 5000);
     };
 
-    initializeSignalR();
+    document.addEventListener("DOMContentLoaded", initializeSignalR);
+
+    // экспортируем для ручного вызова при SPA-переходах
+    window.reconnectUserStatus = initializeSignalR;
 })();

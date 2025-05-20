@@ -76,7 +76,8 @@ namespace VCS_DOCs.Services.Upload
 				try
 				{
 					Directory.Delete(chunkDir, recursive: true);
-					_uploadTaskService.RemoveActiveTask(chunkDir);					
+					_uploadTaskService.RemoveActiveTask(chunkDir);
+					Console.WriteLine($"[Cleaner:{UserId}] удалил {chunkDir}");
 				}
 				catch (Exception ex)
 				{

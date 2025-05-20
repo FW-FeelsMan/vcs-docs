@@ -96,9 +96,13 @@ function renderUploadedFiles(files, uploading, tableBody) {
 
 	for (const file of files) {
 		if (!file || !file.extension || !file.baseName || !file.currentVersion) continue;
+		console.log("[client] file from server:", file);
 		const ext = file.extension.startsWith(".") ? file.extension : `.${file.extension}`;
-		const fullName = `${file.baseName}_${file.currentVersion}${ext}`;
-		const displayName = `${file.displayName}${ext}`;
+		const fullName = `${file.baseName}.${file.currentVersion}`;
+
+		console.log(`[client] fullName composed: ${fullName}`);
+
+		const displayName = `${file.displayName}`;
 		const key = fullName.toLowerCase();
 		if (uploadingKeys.has(key)) continue;
 

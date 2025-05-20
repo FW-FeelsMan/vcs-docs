@@ -64,10 +64,5 @@ namespace VCS_DOCs.Data.Hubs
 			await _hubContext.Clients.User(userId).SendAsync("ForceLogout");
 			await _userService.ClearUserJwtIdAsync(userId);
 		}
-
-		public async Task DebugMessage()
-		{
-			await Clients.Caller.SendAsync("DebugResponse", "Проверка связи с сервером успешна");
-		}
 	}
 }

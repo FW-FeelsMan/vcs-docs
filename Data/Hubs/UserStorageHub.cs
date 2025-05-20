@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using System.Text.RegularExpressions;
 using VCS_DOCs.Services.Upload;
 
 namespace VCS_DOCs.Data.Hubs
@@ -35,49 +36,43 @@ namespace VCS_DOCs.Data.Hubs
 			string userFolder = Path.Combine(basePath, $"userData_{userId}");
 
 			var entries = new List<object>();
+
 			if (Directory.Exists(userFolder))
 			{
 				var files = new DirectoryInfo(userFolder).GetFiles();
 
 				var groups = files
-					.GroupBy(file =>
+					.Select(file =>
 					{
-						var nameWithoutExt = Path.GetFileNameWithoutExtension(file.Name);
-						var baseName = System.Text.RegularExpressions.Regex.Replace(nameWithoutExt, "_v\\d+\\.0$", "");
-						return baseName.ToLowerInvariant();
-					});
+						var match = Regex.Match(file.Name, @"^(.*)\.v(\d+\.\d+)$", RegexOptions.IgnoreCase);
+						var baseName = match.Success ? match.Groups[1].Value : Path.GetFileNameWithoutExtension(file.Name);
+						var version = match.Success ? match.Groups[2].Value : "1.0";
+
+						return new { file, baseName, version };
+					})
+					.GroupBy(x => x.baseName.ToLowerInvariant());
 
 				foreach (var group in groups)
 				{
 					var versions = group
-						.Select(file =>
-						{
-							var match = System.Text.RegularExpressions.Regex.Match(file.Name, "_v(\\d+)\\.0", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-							return match.Success ? $"v{match.Groups[1].Value}.0" : "v1.0";
-						})
-						.OrderBy(v => v)
+						.Select(x => x.version)
+						.Distinct()
+						.OrderBy(v => Version.Parse(v))
 						.ToList();
 
-					var newestFile = group
-						.OrderByDescending(f => f.LastWriteTimeUtc)
+					var newestFileEntry = group
+						.OrderByDescending(x => Version.Parse(x.version))
 						.First();
-					var match = System.Text.RegularExpressions.Regex.Match(newestFile.Name, "_v(\\d+)\\.0", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-					var displayName = Path.GetFileNameWithoutExtension(newestFile.Name);
-
-					if (match.Success && !string.IsNullOrEmpty(match.Value))
-					{
-						displayName = displayName.Replace(match.Value, "");
-					}
 
 					var entry = new
 					{
 						baseName = group.Key,
-						extension = newestFile.Extension,
-						displayName = displayName,
-						currentVersion = versions.LastOrDefault() ?? "v1.0",
+						extension = newestFileEntry.file.Extension,
+						displayName = group.Key,
+						currentVersion = versions.Last(),
 						allVersions = versions,
-						sizeMb = Math.Round(newestFile.Length / 1048576.0, 2),
-						lastWriteTime = newestFile.LastWriteTime.ToString("dd.MM.yyyy, HH:mm")
+						sizeMb = Math.Round(newestFileEntry.file.Length / 1048576.0, 2),
+						lastWriteTime = newestFileEntry.file.LastWriteTime.ToString("dd.MM.yyyy, HH:mm")
 					};
 
 					entries.Add(entry);
@@ -86,6 +81,7 @@ namespace VCS_DOCs.Data.Hubs
 
 			await Clients.Caller.SendAsync("ReceiveStorageUpdate", entries);
 		}
+
 
 		public async Task CancelUpload(string fileName)
 		{

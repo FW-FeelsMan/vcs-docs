@@ -33,7 +33,7 @@ namespace VCS_DOCs.Services.Upload
 			if (!ActiveUploads.TryGetValue(key, out var lastUpdate))
 				return false;
 
-			return (DateTime.UtcNow - lastUpdate) < TimeSpan.FromSeconds(5);
+			return (DateTime.UtcNow - lastUpdate) < TimeSpan.FromSeconds(30);
 		}
 
 		public static void Unregister(string userId, string fileName)

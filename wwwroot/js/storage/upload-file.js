@@ -1,6 +1,6 @@
-﻿// upload-file.js (только загрузка, без UI вмешательств)
-const MAX_CHUNK_SIZE = 2 * 1024 * 1024;
+﻿const MAX_CHUNK_SIZE = 10 * 1024 * 1024;
 const MAX_FILENAME_LENGTH = 120;
+window.currentlyUploadingFiles = window.currentlyUploadingFiles || new Map();
 
 const uploadAbortControllers = new Map();
 const cancelledUploads = new Set();
@@ -13,25 +13,6 @@ function getFileNameParts(name) {
 
 function getFileKey(name) {
 	return name.trim().toLowerCase();
-}
-
-function generateNextVersion(existingVersions) {
-	if (!existingVersions.length) return "v1.0";
-
-	const versionNumbers = existingVersions
-		.map(v => parseFloat(v.replace(/[^\d.]/g, "")))
-		.filter(n => !isNaN(n));
-
-	const maxVersion = versionNumbers.length ? Math.max(...versionNumbers) : 0;
-	const nextVersion = (Math.floor(maxVersion) + 1) + ".0";
-	return "v" + nextVersion;
-}
-
-function findExistingVersions(baseName) {
-	return currentStorageFiles
-		.filter(f => f.baseName.toLowerCase() === baseName.toLowerCase())
-		.map(f => f.currentVersion)
-		.filter(v => v);
 }
 
 async function reserveFile(fileName, fileSize) {
@@ -64,119 +45,129 @@ async function releaseFile(fileName) {
 	} catch { }
 }
 
-async function uploadSelectedFile(file, action = "overwrite") {
-    isUploading = true;
+async function uploadSelectedFile(file) {
+	console.log("Начало загрузки файла:", file.name);
 
-    const [baseName, extension] = getFileNameParts(file.name);
-    let finalName = file.name;
+	isUploading = true;
 
-    if (action === "new-version") {
-        const versions = findExistingVersions(baseName);
-        const nextVersion = generateNextVersion(versions);
-        finalName = `${baseName}_${nextVersion}${extension}`;
-    }
+	const reserveResult = await reserveFile(file.name, file.size);
+	if (!reserveResult.success) {
+		alert(reserveResult.error || "Превышен лимит хранилища.\n\nС учетом текущих загрузок, добавление новых файлов приведет к переполнению Вашего личного хранилища.\n\nОсвободите место или дождитесь/отмените активные загрузки.");
+		return;
+	}
+	if (!window.currentlyUploadingFiles || typeof window.currentlyUploadingFiles.set !== 'function') {
+		window.currentlyUploadingFiles = new Map();
+	}
 
-    const reserveResult = await reserveFile(finalName, file.size);
-    if (!reserveResult.success) {
-        alert(reserveResult.error || "Ошибка при резервировании файла.");
-        return;
-    }
+	const finalName = reserveResult.finalFileName;
+	const key = getFileKey(finalName);
+	console.log("Финальное имя файла:", finalName);
+	console.log("Ключ файла:", key);
+	cancelledUploads.delete(key);
 
-    const key = getFileKey(finalName);
-    cancelledUploads.delete(key);
+	const fileId = `upload-${key.replace(/\W+/g, '-')}`;
 
-    const fileId = `upload-${key.replace(/\W+/g, '-')}`;
+	if (typeof window.addFileToPopup === 'function') {
+		window.addFileToPopup(finalName, file.size, fileId);
+	}
 
-    if (typeof window.addFileToPopup === 'function') {
-        window.addFileToPopup(finalName, file.size, fileId);
-    }
+	window.currentlyUploadingFiles.set(key, {
+		name: finalName,
+		uploaded: 0,
+		total: file.size,
+		fileId
+	});
+	console.log("Добавлено в Map:", key, window.currentlyUploadingFiles.get(key));
+	console.log("Текущие загрузки после добавления:", Array.from(window.currentlyUploadingFiles.entries()));
 
-    window.currentlyUploadingFiles.set(key, {
-        name: finalName,
-        uploaded: 0,
-        total: file.size,
-        fileId
-    });
+	activeUploads++;
+	const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE);
+	const controller = new AbortController();
+	uploadAbortControllers.set(key, controller);
 
-    activeUploads++;
-    const totalChunks = Math.ceil(file.size / MAX_CHUNK_SIZE);
-    const controller = new AbortController();
-    uploadAbortControllers.set(key, controller);
+	let uploadedBytes = 0;
+	let uploadSucceeded = false;
 
-    let uploadedBytes = 0;
-    let uploadSucceeded = false;
+	try {
+		for (let i = 0; i < totalChunks; i++) {
+			if (cancelledUploads.has(key)) throw new Error("Загрузка отменена");
 
-    try {
-        for (let i = 0; i < totalChunks; i++) {
-            if (cancelledUploads.has(key)) throw new Error("Загрузка отменена");
+			const chunk = file.slice(i * MAX_CHUNK_SIZE, (i + 1) * MAX_CHUNK_SIZE);
+			const res = await fetch("/Content/profile_page?handler=UploadChunk", {
+				method: "POST",
+				headers: {
+					"Accept": "application/json",
+					"X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+					"X-File-Name": encodeURIComponent(finalName),
+					"X-Chunk-Index": i.toString(),
+					"X-Total-Chunks": totalChunks.toString()
+				},
+				body: chunk,
+				signal: controller.signal
+			});
 
-            const chunk = file.slice(i * MAX_CHUNK_SIZE, (i + 1) * MAX_CHUNK_SIZE);
-            const res = await fetch("/Content/profile_page?handler=UploadChunk", {
-                method: "POST",
-                headers: {
-                    "Accept": "application/json",
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
-                    "X-File-Name": encodeURIComponent(finalName),
-                    "X-Chunk-Index": i.toString(),
-                    "X-Total-Chunks": totalChunks.toString()
-                },
-                body: chunk,
-                signal: controller.signal
-            });
+			// Для больших файлов периодически обновляем статус активности
+			// Делаем это каждые 5 чанков для файлов больше 100 МБ
+			if (file.size > 100 * 1024 * 1024 && i % 5 === 0 && i > 0) {
+				await fetch("/Content/profile_page?handler=TouchUpload", {
+					method: "POST",
+					headers: {
+						"Accept": "application/json",
+						"X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+						"X-File-Name": encodeURIComponent(finalName)
+					}
+				});
+			}
 
-            const result = await res.json();
-            if (!result.success) throw new Error(result.error);
+			const result = await res.json();
+			if (!result.success) throw new Error(result.error);
 
-            uploadedBytes += chunk.size;
+			uploadedBytes += chunk.size;
 
-            if (window.currentlyUploadingFiles.has(key)) {
-                const fileInfo = window.currentlyUploadingFiles.get(key);
-                fileInfo.uploaded = uploadedBytes;
-                window.currentlyUploadingFiles.set(key, fileInfo);
+			if (window.currentlyUploadingFiles.has(key)) {
+				const fileInfo = window.currentlyUploadingFiles.get(key);
+				fileInfo.uploaded = uploadedBytes;
+				window.currentlyUploadingFiles.set(key, fileInfo);
 
-                if (typeof window.updateFileProgress === 'function' && fileInfo.fileId) {
-                    window.updateFileProgress(fileInfo.fileId, uploadedBytes, file.size);
-                }
-            }
-        }
+				if (typeof window.updateFileProgress === 'function' && fileInfo.fileId) {
+					window.updateFileProgress(fileInfo.fileId, uploadedBytes, file.size);
+				}
+			}
+		}
 
-        const fileInfo = window.currentlyUploadingFiles.get(key);
-        if (typeof window.completeFileUpload === 'function' && fileInfo?.fileId) {
-            window.completeFileUpload(fileInfo.fileId);
-        }
+		const fileInfo = window.currentlyUploadingFiles.get(key);
+		if (typeof window.completeFileUpload === 'function' && fileInfo?.fileId) {
+			window.completeFileUpload(fileInfo.fileId);
+		}
 
-        console.log(`[Upload] Загрузка файла "${finalName}" завершена успешно`);
+		uploadSucceeded = true;
 
-        // ✅ Только после успешной загрузки
-        uploadSucceeded = true;
+	} catch (err) {
+		await releaseFile(finalName);
+	} finally {
+		isUploading = false;
+		activeUploads--;
+		cancelledUploads.delete(key);
+		uploadAbortControllers.delete(key);
+		window.currentlyUploadingFiles.delete(key);
 
-    } catch (err) {
-        await releaseFile(finalName);
-        console.warn(`[Upload] Ошибка загрузки "${finalName}": ${err.message}`);
-    } finally {
-        isUploading = false;
-        activeUploads--;
-        cancelledUploads.delete(key);
-        uploadAbortControllers.delete(key);
-        window.currentlyUploadingFiles.delete(key);
+		if (uploadSucceeded && typeof requestFiles === "function") {
+			setTimeout(() => requestFiles(), 400);
+		}
 
-        if (uploadSucceeded && typeof requestFiles === "function") {
-            //await releaseFile(finalName);
-            setTimeout(() => requestFiles(), 400);
-        }
+		if (typeof refreshStorageStatus === "function") {
+			refreshStorageStatus();
+		}
 
-        if (typeof refreshStorageStatus === "function") {
-            refreshStorageStatus();
-        }
-
-        if (activeUploads === 0) {
-            window.uploadTotalFiles = 0;
-            if (typeof window.updatePopupTitle === 'function') {
-                window.updatePopupTitle();
-            }
-        }
-    }
+		if (activeUploads === 0) {
+			window.uploadTotalFiles = 0;
+			if (typeof window.updatePopupTitle === 'function') {
+				window.updatePopupTitle();
+			}
+		}
+	}
 }
+
 function setupUploadBindings() {
 	const uploadButton = document.getElementById("uploadFileButton");
 	const fileInput = document.getElementById("hiddenFileInput");
@@ -192,42 +183,102 @@ function setupUploadBindings() {
 
 		window.uploadTotalFiles = files.length;
 
+		// Отладка: проверяем инициализацию Map
+		console.log("Тип currentlyUploadingFiles:", typeof window.currentlyUploadingFiles);
+		console.log("Является ли Map:", window.currentlyUploadingFiles instanceof Map);
+
+		// Если не Map, пересоздаем
+		if (!(window.currentlyUploadingFiles instanceof Map)) {
+			console.warn("currentlyUploadingFiles не является Map, пересоздаем");
+			window.currentlyUploadingFiles = new Map();
+		}
+
+		// Отладка: выводим текущие загрузки
+		console.log("Текущие загрузки:", Array.from(window.currentlyUploadingFiles.entries()));
+
 		for (const file of files) {
 			if (file.name.length > MAX_FILENAME_LENGTH) {
 				alert(`Имя файла слишком длинное: ${file.name.length}`);
 				continue;
 			}
 
-			const key = getFileKey(file.name);
+			const fileKey = getFileKey(file.name);
+			console.log("Проверяем файл:", file.name);
+			console.log("Ключ файла:", fileKey);
 
-			if (window.currentlyUploadingFiles?.has(key)) {
-				showConflictModal(file.name, "uploading", {
+			// Отладка: проверяем каждую текущую загрузку
+			let foundUploading = false;
+			window.currentlyUploadingFiles.forEach((entry, key) => {
+				console.log("Сравниваем с:", key);
+				console.log("Данные загрузки:", entry);
+
+				// Проверяем наличие поля name
+				if (entry.name) {
+					const entryKey = getFileKey(entry.name);
+					console.log("Ключ текущей загрузки:", entryKey);
+					if (entryKey === fileKey) {
+						foundUploading = true;
+						console.log("СОВПАДЕНИЕ НАЙДЕНО!");
+					}
+				} else {
+					console.warn("В записи загрузки отсутствует поле name:", entry);
+				}
+			});
+
+			// Используем результат нашей проверки
+			if (foundUploading) {
+				console.warn(`Файл "${file.name}" уже загружается.`);
+				alert(`Файл "${file.name}" уже загружается.`);
+				continue;
+			}
+
+			// Альтернативная проверка (оригинальная)
+			const isUploading = Array.from(window.currentlyUploadingFiles.values())
+				.some(entry => {
+					// Отладка: проверяем каждую запись
+					console.log("Проверка записи:", entry);
+					if (!entry.name) {
+						console.warn("Запись не содержит имя файла:", entry);
+						return false;
+					}
+					const entryKey = getFileKey(entry.name);
+					const matches = entryKey === fileKey;
+					console.log(`Сравнение ${entryKey} === ${fileKey}: ${matches}`);
+					return matches;
+				});
+
+			if (isUploading) {
+				console.warn(`Файл "${file.name}" уже загружается (проверка 2).`);
+				alert(`Файл "${file.name}" уже загружается.`);
+				continue;
+			}
+
+			const conflictFile = window.currentStorageFiles.find(f =>
+				getFileKey(f.baseName) === fileKey
+			);
+
+			if (conflictFile) {
+				showConflictModal(file.name, "exists", {
 					onReplace: async () => {
-						await window.cancelUploadingFile(file.name);
+						const fileToDelete = `${conflictFile.baseName}.v${conflictFile.currentVersion}`;
+						await deleteFile(fileToDelete);
 						setTimeout(() => uploadSelectedFile(file), 300);
 					},
-					onCancel: () => console.log("Отмена загрузки"),
+					onNewVersion: async () => {
+						setTimeout(() => uploadSelectedFile(file), 300);
+					},
+					onCancel: () => { }
 				});
 				continue;
 			}
 
-			const incomingBaseName = getFileNameParts(file.name)[0].toLowerCase();
-			const exists = currentStorageFiles?.some(f => f?.baseName?.toLowerCase() === incomingBaseName);
-
-			if (exists) {
-				showConflictModal(file.name, "exists", {
-					onReplace: () => uploadSelectedFile(file, "overwrite"),
-					onNewVersion: () => uploadSelectedFile(file, "new-version"),
-					onCancel: () => console.log("Отмена загрузки"),
-				});
-			} else {
-				await uploadSelectedFile(file);
-			}
+			await uploadSelectedFile(file);
 		}
 
 		fileInput.value = "";
 	});
 }
+
 
 window.initUploadFile = function () {
 	setupUploadBindings();

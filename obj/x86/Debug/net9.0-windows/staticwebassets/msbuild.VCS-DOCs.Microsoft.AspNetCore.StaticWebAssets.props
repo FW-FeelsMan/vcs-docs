@@ -30,8 +30,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>tdjzcvs99s</Fingerprint>
-      <Integrity>4bQVdGcs29pJO+KZtOd8xZh42+9K/A1p1h7giUKiQK0=</Integrity>
+      <Fingerprint>br6tnxdy1g</Fingerprint>
+      <Integrity>iU1VS/eCqnCFZ20OQk/afWay/OnEagMMi7im2MOQ8/I=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\css\main_css\mainStyle.css'))</OriginalItemSpec>
@@ -588,8 +588,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>luqt603ilh</Fingerprint>
-      <Integrity>LaPlviThvgAU29CQC/9FBIxmU0Kw0HhfE9Ba7oTdFzo=</Integrity>
+      <Fingerprint>sihd5vgqze</Fingerprint>
+      <Integrity>9BrS2UbL/lZuxhaSajNz38Mw6RjOoXBzHuZqfOPUszA=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\profile\profile-sidebar-popup.js'))</OriginalItemSpec>
@@ -606,8 +606,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>v38p0ssljz</Fingerprint>
-      <Integrity>S+Xr+DI0qmQkVZaFkvOZGsSqJscl0NOhV4YFefUyRsc=</Integrity>
+      <Fingerprint>6jud0n5dot</Fingerprint>
+      <Integrity>Ltigu5F37ELsORQM0rCVm/eYoB7uly7V2piQGq2bUxY=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\profile\userStatus.js'))</OriginalItemSpec>
@@ -642,8 +642,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>3he6vevbyn</Fingerprint>
-      <Integrity>OUq+1qTmQlXKxI3euVWhGFFmjhG4mKrzaJ+5EAw5Syo=</Integrity>
+      <Fingerprint>p1l1iqwvkd</Fingerprint>
+      <Integrity>zdrGs2BhZIs+h01aeSgnf/CUMzdYpOM5n5pBWydgw0M=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\storage\storage-model.js'))</OriginalItemSpec>
@@ -660,8 +660,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>h7ekxml317</Fingerprint>
-      <Integrity>E5LFzE5sEBfV0/xrT12HbggUo661crSlkEtboImoGF4=</Integrity>
+      <Fingerprint>8pr1ljnqnw</Fingerprint>
+      <Integrity>fJPpRas7m2w3suZwOVWb7tksNOlg/QLp0jCgFT7Obh4=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\storage\upload-conflict-modal.js'))</OriginalItemSpec>
@@ -678,8 +678,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>y1wowmmavw</Fingerprint>
-      <Integrity>ui/Xjy3IbqSQPHz3MRB2H/8QI1TqWugaQCNNSqoVP1o=</Integrity>
+      <Fingerprint>ansv7f0dh0</Fingerprint>
+      <Integrity>OhocZXFA5DqnbGmoRCFCbrXhrnZcfZqXBgvQUNcJFLk=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\storage\upload-file.js'))</OriginalItemSpec>
@@ -696,8 +696,8 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>h9mfpp5wa8</Fingerprint>
-      <Integrity>i9QMOo1yLoelcJYkyf9waQtWAvv4xNiggUCeBko4iOc=</Integrity>
+      <Fingerprint>npf5o396qa</Fingerprint>
+      <Integrity>NQ1Gif77k9m3YrMccgEbXoxP+MMnOKpx+feKhLlUQdQ=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\storage\user-storage.js'))</OriginalItemSpec>

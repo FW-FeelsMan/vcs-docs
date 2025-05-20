@@ -10450,6 +10450,7 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "D:\\Unity\\sdk polynom\\Samples.Desktop\\Samples.Desktop\\packages": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {

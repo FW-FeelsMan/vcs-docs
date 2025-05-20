@@ -44,7 +44,9 @@ namespace VCS_DOCs.Services.Upload
 
 		private async Task ProcessTaskAsync(FileUploadTask task, CancellationToken stoppingToken)
 		{
-			string[] chunkFiles = Directory.GetFiles(task.TempFilePath).OrderBy(f => f).ToArray();
+			// Получаем все чанки и сортируем их по индексу
+			string[] chunkFiles = Directory.GetFiles(task.TempFilePath).OrderBy(f =>
+				int.Parse(Path.GetFileName(f).Replace("chunk_", ""))).ToArray();
 			string destinationFile = Path.Combine(task.DestinationFolder, task.OriginalFileName);
 
 			if (_cancelledTaskIds.Contains(task.TaskId))
@@ -59,21 +61,65 @@ namespace VCS_DOCs.Services.Upload
 
 			try
 			{
-				using (var destinationStream = new FileStream(destinationFile, FileMode.Create))
-				{
-					foreach (var chunkFile in chunkFiles)
-					{
-						using (var sourceStream = new FileStream(chunkFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-							await sourceStream.CopyToAsync(destinationStream, stoppingToken);
+				// Определяем оптимальный размер буфера в зависимости от размера файла
+				int bufferSize = task.FileLength > 1024 * 1024 * 1024
+					? 16 * 1024 * 1024  // 16 МБ буфер для файлов больше 1 ГБ
+					: 4 * 1024 * 1024;  // 4 МБ буфер для файлов меньше 1 ГБ
 
+				// Используем оптимизированные настройки FileStream для больших файлов
+				using (var destinationStream = new FileStream(
+					destinationFile,
+					FileMode.Create,
+					FileAccess.Write,
+					FileShare.None,
+					bufferSize,
+					FileOptions.Asynchronous | FileOptions.SequentialScan))
+				{
+					long totalProcessed = 0;
+					int chunkCount = chunkFiles.Length;
+
+					for (int i = 0; i < chunkCount; i++)
+					{
+						var chunkFile = chunkFiles[i];
+
+						using (var sourceStream = new FileStream(
+							chunkFile,
+							FileMode.Open,
+							FileAccess.Read,
+							FileShare.ReadWrite,
+							bufferSize,
+							FileOptions.Asynchronous | FileOptions.SequentialScan))
+						{
+							await sourceStream.CopyToAsync(destinationStream, bufferSize, stoppingToken);
+							totalProcessed += sourceStream.Length;
+						}
+
+						// Удаляем чанк после успешного копирования
 						TryDeleteFile(chunkFile);
+
+						// Периодически сообщаем о прогрессе (каждые 10% или каждые 50 чанков)
+						if (i % Math.Max(1, chunkCount / 10) == 0 || i % 50 == 0)
+						{
+							double progress = (double)totalProcessed / task.FileLength * 100;
+							await _hubContext.Clients.Group(task.UserId).SendAsync(
+								"ReceiveUploadProgress",
+								new { fileName = task.OriginalFileName, progress = Math.Min(99, progress) });
+						}
 					}
+
+					// Явно сбрасываем буферы на диск
+					await destinationStream.FlushAsync(stoppingToken);
 				}
 
+				// Удаляем директорию с чанками после успешной сборки
 				TryDeleteDirectory(task.TempFilePath);
 
-				await _hubContext.Clients.Group(task.UserId).SendAsync("ReceiveUploadProgress", new { fileName = task.OriginalFileName, progress = 100 });
+				// Сообщаем о завершении загрузки
+				await _hubContext.Clients.Group(task.UserId).SendAsync(
+					"ReceiveUploadProgress",
+					new { fileName = task.OriginalFileName, progress = 100 });
 
+				// Обновляем список файлов
 				var fileInfos = Directory.GetFiles(task.DestinationFolder).Select(file => new
 				{
 					name = Path.GetFileName(file),
@@ -86,6 +132,11 @@ namespace VCS_DOCs.Services.Upload
 			catch (Exception ex)
 			{
 				_logger.LogError(ex, $"Ошибка при обработке задачи {task.TaskId}: {ex.Message}");
+
+				// Уведомляем клиента об ошибке
+				await _hubContext.Clients.Group(task.UserId).SendAsync(
+					"ReceiveUploadError",
+					new { fileName = task.OriginalFileName, error = $"Ошибка при сборке файла: {ex.Message}" });
 			}
 			finally
 			{

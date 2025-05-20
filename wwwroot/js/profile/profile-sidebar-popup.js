@@ -11,7 +11,7 @@
     `;
     popup.style.display = 'none';
     document.body.appendChild(popup);
-    console.log('[TestProgress] popup создан вручную');
+    //console.log('[TestProgress] popup создан вручную');
 }
 
 function setupEventListeners(popup) {
@@ -98,7 +98,7 @@ function updateFileProgress(fileId, uploadedBytes, totalBytes) {
     if (!fileElement) return;
 
     const percent = Math.min(Math.round((uploadedBytes / totalBytes) * 100), 100);
-    console.log(`[TestProgress] updateFileProgress: ${percent}%`);
+    ////console.log(`[TestProgress] updateFileProgress: ${percent}%`);
 
     const progressFill = fileElement.querySelector('.upload-progress-fill');
     if (progressFill) {
@@ -113,13 +113,13 @@ function updateFileProgress(fileId, uploadedBytes, totalBytes) {
     }
 
     if (percent === 100) {
-        console.log(`[updateFileProgress] Прогресс достиг 100%, вызываем completeFileUpload(${fileId})`);
+        //console.log(`[updateFileProgress] Прогресс достиг 100%, вызываем completeFileUpload(${fileId})`);
         completeFileUpload(fileId);
     }
 }
 
 function completeFileUpload(fileId) {
-    console.log(`[completeFileUpload] Прок-пок-пок я скрипт и я вызван для ${fileId}`);
+    //console.log(`[completeFileUpload] Прок-пок-пок я скрипт и я вызван для ${fileId}`);
 
     const fileElement = document.getElementById(fileId);
     if (!fileElement) {
@@ -131,13 +131,13 @@ function completeFileUpload(fileId) {
     if (statusElement) {
         statusElement.textContent = 'Загрузка завершена';
         statusElement.style.color = '#4caf50';
-        console.log(`[completeFileUpload] Статус изменён на "Загрузка завершена" для ${fileId}`);
+        //console.log(`[completeFileUpload] Статус изменён на "Загрузка завершена" для ${fileId}`);
     }
 
     const progressFill = fileElement.querySelector('.upload-progress-fill');
     if (progressFill) {
         progressFill.style.width = '100%';
-        console.log(`[completeFileUpload] Прогресс установлен на 100% для ${fileId}`);
+        //console.log(`[completeFileUpload] Прогресс установлен на 100% для ${fileId}`);
     }
 
     const cancelButton = fileElement.querySelector('.upload-item-cancel');
@@ -149,14 +149,14 @@ function completeFileUpload(fileId) {
         cancelButton.style.color = '#4caf50';
         cancelButton.style.cursor = 'default';
 
-        console.log(`[completeFileUpload] Кнопка отмены заменена на галочку для ${fileId}`);
+        //console.log(`[completeFileUpload] Кнопка отмены заменена на галочку для ${fileId}`);
     } else {
         console.warn(`[completeFileUpload] Кнопка отмены не найдена для ${fileId}`);
     }
 
     // Удалим элемент через 3 секунды через правильную функцию
     setTimeout(() => {
-        console.log(`[completeFileUpload] Удаляем файл ${fileId} через removeFileFromPopup`);
+        //console.log(`[completeFileUpload] Удаляем файл ${fileId} через removeFileFromPopup`);
         removeFileFromPopup(fileId);
     }, 3000);
 }
@@ -169,7 +169,7 @@ function removeFileFromPopup(fileId) {
     }
 
     fileElement.remove();
-    console.log(`[removeFileFromPopup] Удалён элемент ${fileId}`);
+    //console.log(`[removeFileFromPopup] Удалён элемент ${fileId}`);
     updatePopupTitle();
 
     const popup = document.querySelector('.sidebar-upload-popup');
@@ -177,9 +177,9 @@ function removeFileFromPopup(fileId) {
     const files = content?.querySelectorAll('.upload-item');
 
     if (!files || files.length === 0) {
-        console.log(`[removeFileFromPopup] Все файлы удалены из popup, но popup не скрывается, потому что он встроен в разметку.`);
+        //console.log(`[removeFileFromPopup] Все файлы удалены из popup, но popup не скрывается, потому что он встроен в разметку.`);
     } else {
-        console.log(`[removeFileFromPopup] Файл ${fileId} удалён, но в списке остались другие`);
+        //console.log(`[removeFileFromPopup] Файл ${fileId} удалён, но в списке остались другие`);
     }
 }
 
@@ -226,12 +226,12 @@ function runTestProgress() {
         uploaded += chunkSize;
         if (uploaded > fileSize) uploaded = fileSize;
 
-        console.log(`[TestProgress] ${fileId} -> ${uploaded} / ${fileSize}`);
+        //console.log(`[TestProgress] ${fileId} -> ${uploaded} / ${fileSize}`);
         updateFileProgress(fileId, uploaded, fileSize);
 
         if (uploaded >= fileSize) {
             clearInterval(interval);
-            console.log('[TestProgress] Завершено');
+            //console.log('[TestProgress] Завершено');
             completeFileUpload(fileId);
         }
     }, 300);
@@ -255,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return setTimeout(waitForPopupContent, 200);
         }
 
-        console.log('[TestProgress] .sidebar-upload-content найден, начинаем симуляцию');
+        //console.log('[TestProgress] .sidebar-upload-content найден, начинаем симуляцию');
         runTestProgress();
     };
 
@@ -265,12 +265,12 @@ document.addEventListener('DOMContentLoaded', () => {
 window.profileSidebarPopup = {
     updateProgress: function (fileName, uploadedBytes, totalBytes) {
         const fileId = `upload-${fileName.toLowerCase().replace(/\W+/g, '-')}`;
-        console.log('[profileSidebarPopup] updateProgress', fileId);
+        //console.log('[profileSidebarPopup] updateProgress', fileId);
         updateFileProgress(fileId, uploadedBytes, totalBytes);
     },
     removeFile: function (fileName) {
         const fileId = `upload-${fileName.toLowerCase().replace(/\W+/g, '-')}`;
-        console.log('[profileSidebarPopup] removeFile', fileId);
+        //console.log('[profileSidebarPopup] removeFile', fileId);
         removeFileFromPopup(fileId);
     }
 };
