@@ -53,6 +53,8 @@
           "Microsoft.EntityFrameworkCore.Sqlite": "9.0.3",
           "Microsoft.EntityFrameworkCore.Tools": "9.0.3",
           "Microsoft.NET.Test.Sdk": "17.13.0",
+          "MiniProfiler.AspNetCore.Mvc": "4.5.4",
+          "MiniProfiler.EntityFrameworkCore": "4.5.4",
           "Moq": "4.20.72",
           "MySql.EntityFrameworkCore": "9.0.0",
           "Newtonsoft.Json": "13.0.3",
@@ -1635,6 +1637,63 @@
           "Microsoft.NETCore.Platforms": "1.1.1",
           "Microsoft.NETCore.Targets": "1.1.3",
           "System.Runtime": "4.3.1"
+        }
+      },
+      "MiniProfiler.AspNetCore/4.5.4": {
+        "dependencies": {
+          "MiniProfiler.Shared": "4.5.4"
+        },
+        "runtime": {
+          "lib/net8.0/MiniProfiler.AspNetCore.dll": {
+            "assemblyVersion": "4.0.0.0",
+            "fileVersion": "4.5.4.47516"
+          }
+        },
+        "compile": {
+          "lib/net8.0/MiniProfiler.AspNetCore.dll": {}
+        }
+      },
+      "MiniProfiler.AspNetCore.Mvc/4.5.4": {
+        "dependencies": {
+          "MiniProfiler.AspNetCore": "4.5.4"
+        },
+        "runtime": {
+          "lib/net8.0/MiniProfiler.AspNetCore.Mvc.dll": {
+            "assemblyVersion": "4.0.0.0",
+            "fileVersion": "4.5.4.47516"
+          }
+        },
+        "compile": {
+          "lib/net8.0/MiniProfiler.AspNetCore.Mvc.dll": {}
+        }
+      },
+      "MiniProfiler.EntityFrameworkCore/4.5.4": {
+        "dependencies": {
+          "Microsoft.EntityFrameworkCore.Relational": "9.0.3",
+          "MiniProfiler.Shared": "4.5.4"
+        },
+        "runtime": {
+          "lib/net8.0/MiniProfiler.EntityFrameworkCore.dll": {
+            "assemblyVersion": "4.0.0.0",
+            "fileVersion": "4.5.4.47516"
+          }
+        },
+        "compile": {
+          "lib/net8.0/MiniProfiler.EntityFrameworkCore.dll": {}
+        }
+      },
+      "MiniProfiler.Shared/4.5.4": {
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "9.0.3"
+        },
+        "runtime": {
+          "lib/net8.0/MiniProfiler.Shared.dll": {
+            "assemblyVersion": "4.0.0.0",
+            "fileVersion": "4.5.4.47516"
+          }
+        },
+        "compile": {
+          "lib/net8.0/MiniProfiler.Shared.dll": {}
         }
       },
       "Mono.TextTemplating/3.0.0": {
@@ -5160,6 +5219,34 @@
       "sha512": "sha512-9ZQKCWxH7Ijp9BfahvL2Zyf1cJIk8XYLF6Yjzr2yi0b2cOut/HQ31qf1ThHAgCc3WiZMdnWcfJCgN82/0UunxA==",
       "path": "microsoft.win32.primitives/4.3.0",
       "hashPath": "microsoft.win32.primitives.4.3.0.nupkg.sha512"
+    },
+    "MiniProfiler.AspNetCore/4.5.4": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-meedJsjpYOeHPhE8H6t+dGQ9zLxcCQVpi4DXzmxmYAXywmTzlo6jv2IASUv5QijTU0CxsROln3FHd8RsTO8Z8A==",
+      "path": "miniprofiler.aspnetcore/4.5.4",
+      "hashPath": "miniprofiler.aspnetcore.4.5.4.nupkg.sha512"
+    },
+    "MiniProfiler.AspNetCore.Mvc/4.5.4": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-+NqXyCy9aNdroPm6leW5+cpngtCnkCdoyOlJzvVN62uucSx+MYkx8jmKbgAt+aCP6aghADfHBExwrTIldHxapg==",
+      "path": "miniprofiler.aspnetcore.mvc/4.5.4",
+      "hashPath": "miniprofiler.aspnetcore.mvc.4.5.4.nupkg.sha512"
+    },
+    "MiniProfiler.EntityFrameworkCore/4.5.4": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-SSOuBYtNbM8AMmsYMP6Edr7iBfVYzswVt/yoIDboBRLLUgkA4SyROCJuTTtZ8eJSzlNuq5DIR+BLCCcigaV/vw==",
+      "path": "miniprofiler.entityframeworkcore/4.5.4",
+      "hashPath": "miniprofiler.entityframeworkcore.4.5.4.nupkg.sha512"
+    },
+    "MiniProfiler.Shared/4.5.4": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-f8ckFm/xTS8C2Bn4BdVc94dNvg+tRfk0e4XFaETOqRi6r0PUOyn3Z9jTQCVpB3R1pP5WiRsEIrqqxux95BVpTA==",
+      "path": "miniprofiler.shared/4.5.4",
+      "hashPath": "miniprofiler.shared.4.5.4.nupkg.sha512"
     },
     "Mono.TextTemplating/3.0.0": {
       "type": "package",

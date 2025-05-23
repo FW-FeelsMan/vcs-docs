@@ -1,4 +1,7 @@
 ﻿@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@using StackExchange.Profiling
+@inject MiniProfiler Profiler
+
 @using System.Security.Claims
 @{
     var tokens = Antiforgery.GetAndStoreTokens(Context);
@@ -57,5 +60,6 @@
 
     <!-- Скрипты страницы -->
     @await RenderSectionAsync("Scripts", required: false)
+    <mini-profiler />
 </body>
 </html>

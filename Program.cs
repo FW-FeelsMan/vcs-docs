@@ -12,6 +12,8 @@ using VCS_DOCs.Utilities;
 using VCS_DOCs.Services;
 using VCS_DOCs.Configuration;
 using Microsoft.Extensions.FileProviders;
+using StackExchange.Profiling;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -92,6 +94,14 @@ builder.Services.AddCors(options =>
 builder.Services.AddMemoryCache();
 builder.Services.AddControllersWithViews()
 	.AddRazorRuntimeCompilation();
+
+builder.Services.AddMiniProfiler(options =>
+{
+	options.RouteBasePath = "/profiler";
+	options.TrackConnectionOpenClose = true;
+	options.ColorScheme = StackExchange.Profiling.ColorScheme.Dark;
+}).AddEntityFramework();
+
 
 builder.Services.AddSingleton<FileUploadTaskService>();
 builder.Services.AddHostedService(provider => provider.GetRequiredService<FileUploadTaskService>());

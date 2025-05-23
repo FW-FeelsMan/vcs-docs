@@ -107,6 +107,14 @@
               "target": "Package",
               "version": "[17.13.0, )"
             },
+            "MiniProfiler.AspNetCore.Mvc": {
+              "target": "Package",
+              "version": "[4.5.4, )"
+            },
+            "MiniProfiler.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[4.5.4, )"
+            },
             "Moq": {
               "target": "Package",
               "version": "[4.20.72, )"

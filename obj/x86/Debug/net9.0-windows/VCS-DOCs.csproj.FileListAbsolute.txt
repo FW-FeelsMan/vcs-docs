@@ -747,3 +747,7 @@ D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\ref\VCS-DOCs.dll
 D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\73gpkicvb0-ansv7f0dh0.gz
 D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\obt8gn1yoe-br6tnxdy1g.gz
 D:\Unity\VCS-DOCs\obj\x86\Debug\net9.0-windows\compressed\vlrhzf74uc-6jud0n5dot.gz
+D:\Unity\VCS-DOCs\bin\x86\Debug\net9.0-windows\MiniProfiler.AspNetCore.dll
+D:\Unity\VCS-DOCs\bin\x86\Debug\net9.0-windows\MiniProfiler.AspNetCore.Mvc.dll
+D:\Unity\VCS-DOCs\bin\x86\Debug\net9.0-windows\MiniProfiler.EntityFrameworkCore.dll
+D:\Unity\VCS-DOCs\bin\x86\Debug\net9.0-windows\MiniProfiler.Shared.dll

@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "vdHOMoTG/bU=",
+  "dgSpecHash": "ROTsxM/NINY=",
   "success": true,
   "projectFilePath": "D:\\Unity\\VCS-DOCs\\VCS-DOCs.csproj",
   "expectedPackageFiles": [
@@ -72,6 +72,10 @@
     "D:\\Soft\\.nuget\\packages\\microsoft.testplatform.objectmodel\\17.13.0\\microsoft.testplatform.objectmodel.17.13.0.nupkg.sha512",
     "D:\\Soft\\.nuget\\packages\\microsoft.testplatform.testhost\\17.13.0\\microsoft.testplatform.testhost.17.13.0.nupkg.sha512",
     "D:\\Soft\\.nuget\\packages\\microsoft.win32.primitives\\4.3.0\\microsoft.win32.primitives.4.3.0.nupkg.sha512",
+    "D:\\Soft\\.nuget\\packages\\miniprofiler.aspnetcore\\4.5.4\\miniprofiler.aspnetcore.4.5.4.nupkg.sha512",
+    "D:\\Soft\\.nuget\\packages\\miniprofiler.aspnetcore.mvc\\4.5.4\\miniprofiler.aspnetcore.mvc.4.5.4.nupkg.sha512",
+    "D:\\Soft\\.nuget\\packages\\miniprofiler.entityframeworkcore\\4.5.4\\miniprofiler.entityframeworkcore.4.5.4.nupkg.sha512",
+    "D:\\Soft\\.nuget\\packages\\miniprofiler.shared\\4.5.4\\miniprofiler.shared.4.5.4.nupkg.sha512",
     "D:\\Soft\\.nuget\\packages\\mono.texttemplating\\3.0.0\\mono.texttemplating.3.0.0.nupkg.sha512",
     "D:\\Soft\\.nuget\\packages\\moq\\4.20.72\\moq.4.20.72.nupkg.sha512",
     "D:\\Soft\\.nuget\\packages\\mysql.data\\9.2.0\\mysql.data.9.2.0.nupkg.sha512",
