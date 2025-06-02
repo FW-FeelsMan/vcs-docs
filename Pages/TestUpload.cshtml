@@ -1,0 +1,87 @@
+﻿@page
+@model VCS_DOCs.Pages.TestUploadModel
+@{
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Тест загрузки</title>
+</head>
+<body style="padding:40px;font-family:sans-serif;background:#1e1e1e;color:white">
+    <h1>Загрузка файла</h1>
+    <input type="file" id="fileInput" onchange="console.log(this.files[0])" />
+    <br><br>
+    <button id="uploadButton">Загрузить</button>
+
+
+    <script>
+        async function calculateSHA256(file) {
+            const arrayBuffer = await file.arrayBuffer();
+            const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            return hashHex;
+        }
+
+        async function startUpload() {
+            const file = document.getElementById("fileInput").files[0];
+            if (!file || file.size === 0) {
+                alert("Файл не выбран или пустой");
+                return;
+            }
+
+            const hash = await calculateSHA256(file);
+            const chunkSize = 1024 * 1024; // 1MB
+            const totalChunks = Math.ceil(file.size / chunkSize);
+
+            for (let i = 0; i < totalChunks; i++) {
+                const chunk = file.slice(i * chunkSize, (i + 1) * chunkSize);
+                const form = new FormData();
+
+                form.append("chunk", chunk, `${file.name}.part${i}`);
+                form.append("hash", hash);
+                form.append("chunkIndex", i);
+                form.append("totalChunks", totalChunks);
+                form.append("fileSize", file.size);
+                form.append("fileName", file.name);
+
+                console.log(`Uploading chunk ${i}, size: ${chunk.size}`);
+
+                const response = await fetch("/api/upload/chunk", {
+                    method: "POST",
+                    body: form
+                });
+
+                const text = await response.text();
+
+                if (!response.ok) {
+                    alert(`Ошибка загрузки: ${text}`);
+                    throw new Error(`Upload failed: ${text}`);
+                }
+
+                console.log(`Chunk ${i}: Status ${response.status} — ${text}`);
+            }
+
+
+            const completeForm = new FormData();
+            completeForm.append("hash", hash);
+
+            const completeResp = await fetch("/api/upload/complete", {
+                method: "POST",
+                body: completeForm
+            });
+
+            console.log("Complete:", await completeResp.text());
+        }
+        document.getElementById("uploadButton").addEventListener("click", async () => {
+            console.log("Клик по кнопке — начинаем загрузку");
+            try {
+                await startUpload();
+            } catch (err) {
+                console.error("Ошибка загрузки:", err.message);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -17,7 +17,7 @@ namespace VCS_DOCs.Services.User
 			if (user != null)
 			{
 				user.StatusOnline = isOnline ? 1 : 0;
-				user.LastEntry = DateTime.UtcNow;
+				user.LastEntry = DateTime.Now;
 				await _context.SaveChangesAsync();
 			}
 		}

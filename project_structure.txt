@@ -1,0 +1,410 @@
+📁 Структура проекта: D:\Unity\VCS-DOCs
+
+└──[VCS-DOCs]
+    ├──.gitignore
+    ├──appsettings.Development.json
+    ├──appsettings.json
+    ├──package-lock.json
+    ├──package.json
+    ├──Program.cs
+    ├──project_structure.txt
+    ├──VCS-DOCs.csproj
+    ├──VCS-DOCs.csproj.Backup.tmp
+    ├──VCS-DOCs.csproj.user
+    ├──VCS-DOCs.sln
+    ├──VCSDocs.db
+    ├──VCSDocs.db-shm
+    └──VCSDocs.db-wal
+    ├──[Configuration]
+    │   └──UserDataPathOptions.cs
+    ├──[Controllers]
+    │   └──UploadController.cs
+    ├──[Data]
+    │   └──AppDbContext.cs
+    │   ├──[Entities]
+    │   ├──[Hubs]
+    │   │   └──UserStatusHub.cs
+    │   └──[userData]
+    │       └──[userData_0805bef4-0f45-4fb1-a376-f0eda0c9a2f5]
+    │           ├──[Avatars]
+    │           │   └──avatar.jpg
+    │           ├──[completed]
+    │           │   ├──[edb4ce74e962923951c0cdfaa56974754bac728358efd0ae91db322f871b37e9_v001]
+    │           │   │   └──РУ-700 (17.02.25 PDM ЕКБ).zip
+    │           │   └──[t2vgpzn5_v001]
+    │           │       └──из полинома.xlsx
+    │           └──[uploads]
+    ├──[Pages]
+    │   ├──Index.cshtml
+    │   ├──Index.cshtml.cs
+    │   ├──Login.cshtml
+    │   ├──Login.cshtml.cs
+    │   ├──Privacy.cshtml
+    │   ├──Privacy.cshtml.cs
+    │   ├──TestUpload.cshtml
+    │   ├──TestUpload.cshtml.cs
+    │   ├──_ContentProjects.cshtml
+    │   ├──_ContentProjects.cshtml.cs
+    │   └──_ViewImports.cshtml
+    │   ├──[Content]
+    │   │   ├──contact_page.cshtml
+    │   │   ├──contact_page.cshtml.cs
+    │   │   ├──extra_page.cshtml
+    │   │   ├──extra_page.cshtml.cs
+    │   │   ├──infographics_page.cshtml
+    │   │   ├──infographics_page.cshtml.cs
+    │   │   ├──profile_page.cshtml
+    │   │   ├──profile_page.cshtml.cs
+    │   │   ├──project_page.cshtml
+    │   │   └──project_page.cshtml.cs
+    │   ├──[Errors]
+    │   │   ├──404.cshtml
+    │   │   ├──404.cshtml.cs
+    │   │   ├──Error.cshtml
+    │   │   └──Error.cshtml.cs
+    │   └──[Shared]
+    │       ├──_Layout.cshtml
+    │       └──_Layout.cshtml.cs
+    │       ├──[Scripts]
+    │       │   ├──Scripts_Index.cshtml
+    │       │   ├──Scripts_Index.cshtml.cs
+    │       │   ├──Scripts_Libraries.cshtml
+    │       │   ├──Scripts_Libraries.cshtml.cs
+    │       │   ├──Scripts_Login.cshtml
+    │       │   └──Scripts_Login.cshtml.cs
+    │       └──[Styles]
+    │           ├──Styles_Layout.cshtml
+    │           └──Styles_Layout.cshtml.cs
+    ├──[Properties]
+    │   └──launchSettings.json
+    ├──[Services]
+    │   └──[User]
+    │       ├──IUserService.cs
+    │       ├──UserService.cs
+    │       └──UserServiceManager.cs
+    ├──[Utilities]
+    │   ├──Config.ini
+    │   ├──ConfigReader.cs
+    │   ├──CustomUserIdProvider.cs
+    │   └──Specialities.cs
+    └──[wwwroot]
+        └──favicon.ico
+        ├──[css]
+        │   ├──[main_css]
+        │   │   ├──loginStyle.css
+        │   │   └──mainStyle.css
+        │   └──[sub_css]
+        │       ├──contact_page.css
+        │       ├──extra_page.css
+        │       ├──infographics_page.css
+        │       ├──profile_page.css
+        │       └──project_page.css
+        ├──[images]
+        │   ├──archiveIcon.png
+        │   ├──default_avatar.png
+        │   ├──edit_icon.png
+        │   ├──extra.png
+        │   ├──helpIcon.png
+        │   ├──ibackground.jpg
+        │   ├──infographicIcon.png
+        │   ├──logout_icon.png
+        │   ├──logoVCS.png
+        │   ├──personalIcon.png
+        │   ├──projectsIcon.png
+        │   ├──ptkLogoTitel.png
+        │   └──save_icon.png
+        └──[js]
+            ├──[auth]
+            │   └──auth-login.js
+            ├──[profile]
+            │   ├──profile-edit-info.js
+            │   ├──profile-sidebar-popup.js
+            │   ├──profile.js
+            │   └──userStatus.js
+            │   ├──[storage]
+            │   │   ├──sorttable.js
+            │   │   ├──upload-conflict-modal.js
+            │   │   └──upload-file.js
+            │   └──[taskManager]
+            │       └──taskManager.js
+            ├──[storage(old)]
+            │   ├──storage-model.js
+            │   ├──upload-file.js
+            │   └──user-storage.js
+            └──[ui]
+                ├──context-menu.js
+                ├──extra-tabbar.js
+                └──sidebar.js
+
+🔍 Методы в .js и .cs файлах:
+
+Program.cs методы:
+ - AutoValidateAntiforgeryTokenAttribute
+ - MemoryCacheStorage
+ - PhysicalFileProvider
+
+UploadController.cs методы:
+ - BadRequest
+ - BadRequest
+ - Unauthorized
+ - if
+ - if
+ - BadRequest
+ - Ok
+ - using
+ - Ok
+ - Unauthorized
+ - BadRequest
+ - BadRequest
+ - FileStream
+ - BadRequest
+ - FileStream
+ - Ok
+ - Unauthorized
+ - Ok
+ - Unauthorized
+ - Ok
+
+AppDbContext.cs методы:
+ - ApplicationDbContext
+ - OnConfiguring
+
+Index.cshtml.cs методы:
+ - IndexModel
+ - RedirectToPage
+ - RedirectToPage
+ - UpdateUserStatus
+ - RedirectToPage
+ - Page
+ - UpdateUserStatus
+ - RedirectToPage
+ - UpdateUserStatus
+
+Login.cshtml.cs методы:
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - Claim
+ - Claim
+ - Claim
+ - ClaimsPrincipal
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - длинный
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - OnPostLoginAsync
+ - if
+ - OnPostRegisterAsync
+ - Page
+ - OnGet
+ - RecordDocumentHistory
+
+Privacy.cshtml.cs методы:
+ - PrivacyModel
+ - OnGet
+
+TestUpload.cshtml.cs методы:
+ - OnGet
+
+_ContentProjects.cshtml.cs методы:
+ - OnGet
+
+CustomUserIdProvider.cs методы:
+ - GetUserId
+
+UserStatusHub.cs методы:
+ - OnConnectedAsync
+ - OnDisconnectedAsync
+ - ForceLogoutUser
+
+contact_page.cshtml.cs методы:
+ - OnGet
+
+extra_page.cshtml.cs методы:
+ - OnGet
+
+infographics_page.cshtml.cs методы:
+ - OnGet
+
+profile_page.cshtml.cs методы:
+ - OnGetAsync
+ - FileInfo
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - JsonResult
+ - FileStream
+ - JsonResult
+ - JsonResult
+
+project_page.cshtml.cs методы:
+ - OnGet
+
+404.cshtml.cs методы:
+ - OnGet
+
+Error.cshtml.cs методы:
+ - ErrorModel
+ - OnGet
+
+_Layout.cshtml.cs методы:
+ - OnGet
+
+IUserService.cs методы:
+ - UpdateUserStatusAsync
+ - ClearUserJwtIdAsync
+
+UserService.cs методы:
+ - UserService
+ - UpdateUserStatusAsync
+ - ClearUserJwtIdAsync
+
+UserServiceManager.cs методы:
+ - UserServiceManager
+ - StartUserServices
+ - StopUserServicesAsync
+
+Scripts_Index.cshtml.cs методы:
+ - OnGet
+
+Scripts_Libraries.cshtml.cs методы:
+ - OnGet
+
+Scripts_Login.cshtml.cs методы:
+ - OnGet
+
+Styles_Layout.cshtml.cs методы:
+ - OnGet
+
+auth-login.js методы:
+ - showLoader
+ - hideLoader
+ - validateInput
+ - submitForm
+
+profile-edit-info.js методы:
+ - applyDateMask
+ - createEditButton
+ - handleEditClick
+
+profile-sidebar-popup.js методы:
+ - ensurePopupExists
+ - addFileToPopup
+ - updateFileProgress
+ - markUploadAsProcessing
+ - completeFileUpload
+ - removeFileFromPopup
+ - updatePopupTitle
+ - formatFileSize
+
+profile.js методы:
+ - handleDomChanges
+ - updateTooltips
+ - updateAvatarInSidebar
+ - initAvatarUpload
+
+userStatus.js методы:
+ - initializeSignalR
+ - getUserStatusEl
+ - setUserStatus
+
+storage-model.js методы:
+ - notify
+ - notifyUploadsOnly
+ - getState
+ - renderUploadedFiles
+ - renderUploadingFiles
+
+upload-file.js методы:
+ - getFileKey
+ - formatFileSize
+ - reserveFile
+ - releaseFile
+ - updateChunkSize
+ - enqueueFileUpload
+ - processUploadQueue
+ - updateProgressThrottled
+ - processUpdates
+ - uploadChunks
+ - uploadChunk
+ - scheduleNextChunks
+ - uploadSelectedFile
+
+user-storage.js методы:
+ - initUserStorage
+ - waitForStorageTab
+ - ensureConnectionReady
+ - requestFiles
+ - updateNonUploadingRows
+ - setupVersionDropdown
+ - deleteFile
+ - refreshStorageStatus
+ - setupMultiButtonEvents
+ - downloadFile
+
+extra-tabbar.js методы:
+ - setActiveTab
+
+sidebar.js методы:
+ - updateButtonSelection
+ - loadContent
+ - loadProfileScripts
+ - showCachedContent
+ - restoreModel
+ - getPageState
+ - restorePageState
+ - loadStyles
+ - showLoader
+ - hideLoader
+ - initExtraPage
+ - handleFileUpload
+
+sorttable.js методы:
+ - has
+ - so
+ - takes
+ - to
+ - dean_addEvent
+ - removeEvent
+ - handleEvent
+ - fixEvent
+
+upload-conflict-modal.js методы:
+ - showConflictModal
+
+upload-file.js методы:
+ - computeSHA256
+
+taskManager.js методы:
+ - render
+ - addTask
+ - clear
+ - capitalize
+

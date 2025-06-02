@@ -33,38 +33,6 @@
       "PackagePath": "staticwebassets\\favicon.ico"
     },
     {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\bundle.js",
-      "PackagePath": "staticwebassets\\ifcjs\\bundle.js"
-    },
-    {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\bundle.js.map",
-      "PackagePath": "staticwebassets\\ifcjs\\bundle.js.map"
-    },
-    {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\img\\lampIconOff.png",
-      "PackagePath": "staticwebassets\\ifcjs\\img\\lampIconOff.png"
-    },
-    {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\img\\lampIconOn.png",
-      "PackagePath": "staticwebassets\\ifcjs\\img\\lampIconOn.png"
-    },
-    {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\img\\uploadIcon.png",
-      "PackagePath": "staticwebassets\\ifcjs\\img\\uploadIcon.png"
-    },
-    {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\index.html",
-      "PackagePath": "staticwebassets\\ifcjs\\index.html"
-    },
-    {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\wasm\\web-ifc-mt.wasm",
-      "PackagePath": "staticwebassets\\ifcjs\\wasm\\web-ifc-mt.wasm"
-    },
-    {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\ifcjs\\wasm\\web-ifc.wasm",
-      "PackagePath": "staticwebassets\\ifcjs\\wasm\\web-ifc.wasm"
-    },
-    {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\images\\archiveIcon.png",
       "PackagePath": "staticwebassets\\images\\archiveIcon.png"
     },
@@ -133,28 +101,36 @@
       "PackagePath": "staticwebassets\\js\\profile\\profile.js"
     },
     {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\profile\\storage\\sorttable.js",
+      "PackagePath": "staticwebassets\\js\\profile\\storage\\sorttable.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\profile\\storage\\upload-conflict-modal.js",
+      "PackagePath": "staticwebassets\\js\\profile\\storage\\upload-conflict-modal.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\profile\\storage\\upload-file.js",
+      "PackagePath": "staticwebassets\\js\\profile\\storage\\upload-file.js"
+    },
+    {
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\profile\\taskManager\\taskManager.js",
+      "PackagePath": "staticwebassets\\js\\profile\\taskManager\\taskManager.js"
+    },
+    {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\profile\\userStatus.js",
       "PackagePath": "staticwebassets\\js\\profile\\userStatus.js"
     },
     {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage\\sorttable.js",
-      "PackagePath": "staticwebassets\\js\\storage\\sorttable.js"
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage(old)\\storage-model.js",
+      "PackagePath": "staticwebassets\\js\\storage(old)\\storage-model.js"
     },
     {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage\\storage-model.js",
-      "PackagePath": "staticwebassets\\js\\storage\\storage-model.js"
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage(old)\\upload-file.js",
+      "PackagePath": "staticwebassets\\js\\storage(old)\\upload-file.js"
     },
     {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage\\upload-conflict-modal.js",
-      "PackagePath": "staticwebassets\\js\\storage\\upload-conflict-modal.js"
-    },
-    {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage\\upload-file.js",
-      "PackagePath": "staticwebassets\\js\\storage\\upload-file.js"
-    },
-    {
-      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage\\user-storage.js",
-      "PackagePath": "staticwebassets\\js\\storage\\user-storage.js"
+      "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\storage(old)\\user-storage.js",
+      "PackagePath": "staticwebassets\\js\\storage(old)\\user-storage.js"
     },
     {
       "Id": "D:\\Unity\\VCS-DOCs\\wwwroot\\js\\ui\\context-menu.js",

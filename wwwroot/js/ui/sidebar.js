@@ -1,5 +1,4 @@
-﻿//sidebar.js скрипт сайдбара на главной и подгрузки контента
-const contentCache = new Map(); 
+﻿const contentCache = new Map();
 let currentContentId = null;
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -45,7 +44,6 @@ window.selectButton = function (button) {
     updateButtonSelection(button);
 };
 
-
 function updateButtonSelection(button) {
     document.querySelectorAll('.sidebar-button').forEach(btn => {
         btn.classList.remove('selected');
@@ -73,17 +71,14 @@ async function loadContent(contentId) {
 
         contentContainer.innerHTML = html;
         if (contentId === 'profile_page') {
-            loadProfileScripts().then(async () => {
-                if (typeof window.initUploadFile === "function") {
-                    window.initUploadFile();
-                }
-            });
+            await loadProfileScripts();
+            if (typeof window.initUploadFile === "function") {
+                window.initUploadFile();
+            }
         }
     } catch (error) {
         console.error('Ошибка загрузки:', error);
-        if (contentContainer) {
-            contentContainer.innerHTML = `<div class="error-message">Ошибка загрузки</div>`;
-        }
+        contentContainer.innerHTML = `<div class="error-message">Ошибка загрузки</div>`;
     } finally {
         hideLoader();
     }
@@ -91,44 +86,48 @@ async function loadContent(contentId) {
 
 async function loadProfileScripts() {
     const scripts = [
-        "/js/storage/storage-model.js", 
         "/js/profile/profile.js",
-        "/js/profile/profile-sidebar-popup.js",
         "/js/profile/profile-edit-info.js",
-        "/js/storage/sorttable.js",
-        "/js/storage/upload-file.js",
-        "/js/storage/upload-conflict-modal.js",
-        "/js/storage/user-storage.js"
+        "/js/profile/storage/upload-file.js",
+        "/js/profile/storage/upload-conflict-modal.js",
+        "/js/profile/storage/sorttable.js",
+        "/js/profile/taskManager/taskManager.js"
     ];
-    if (typeof window.initUserStorage === "function") {
-        window.initUserStorage();
-    }
 
     const promises = scripts.map(src => {
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
             script.src = src;
             script.defer = true;
-            script.onload = () => {
-                //console.log(`Подключён скрипт: ${src}`);
-                resolve();
-            };
-            script.onerror = () => {
-                console.error(`Ошибка загрузки скрипта: ${src}`);
-                reject(new Error(`Ошибка загрузки: ${src}`));
-            };
+            script.onload = resolve;
+            script.onerror = () => reject(new Error(`Ошибка загрузки: ${src}`));
             document.body.appendChild(script);
         });
     });
 
     await Promise.all(promises);
-    initAvatarUpload();
 
+    initAvatarUpload();
     if (typeof window.initUserStorage === "function") {
         window.initUserStorage();
     }
-}
 
+    if (window.taskManager) {
+        try {
+            const response = await fetch("/api/tasks/active");
+            if (!response.ok) throw new Error(`Ошибка ответа: ${response.status}`);
+            const tasks = await response.json();
+
+            if (Array.isArray(tasks)) {
+                tasks.forEach(task => {
+                    window.taskManager.addTask(task);
+                });
+            }
+        } catch (err) {
+            console.error("Ошибка при получении задач с сервера:", err);
+        }
+    }
+}
 function showCachedContent(contentId) {
     const contentContainer = document.getElementById('content');
     const cachedData = contentCache.get(contentId);
@@ -147,6 +146,7 @@ function showCachedContent(contentId) {
         }
     }
 }
+
 function restoreModel(modelData) {
     const viewer = document.getElementById('model-viewer');
     if (!viewer) {
@@ -160,11 +160,10 @@ function restoreModel(modelData) {
         console.error('Ошибка восстановления модели:', error);
     }
 }
+
 function getPageState(contentId) {
     if (contentId === 'extra_page') {
-        return {
-            model: window.uploadedModel 
-        };
+        return { model: window.uploadedModel };
     }
     return null;
 }
@@ -175,7 +174,7 @@ function restorePageState(contentId, container) {
 
     if (contentId === 'extra_page' && state.model) {
         window.uploadedModel = state.model;
-        restoreModel(container); 
+        restoreModel(container);
     }
 }
 
@@ -189,6 +188,7 @@ function showLoader() {
     const loader = document.getElementById('loader');
     if (loader) loader.classList.remove('hidden');
 }
+
 function hideLoader() {
     const loader = document.getElementById('loader');
     if (loader) loader.classList.add('hidden');
@@ -205,7 +205,7 @@ function initExtraPage() {
 
         uploader.addEventListener('change', handleFileUpload);
         console.log('Инициализация extra_page успешна');
-    }, 50); 
+    }, 50);
 }
 
 function handleFileUpload(e) {

@@ -145,20 +145,62 @@ namespace VCS_DOCs.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("VCS_DOCs.ChunkStatus", b =>
+            modelBuilder.Entity("VCS_DOCs.FileUploadChunk", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Index")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("ChunkFolder")
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Uploaded")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId");
+
+                    b.ToTable("FileUploadChunks");
+                });
+
+            modelBuilder.Entity("VCS_DOCs.FileUploadSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FileHash")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<Guid>("FileId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("FileSize")
                         .HasColumnType("INTEGER");
 
-                    b.Property<long>("TotalBytes")
+                    b.Property<bool>("IsLatest")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("OriginalFileName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TotalChunks")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("UpdatedAt")
@@ -168,41 +210,12 @@ namespace VCS_DOCs.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("ChunkStatuses");
-                });
-
-            modelBuilder.Entity("VCS_DOCs.FileReservation", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("Version")
                         .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsReleased")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<long>("ReservedBytes")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
-
-                    b.ToTable("FileReservations");
+                    b.ToTable("FileUploadSessions");
                 });
 
             modelBuilder.Entity("VCS_DOCs.User", b =>
@@ -363,26 +376,20 @@ namespace VCS_DOCs.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("VCS_DOCs.ChunkStatus", b =>
+            modelBuilder.Entity("VCS_DOCs.FileUploadChunk", b =>
                 {
-                    b.HasOne("VCS_DOCs.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
+                    b.HasOne("VCS_DOCs.FileUploadSession", "Session")
+                        .WithMany("Chunks")
+                        .HasForeignKey("SessionId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("User");
+                    b.Navigation("Session");
                 });
 
-            modelBuilder.Entity("VCS_DOCs.FileReservation", b =>
+            modelBuilder.Entity("VCS_DOCs.FileUploadSession", b =>
                 {
-                    b.HasOne("VCS_DOCs.User", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
+                    b.Navigation("Chunks");
                 });
 #pragma warning restore 612, 618
         }

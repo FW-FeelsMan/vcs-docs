@@ -1,1 +1,5 @@
 Data/userData
+.vs/
+bin/
+obj/
+wwwroot/js/storage(old)

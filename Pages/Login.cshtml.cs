@@ -9,7 +9,6 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Data.Hubs;
-using VCS_DOCs.Services.Microservices;
 using VCS_DOCs.Services.User;
 using VCS_DOCs.Utilities;
 
@@ -19,7 +18,6 @@ namespace VCS_DOCs.Pages
 	{
 		private readonly ApplicationDbContext _context;
 		private readonly ILogger<LoginModel> _logger;
-		private readonly ILogger<UserBackgroundService> _loggerUserBackgroundService;
 		private readonly IServiceProvider _serviceProvider;
 		private readonly IHubContext<UserStatusHub> _hubContext;
 		private readonly IUserService _userService;
@@ -28,7 +26,6 @@ namespace VCS_DOCs.Pages
 		public LoginModel(
 			ApplicationDbContext context,
 			ILogger<LoginModel> logger,
-			ILogger<UserBackgroundService> userBackgroundServiceLogger,
 			IServiceProvider serviceProvider,
 			IHubContext<UserStatusHub> hubContext,
 			IUserService userService,
@@ -36,7 +33,6 @@ namespace VCS_DOCs.Pages
 		{
 			_context = context;
 			_logger = logger;
-			_loggerUserBackgroundService = userBackgroundServiceLogger;
 			_serviceProvider = serviceProvider;
 			_hubContext = hubContext;
 			_userService = userService;
@@ -67,13 +63,13 @@ namespace VCS_DOCs.Pages
 
 			if (FailedLogins.TryGetValue(ip, out var data))
 			{
-				if (data.Attempts >= 5 && (DateTime.UtcNow - data.LastAttempt).TotalMinutes < 10)
+				if (data.Attempts >= 5 && (DateTime.Now - data.LastAttempt).TotalMinutes < 10)
 					return new JsonResult(new { success = false, errors = new List<string> { "Слишком много неудачных попыток. Попробуйте позже." } });
 			}
 
 			if (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password))
 			{
-				FailedLogins[ip] = (data.Attempts + 1, DateTime.UtcNow);
+				FailedLogins[ip] = (data.Attempts + 1, DateTime.Now);
 				return new JsonResult(new { success = false, errors = new List<string> { "Имя пользователя и пароль обязательны." } });
 			}
 
@@ -81,7 +77,7 @@ namespace VCS_DOCs.Pages
 
 			if (user == null || user.IsDeleted || !BCrypt.Net.BCrypt.Verify(Password, user.PasswordHash))
 			{
-				FailedLogins[ip] = (data.Attempts + 1, DateTime.UtcNow);
+				FailedLogins[ip] = (data.Attempts + 1, DateTime.Now);
 				return new JsonResult(new { success = false, errors = new List<string> { "Неверное имя пользователя, пароль или аккаунт был удалён." } });
 			}
 
@@ -108,7 +104,7 @@ namespace VCS_DOCs.Pages
 
 			user.JwtId = Guid.NewGuid().ToString();
 			user.HardwareId = Request.Form["hardwareId"].ToString() ?? user.HardwareId;
-			user.LastEntry = DateTime.UtcNow;
+			user.LastEntry = DateTime.Now;
 			user.StatusOnline = 1;
 			_context.Users.Update(user);
 			await _context.SaveChangesAsync();
@@ -123,7 +119,7 @@ namespace VCS_DOCs.Pages
 			var authProperties = new AuthenticationProperties
 			{
 				IsPersistent = true,
-				ExpiresUtc = DateTime.UtcNow.AddDays(7)
+				ExpiresUtc = DateTime.Now.AddDays(7)
 			};
 
 			await HttpContext.SignInAsync(

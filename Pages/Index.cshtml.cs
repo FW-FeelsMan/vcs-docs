@@ -15,15 +15,20 @@ namespace VCS_DOCs.Pages
 		private readonly ILogger<IndexModel> _logger;
 		public string UserStorageRootPath { get; private set; } = "";
 		private readonly UserDataPathOptions _userDataOptions;
-
+		private readonly IWebHostEnvironment _env;
 		public User? CurrentUser { get; set; }
+		public string AvatarUrl { get; set; } = "";
 
-
-		public IndexModel(ILogger<IndexModel> logger, ApplicationDbContext context, IOptions<UserDataPathOptions> userDataOptions)
+		public IndexModel(
+		ILogger<IndexModel> logger,
+		ApplicationDbContext context,
+		IOptions<UserDataPathOptions> userDataOptions,
+		IWebHostEnvironment env)
 		{
 			_context = context;
 			_logger = logger;
 			_userDataOptions = userDataOptions.Value;
+			_env = env;
 		}
 
 		public async Task<IActionResult> OnGetAsync()
@@ -47,6 +52,32 @@ namespace VCS_DOCs.Pages
 			UserStorageRootPath = _userDataOptions.BasePath;
 			ViewData["UserStorageBasePath"] = _userDataOptions.BasePath;
 
+			var shortId = CurrentUser.Id.Replace("-", "").Substring(0, 8);
+			//var avatarPath = Path.Combine(_env.WebRootPath, "userdata", $"u_{shortId}", "a", "avatar.jpg");
+			var avatarPath = Path.Combine(_userDataOptions.BasePath, $"u_{shortId}", "a", "avatar.jpg");
+			//_logger.LogInformation("Реальный путь к аватарке: {RealPath}", avatarPath);
+
+			if (System.IO.File.Exists(avatarPath))
+			{
+				AvatarUrl = $"/userdata/u_{shortId}/a/avatar.jpg?v={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+			}
+			else
+			{
+				AvatarUrl = "/images/default_avatar.png";
+			}
+
+			//_logger.LogInformation("Проверяем путь к аватарке: {Path}", avatarPath);
+			//_logger.LogInformation("Файл существует? {Exists}", System.IO.File.Exists(avatarPath));
+
+			if (System.IO.File.Exists(avatarPath))
+			{
+				AvatarUrl = $"/userdata/u_{shortId}/a/avatar.jpg?v={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}";
+			}
+			else
+			{
+				AvatarUrl = "/images/default_avatar.png";
+			}
+
 			return Page();
 		}
 
@@ -69,7 +100,7 @@ namespace VCS_DOCs.Pages
 			if (user != null)
 			{
 				user.StatusOnline = isOnline ? 1 : 0;
-				user.LastEntry = DateTime.UtcNow;
+				user.LastEntry = DateTime.Now;
 				await _context.SaveChangesAsync();
 			}
 		}

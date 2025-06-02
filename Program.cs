@@ -1,26 +1,26 @@
-//Program.cs
 using AspNetCoreRateLimit;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using VCS_DOCs;
 using Microsoft.AspNetCore.Mvc;
-using VCS_DOCs.Data.Hubs;
 using VCS_DOCs.Services.User;
-using VCS_DOCs.Services.Upload;
 using VCS_DOCs.Utilities;
 using VCS_DOCs.Services;
 using VCS_DOCs.Configuration;
 using Microsoft.Extensions.FileProviders;
 using StackExchange.Profiling;
-
+using StackExchange.Profiling.Storage;
+using Microsoft.Extensions.Caching.Memory;
+using VCS_DOCs.Data.Hubs;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Options;
+using VCS_DOCs.Hubs;
+using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ====== Services ======
-builder.Services.AddSingleton<UserServiceManager>();
-builder.Services.AddTransient<UserFileUploadService>();
-
+// === Services ===
 builder.Services.AddRazorPages(options =>
 {
 	options.Conventions.ConfigureFilter(new AutoValidateAntiforgeryTokenAttribute());
@@ -31,15 +31,17 @@ builder.Services.AddRazorPages(options =>
 	jsonOptions.JsonSerializerOptions.PropertyNamingPolicy = null;
 });
 
+var projectRoot = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", ".."));
+
 builder.Services.Configure<UserDataPathOptions>(options =>
 {
-	options.BasePath = Path.Combine(builder.Environment.ContentRootPath, "Data", "userData");
+	options.BasePath = Path.Combine(projectRoot, "Data", "userData");
 });
 
-builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+
+builder.Services.Configure<FormOptions>(options =>
 {
-	options.MultipartBodyLengthLimit = 15L * 1024 * 1024; // 15 MB
-	options.MemoryBufferThreshold = 1024 * 1024; // 1 MB
+	options.MultipartBodyLengthLimit = long.MaxValue;
 });
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -49,10 +51,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddSignalR(options =>
 {
 	options.EnableDetailedErrors = true;
-})
-.AddHubOptions<UserStatusHub>(options =>
-{
-	options.ClientTimeoutInterval = TimeSpan.FromSeconds(30);
 });
 
 builder.Services.AddScoped<IUserService, UserService>();
@@ -80,6 +78,7 @@ builder.Services.AddAntiforgery(options =>
 });
 
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
+builder.Services.AddSingleton<UserServiceManager>();
 
 builder.Services.AddCors(options =>
 {
@@ -98,14 +97,10 @@ builder.Services.AddControllersWithViews()
 builder.Services.AddMiniProfiler(options =>
 {
 	options.RouteBasePath = "/profiler";
-	options.TrackConnectionOpenClose = true;
-	options.ColorScheme = StackExchange.Profiling.ColorScheme.Dark;
-}).AddEntityFramework();
+	options.ShouldProfile = _ => builder.Environment.IsDevelopment();
+	options.ResultsAuthorize = _ => true;
+});
 
-
-builder.Services.AddSingleton<FileUploadTaskService>();
-builder.Services.AddHostedService(provider => provider.GetRequiredService<FileUploadTaskService>());
-builder.Services.AddScoped<IStorageQuotaService, EfStorageQuotaService>();
 
 builder.WebHost.ConfigureKestrel(options =>
 {
@@ -130,23 +125,36 @@ builder.Services.Configure<IpRateLimitOptions>(options =>
 		}
 	];
 });
+builder.Services.AddScoped<UploadCleanupService>();
+builder.Services.AddHostedService<UploadCleanupHostedService>();
 
+builder.Logging.ClearProviders(); 
+builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
 var app = builder.Build();
-
-// ====== Middlewares ======
-
-app.UseHttpsRedirection();
-
-// (1) Подключаем обычные статики (css, js, images)
-app.UseStaticFiles();
-
-// (2) Подключаем юзерские файлы отдельно
-var userDataPath = Path.Combine(builder.Environment.ContentRootPath, "Data", "userData");
+var userDataOptions = app.Services.GetRequiredService<IOptions<UserDataPathOptions>>().Value;
+var userDataPath = userDataOptions.BasePath;
 
 if (!Directory.Exists(userDataPath))
 {
 	Directory.CreateDirectory(userDataPath);
 }
+
+app.UseStaticFiles(new StaticFileOptions
+{
+	FileProvider = new PhysicalFileProvider(userDataPath),
+	RequestPath = "/userdata"
+});
+
+// === MiniProfiler ===
+var memoryCache = app.Services.GetRequiredService<IMemoryCache>();
+MiniProfiler.DefaultOptions.Storage = new MemoryCacheStorage(memoryCache, TimeSpan.FromMinutes(30));
+
+app.UseMiniProfiler();
+
+// === Middleware ===
+app.UseHttpsRedirection();
+app.UseStaticFiles();
 
 app.UseStaticFiles(new StaticFileOptions
 {
@@ -160,16 +168,11 @@ app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapHub<UserStatusHub>("/Data/userStatusHub");
-app.MapHub<UserStorageHub>("/userStorageHub");
+// === Map ===
 app.MapRazorPages();
+app.MapControllers();
+app.MapHub<UserStatusHub>("/Data/userStatusHub");
+app.MapHub<TaskHub>("/hubs/tasks");
 
-using (var scope = app.Services.CreateScope())
-{
-	var quotaService = scope.ServiceProvider.GetRequiredService<IStorageQuotaService>();
-	await quotaService.CleanUpBrokenReservationsAsync();
-}
-
-var userServiceManager = app.Services.GetRequiredService<UserServiceManager>();
-
+app.UseStatusCodePagesWithReExecute("/Errors/{0}");
 app.Run();

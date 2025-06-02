@@ -117,20 +117,48 @@
                 <h2>Задачи</h2>
                 <h3>Задачи пользователя, обрабатываемые на сервере</h3>
                 <div class="tasks-container" id="tasksContainer">
-                    <div class="tasks-grid">
-                        <!-- Динамически создаются задачи загрузки -->
+                    <div class="tasks-scrollable">
+                        <div class="tasks-grid" id="taskCardList">
+
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <div id="upload-conflict-modal" class="modal" style="display:none;">
+    <div id="upload-version-modal" class="modal" style="display:none;">
         <div class="modal-content">
-            <p id="conflict-message">Сообщение по умолчанию.</p>
+            <h3 id="version-modal-title">Подтверждение</h3>
+            <p id="version-conflict-message">Сообщение по умолчанию.</p>
             <div class="modal-buttons">
-                <button id="conflict-replace" class="btn btn-warning">Заменить</button>
+                <div class="multi-button version-selector" id="version-selector">
+                    <div class="button-part label">Заменить:</div>
+                    <div id="selected-version" class="button-part version">V4</div>
+                    <div id="version-dropdown" class="button-part dropdown">&#9662;</div>
+                </div>
+                <div id="version-list" class="version-list" style="display: none;"></div>
                 <button id="conflict-new-version" class="btn btn-info">Новая версия</button>
                 <button id="conflict-cancel" class="btn">Отмена</button>
+            </div>
+        </div>
+    </div>
+    <div id="upload-warning-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h3 id="warning-modal-title">Предупреждение</h3>
+            <p id="warning-message">Подтверждение действия</p>
+            <div class="modal-buttons">
+                <button id="warning-confirm" class="btn danger">Удалить</button>
+                <button id="warning-cancel" class="btn">Отмена</button>
+            </div>
+        </div>
+    </div>
+    <div id="upload-resume-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h3 id="resume-modal-title">Продолжить загрузку?</h3>
+            <p id="resume-modal-message">Файл уже загружался. Хотите продолжить?</p>
+            <div class="modal-buttons">
+                <button id="resume-confirm" class="btn btn-primary">Продолжить</button>
+                <button id="resume-cancel" class="btn">Начать заново</button>
             </div>
         </div>
     </div>

@@ -11,52 +11,15 @@
     `;
     popup.style.display = 'none';
     document.body.appendChild(popup);
-    //console.log('[TestProgress] popup создан вручную');
-}
-
-function setupEventListeners(popup) {
-    const header = popup.querySelector('.sidebar-upload-header');
-    const newHeader = header.cloneNode(true);
-    header.parentNode.replaceChild(newHeader, header);
-
-    const toggleBtn = newHeader.querySelector('.sidebar-upload-toggle');
-
-    newHeader.addEventListener('click', (e) => {
-        if (e.target.closest('.sidebar-upload-toggle')) return;
-        togglePopup(popup);
-    });
-
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            togglePopup(popup);
-        });
-    } else {
-        console.warn('[setupEventListeners] Кнопка toggle не найдена после клонирования!');
-    }
-}
-
-function togglePopup(popup) {
-    const isMinimized = popup.classList.toggle('minimized');
-    const toggleBtn = popup.querySelector('.sidebar-upload-toggle');
-    const icon = toggleBtn.querySelector('span');
-
-    icon.innerHTML = isMinimized ? '&#9650;' : '&#9660;';
-    toggleBtn.title = isMinimized ? 'Развернуть' : 'Свернуть';
 }
 
 function addFileToPopup(fileName, fileSize, customFileId = null) {
     const fileId = customFileId || `upload-${fileName.toLowerCase().replace(/\W+/g, '-')}`;
-    const existing = document.getElementById(fileId);
-    if (existing) return fileId;
+    if (document.getElementById(fileId)) return fileId;
+
+    ensurePopupExists();
 
     const popup = document.querySelector('.sidebar-upload-popup');
-    if (!popup) {
-       // initSidebarUploadToggle();
-        setTimeout(() => addFileToPopup(fileName, fileSize, fileId), 100);
-        return;
-    }
-
     const content = popup.querySelector('.sidebar-upload-content');
     if (!content) return;
 
@@ -76,8 +39,7 @@ function addFileToPopup(fileName, fileSize, customFileId = null) {
         <button class="upload-item-cancel" title="Отменить загрузку">✕</button>
     `;
 
-    const cancelButton = fileElement.querySelector('.upload-item-cancel');
-    cancelButton.addEventListener('click', (e) => {
+    fileElement.querySelector('.upload-item-cancel').addEventListener('click', (e) => {
         e.stopPropagation();
         if (typeof window.cancelUploadingFile === 'function') {
             window.cancelUploadingFile(fileName);
@@ -85,10 +47,7 @@ function addFileToPopup(fileName, fileSize, customFileId = null) {
     });
 
     content.appendChild(fileElement);
-
     popup.style.display = 'block';
-   // if (popup.classList.contains('minimized')) togglePopup(popup);
-
     updatePopupTitle();
     return fileId;
 }
@@ -98,12 +57,8 @@ function updateFileProgress(fileId, uploadedBytes, totalBytes) {
     if (!fileElement) return;
 
     const percent = Math.min(Math.round((uploadedBytes / totalBytes) * 100), 100);
-    ////console.log(`[TestProgress] updateFileProgress: ${percent}%`);
-
     const progressFill = fileElement.querySelector('.upload-progress-fill');
-    if (progressFill) {
-        progressFill.style.width = `${percent}%`;
-    }
+    if (progressFill) progressFill.style.width = `${percent}%`;
 
     const statusElement = fileElement.querySelector('.upload-item-status');
     if (statusElement) {
@@ -113,93 +68,71 @@ function updateFileProgress(fileId, uploadedBytes, totalBytes) {
     }
 
     if (percent === 100) {
-        //console.log(`[updateFileProgress] Прогресс достиг 100%, вызываем completeFileUpload(${fileId})`);
-        completeFileUpload(fileId);
+        markUploadAsProcessing(fileId);
+    }
+}
+
+function markUploadAsProcessing(fileId) {
+    const fileElement = document.getElementById(fileId);
+    if (!fileElement) return;
+
+    const status = fileElement.querySelector('.upload-item-status');
+    if (status) {
+        status.textContent = 'Обработка файла...';
+        status.style.color = '#ffa500';
+    }
+
+    const cancel = fileElement.querySelector('.upload-item-cancel');
+    if (cancel) {
+        cancel.textContent = '⏳';
+        cancel.title = 'Ожидание завершения';
+        cancel.disabled = true;
+        cancel.style.cursor = 'wait';
     }
 }
 
 function completeFileUpload(fileId) {
-    //console.log(`[completeFileUpload] Прок-пок-пок я скрипт и я вызван для ${fileId}`);
+    const el = document.getElementById(fileId);
+    if (!el) return;
 
-    const fileElement = document.getElementById(fileId);
-    if (!fileElement) {
-        console.warn(`[completeFileUpload] Элемент ${fileId} не найден. Падаю в тоске.`);
-        return;
+    const status = el.querySelector('.upload-item-status');
+    if (status) {
+        status.textContent = 'Загрузка завершена';
+        status.style.color = '#4caf50';
     }
 
-    const statusElement = fileElement.querySelector('.upload-item-status');
-    if (statusElement) {
-        statusElement.textContent = 'Загрузка завершена';
-        statusElement.style.color = '#4caf50';
-        //console.log(`[completeFileUpload] Статус изменён на "Загрузка завершена" для ${fileId}`);
+    const bar = el.querySelector('.upload-progress-fill');
+    if (bar) bar.style.width = '100%';
+
+    const cancel = el.querySelector('.upload-item-cancel');
+    if (cancel) {
+        cancel.textContent = '✓';
+        cancel.title = 'Готово';
+        cancel.disabled = true;
+        cancel.style.cursor = 'default';
+        cancel.style.color = '#4caf50';
     }
 
-    const progressFill = fileElement.querySelector('.upload-progress-fill');
-    if (progressFill) {
-        progressFill.style.width = '100%';
-        //console.log(`[completeFileUpload] Прогресс установлен на 100% для ${fileId}`);
-    }
-
-    const cancelButton = fileElement.querySelector('.upload-item-cancel');
-    if (cancelButton) {
-        cancelButton.textContent = '✓';
-        cancelButton.title = 'Готово';
-        cancelButton.classList.add('upload-complete');
-        cancelButton.disabled = true;
-        cancelButton.style.color = '#4caf50';
-        cancelButton.style.cursor = 'default';
-
-        //console.log(`[completeFileUpload] Кнопка отмены заменена на галочку для ${fileId}`);
-    } else {
-        console.warn(`[completeFileUpload] Кнопка отмены не найдена для ${fileId}`);
-    }
-
-    // Удалим элемент через 3 секунды через правильную функцию
-    setTimeout(() => {
-        //console.log(`[completeFileUpload] Удаляем файл ${fileId} через removeFileFromPopup`);
-        removeFileFromPopup(fileId);
-    }, 3000);
+    setTimeout(() => removeFileFromPopup(fileId), 3000);
 }
 
 function removeFileFromPopup(fileId) {
-    const fileElement = document.getElementById(fileId);
-    if (!fileElement) {
-        console.warn(`[removeFileFromPopup] Не найден элемент ${fileId}`);
-        return;
-    }
-
-    fileElement.remove();
-    //console.log(`[removeFileFromPopup] Удалён элемент ${fileId}`);
+    const el = document.getElementById(fileId);
+    if (!el) return;
+    el.remove();
     updatePopupTitle();
-
-    const popup = document.querySelector('.sidebar-upload-popup');
-    const content = popup?.querySelector('.sidebar-upload-content');
-    const files = content?.querySelectorAll('.upload-item');
-
-    if (!files || files.length === 0) {
-        //console.log(`[removeFileFromPopup] Все файлы удалены из popup, но popup не скрывается, потому что он встроен в разметку.`);
-    } else {
-        //console.log(`[removeFileFromPopup] Файл ${fileId} удалён, но в списке остались другие`);
-    }
 }
 
 function updatePopupTitle() {
     const popup = document.querySelector('.sidebar-upload-popup');
-    if (!popup) return;
+    const title = popup?.querySelector('.sidebar-upload-title');
+    const count = popup?.querySelectorAll('.upload-item')?.length || 0;
 
-    const title = popup.querySelector('.sidebar-upload-title');
     if (!title) return;
 
-    const files = popup.querySelectorAll('.upload-item');
-    const count = files.length;
-
-    if (count === 0) {
-        title.textContent = 'Загрузка файлов';
-    } else if (count === 1) {
-        title.textContent = 'Загружается 1 файл';
-    } else {
-        title.textContent = `Загружается ${count} файлов`;
-    }
+    if (count === 0) title.textContent = 'Загрузка файлов';
+    else if (count === 1) title.textContent = 'Загружается 1 файл';
+    else title.textContent = `Загружается ${count} файлов`;
 }
 
 function formatFileSize(bytes) {
@@ -210,67 +143,86 @@ function formatFileSize(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-function runTestProgress() {
-    const fileName = 'test-run-file.txt';
-    const fileSize = 5 * 1024 * 1024; // 5 МБ
-    const fileId = addFileToPopup(fileName, fileSize);
-
-    if (!fileId) {
-        console.warn('[TestProgress] Не удалось добавить файл для теста');
-        return;
-    }
-
-    let uploaded = 0;
-    const chunkSize = 512 * 1024; // 512 КБ
-    const interval = setInterval(() => {
-        uploaded += chunkSize;
-        if (uploaded > fileSize) uploaded = fileSize;
-
-        //console.log(`[TestProgress] ${fileId} -> ${uploaded} / ${fileSize}`);
-        updateFileProgress(fileId, uploaded, fileSize);
-
-        if (uploaded >= fileSize) {
-            clearInterval(interval);
-            //console.log('[TestProgress] Завершено');
-            completeFileUpload(fileId);
-        }
-    }, 300);
-}
-
 // Глобальный экспорт
-//window.initSidebarUploadToggle = initSidebarUploadToggle;
 window.addFileToPopup = addFileToPopup;
 window.updateFileProgress = updateFileProgress;
 window.completeFileUpload = completeFileUpload;
 window.removeFileFromPopup = removeFileFromPopup;
-window.runTestProgress = runTestProgress;
-
-document.addEventListener('DOMContentLoaded', () => {
-    //initSidebarUploadToggle();
-
-    const waitForPopupContent = () => {
-        const content = document.querySelector('.sidebar-upload-popup .sidebar-upload-content');
-        if (!content) {
-            console.warn('[TestProgress] Ожидаем .sidebar-upload-content...');
-            return setTimeout(waitForPopupContent, 200);
-        }
-
-        //console.log('[TestProgress] .sidebar-upload-content найден, начинаем симуляцию');
-        runTestProgress();
-    };
-
-    waitForPopupContent();
-});
 
 window.profileSidebarPopup = {
-    updateProgress: function (fileName, uploadedBytes, totalBytes) {
+    updateProgress: (fileName, up, total) => {
         const fileId = `upload-${fileName.toLowerCase().replace(/\W+/g, '-')}`;
-        //console.log('[profileSidebarPopup] updateProgress', fileId);
-        updateFileProgress(fileId, uploadedBytes, totalBytes);
+        updateFileProgress(fileId, up, total);
     },
-    removeFile: function (fileName) {
+    removeFile: (fileName) => {
         const fileId = `upload-${fileName.toLowerCase().replace(/\W+/g, '-')}`;
-        //console.log('[profileSidebarPopup] removeFile', fileId);
         removeFileFromPopup(fileId);
     }
 };
+
+// SignalR
+(function () {
+    if (typeof signalR === 'undefined') {
+        console.error('[SignalR] Не загружен');
+        return;
+    }
+
+    if (window.userStorageConnection?.state === signalR.HubConnectionState.Connected) {
+        console.warn('[SignalR:userStorageHub] Уже подключено — повторное подключение не требуется');
+        return;
+    }
+
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/userStorageHub")
+        .configureLogging(signalR.LogLevel.Information)
+        .withAutomaticReconnect()
+        .build();
+
+    connection.on("UploadAssemblyComplete", ({ fileName }) => {
+        const key = fileName.toLowerCase().replace(/\W+/g, '-');
+        const fileId = `upload-${key}`;
+        console.log(`[SignalR:userStorageHub] 🧩 Завершена сборка файла ${fileName}, обновляем UI`);
+
+        if (typeof window.completeFileUpload === 'function') {
+            window.completeFileUpload(fileId);
+        } else {
+            console.warn('[SignalR:userStorageHub] window.completeFileUpload не определена');
+        }
+
+        if (typeof window.requestFiles === 'function') {
+            setTimeout(() => window.requestFiles(), 400);
+        }
+    });
+
+    connection.on("ReceiveUploadError", ({ fileName, error }) => {
+        const key = fileName.toLowerCase().replace(/\W+/g, '-');
+        const fileId = `upload-${key}`;
+        console.warn(`[SignalR:userStorageHub] ❌ Ошибка сборки файла ${fileName}: ${error}`);
+
+        const el = document.getElementById(fileId);
+        if (!el) return;
+
+        const status = el.querySelector('.upload-item-status');
+        if (status) {
+            status.textContent = `Ошибка: ${error}`;
+            status.style.color = '#f44336';
+        }
+
+        const cancel = el.querySelector('.upload-item-cancel');
+        if (cancel) {
+            cancel.disabled = true;
+            cancel.textContent = '×';
+            cancel.title = 'Ошибка';
+            cancel.style.cursor = 'not-allowed';
+        }
+    });
+
+    connection.start()
+        .then(() => {
+            console.log("[SignalR:userStorageHub] ✅ Подключение установлено (popup)");
+            window.userStorageConnection = connection;
+        })
+        .catch(err => {
+            console.error("[SignalR:userStorageHub] Ошибка подключения:", err);
+        });
+})();

@@ -1,5 +1,5 @@
 ﻿using System;
-using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,8 +12,8 @@ namespace VCS_DOCs
 		{
 		}
 
-		public DbSet<FileReservation> FileReservations { get; set; }
-		public DbSet<ChunkStatus> ChunkStatuses { get; set; }
+		public DbSet<FileUploadSession> FileUploadSessions { get; set; }
+		public DbSet<FileUploadChunk> FileUploadChunks { get; set; } = null!;
 
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
@@ -24,7 +24,7 @@ namespace VCS_DOCs
 		}
 	}
 
-	public class User : IdentityUser
+	public class User : Microsoft.AspNetCore.Identity.IdentityUser
 	{
 		public string FullName { get; set; } = "Не установлено";
 		public string DateOfBirth { get; set; } = "Не установлено";
@@ -41,25 +41,38 @@ namespace VCS_DOCs
 		public bool IsDeleted { get; set; } = false;
 	}
 
-	public class FileReservation
+	public class FileUploadSession
 	{
-		public int Id { get; set; }
+		public Guid Id { get; set; } = Guid.NewGuid();
+		public Guid FileId { get; set; } = Guid.NewGuid(); // Уникальный идентификатор файла
+
 		public string UserId { get; set; } = null!;
-		public User User { get; set; } = null!;
-		public string FileName { get; set; } = null!;
-		public long ReservedBytes { get; set; }
-		public bool IsReleased { get; set; }
-		public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+		public string OriginalFileName { get; set; } = null!;
+		public string FileHash { get; set; } = null!;
+
+		public long FileSize { get; set; }
+		public int TotalChunks { get; set; }
+		public string Status { get; set; } = "pending"; // pending, complete, failed
+
+		public DateTime CreatedAt { get; set; } = DateTime.Now;
+		public DateTime UpdatedAt { get; set; } = DateTime.Now;
+
+		public List<FileUploadChunk> Chunks { get; set; } = [];
+
+		public int Version { get; set; } = 1;
+		public bool IsLatest { get; set; } = false;
 	}
 
-	public class ChunkStatus
+	public class FileUploadChunk
 	{
-		public int Id { get; set; }
-		public string UserId { get; set; } = null!;
-		public User User { get; set; } = null!;
-		public string ChunkFolder { get; set; } = null!;
-		public long TotalBytes { get; set; }
-		public bool IsActive { get; set; }
-		public DateTime UpdatedAt { get; set; }
+		[Key]
+		public Guid Id { get; set; } = Guid.NewGuid();
+
+		public Guid SessionId { get; set; }
+		public FileUploadSession Session { get; set; } = null!;
+
+		public int Index { get; set; }
+		public bool Uploaded { get; set; }
+		public DateTime UpdatedAt { get; set; } = DateTime.Now;
 	}
 }
