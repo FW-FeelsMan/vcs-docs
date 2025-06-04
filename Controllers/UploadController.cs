@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using VCS_DOCs.Configuration;
+using VCS_DOCs.Hubs;
 
 namespace VCS_DOCs.Controllers
 {
@@ -13,15 +15,18 @@ namespace VCS_DOCs.Controllers
 		private readonly ILogger<UploadController> _logger;
 		private readonly ApplicationDbContext _db;
 		private readonly UserDataPathOptions _options;
+		private readonly IHubContext<TaskHub> _hub;
 
 		public UploadController(
 			ILogger<UploadController> logger,
 			ApplicationDbContext db,
-			IOptions<UserDataPathOptions> options)
+			IOptions<UserDataPathOptions> options,
+			IHubContext<TaskHub> hub)
 		{
 			_logger = logger;
 			_db = db;
 			_options = options.Value;
+			_hub = hub;
 		}
 
 		private string? GetUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -64,8 +69,7 @@ namespace VCS_DOCs.Controllers
 					.FirstOrDefaultAsync();
 
 				int newVersion = lastComplete != null ? lastComplete.Version + 1 : 1;
-
-				Guid fileId;
+				Guid fileId = replaceVersion.HasValue && lastComplete != null ? lastComplete.FileId : Guid.NewGuid();
 
 				if (replaceVersion.HasValue)
 				{
@@ -81,18 +85,9 @@ namespace VCS_DOCs.Controllers
 					{
 						_db.FileUploadChunks.RemoveRange(replacing.Chunks);
 						_db.FileUploadSessions.Remove(replacing);
-						await _db.SaveChangesAsync(); // Устраняем конфликты
-
+						await _db.SaveChangesAsync();
 						fileId = replacing.FileId;
 					}
-					else
-					{
-						fileId = Guid.NewGuid();
-					}
-				}
-				else
-				{
-					fileId = lastComplete?.FileId ?? Guid.NewGuid();
 				}
 
 				session = new FileUploadSession
@@ -130,14 +125,24 @@ namespace VCS_DOCs.Controllers
 			catch (DirectoryNotFoundException ex)
 			{
 				_logger.LogWarning("Директория для чанка отсутствует: {Path}", chunkPath);
-				return BadRequest($"Папка для хранения чанков отсутствует. Возможно, загрузка была сброшена.");
+				return BadRequest("Папка для хранения чанков отсутствует. Возможно, загрузка была сброшена.");
 			}
 
 			chunkEntry.Uploaded = true;
 			chunkEntry.UpdatedAt = DateTime.Now;
 			session.UpdatedAt = DateTime.Now;
-
 			await _db.SaveChangesAsync();
+			_logger.LogInformation("[{Time}] Push TaskUpdate (chunk upload): {Title}", DateTime.Now, $"Загрузка файла: {fileName}");
+			await _hub.Clients.User(userId).SendAsync("TaskUpdate", new
+			{
+				taskKey = "upload_" + hash,
+				title = $"Загрузка файла: {fileName}",
+				type = "upload",
+				statusClass = "in-progress",
+				statusText = $"{session.Chunks.Count(c => c.Uploaded)} / {session.TotalChunks} чанков",
+				cancelable = false
+			});
+
 			return Ok(new { message = "Чанк сохранён", chunkIndex });
 		}
 
@@ -154,6 +159,16 @@ namespace VCS_DOCs.Controllers
 
 			if (session == null || session.Chunks.Any(c => !c.Uploaded))
 				return BadRequest("Ошибка сессии или не все чанки загружены");
+			_logger.LogInformation("[{Time}] Push TaskUpdate (start compiling): {Title}", DateTime.Now, $"Сборка файла: {session.OriginalFileName}");
+			await _hub.Clients.User(userId).SendAsync("TaskUpdate", new
+			{
+				taskKey = $"compiling_{hash}",
+				title = $"Сборка файла: {session.OriginalFileName}",
+				type = "upload",
+				statusClass = "in-progress",
+				statusText = "Сборка из чанков...",
+				cancelable = false
+			});
 
 			var shortId = GetShortId(userId);
 			var newVersion = session.Version;
@@ -170,26 +185,43 @@ namespace VCS_DOCs.Controllers
 
 			try
 			{
-				using (var output = new FileStream(finalPath, FileMode.Create))
+				using var output = new FileStream(finalPath, FileMode.Create);
+				for (int i = 0; i < session.TotalChunks; i++)
 				{
-					for (int i = 0; i < session.TotalChunks; i++)
+					var chunkPath = Path.Combine(tempDir, $"chunk_{i:D4}");
+					if (!System.IO.File.Exists(chunkPath))
 					{
-						var chunkPath = Path.Combine(tempDir, $"chunk_{i:D4}");
-						if (!System.IO.File.Exists(chunkPath))
-						{
-							_logger.LogWarning("Не найден чанк {Index} для сборки: {Path}", i, chunkPath);
-							return BadRequest($"Чанк {i} отсутствует. Загрузка нарушена или прервана.");
-						}
+						_logger.LogInformation("[{Time}] Push TaskUpdate (start compiling): {Title}", DateTime.Now, $"Сборка файла: {session.OriginalFileName}");
 
-						using var input = new FileStream(chunkPath, FileMode.Open);
-						await input.CopyToAsync(output);
+						await _hub.Clients.User(userId).SendAsync("TaskUpdate", new
+						{
+							taskKey = $"compiling_{hash}",
+							title = $"Сборка файла: {session.OriginalFileName}",
+							type = "upload",
+							statusClass = "error",
+							statusText = $"Ошибка: отсутствует чанк {i}",
+							cancelable = false
+						});
+						return BadRequest($"Чанк {i} отсутствует");
 					}
+
+					using var input = new FileStream(chunkPath, FileMode.Open);
+					await input.CopyToAsync(output);
 				}
 			}
 			catch (Exception ex)
 			{
-				_logger.LogError(ex, "Ошибка при сборке файла");
-				return StatusCode(500, "Ошибка сборки файла");
+				_logger.LogError(ex, "Ошибка при сборке");
+				await _hub.Clients.User(userId).SendAsync("TaskUpdate", new
+				{
+					taskKey = $"compiling_{hash}",
+					title = $"Сборка файла: {session.OriginalFileName}",
+					type = "upload",
+					statusClass = "error",
+					statusText = "Ошибка при сборке",
+					cancelable = false
+				});
+				return StatusCode(500, "Ошибка при сборке файла");
 			}
 
 			session.Status = "complete";
@@ -201,9 +233,18 @@ namespace VCS_DOCs.Controllers
 				.ForEachAsync(x => x.IsLatest = false);
 
 			_db.FileUploadChunks.RemoveRange(session.Chunks);
-
 			await _db.SaveChangesAsync();
 			DeleteDirectorySafe(tempDir);
+			_logger.LogInformation("[{Time}] Push TaskUpdate (start compiling): {Title}", DateTime.Now, $"Сборка файла: {session.OriginalFileName}");
+			await _hub.Clients.User(userId).SendAsync("TaskUpdate", new
+			{
+				taskKey = $"compiling_{hash}",
+				title = $"Сборка файла: {session.OriginalFileName}",
+				type = "upload",
+				statusClass = "done",
+				statusText = "Сборка завершена",
+				cancelable = false
+			});
 
 			return Ok(new { message = "Файл собран", FileName = versionedName, Version = newVersion });
 		}
@@ -242,55 +283,6 @@ namespace VCS_DOCs.Controllers
 			return Ok(new { status = "exists", replaceVersion = latest.Version });
 		}
 
-		[HttpGet("versions/{fileName}")]
-		public async Task<IActionResult> GetFileVersions(string fileName)
-		{
-			var userId = GetUserId();
-			if (string.IsNullOrEmpty(userId))
-				return Unauthorized();
-
-			var lastSession = await _db.FileUploadSessions
-				.Where(x => x.UserId == userId && x.OriginalFileName == fileName && x.Status == "complete")
-				.OrderByDescending(x => x.Version)
-				.FirstOrDefaultAsync();
-
-			if (lastSession == null)
-				return Ok(new List<object>());
-
-			var fileId = lastSession.FileId;
-
-			var versions = await _db.FileUploadSessions
-				.Where(x => x.UserId == userId && x.FileId == fileId && x.Status == "complete")
-				.OrderByDescending(x => x.Version)
-				.Select(x => new { x.Version, x.UpdatedAt })
-				.ToListAsync();
-
-			return Ok(versions);
-		}
-
-		[HttpPost("cleanup-incomplete")]
-		public async Task<IActionResult> CleanupIncomplete()
-		{
-			var staleTime = DateTime.Now.AddHours(-1);
-			var staleSessions = await _db.FileUploadSessions
-				.Include(x => x.Chunks)
-				.Where(x => x.Status == "incomplete" && x.UpdatedAt < staleTime)
-				.ToListAsync();
-
-			foreach (var session in staleSessions)
-			{
-				var tempDir = Path.Combine(_options.BasePath, $"u_{GetShortId(session.UserId)}", "temp", session.FileHash);
-				DeleteDirectorySafe(tempDir);
-
-				_db.FileUploadChunks.RemoveRange(session.Chunks);
-				_db.FileUploadSessions.Remove(session);
-			}
-
-			await _db.SaveChangesAsync();
-
-			return Ok(new { removed = staleSessions.Count });
-		}
-
 		[HttpGet("upload-status")]
 		public async Task<IActionResult> GetUploadStatus(string fileHash)
 		{
@@ -319,6 +311,31 @@ namespace VCS_DOCs.Controllers
 				totalChunks = session.TotalChunks,
 				uploaded = uploadedChunks
 			});
+		}
+		[HttpGet("versions/{fileName}")]
+		public async Task<IActionResult> GetFileVersions(string fileName)
+		{
+			var userId = GetUserId();
+			if (string.IsNullOrEmpty(userId))
+				return Unauthorized();
+
+			var lastSession = await _db.FileUploadSessions
+				.Where(x => x.UserId == userId && x.OriginalFileName == fileName && x.Status == "complete")
+				.OrderByDescending(x => x.Version)
+				.FirstOrDefaultAsync();
+
+			if (lastSession == null)
+				return Ok(new List<object>());
+
+			var fileId = lastSession.FileId;
+
+			var versions = await _db.FileUploadSessions
+				.Where(x => x.UserId == userId && x.FileId == fileId && x.Status == "complete")
+				.OrderByDescending(x => x.Version)
+				.Select(x => new { x.Version, x.UpdatedAt })
+				.ToListAsync();
+
+			return Ok(versions);
 		}
 	}
 

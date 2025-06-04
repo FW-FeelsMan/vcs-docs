@@ -42,7 +42,6 @@ window.initUploadFile = function () {
 			return;
 		}
 
-		// Проверяем статус загрузки на сервере
 		try {
 			const res = await fetch(`/api/upload/upload-status?fileHash=${realHash}`);
 			if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -70,8 +69,7 @@ function showResumeModal(fileName, onContinue, onRestart) {
 	const cancelBtn = modal.querySelector("#resume-cancel");
 
 	if (!modal || !message || !confirmBtn || !cancelBtn) {
-		alert("Файл уже загружался. Продолжить?");
-		const answer = confirm("Продолжить загрузку?");
+		const answer = confirm("Файл уже загружался. Продолжить загрузку?");
 		answer ? onContinue?.() : onRestart?.();
 		return;
 	}
@@ -128,10 +126,7 @@ async function startUpload(file, hash, replaceVersion, sessionId = null, already
 	isUploadInProgress = true;
 
 	for (let i = 0; i < totalChunks; i++) {
-		if (alreadyUploaded.has(i)) {
-			console.log(`Пропуск чанка ${i + 1} — уже загружен`);
-			continue;
-		}
+		if (alreadyUploaded.has(i)) continue;
 
 		const start = i * chunkSize;
 		const end = Math.min(file.size, start + chunkSize);
@@ -150,7 +145,6 @@ async function startUpload(file, hash, replaceVersion, sessionId = null, already
 		try {
 			const response = await fetch('/api/Upload/chunk', { method: 'POST', body: formData });
 			if (!response.ok) throw new Error(`Ошибка загрузки чанка ${i}`);
-			console.log(`Чанк ${i + 1}/${totalChunks} загружен`);
 		} catch (err) {
 			console.error("Ошибка загрузки чанка:", err);
 			isUploadInProgress = false;
@@ -192,7 +186,6 @@ function computeSparkMD5Hash(file, chunkSize = 10 * 1024 * 1024) {
 		reader.onload = (e) => {
 			spark.append(e.target.result);
 			currentChunk++;
-
 			if (currentChunk < chunks) {
 				loadNext();
 			} else {
@@ -241,7 +234,6 @@ function closeUploadErrorModal() {
 	if (modal) modal.style.display = "none";
 }
 
-// Предотвращение обновления/закрытия страницы во время загрузки
 window.addEventListener("beforeunload", function (e) {
 	if (isUploadInProgress) {
 		const message = "Файл всё ещё загружается. Уход со страницы прервёт загрузку.";

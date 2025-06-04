@@ -38,7 +38,7 @@ public class UploadCleanupService : BackgroundService
 				_logger.LogError(ex, "Ошибка при автоматической очистке загрузок.");
 			}
 
-			await Task.Delay(TimeSpan.FromMinutes(10), stoppingToken);
+			await Task.Delay(TimeSpan.FromMinutes(15), stoppingToken);
 		}
 	}
 
@@ -114,17 +114,25 @@ public class UploadCleanupService : BackgroundService
 
 			if (!string.IsNullOrEmpty(session.UserId))
 			{
+				if (!force && (DateTime.Now - session.UpdatedAt) < TimeSpan.FromSeconds(60))
+				{
+					_logger.LogInformation("Пропущена повторная отправка TaskUpdate для недавно очищенной сессии: {File}", session.OriginalFileName);
+					continue;
+				}
+
 				await _hub.Clients.User(session.UserId).SendAsync("TaskUpdate", new
 				{
+					taskKey = $"cleanup_{status}_{session.FileId}_{session.Version}",
 					title = $"Очищена сессия со статусом '{status}': {session.OriginalFileName}",
 					type = "system",
 					statusClass = "done",
 					statusText = "Завершено",
-					cancelable = false
+					cancelable = false,
+					autoRemove = true,
+					autoRemoveDelay = 5000
 				});
 			}
 		}
-
 		await db.SaveChangesAsync();
 	}
 

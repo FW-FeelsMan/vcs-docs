@@ -34,7 +34,7 @@
 
 				try
 				{
-					await Task.Delay(TimeSpan.FromMinutes(10), stoppingToken);
+					await Task.Delay(TimeSpan.FromMinutes(15), stoppingToken);
 				}
 				catch (TaskCanceledException)
 				{
