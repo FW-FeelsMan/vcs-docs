@@ -63,14 +63,31 @@ namespace VCS_DOCs.Controllers
 
 			if (session == null)
 			{
-				var lastComplete = await _db.FileUploadSessions
+				// Ищем любую существующую сессию с таким же именем файла
+				var existingFile = await _db.FileUploadSessions
 					.Where(x => x.UserId == userId && x.OriginalFileName == fileName && x.Status == "complete")
 					.OrderByDescending(x => x.Version)
 					.FirstOrDefaultAsync();
 
-				int newVersion = lastComplete != null ? lastComplete.Version + 1 : 1;
-				Guid fileId = replaceVersion.HasValue && lastComplete != null ? lastComplete.FileId : Guid.NewGuid();
+				// Используем существующий FileId, если файл с таким именем уже существует
+				// Это исправление обеспечивает связь между версиями одного файла
+				Guid fileId;
+				int newVersion;
 
+				if (existingFile != null)
+				{
+					// Используем существующий FileId для сохранения связи между версиями
+					fileId = existingFile.FileId;
+					newVersion = existingFile.Version + 1;
+				}
+				else
+				{
+					// Только для новых файлов создаем новый FileId
+					fileId = Guid.NewGuid();
+					newVersion = 1;
+				}
+
+				// Если указана конкретная версия для замены
 				if (replaceVersion.HasValue)
 				{
 					var replacing = await _db.FileUploadSessions
@@ -86,7 +103,8 @@ namespace VCS_DOCs.Controllers
 						_db.FileUploadChunks.RemoveRange(replacing.Chunks);
 						_db.FileUploadSessions.Remove(replacing);
 						await _db.SaveChangesAsync();
-						fileId = replacing.FileId;
+						fileId = replacing.FileId; // Используем FileId заменяемой версии
+						newVersion = replaceVersion.Value; // Сохраняем номер версии
 					}
 				}
 
@@ -280,7 +298,19 @@ namespace VCS_DOCs.Controllers
 			if (latest.Status != "complete")
 				return Ok(new { status = "uploading" });
 
-			return Ok(new { status = "exists", replaceVersion = latest.Version });
+			// Получаем все версии файла для отображения в выпадающем списке
+			var allVersions = await _db.FileUploadSessions
+				.Where(x => x.UserId == userId && x.FileId == latest.FileId && x.Status == "complete")
+				.OrderByDescending(x => x.Version)
+				.Select(x => new { x.Version, x.UpdatedAt })
+				.ToListAsync();
+
+			return Ok(new
+			{
+				status = "exists",
+				replaceVersion = latest.Version,
+				allVersions = allVersions // Добавляем все версии в ответ
+			});
 		}
 
 		[HttpGet("upload-status")]
@@ -337,6 +367,42 @@ namespace VCS_DOCs.Controllers
 
 			return Ok(versions);
 		}
+		[HttpGet("list")]
+		public async Task<IActionResult> ListFiles()
+		{
+			var userId = GetUserId();
+			if (string.IsNullOrEmpty(userId))
+				return Unauthorized();
+
+			// Получаем последние версии файлов
+			var latestSessions = await _db.FileUploadSessions
+				.Where(s => s.UserId == userId && s.Status == "complete" && s.IsLatest)
+				.OrderByDescending(s => s.UpdatedAt)
+				.ToListAsync();
+
+			// Получаем все версии для этих файлов
+			var fileIds = latestSessions.Select(s => s.FileId).Distinct().ToList();
+
+			var allVersions = await _db.FileUploadSessions
+				.Where(s => s.UserId == userId && fileIds.Contains(s.FileId) && s.Status == "complete")
+				.ToListAsync();
+
+			var result = latestSessions.Select(latest => new
+			{
+				FileName = latest.OriginalFileName,
+				FileId = latest.FileId,
+				FileSize = latest.FileSize,
+				UpdatedAt = latest.UpdatedAt,
+				LatestVersion = latest.Version,
+				Versions = allVersions
+					.Where(v => v.FileId == latest.FileId)
+					.Select(v => new { v.Version, v.UpdatedAt })
+					.OrderByDescending(v => v.Version)
+					.ToList()
+			});
+
+			return Ok(result);
+		}
 	}
 
 	public class ConflictCheckRequest
@@ -345,3 +411,4 @@ namespace VCS_DOCs.Controllers
 		public string Hash { get; set; } = "";
 	}
 }
+

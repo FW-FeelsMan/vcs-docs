@@ -84,15 +84,16 @@ async function loadContent(contentId) {
     }
 }
 
-async function loadProfileScripts() {
-    const scripts = [
-        "/js/profile/profile.js",
-        "/js/profile/profile-edit-info.js",
-        "/js/profile/storage/upload-file.js",
-        "/js/profile/storage/upload-conflict-modal.js",
-        "/js/profile/storage/sorttable.js",
-        "/js/profile/taskManager/taskManager.js"
-    ];
+    async function loadProfileScripts() {
+        const scripts = [
+            "/js/profile/profile.js",
+            "/js/profile/profile-edit-info.js",
+            "/js/profile/storage/upload-file.js",
+            "/js/profile/storage/storage-table.js",
+            "/js/profile/storage/upload-conflict-modal.js",
+            "/js/profile/storage/sorttable.js",
+            "/js/profile/taskManager/taskManager.js"
+        ];
 
     const promises = scripts.map(src => {
         return new Promise((resolve, reject) => {

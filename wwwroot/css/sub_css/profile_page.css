@@ -1,27 +1,4 @@
-﻿/* ==========================================================================
-   СОДЕРЖАНИЕ:
-   
-   1. Переменные
-   2. Анимации
-   3. Базовые стили
-   4. Кнопки
-     4.1. Основные кнопки
-     4.2. Кнопки с вариациями
-     4.3. Мульти-кнопки и выпадающие списки
-   5. Контейнеры и сетки
-   6. Сайдбар
-   7. Контент
-   8. Таблицы
-   9. Аватар и профиль
-   10. Модальные окна
-   11. Карточки задач
-   12. Версионирование
-   ========================================================================== */
-
-/* ==========================================================================
-   1. Переменные
-   ========================================================================== */
-:root {
+﻿:root {
     --primary-color: #5a9bd5;
     --primary-hover: #3d7bbf;
     --background-light: #dddedf;
@@ -32,13 +9,10 @@
     --shadow-dark: rgba(0, 0, 0, 0.15);
     --modal-button-font-size: 14px;
     --modal-button-font-weight: bold;
-    --version-list-font-size: 12px;
-    --version-list-max-height: 200px;
+    --version-list-font-size: 13px;
+    --version-list-max-height: 220px;
 }
 
-/* ==========================================================================
-   2. Анимации
-   ========================================================================== */
 @keyframes slideInRight {
     from {
         opacity: 0;
@@ -87,9 +61,6 @@
     }
 }
 
-/* ==========================================================================
-   3. Базовые стили
-   ========================================================================== */
 h1, h3 {
     color: var(--text-dark);
 }
@@ -108,11 +79,6 @@ hr.solid {
     border-top: 3px solid #bbb;
 }
 
-/* ==========================================================================
-   4. Кнопки
-   ========================================================================== */
-
-/* 4.1. Основные кнопки */
 .button-container {
     display: flex;
     justify-content: space-between;
@@ -120,6 +86,7 @@ hr.solid {
     width: 100%;
 }
 
+/* --------- Кнопки и модальные --------- */
 .button-sliding {
     --btn-color: var(--primary-color);
     --btn-border: var(--btn-color);
@@ -152,7 +119,7 @@ hr.solid {
     }
 
     .button-sliding:hover {
-        color: #fff;
+        color: var(--primary-color);
     }
 
         .button-sliding:hover:after {
@@ -167,7 +134,6 @@ hr.solid {
         color: #fff;
     }
 
-    /* 4.2. Кнопки с вариациями */
     .button-sliding.primary {
         --btn-color: var(--primary-color);
         --btn-border: var(--primary-color);
@@ -191,8 +157,8 @@ hr.solid {
     .button-sliding.small {
         --btn-color: var(--primary-color);
         --btn-border: var(--btn-color);
-        min-width: 87px;
-        height: 25px;
+        min-width: 120px;
+        height: 35px;
         font-size: 0.8rem;
         padding: 2px 6px;
         border: 2px solid var(--btn-border);
@@ -240,147 +206,174 @@ hr.solid {
             color: #fff;
         }
 
-/* Стандартные кнопки */
-.btn {
-    --btn-color: var(--primary-color);
-    --btn-border: var(--btn-color);
-    min-width: 100px;
-    height: 40px;
-    padding: 5px 15px;
-    font-weight: var(--modal-button-font-weight);
-    font-size: var(--modal-button-font-size);
+    .button-sliding:hover {
+        color: #fff !important;
+    }
+
+.button_slide {
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
+    padding: 8px 14px;
+    display: inline-block;
+    font-size: 0.8rem;
     cursor: pointer;
-    position: relative;
-    overflow: hidden;
+    box-shadow: inset 0 0 0 0 var(--primary-color);
+    transition: all 0.4s ease-out;
     background: transparent;
-    border: 2px solid var(--btn-border);
-    color: var(--btn-color);
-    border-radius: 5px;
-    transition: all 0.3s ease;
-    z-index: 0;
-}
-
-    .btn::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 0;
-        height: 100%;
-        width: 0;
-        background: var(--btn-color);
-        z-index: -1;
-        transition: all 0.3s ease;
-    }
-
-    .btn:hover {
-        color: #fff;
-    }
-
-        .btn:hover::after {
-            width: 100%;
-        }
-
-    .btn.btn-info {
-        --btn-color: #17a2b8;
-        --btn-border: #17a2b8;
-    }
-
-/* 4.3. Мульти-кнопки и выпадающие списки */
-.multi-button {
+    font-weight: var(--modal-button-font-weight);
     position: relative;
-    display: inline-flex;
-    align-items: center;
+    user-select: none;
 }
 
-    .multi-button .button-sliding {
-        border-top-right-radius: 0;
-        border-bottom-right-radius: 0;
-    }
+.slide_right:hover {
+    color: #fff;
+    box-shadow: inset 160px 0 0 0 var(--primary-color);
+}
 
-    .multi-button .dropdown-arrow {
-        background: var(--primary-color);
-        color: white;
-        height: 40px;
+/* --------- Split-кнопки (универсальные) --------- */
+.button-split-wrapper, .split-button, .multi-button {
+    display: inline-flex;
+    position: relative;
+    border-radius: 4px;
+    vertical-align: middle;
+    background: #fff;
+    overflow: visible;
+}
+
+.split-button {
+    border: 2px solid var(--primary-color);
+    cursor: pointer;
+    user-select: none;
+}
+
+    .split-button .button-part {
         display: flex;
         align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        border-left: none;
-        border-top-right-radius: 5px;
-        border-bottom-right-radius: 5px;
-        padding: 0 10px;
-        font-size: 20px;
-        transition: all 0.3s ease;
+        height: 37px;
+        font-weight: var(--modal-button-font-weight);
     }
 
-        .multi-button .dropdown-arrow:hover {
-            background: var(--primary-hover);
+    .split-button .label {
+        background: transparent;
+        color: var(--primary-color);
+        font-size: var(--modal-button-font-size);
+        padding: 0 10px;
+        height: 37px;
+        display: flex;
+        align-items: center;
+    }
+
+    .split-button .version {
+        color: var(--primary-color);
+        min-width: 50px;
+        font-size: var(--version-list-font-size);
+    }
+
+    .split-button .dropdown {
+        background: var(--primary-color);
+        color: white;
+        font-size: 35px;
+    }
+
+    .split-button.inline {
+        display: inline-flex;
+        align-items: center;
+        border: 2px solid var(--btn-border);
+        border-radius: 5px;
+        font-size: 0.8rem;
+        height: 28px;
+        max-width: 160px;
+    }
+
+        .split-button.inline .button-part {
+            padding: 0 6px;
+            height: 100%;
+            color: var(--btn-color);
+            background: #fff;
+            white-space: nowrap;
         }
 
-/* Кнопка "Заменить" */
-.vers-button {
-    font-size: var(--modal-button-font-size);
-    padding: 0 8px;
-    height: 40px;
-    min-width: 120px;
-    max-width: 140px;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    text-align: center;
-    --btn-color: var(--primary-color);
-    --btn-border: var(--btn-color);
-    border: 2px solid var(--btn-border);
-    background: transparent;
-    color: var(--btn-color);
-    font-weight: var(--modal-button-font-weight);
-    border-radius: 5px 0 0 5px;
-    cursor: pointer;
-    position: relative;
-    transition: all 0.3s ease;
-    z-index: 0;
+        .split-button.inline .label {
+            border-right: 1px solid var(--btn-border);
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .split-button.inline .value {
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .split-button.inline .dropdown {
+            background: var(--btn-color);
+            color: var(--primary-color);
+            width: 24px;
+            justify-content: center;
+            font-size: 14px;
+            border-left: 1px solid var(--btn-border);
+            padding: 0;
+        }
+
+/* --------- Модальные --------- */
+.modal {
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
 }
 
-    .vers-button:hover {
-        color: #fff;
+.modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 20px;
+    border: 1px solid var(--primary-color);
+    width: 450px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.modal-buttons {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    position: relative;
+}
+
+    .modal-buttons button {
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: var(--modal-button-font-weight);
+        font-size: var(--modal-button-font-size);
     }
 
-    .vers-button::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 0;
-        height: 100%;
-        width: 0;
-        background: var(--btn-color);
-        z-index: -1;
-        transition: all 0.3s ease;
-    }
+#upload-version-modal .modal-content {
+    background-color: #ffffff;
+    border-color: var(--primary-color);
+}
 
-    .vers-button:hover::after {
-        width: 100%;
-    }
+#upload-warning-modal .modal-content {
+    background-color: #fff3f3;
+    border-color: #ff4444;
+}
 
-    .vers-button:disabled {
-        cursor: not-allowed;
-        opacity: 0.5;
-        background-color: #ccc;
-        border-color: #ccc;
-        color: #fff;
-    }
+#upload-warning-modal h3 {
+    color: #dc3545;
+}
 
-    /* Уменьшенная стрелка */
-    .vers-button + .dropdown-arrow {
-        font-size: 16px;
-        width: 22px;
-        height: 40px;
-        border-top-right-radius: 5px;
-        border-bottom-right-radius: 5px;
-    }
+#upload-warning-modal .btn.danger {
+    --btn-color: #ff4444;
+    --btn-border: #ff4444;
+}
 
-/* ==========================================================================
-   5. Контейнеры и сетки
-   ========================================================================== */
+/* --------- Профиль, sidebar, info --------- */
 .profile_background {
     background-color: var(--background-dark);
     border-radius: 6px;
@@ -413,9 +406,6 @@ hr.solid {
     margin-top: 20px;
 }
 
-/* ==========================================================================
-   6. Сайдбар
-   ========================================================================== */
 .profile-sidebar {
     position: relative;
     width: 250px;
@@ -423,7 +413,6 @@ hr.solid {
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px var(--shadow-light);
-    justify-content: space-between;
 }
 
 .sidebar-menu {
@@ -502,9 +491,6 @@ hr.solid {
     padding: 8px;
 }
 
-/* ==========================================================================
-   7. Контент
-   ========================================================================== */
 .profile-content {
     flex-grow: 1;
     background: #fff;
@@ -575,61 +561,6 @@ hr.solid {
     cursor: not-allowed;
 }
 
-/* ==========================================================================
-   8. Таблицы
-   ========================================================================== */
-.table-scroll-wrapper {
-    position: relative;
-    width: 100%;
-    overflow-x: auto;
-    overflow-y: visible;
-}
-
-.fixed-width-table {
-    width: 860px;
-    table-layout: fixed;
-    border-collapse: collapse;
-}
-
-    .fixed-width-table th,
-    .fixed-width-table td {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: left;
-        position: relative;
-    }
-
-        .fixed-width-table th.filename-col,
-        .fixed-width-table td.filename-col {
-            width: 30%;
-        }
-
-        .fixed-width-table th.size-col,
-        .fixed-width-table td.size-col {
-            width: 15%;
-        }
-
-        .fixed-width-table th.date-col,
-        .fixed-width-table td.date-col {
-            width: 25%;
-        }
-
-        .fixed-width-table th.command-col,
-        .fixed-width-table td.command-col {
-            width: 25%;
-        }
-
-        .fixed-width-table th.version-col,
-        .fixed-width-table td.version-col {
-            width: 20%;
-        }
-
-/* ==========================================================================
-   9. Аватар и профиль
-   ========================================================================== */
 .avatar-wrapper {
     display: flex;
     flex-direction: column;
@@ -663,70 +594,7 @@ hr.solid {
     text-align: center;
 }
 
-/* ==========================================================================
-   10. Модальные окна
-   ========================================================================== */
-.modal {
-    position: fixed;
-    z-index: 9999;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: none;
-}
-
-.modal-content {
-    background-color: #fff;
-    margin: 10% auto;
-    padding: 20px;
-    border: 1px solid var(--primary-color);
-    width: 450px;
-    border-radius: 10px;
-    text-align: center;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-}
-
-.modal-buttons {
-    margin-top: 20px;
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    position: relative;
-}
-
-    .modal-buttons button {
-        padding: 10px 20px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: var(--modal-button-font-weight);
-        font-size: var(--modal-button-font-size);
-    }
-
-#upload-version-modal .modal-content {
-    background-color: #ffffff;
-    border-color: var(--primary-color);
-}
-
-#upload-warning-modal .modal-content {
-    background-color: #fff3f3;
-    border-color: #ff4444;
-}
-
-#upload-warning-modal h3 {
-    color: #dc3545;
-}
-
-#upload-warning-modal .btn.danger {
-    --btn-color: #ff4444;
-    --btn-border: #ff4444;
-}
-
-/* ==========================================================================
-   11. Карточки задач
-   ========================================================================== */
+/* --------- Задачи и карточки --------- */
 .tasks-scrollable {
     flex-grow: 1;
     overflow-y: auto;
@@ -856,106 +724,242 @@ hr.solid {
     transition: opacity 0.5s ease, transform 0.5s ease;
 }
 
-/* ==========================================================================
-   12. Версионирование
-   ========================================================================== */
-.version-list {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    background: white;
-    border: 2px solid var(--primary-color);
-    border-radius: 5px;
-    width: 170px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    display: none;
-    z-index: 99999;
-    overflow-y: auto;
-    max-height: var(--version-list-max-height);
-    animation: dropdown-fade-slide 0.2s ease-out forwards;
-    margin-top: 2px;
+/* --------- Таблицы файлов и action-dropdown --------- */
+.file-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
 }
 
-    .version-list > div {
-        padding: 8px 10px;
-        font-size: var(--version-list-font-size);
-        cursor: pointer;
-        color: var(--text-dark);
-        transition: background 0.3s, color 0.3s;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        position: relative;
+    .file-table th, .file-table td {
+        padding: 12px;
+        border-bottom: 1px solid #ddd;
+        text-align: left;
     }
 
-        .version-list > div:hover {
-            background: var(--primary-hover);
-            color: #fff;
-        }
+    .file-table select, .file-table button {
+        padding: 4px 8px;
+        font-size: 0.9em;
+        cursor: pointer;
+    }
 
-            /* Добавляем всплывающую подсказку при наведении */
-            .version-list > div:hover::after {
-                content: attr(title);
-                position: absolute;
-                left: 100%;
-                top: 0;
-                background: rgba(0, 0, 0, 0.8);
-                color: white;
-                padding: 5px 8px;
-                border-radius: 4px;
-                font-size: var(--version-list-font-size);
-                white-space: nowrap;
-                z-index: 100000;
-                margin-left: 10px;
-            }
-
-.selected-version-label {
+.action-dropdown {
+    position: relative;
     display: inline-block;
-    padding: 0 8px;
-    height: 40px;
-    line-height: 40px;
-    font-size: var(--version-list-font-size);
-    color: var(--primary-color);
-    background-color: #f5faff;
-    border: 1px solid var(--primary-color);
-    border-left: none;
-    border-right: none;
 }
 
-.version-selector {
+.file-table td:last-child {
+    min-width: 180px;
+    white-space: nowrap;
+}
+
+.file-table .split-button {
+    font-size: 0.85rem;
+    height: 32px;
+    min-width: 160px;
+}
+
+    .file-table .split-button .button-part {
+        height: 32px;
+        padding: 0 8px;
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+
+    .file-table .split-button .label {
+        font-size: 0.8rem;
+        padding: 0 6px;
+    }
+
+    .file-table .split-button .version {
+        font-size: 0.8rem;
+        min-width: 60px;
+        padding: 0 6px;
+    }
+
+    .file-table .split-button .dropdown {
+        width: 24px;
+        font-size: 12px;
+    }
+
+.file-table .action-dropdown {
+    display: inline-block;
+    white-space: nowrap;
+}
+
+/* --------- Выпадающие меню для split-кнопки "Версия" --------- */
+.multi-button {
     display: inline-flex;
+    align-items: stretch;
+    position: relative;
     border: 2px solid var(--primary-color);
-    border-radius: 5px;
-    overflow: hidden;
+    border-radius: 6px;
+    overflow: visible;
+    background: #fff;
+    vertical-align: middle;
+    height: 40px;
+}
+
+.version-button {
+    border: none;
+    background: #fff;
+    font-weight: 700;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 15px;
+    color: var(--primary-color);
+    outline: none;
+    border-radius: 4px 0 0 4px;
+    transition: background 0.18s, color 0.18s;
+}
+
+    .version-button:hover {
+        background: var(--background-light);
+        color: var(--primary-hover);
+    }
+
+.dropdown-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    font-size: 24px;
+    color: var(--primary-color);
+    background: #fff;
+    border-left: 1.5px solid var(--primary-color);
+    border-radius: 0 4px 4px 0;
     cursor: pointer;
     user-select: none;
+    transition: background 0.15s, color 0.15s;
 }
 
-    .version-selector .button-part {
-        display: flex;
-        align-items: center;
-        height: 37px;
-        font-weight: var(--modal-button-font-weight);
+    .dropdown-arrow:hover {
+        background: var(--primary-hover);
+        color: #fff;
     }
 
-    .version-selector .label {
-        background: transparent;
-        color: var(--primary-color);
-        font-size: var(--modal-button-font-size);
-        padding: 0 10px;
-        height: 37px;
-        display: flex;
-        align-items: center;
-    }
+#version-dropdown-menu {
+    position: fixed;
+    width: 130px;
+    background: #fff;
+    border: 1.5px solid var(--primary-color);
+    border-radius: 5px;
+    z-index: 99999;
+    box-shadow: 0 8px 24px var(--shadow-dark);
+    padding: 0;
+    margin: 0;
+    max-height: var(--version-list-max-height);
+    overflow-y: auto;
+    animation: dropdown-fade-slide 0.16s cubic-bezier(.39,.58,.57,1.01);
+    overflow-x: hidden;
+}
 
-    .version-selector .version {
-        color: var(--primary-color);
-        min-width: 50px;
-        font-size: var(--version-list-font-size);
-    }
+.dropdown-item {
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: var(--version-list-font-size);
+    color: var(--text-dark);
+    background: #fff;
+    border: none;
+    text-align: left;
+    width: 100%;
+    transition: background 0.16s, color 0.16s;
+}
 
-    .version-selector .dropdown {
+    .dropdown-item:hover,
+    .dropdown-item:focus {
         background: var(--primary-color);
-        color: white;
-        font-size: 35px;
+        color: #fff;
+        outline: none;
     }
+
+    .dropdown-item[style*="font-weight: bold"] {
+        background: #e5f1fb !important;
+        color: var(--primary-hover) !important;
+    }
+.multi-button.action-multibutton {
+    border: 2px solid var(--primary-color);
+    border-radius: 6px;
+    background: #fff;
+    overflow: visible;
+    position: relative;
+    height: 40px;
+    display: inline-flex;
+    align-items: stretch;
+    vertical-align: middle;
+}
+
+.action-button {
+    border: none;
+    background: #fff;
+    font-weight: 700;
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 15px;
+    color: var(--primary-color);
+    outline: none;
+    border-radius: 4px 0 0 4px;
+    transition: background 0.18s, color 0.18s;
+}
+
+    .action-button:hover {
+        background: var(--background-light);
+        color: var(--primary-hover);
+    }
+
+.multi-button .dropdown-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px;
+    font-size: 24px;
+    color: var(--primary-color);
+    background: #fff;
+    border-left: 1.5px solid var(--primary-color);
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s, color 0.15s;
+}
+
+    .multi-button .dropdown-arrow:hover {
+        background: var(--primary-hover);
+        color: #fff;
+    }
+
+.action-dropdown-menu {
+    position: absolute;
+    left: 0;
+    top: 100%;
+    min-width: 140px;
+    background: #fff;
+    border: 1.5px solid var(--primary-color);
+    border-radius: 5px;
+    z-index: 99999;
+    box-shadow: 0 8px 24px var(--shadow-dark);
+    padding: 0;
+    margin: 0;
+    max-height: 220px;
+    overflow-y: auto;
+    animation: dropdown-fade-slide 0.16s cubic-bezier(.39,.58,.57,1.01);
+    overflow-x: hidden;
+}
+
+    .action-dropdown-menu .dropdown-item {
+        padding: 8px 16px;
+        cursor: pointer;
+        font-size: var(--version-list-font-size);
+        color: var(--text-dark);
+        background: #fff;
+        border: none;
+        text-align: left;
+        width: 100%;
+        transition: background 0.16s, color 0.16s;
+    }
+
+        .action-dropdown-menu .dropdown-item:hover,
+        .action-dropdown-menu .dropdown-item:focus {
+            background: var(--primary-color);
+            color: #fff;
+            outline: none;
+        }

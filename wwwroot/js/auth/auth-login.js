@@ -46,6 +46,11 @@ const hardwareId = navigator.userAgent;
 document.getElementById('hardwareId').value = hardwareId;
 document.getElementById('hardwareIdRegister').value = hardwareId;
 
+const params = new URLSearchParams(window.location.search);
+if (params.get('message') === 'session_terminated') {
+    alert('Вы были разлогинены, так как выполнен вход с другого устройства');
+}
+
 async function submitForm(event, url, errorSelector, successRedirect = null) {
     event.preventDefault();
 

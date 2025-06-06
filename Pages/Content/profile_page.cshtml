@@ -95,22 +95,19 @@
                     </div>
                 </div>
                 <div class="content-scrollable">
-                    <div class="table-scroll-wrapper">
-                        <table class="sortable fixed-width-table">
-                            <thead>
-                                <tr>
-                                    <th class="filename-col">Имя файла</th>
-                                    <th class="version-col">Версия</th>
-                                    <th class="size-col">Размер, Мб</th>
-                                    <th class="date-col">Дата и время загрузки</th>
-                                    <th class="command-col">Команда</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Динамически заполняется -->
-                            </tbody>
-                        </table>
-                    </div>
+                    <table id="userFilesTable" class="file-table">
+                        <thead>
+                            <tr>
+                                <th>Имя файла</th>
+                                <th>Версия</th>
+                                <th>Размер</th>
+                                <th>Загружен</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+
                 </div>
             </div>
             <div id="tasks" class="content-section">
@@ -131,7 +128,7 @@
             <h3 id="version-modal-title">Подтверждение</h3>
             <p id="version-conflict-message">Сообщение по умолчанию.</p>
             <div class="modal-buttons">
-                <div class="multi-button version-selector" id="version-selector">
+                <div class="multi-button split-button" id="split-button">
                     <div class="button-part label">Заменить:</div>
                     <div id="selected-version" class="button-part version">V4</div>
                     <div id="version-dropdown" class="button-part dropdown">&#9662;</div>

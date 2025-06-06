@@ -10,7 +10,7 @@
 	const cancelBtn = modal.querySelector("#conflict-cancel");
 	const versionBtn = modal.querySelector("#conflict-new-version");
 
-	const replaceContainer = modal.querySelector("#version-selector");
+	const replaceContainer = modal.querySelector("#split-button");
 	const selectedVersionSpan = modal.querySelector("#selected-version");
 	const dropdownArrow = modal.querySelector("#version-dropdown");
 	const versionList = modal.querySelector("#version-list");
