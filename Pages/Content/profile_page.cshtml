@@ -35,16 +35,6 @@
                 <li data-target="storage">Личное хранилище</li>
                 <li data-target="tasks">Задачи</li>
             </ul>
-
-            <div class="sidebar-upload-popup">
-                <div class="sidebar-upload-header">
-                    <div class="sidebar-upload-title">Загрузка файлов</div>
-                    <button class="sidebar-upload-toggle" title="Свернуть"><span>↹</span></button>
-                </div>
-                <div class="sidebar-upload-content"></div>
-            </div>
-
-
         </div>
         <div class="profile-content">
             <div id="personal-data" class="content-section active">
@@ -79,7 +69,7 @@
                     </div>
                     <div class="info-card">
                         <h4>Удаление аккаунта</h4>
-                        <button class="button-sliding primary">Удалить</button>
+                        <button class="button-sliding danger">Удалить</button>
                     </div>
                 </div>
             </div>
@@ -134,18 +124,18 @@
                     <div id="version-dropdown" class="button-part dropdown">&#9662;</div>
                 </div>
                 <div id="version-list" class="version-list" style="display: none;"></div>
-                <button id="conflict-new-version" class="btn btn-info">Новая версия</button>
-                <button id="conflict-cancel" class="btn">Отмена</button>
+                <button id="conflict-new-version" class="button-sliding primary">Новая версия</button>
+                <button id="conflict-cancel" class="button-sliding primary">Отмена</button>
             </div>
         </div>
     </div>
-    <div id="upload-warning-modal" class="modal" style="display:none;">
+   <div id="upload-warning-modal" class="modal" style="display:none;">
         <div class="modal-content">
             <h3 id="warning-modal-title">Предупреждение</h3>
             <p id="warning-message">Подтверждение действия</p>
             <div class="modal-buttons">
-                <button id="warning-confirm" class="btn danger">Удалить</button>
-                <button id="warning-cancel" class="btn">Отмена</button>
+                <button id="warning-confirm" class="button-sliding danger">Удалить</button>
+                <button id="warning-cancel" class="button-sliding">Отмена</button>
             </div>
         </div>
     </div>
@@ -154,8 +144,8 @@
             <h3 id="resume-modal-title">Продолжить загрузку?</h3>
             <p id="resume-modal-message">Файл уже загружался. Хотите продолжить?</p>
             <div class="modal-buttons">
-                <button id="resume-confirm" class="btn btn-primary">Продолжить</button>
-                <button id="resume-cancel" class="btn">Начать заново</button>
+                <button id="resume-confirm" class="button-sliding">Продолжить</button>
+                <button id="resume-cancel" class="button-sliding">Начать заново</button>
             </div>
         </div>
     </div>

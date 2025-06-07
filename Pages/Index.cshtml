@@ -56,13 +56,15 @@
             <img src="~/images/logout_icon.png" alt="Выход" class="logout-icon">
         </button>
     </form>
+    <div id="chat-toggle-button" title="Открыть чат">
+        💬
+    </div>
 
 </div>
 
 <div id="content" class="content-field">
     @await Html.PartialAsync("_ContentProjects")
 </div>
-
 <div class="context-menu">
     <ul>
         <li>Открыть</li>

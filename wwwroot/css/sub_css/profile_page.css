@@ -91,7 +91,7 @@ hr.solid {
     --btn-color: var(--primary-color);
     --btn-border: var(--btn-color);
     min-width: 130px;
-    height: 40px;
+    height: 44px;
     padding: 5px 10px;
     font-weight: var(--modal-button-font-weight);
     font-size: var(--modal-button-font-size);
@@ -212,7 +212,6 @@ hr.solid {
 
 .button_slide {
     color: var(--primary-color);
-    border: 2px solid var(--primary-color);
     padding: 8px 14px;
     display: inline-block;
     font-size: 0.8rem;
@@ -249,7 +248,7 @@ hr.solid {
     .split-button .button-part {
         display: flex;
         align-items: center;
-        height: 37px;
+        height: 40px;
         font-weight: var(--modal-button-font-weight);
     }
 
@@ -347,7 +346,7 @@ hr.solid {
 }
 
     .modal-buttons button {
-        padding: 10px 20px;
+        padding: 10px 10px;
         border-radius: 6px;
         cursor: pointer;
         font-weight: var(--modal-button-font-weight);
@@ -526,7 +525,7 @@ hr.solid {
 .info-card {
     background: linear-gradient(to bottom, #fcfcfc, #f8f8f8);
     border: 1px solid #ddd;
-    padding: 15px;
+    padding: 12px;
     border-radius: 12px;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -792,7 +791,6 @@ hr.solid {
     display: inline-flex;
     align-items: stretch;
     position: relative;
-    border: 2px solid var(--primary-color);
     border-radius: 6px;
     overflow: visible;
     background: #fff;
@@ -878,7 +876,6 @@ hr.solid {
         color: var(--primary-hover) !important;
     }
 .multi-button.action-multibutton {
-    border: 2px solid var(--primary-color);
     border-radius: 6px;
     background: #fff;
     overflow: visible;
@@ -930,7 +927,7 @@ hr.solid {
 .action-dropdown-menu {
     position: absolute;
     left: 0;
-    top: 100%;
+    top: 120%;
     min-width: 140px;
     background: #fff;
     border: 1.5px solid var(--primary-color);
@@ -963,3 +960,194 @@ hr.solid {
             color: #fff;
             outline: none;
         }
+#version-list {
+    position: absolute;
+    top: 100%;
+    left:0px;
+    width: 170px;
+    background: #fff;
+    border: 1.5px solid var(--primary-color);
+    border-radius: 5px;
+    z-index: 9999;
+    box-shadow: 0 8px 24px var(--shadow-dark);
+    padding: 0;
+    margin-top: 4px;
+    max-height: var(--version-list-max-height);
+    overflow-x:hidden;
+    animation: dropdown-fade-slide 0.16s cubic-bezier(.39,.58,.57,1.01);
+}
+#split-button {
+    position: relative; 
+}
+.version-multibutton-lg {
+    height: 45px;
+    border: 2px solid var(--primary-color);
+    border-radius: 6px;
+    background: #fff;
+    display: inline-flex;
+    align-items: stretch;
+    overflow: visible;
+    vertical-align: middle;
+}
+
+    .version-multibutton-lg .version-button {
+        font-size: 14px;
+        padding: 10px 18px;
+        height: 100%;
+        font-weight: 700;
+        color: var(--primary-color);
+        background: #fff;
+        border: none;
+        border-radius: 4px 0 0 4px;
+        cursor: pointer;
+        transition: background 0.18s, color 0.18s;
+    }
+
+        .version-multibutton-lg .version-button:hover {
+            background: var(--background-light);
+            color: var(--primary-hover);
+        }
+
+    .version-multibutton-lg .dropdown-arrow {
+        font-size: 24px;
+        padding: 0 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        border-left: 1.5px solid var(--primary-color);
+        border-radius: 0 4px 4px 0;
+        background: #fff;
+        color: var(--primary-color);
+        cursor: pointer;
+        user-select: none;
+        transition: background 0.15s, color 0.15s;
+    }
+
+        .version-multibutton-lg .dropdown-arrow:hover {
+            background: var(--primary-hover);
+            color: #fff;
+        }
+/* Стили для компактных кнопок */
+
+/* Компактная мульти-кнопка */
+.multi-button.compact {
+    display: inline-flex;
+    position: relative;
+    border-radius: 4px;
+    vertical-align: middle;
+    background: #fff;
+    overflow: visible;
+    height: 32px;
+}
+
+/* Компактная кнопка с эффектом скольжения */
+.button-sliding.compact {
+    --btn-color: var(--primary-color);
+    --btn-border: var(--btn-color);
+    min-width: 90px;
+    height: 32px;
+    padding: 0 8px;
+    font-weight: bold;
+    font-size: 12px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    background: transparent;
+    border: 2px solid var(--btn-border);
+    color: var(--btn-color);
+    border-radius: 4px 0 0 4px;
+    transition: all 0.3s ease;
+    z-index: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .button-sliding.compact:after {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 0;
+        background: var(--btn-color);
+        z-index: -1;
+        transition: all 0.3s ease;
+    }
+
+    .button-sliding.compact:hover {
+        color: #fff;
+    }
+
+        .button-sliding.compact:hover:after {
+            width: 100%;
+        }
+
+/* Компактная стрелка выпадающего списка */
+.dropdown-arrow.compact {
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+    .dropdown-arrow.compact:hover {
+        background: var(--primary-hover);
+    }
+
+/* Компактное выпадающее меню */
+.action-dropdown-menu.compact {
+    background: white;
+    border: 1.5px solid var(--primary-color);
+    border-radius: 4px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    top: 100%;
+    left: 0;
+    margin-top: 2px;
+}
+
+    .action-dropdown-menu.compact .dropdown-item {
+        padding: 6px 12px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: background 0.2s;
+        white-space: nowrap;
+    }
+
+        .action-dropdown-menu.compact .dropdown-item:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+/* Стили для выпадающего меню версий */
+#version-dropdown-menu.compact {
+    position: absolute;
+    min-width: 90px;
+    background: #fff;
+   
+    z-index: 99999;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 0;
+    margin: 0;
+}
+
+    #version-dropdown-menu.compact .dropdown-item {
+        padding: 6px 12px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+        #version-dropdown-menu.compact .dropdown-item:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+

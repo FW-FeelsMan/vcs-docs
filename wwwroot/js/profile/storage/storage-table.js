@@ -38,19 +38,19 @@ function initStorageTable() {
 
     function renderVersionDropdown(file) {
         return `
-            <div class="multi-button version-multibutton" data-file-id="${file.FileId}" data-current-version="${file.LatestVersion}">
-                <button class="button-sliding primary version-button" data-version="${file.LatestVersion}">Версия v${file.LatestVersion}</button>
-                <div class="dropdown-arrow" style="cursor:pointer;">&#9662;</div>
+            <div class="multi-button compact version-multibutton" data-file-id="${file.FileId}" data-current-version="${file.LatestVersion}">
+                <button class="button-sliding primary compact version-button" data-version="${file.LatestVersion}">v${file.LatestVersion}</button>
+                <div class="dropdown-arrow compact">&#9662;</div>
             </div>
         `;
     }
 
     function renderActions(file) {
         return `
-            <div class="multi-button action-multibutton" style="position: relative;">
-                <button class="button-sliding primary action-button" data-action="delete">Удалить</button>
-                <div class="dropdown-arrow">&#9662;</div>
-                <div class="action-dropdown-menu" style="display: none; position: absolute; min-width: 140px;">
+            <div class="multi-button compact action-multibutton" style="position: relative;">
+                <button class="button-sliding primary compact action-button" data-action="delete">Удалить</button>
+                <div class="dropdown-arrow compact">&#9662;</div>
+                <div class="action-dropdown-menu compact" style="display: none; position: absolute; min-width: 120px;">
                     <div class="dropdown-item" data-action="download">Скачать</div>
                     <div class="dropdown-item" data-action="delete">Удалить</div>
                     <div class="dropdown-item" data-action="view">Просмотр</div>
@@ -125,35 +125,29 @@ function initStorageTable() {
                 // Создать меню
                 const menu = document.createElement('div');
                 menu.id = 'version-dropdown-menu';
+                menu.className = 'compact';
+
+                // Позиционирование меню точно под кнопкой
+                const rect = wrapper.getBoundingClientRect();
                 menu.style.position = 'absolute';
-                menu.style.minWidth = '120px';
-                menu.style.background = '#fff';
-                menu.style.border = '1.5px solid #5a9bd5';
-                menu.style.borderRadius = '5px';
-                menu.style.zIndex = 99999;
-                menu.style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)';
-                menu.style.padding = '0';
-                menu.style.margin = '0';
-                menu.style.left = (wrapper.getBoundingClientRect().left + window.scrollX) + 'px';
-                menu.style.top = (wrapper.getBoundingClientRect().bottom + window.scrollY) + 'px';
+                menu.style.left = (rect.left + window.scrollX) + 'px';
+                menu.style.top = (rect.bottom + window.scrollY) + 'px';
+                menu.style.width = rect.width + 'px';
 
                 file.Versions.forEach(v => {
                     const item = document.createElement('div');
                     item.className = 'dropdown-item';
                     item.textContent = 'v' + v.Version;
-                    item.style.padding = '8px 16px';
-                    item.style.cursor = 'pointer';
                     if (v.Version == currentVersion) {
                         item.style.background = '#e5f1fb';
                         item.style.fontWeight = 'bold';
                     }
                     item.onclick = function () {
-                        button.textContent = 'Версия v' + v.Version;
+                        button.textContent = 'v' + v.Version;
                         wrapper.setAttribute('data-current-version', v.Version);
                         button.setAttribute('data-version', v.Version);
                         menu.remove();
                         currentVersion = v.Version;
-                        // Можно вызвать ajax для смены версии!
                     };
                     menu.appendChild(item);
                 });
@@ -217,3 +211,4 @@ function initStorageTable() {
 
     fetchFiles();
 }
+

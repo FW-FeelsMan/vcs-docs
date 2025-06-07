@@ -1,0 +1,117 @@
+﻿<link href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,700' rel='stylesheet' type='text/css'>
+
+<div id="chatbox">
+    <div id="friendslist">
+        <div id="topmenu">
+            <span class="active">Контакты</span>
+            <span>Чаты</span>
+            <span>История</span>
+        </div>
+
+        <div id="friends">
+            <div class="friend">
+                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/245657/1_copy.jpg" />
+                <p>
+                    <strong>Нет вертикального скролла</strong>
+                    <span>email@example.com</span>
+                </p>
+                <div class="status available"></div>
+            </div>
+
+           
+            <input type="text" id="searchfield" placeholder="Поиск контактов..." />
+        </div>
+    </div>
+
+    <div id="chatview" class="p1">
+        <div id="profile">
+            <div id="minimize" title="Свернуть чат"></div>
+            <div id="close" title="Закрыть чат">
+                <div class="cy"></div>
+                <div class="cx"></div>
+            </div>
+
+            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/245657/1_copy.jpg" />
+            <div id="profile-info">
+                <p>Алексей Петров</p>
+                <span>alexey.petrov@example.com</span>
+            </div>
+        </div>
+
+        <div id="chat-messages">
+            <label>Сегодня</label>
+
+            <div class="message">
+                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/245657/1_copy.jpg" />
+                <div class="bubble">
+                    Привет! Как продвигается работа над проектом?
+                    <span>10:42</span>
+                </div>
+            </div>
+
+            <div class="message right">
+                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/245657/2_copy.jpg" />
+                <div class="bubble">
+                    Привет! Всё идёт по плану, уже закончил основную часть.
+                    <span>10:45</span>
+                </div>
+            </div>
+
+            <div class="message">
+                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/245657/1_copy.jpg" />
+                <div class="bubble">
+                    Отлично! Когда планируешь сдать финальную версию?
+                    <span>10:47</span>
+                </div>
+            </div>
+
+            <div class="message right">
+                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/245657/2_copy.jpg" />
+                <div class="bubble">
+                    Думаю, к концу недели всё будет готово. Нужно ещё протестировать.
+                    <span>10:49</span>
+                </div>
+            </div>
+
+            <div class="message">
+                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/245657/1_copy.jpg" />
+                <div class="bubble">
+                    Хорошо, буду ждать. Если нужна помощь - пиши!
+                    <span>10:51</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="sendmessage">
+            <input type="text" placeholder="Введите сообщение..." />
+            <button id="send"></button>
+        </div>
+    </div>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+<script>
+    $(document).ready(function () {
+        const chatToggleBtn = $('#chat-toggle-button');
+        const chatBox = $('#chatbox');
+        const chatCloseBtn = $('#close');
+
+        // Сначала скрываем чат
+        chatBox.hide();
+
+        // Открыть чат по клику
+        chatToggleBtn.on('click', function () {
+            chatBox.fadeIn(200);
+        });
+
+        // Закрыть чат по кнопке закрытия
+        chatCloseBtn.on('click', function () {
+            chatBox.fadeOut(200);
+        });
+
+        // Опционально: свернуть чат по кнопке minimize
+        $('#minimize').on('click', function () {
+            chatBox.fadeOut(200);
+        });
+    });
+</script>

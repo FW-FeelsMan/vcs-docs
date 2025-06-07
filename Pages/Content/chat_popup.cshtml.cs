@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace VCS_DOCs.Pages
+namespace VCS_DOCs.Pages.Content
 {
-    public class TestUploadModel : PageModel
+    public class chat_popupModel : PageModel
     {
         public void OnGet()
         {

@@ -26,18 +26,36 @@ window.initUploadFile = function () {
 		console.log(`Файл выбран: ${file.name}, размер: ${file.size}`);
 
 		let realHash;
+		const hashTask = {
+			taskKey: `hash_${file.name}_${file.size}_${Date.now()}`,
+			title: file.name,
+			type: "hashing",
+			statusClass: "waiting",
+			statusText: "Подготовка к загрузке (хеширование)",
+			cancelable: false
+		};
+		window.taskManager.addTask(hashTask);
 
 		try {
 			if (file.size <= 100 * 1024 * 1024) {
 				realHash = await computeSHA256(file);
+				hashTask.statusClass = "done";
+				hashTask.statusText = "Хеш готов";
+				window.taskManager.addTask(hashTask);
 				console.log("SHA-256 хэш:", realHash);
 			} else {
 				console.log("Используется SparkMD5 для больших файлов");
 				realHash = await computeSparkMD5Hash(file);
+				hashTask.statusClass = "done";
+				hashTask.statusText = "Хеш готов";
+				window.taskManager.addTask(hashTask);
 				console.log("MD5 хэш:", realHash);
 			}
 		} catch (error) {
 			console.error("Ошибка вычисления хеша:", error);
+			hashTask.statusClass = "failed";
+			hashTask.statusText = "Ошибка хеширования";
+			window.taskManager.addTask(hashTask);
 			alert("Не удалось вычислить хеш файла. Попробуйте еще раз.");
 			return;
 		}

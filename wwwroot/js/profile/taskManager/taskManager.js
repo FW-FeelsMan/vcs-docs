@@ -53,68 +53,117 @@ window.taskManager = (function () {
 
     function render() {
         if (!taskListEl) return console.warn("[TaskManager] taskCardList не найден");
-        taskListEl.innerHTML = "";
+
+        const domCards = new Map();
+        taskListEl.querySelectorAll(".task-card").forEach(card => {
+            const key = card.querySelector(".task-status")?.dataset.taskkey;
+            if (key) domCards.set(key, card);
+        });
+
+        const seenKeys = new Set();
+
         tasks.forEach(task => {
-            const card = document.createElement("div");
-            card.className = `task-card ${task.type}-task`;
+            const key = task.taskKey;
+            if (!key) return;
 
-            const titleHtml = escapeHtml(task.title);
-            const statusHtml = escapeHtml(task.statusText);
+            seenKeys.add(key);
+            const existingCard = domCards.get(key);
 
-            card.innerHTML = `
-                <div class="task-card-header">
-                    <h4 class="task-title">${titleHtml}</h4>
-                    <span class="task-status ${task.statusClass}" data-taskkey="${task.taskKey || ""}" style="${task.statusClass === 'waiting' ? 'color: var(--primary-color); background: none;' : ''}">
-                        ${statusHtml}
-                    </span>
-                </div>
-                <div class="task-card-meta">
-                    <span class="task-type">Тип: ${capitalize(task.type)}</span>
-                    <div class="task-buttons">
-                        ${task.cancelable ? '<button class="task-cancel-btn">Отменить</button>' : ""}
-                        ${task.manualTrigger ? '<button class="button-sliding danger small call task-trigger-btn">Вызвать</button>' : ""}
-                    </div>
-                </div>
-            `;
+            if (existingCard) {
+                let hasChanged = false;
 
-            if (task.cancelable) {
-                const btn = card.querySelector(".task-cancel-btn");
-                btn.onclick = () => {
-                    if (typeof task.onCancel === "function") task.onCancel(task);
-                    removeTask(task);
-                };
-            }
+                const titleEl = existingCard.querySelector(".task-title");
+                if (titleEl && titleEl.textContent !== task.title) {
+                    titleEl.textContent = task.title;
+                    hasChanged = true;
+                }
 
-            if (task.manualTrigger) {
-                const btn = card.querySelector(".task-trigger-btn");
-                btn.onclick = () => {
-                    if (btn.disabled) return;
-                    const confirmAndTrigger = () => {
-                        btn.disabled = true;
-                        triggerTask(task.taskKey);
-                        setTimeout(() => btn.disabled = false, 3000);
-                    };
-                    if (task.taskKey === "uploadCleanup_incomplete") {
-                        showCleanupWarningModal({
-                            title: "Очистка INCOMPLETE",
-                            message: "Будут удалены чанки в статусе INCOMPLETE. Это остановит текущие загрузки. Вы уверены?",
-                            onConfirm: confirmAndTrigger,
-                            onCancel: () => console.log("Очистка INCOMPLETE отменена.")
-                        });
-                    } else if (task.taskKey === "uploadCleanup_compiling") {
-                        showCleanupWarningModal({
-                            title: "Очистка COMPILING",
-                            message: "Будут удалены чанки в статусе COMPILING. Это может оборвать сборку больших файлов. Уверены?",
-                            onConfirm: confirmAndTrigger,
-                            onCancel: () => console.log("Очистка COMPILING отменена.")
-                        });
-                    } else {
-                        confirmAndTrigger();
+                const statusEl = existingCard.querySelector(".task-status");
+                if (statusEl) {
+                    if (statusEl && !task.nextRunUtc && statusEl.textContent !== task.statusText) {
+                        statusEl.textContent = task.statusText;
+                        hasChanged = true;
                     }
-                };
-            }
 
-            taskListEl.appendChild(card);
+                    const desiredClass = `task-status ${task.statusClass}`;
+                    if (statusEl.className !== desiredClass) {
+                        statusEl.className = desiredClass;
+                        statusEl.style = task.statusClass === 'waiting'
+                            ? 'color: var(--primary-color); background: none;'
+                            : '';
+                        hasChanged = true;
+                    }
+                }
+
+                // optionally: update visibility of buttons if dynamic
+
+            } else {
+                // Create new card
+                const card = document.createElement("div");
+                card.className = `task-card ${task.type}-task`;
+
+                const titleHtml = escapeHtml(task.title);
+                const statusHtml = escapeHtml(task.statusText);
+
+                card.innerHTML = `
+				<div class="task-card-header">
+					<h4 class="task-title">${titleHtml}</h4>
+					<span class="task-status ${task.statusClass}" data-taskkey="${task.taskKey || ""}" style="${task.statusClass === 'waiting' ? 'color: var(--primary-color); background: none;' : ''}">
+						${statusHtml}
+					</span>
+				</div>
+				<div class="task-card-meta">
+					<span class="task-type">Тип: ${capitalize(task.type)}</span>
+					<div class="task-buttons">
+						${task.cancelable ? '<button class="task-cancel-btn">Отменить</button>' : ""}
+						${task.manualTrigger ? '<button class="button-sliding danger small call task-trigger-btn">Вызвать</button>' : ""}
+					</div>
+				</div>
+			`;
+
+                if (task.cancelable) {
+                    const btn = card.querySelector(".task-cancel-btn");
+                    btn.onclick = () => {
+                        if (typeof task.onCancel === "function") task.onCancel(task);
+                        removeTask(task);
+                    };
+                }
+
+                if (task.manualTrigger) {
+                    const btn = card.querySelector(".task-trigger-btn");
+                    btn.onclick = () => {
+                        if (btn.disabled) return;
+                        const confirmAndTrigger = () => {
+                            btn.disabled = true;
+                            triggerTask(task.taskKey);
+                            setTimeout(() => btn.disabled = false, 3000);
+                        };
+                        if (task.taskKey === "uploadCleanup_incomplete") {
+                            showCleanupWarningModal({
+                                title: "Очистка INCOMPLETE",
+                                message: "Будут удалены чанки в статусе INCOMPLETE. Это остановит текущие загрузки. Вы уверены?",
+                                onConfirm: confirmAndTrigger,
+                                onCancel: () => console.log("Очистка INCOMPLETE отменена.")
+                            });
+                        } else if (task.taskKey === "uploadCleanup_compiling") {
+                            showCleanupWarningModal({
+                                title: "Очистка COMPILING",
+                                message: "Будут удалены чанки в статусе COMPILING. Это может оборвать сборку больших файлов. Уверены?",
+                                onConfirm: confirmAndTrigger,
+                                onCancel: () => console.log("Очистка COMPILING отменена.")
+                            });
+                        } else {
+                            confirmAndTrigger();
+                        }
+                    };
+                }
+
+                taskListEl.appendChild(card);
+            }
+        });
+
+        domCards.forEach((card, key) => {
+            if (!seenKeys.has(key)) card.remove();
         });
     }
 
@@ -122,8 +171,7 @@ window.taskManager = (function () {
         if (!task || (!task.taskKey && !task.title)) return;
         if (isInBlacklist(task)) return;
 
-        const key = task.taskKey || `${task.title}_${task.type}`;
-        let existing = tasks.find(t => t.taskKey === task.taskKey || `${t.title}_${t.type}` === key);
+        let existing = tasks.find(t => t.taskKey && t.taskKey === task.taskKey);
         let justCompleted = false;
 
         if (existing) {
@@ -161,7 +209,7 @@ window.taskManager = (function () {
                 const diff = Math.max(0, Math.floor((target - now) / 1000));
                 const mins = Math.floor(diff / 60);
                 const secs = diff % 60;
-                el.innerText = diff < 60 ? `${secs} сек.` : `${mins} мин. ${secs.toString().padStart(2, "0")} сек.`;
+                el.innerText = `${Math.floor(diff / 60)}:${(diff % 60).toString().padStart(2, "0")}`;
             }
         });
     }

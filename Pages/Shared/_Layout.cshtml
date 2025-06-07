@@ -53,5 +53,6 @@
     <!-- Скрипты страницы -->
     @await RenderSectionAsync("Scripts", required: false)
     <mini-profiler />
+    @await Html.PartialAsync("~/Pages/Content/chat_popup.cshtml")
 </body>
 </html>

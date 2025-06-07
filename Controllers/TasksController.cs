@@ -33,7 +33,7 @@ public class TasksController : ControllerBase
 	{
 		new {
 			title = "Очистка INCOMPLETE",
-			statusText = $"Автозапуск: {FormatTime((int)(nextIncomplete - now).TotalSeconds)}",
+			statusText = $"{FormatTime((int)(nextIncomplete - now).TotalSeconds)}",
 			statusClass = "waiting",
 			type = "system",
 			cancelable = false,
@@ -43,7 +43,7 @@ public class TasksController : ControllerBase
 		},
 		new {
 			title = "Очистка COMPILING",
-			statusText = $"Автозапуск: {FormatTime((int)(nextCompiling - now).TotalSeconds)}",
+			statusText = $"{FormatTime((int)(nextCompiling - now).TotalSeconds)}",
 			statusClass = "waiting",
 			type = "system",
 			cancelable = false,
@@ -52,6 +52,7 @@ public class TasksController : ControllerBase
 			nextRunUtc = nextCompiling.ToString("o")
 		},
 		new {
+			taskKey = "singleDeviceControl",
 			title = "Контроль входа с одного устройства",
 			statusText = "Активна",
 			statusClass = "active",
@@ -85,12 +86,11 @@ public class TasksController : ControllerBase
 				return BadRequest(new { error = "Неизвестный ключ задачи." });
 		}
 	}
-
 	private string FormatTime(int seconds)
 	{
-		if (seconds < 60) return $"{seconds} сек.";
-		if (seconds < 3600) return $"{seconds / 60} мин.";
-		return $"{seconds / 3600} ч.";
+		var mins = seconds / 60;
+		var secs = seconds % 60;
+		return $"{mins}:{secs.ToString("D2")}";
 	}
 }
 
