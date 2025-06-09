@@ -6,13 +6,22 @@ function initStorageTable() {
     const counter = document.getElementById('storageCounter');
     if (!tableBody) return console.warn("Элемент таблицы не найден");
 
+    // Загрузка и отрисовка списка файлов + счётчика
     async function fetchFiles() {
         try {
             const res = await fetch('/api/Upload/list');
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const files = await res.json();
-            renderTable(files);
-            counter.textContent = `Файлов: ${files.length}`;
+            const data = await res.json();
+
+            renderTable(data.files);
+
+            const used = formatSize(data.usedBytes);
+            const temp = formatSize(data.tempBytes);
+            const limit = formatSize(data.limitBytes);
+            const free = formatSize(data.limitBytes - data.usedBytes - data.tempBytes);
+
+            counter.textContent =
+                `Использовано: ${used} из ${limit} (временных: ${temp}); свободно: ${free}`;
         } catch (err) {
             console.error("Не удалось загрузить список файлов", err);
             counter.textContent = "Ошибка загрузки";
@@ -28,7 +37,7 @@ function initStorageTable() {
                 <td>${renderVersionDropdown(file)}</td>
                 <td>${formatSize(file.FileSize)}</td>
                 <td>${formatDate(file.UpdatedAt)}</td>
-                <td>${renderActions(file)}</td>
+                <td>${renderActions()}</td>
             `;
             tableBody.appendChild(row);
         });
@@ -38,48 +47,64 @@ function initStorageTable() {
 
     function renderVersionDropdown(file) {
         return `
-            <div class="multi-button compact version-multibutton" data-file-id="${file.FileId}" data-current-version="${file.LatestVersion}">
-                <button class="button-sliding primary compact version-button" data-version="${file.LatestVersion}">v${file.LatestVersion}</button>
+            <div class="multi-button compact version-multibutton"
+                 data-file-id="${file.FileId}"
+                 data-current-version="${file.LatestVersion}">
+                <button class="button-sliding primary compact version-button"
+                        data-version="${file.LatestVersion}">
+                    v${file.LatestVersion}
+                </button>
                 <div class="dropdown-arrow compact">&#9662;</div>
-            </div>
-        `;
+            </div>`;
     }
 
-    function renderActions(file) {
+    function renderActions() {
         return `
             <div class="multi-button compact action-multibutton" style="position: relative;">
-                <button class="button-sliding primary compact action-button" data-action="delete">Удалить</button>
+                <button class="button-sliding primary compact action-button" data-action="delete">
+                    Удалить
+                </button>
                 <div class="dropdown-arrow compact">&#9662;</div>
-                <div class="action-dropdown-menu compact" style="display: none; position: absolute; min-width: 120px;">
+                <div class="action-dropdown-menu compact"
+                     style="display: none; position: absolute; min-width: 120px;">
                     <div class="dropdown-item" data-action="download">Скачать</div>
                     <div class="dropdown-item" data-action="delete">Удалить</div>
                     <div class="dropdown-item" data-action="view">Просмотр</div>
                     <div class="dropdown-item" data-action="share">Поделиться</div>
                 </div>
-            </div>
-        `;
+            </div>`;
     }
 
     function handleActionClick(action, file) {
-        const url = `/api/Upload/download/${file.FileId}?v=${file.LatestVersion}`;
+        const fileId = file.FileId;
+        const version = file.LatestVersion;
+        const downloadUrl = `/api/upload/download/${fileId}/${version}`;
+
         switch (action) {
             case 'download':
-                window.location.href = url;
+                window.location.href = downloadUrl;
                 break;
             case 'view':
-                window.open(url, '_blank');
+                window.open(downloadUrl, '_blank');
                 break;
             case 'share':
-                navigator.clipboard.writeText(window.location.origin + url)
+                navigator.clipboard.writeText(window.location.origin + downloadUrl)
                     .then(() => alert("Ссылка скопирована в буфер"))
                     .catch(() => alert("Не удалось скопировать ссылку"));
                 break;
             case 'delete':
                 if (!confirm("Удалить файл?")) return;
-                fetch(`/api/Upload/delete/${file.FileId}?v=${file.LatestVersion}`, { method: 'DELETE' })
+                fetch(`/api/upload/delete/${fileId}/${version}`, { method: 'DELETE' })
                     .then(r => {
                         if (!r.ok) throw new Error("Ошибка удаления");
-                        fetchFiles();
+                        return r.json();
+                    })
+                    .then(data => {
+                        if (data.status === 'deleted') {
+                            fetchFiles();
+                        } else {
+                            alert("Не удалось удалить файл");
+                        }
                     })
                     .catch(err => {
                         console.error("Ошибка при удалении файла:", err);
@@ -103,35 +128,29 @@ function initStorageTable() {
         return new Date(dateStr).toLocaleString();
     }
 
-    // ------- Версионный дропдаун (split button, 1 меню на всю страницу) -------
+    // Версионный дропдаун
     function setupAllVersionDropdowns(files) {
-        const oldMenu = document.getElementById('version-dropdown-menu');
-        if (oldMenu) oldMenu.remove();
+        document.getElementById('version-dropdown-menu')?.remove();
 
         document.querySelectorAll('.version-multibutton').forEach(wrapper => {
             const arrow = wrapper.querySelector('.dropdown-arrow');
             const button = wrapper.querySelector('.version-button');
-            const fileId = wrapper.getAttribute('data-file-id');
-            let currentVersion = wrapper.getAttribute('data-current-version');
+            const fileId = wrapper.dataset.fileId;
+            let currentVersion = wrapper.dataset.currentVersion;
             const file = files.find(f => f.FileId == fileId);
-            if (!arrow || !button || !file) return;
+            if (!file) return;
 
-            arrow.onclick = function (e) {
+            arrow.onclick = e => {
                 e.stopPropagation();
-                // Закрыть другие меню
-                const existing = document.getElementById('version-dropdown-menu');
-                if (existing) existing.remove();
+                document.getElementById('version-dropdown-menu')?.remove();
 
-                // Создать меню
                 const menu = document.createElement('div');
                 menu.id = 'version-dropdown-menu';
                 menu.className = 'compact';
-
-                // Позиционирование меню точно под кнопкой
                 const rect = wrapper.getBoundingClientRect();
                 menu.style.position = 'absolute';
-                menu.style.left = (rect.left + window.scrollX) + 'px';
-                menu.style.top = (rect.bottom + window.scrollY) + 'px';
+                menu.style.left = rect.left + 'px';
+                menu.style.top = rect.bottom + 'px';
                 menu.style.width = rect.width + 'px';
 
                 file.Versions.forEach(v => {
@@ -142,73 +161,68 @@ function initStorageTable() {
                         item.style.background = '#e5f1fb';
                         item.style.fontWeight = 'bold';
                     }
-                    item.onclick = function () {
+                    item.onclick = () => {
                         button.textContent = 'v' + v.Version;
-                        wrapper.setAttribute('data-current-version', v.Version);
-                        button.setAttribute('data-version', v.Version);
-                        menu.remove();
+                        wrapper.dataset.currentVersion = v.Version;
+                        button.dataset.version = v.Version;
                         currentVersion = v.Version;
+                        menu.remove();
                     };
                     menu.appendChild(item);
                 });
 
                 document.body.appendChild(menu);
-
-                // Клик вне меню — закрыть
-                function closeMenuOnClick(e) {
-                    if (!menu.contains(e.target)) {
-                        menu.remove();
-                        document.removeEventListener('click', closeMenuOnClick);
-                    }
-                }
-                setTimeout(() => document.addEventListener('click', closeMenuOnClick), 0);
+                setTimeout(() => {
+                    document.addEventListener('click', function close(e) {
+                        if (!menu.contains(e.target)) {
+                            menu.remove();
+                            document.removeEventListener('click', close);
+                        }
+                    });
+                }, 0);
             };
         });
     }
 
-    // ------- Дропдаун действий (split-button с отдельным действием) -------
+    // Дропдаун действий
     function setupAllActionDropdowns(files) {
         document.querySelectorAll('.action-multibutton').forEach(dropdown => {
-            const button = dropdown.querySelector('.action-button');
+            const btn = dropdown.querySelector('.action-button');
             const arrow = dropdown.querySelector('.dropdown-arrow');
             const menu = dropdown.querySelector('.action-dropdown-menu');
             const items = menu.querySelectorAll('.dropdown-item');
-            let selectedAction = button.getAttribute('data-action') || 'delete';
+            let selectedAction = btn.dataset.action || 'delete';
 
-            // Открытие меню только по стрелке
-            arrow.onclick = function (e) {
+            arrow.onclick = e => {
                 e.stopPropagation();
-                document.querySelectorAll('.action-dropdown-menu').forEach(m => {
-                    if (m !== menu) m.style.display = 'none';
-                });
-                menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+                document.querySelectorAll('.action-dropdown-menu')
+                    .forEach(m => m !== menu && (m.style.display = 'none'));
+                menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
             };
 
-            // Клик по основной кнопке — выполнить действие
-            button.onclick = function (e) {
+            btn.onclick = () => {
                 const row = dropdown.closest('tr');
-                const fileId = row.querySelector('.version-multibutton')?.getAttribute('data-file-id');
-                const version = row.querySelector('.version-button')?.getAttribute('data-version');
+                const fileId = row.querySelector('.version-multibutton').dataset.fileId;
+                const version = row.querySelector('.version-button').dataset.version;
                 handleActionClick(selectedAction, { FileId: fileId, LatestVersion: version });
             };
 
-            // Меняем текст кнопки и выбранное действие при выборе пункта меню
             items.forEach(item => {
-                item.onclick = function (e) {
+                item.onclick = () => {
                     selectedAction = item.dataset.action;
-                    button.textContent = item.textContent;
-                    button.setAttribute('data-action', selectedAction);
+                    btn.textContent = item.textContent;
+                    btn.dataset.action = selectedAction;
                     menu.style.display = 'none';
                 };
             });
 
-            // Клик вне меню — закрыть меню
-            document.addEventListener('click', function (e) {
+            document.addEventListener('click', e => {
                 if (!dropdown.contains(e.target)) menu.style.display = 'none';
             });
         });
     }
 
+    // Запустить
     fetchFiles();
+    window.fetchFiles = fetchFiles;
 }
-

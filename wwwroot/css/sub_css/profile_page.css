@@ -144,6 +144,10 @@ hr.solid {
         --btn-border: #ff4444;
     }
 
+    .button-sliding.allowed {
+        --btn-color: #11f80d;
+        --btn-border: #11f80d;
+    }
     .button-sliding.success {
         --btn-color: #28a745;
         --btn-border: #28a745;
@@ -505,13 +509,14 @@ hr.solid {
     display: none;
     animation: fadeInSlideIn 0.5s ease-out;
     flex-grow: 1;
-    overflow: hidden;
+    
 }
 
     .content-section.active {
         display: flex;
         flex-direction: column;
-        height: 100%;
+        flex: 1 1 auto;
+        overflow: visible;
     }
 
 .content-scrollable {
@@ -595,9 +600,8 @@ hr.solid {
 
 /* --------- Задачи и карточки --------- */
 .tasks-scrollable {
-    flex-grow: 1;
+    flex: 1 1 auto;
     overflow-y: auto;
-    max-height: 100%;
     padding-right: 10px;
 }
 

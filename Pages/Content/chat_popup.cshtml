@@ -1,26 +1,29 @@
 ﻿<link href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,700' rel='stylesheet' type='text/css'>
 
 <div id="chatbox">
+    <div id="chatbox-close" title="Закрыть чат">
+        <div class="cy"></div>
+        <div class="cx"></div>
+    </div>
     <div id="friendslist">
         <div id="topmenu">
             <span class="active">Контакты</span>
             <span>Чаты</span>
-            <span>История</span>
+            <span>Задачи</span>
         </div>
 
         <div id="friends">
             <div class="friend">
-                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/245657/1_copy.jpg" />
+                <img src="~/images/default_avatar.png" />
                 <p>
-                    <strong>Нет вертикального скролла</strong>
-                    <span>email@example.com</span>
+                    <strong>Колотов Михаил Викторович</strong>
+                    <span>warmenzim@gmail.com</span>
                 </p>
                 <div class="status available"></div>
             </div>
 
-           
-            <input type="text" id="searchfield" placeholder="Поиск контактов..." />
         </div>
+        <input type="text" id="searchfield" placeholder="Поиск контактов..." />
     </div>
 
     <div id="chatview" class="p1">
@@ -114,4 +117,19 @@
             chatBox.fadeOut(200);
         });
     });
+    $('#close').on('click', function () {
+        $('#chatbox').fadeOut(200);
+    });
+    document.getElementById('chatbox-close')
+        .addEventListener('click', () => {
+            document.getElementById('chatbox')
+                .classList.add('fadeOut');
+            setTimeout(() => {
+                document.getElementById('chatbox')
+                    .style.display = 'none';
+                document.getElementById('chatbox')
+                    .classList.remove('fadeIn', 'fadeOut');
+            }, 300);
+        });
+
 </script>

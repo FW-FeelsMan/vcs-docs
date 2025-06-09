@@ -13,6 +13,8 @@
     ├──VCS-DOCs.csproj.user
     ├──VCS-DOCs.sln
     ├──VCSDocs.db
+    ├──VCSDocs.db-shm
+    ├──VCSDocs.db-wal
     └──VCSDocs.sqbpro
     ├──[Configuration]
     │   └──UserDataPathOptions.cs
@@ -30,38 +32,62 @@
     │           ├──[a]
     │           │   └──avatar.jpg
     │           ├──[files]
-    │           │   ├──[06eac90c-3779-479b-95c1-051f1f39df48]
+    │           │   ├──[095d8e42-ef72-4a7a-aafd-9190dfbc9442]
+    │           │   │   └──[v1]
+    │           │   │       └──подсборка.a3d.bak
+    │           │   ├──[09bfb383-a956-40b3-87c6-7f256689ba3c]
+    │           │   │   ├──[v1]
+    │           │   │   │   └──подсборка.a3d — копия (4).bak
+    │           │   │   └──[v2]
+    │           │   │       └──подсборка.a3d — копия (4).bak
+    │           │   ├──[0e1e6e6e-1d5e-44e8-90bf-5ab1d4443e7a]
+    │           │   │   ├──[v1]
+    │           │   │   │   └──подсборка.a3d — копия (3).bak
+    │           │   │   ├──[v2]
+    │           │   │   │   └──подсборка.a3d — копия (3).bak
+    │           │   │   ├──[v3]
+    │           │   │   │   └──подсборка.a3d — копия (3).bak
+    │           │   │   ├──[v4]
+    │           │   │   │   └──подсборка.a3d — копия (3).bak
+    │           │   │   └──[v5]
+    │           │   │       └──подсборка.a3d — копия (3).bak
+    │           │   ├──[180b3a34-c6bc-4a84-b09c-c3dffc3a0e62]
+    │           │   │   └──[v1]
+    │           │   │       └──подсборка.a3d — копия (8).bak
+    │           │   ├──[20d728b8-72c1-4a24-816d-14375db5ad6d]
+    │           │   │   ├──[v1]
+    │           │   │   │   └──подсборка.a3d — копия (5).bak
+    │           │   │   └──[v2]
+    │           │   │       └──подсборка.a3d — копия (5).bak
+    │           │   ├──[35eadae1-1bbe-4e4f-9dbf-e4f5e826a473]
     │           │   │   ├──[v1]
     │           │   │   │   └──подсборка.a3d — копия (2).bak
-    │           │   │   └──[v2]
+    │           │   │   ├──[v2]
+    │           │   │   │   └──подсборка.a3d — копия (2).bak
+    │           │   │   ├──[v3]
+    │           │   │   │   └──подсборка.a3d — копия (2).bak
+    │           │   │   ├──[v4]
+    │           │   │   │   └──подсборка.a3d — копия (2).bak
+    │           │   │   └──[v5]
     │           │   │       └──подсборка.a3d — копия (2).bak
-    │           │   ├──[208e26af-0250-43bd-898c-b545d0bd33c5]
-    │           │   │   └──[v1]
-    │           │   │       └──СС-ПОМ — копия — копия.zip
-    │           │   ├──[8e5ccbf1-cb66-47d7-9991-56e02d50d65d]
+    │           │   ├──[8e451cb1-48a2-4f7b-acfc-2396a9ea49cd]
+    │           │   │   ├──[v1]
+    │           │   │   │   └──подсборка.a3d — копия (6).bak
+    │           │   │   └──[v2]
+    │           │   │       └──подсборка.a3d — копия (6).bak
+    │           │   ├──[ad99567a-dc04-426a-849a-45901c94bbe5]
     │           │   │   ├──[v1]
     │           │   │   │   └──РУ-700 (17.02.25 PDM ЕКБ).zip
     │           │   │   ├──[v2]
     │           │   │   │   └──РУ-700 (17.02.25 PDM ЕКБ).zip
     │           │   │   └──[v3]
     │           │   │       └──РУ-700 (17.02.25 PDM ЕКБ).zip
-    │           │   ├──[9dbdaa45-1b96-4d91-baa1-88c833a281b9]
-    │           │   │   ├──[v1]
-    │           │   │   │   └──подсборка.a3d — копия (3).bak
-    │           │   │   ├──[v2]
-    │           │   │   │   └──подсборка.a3d — копия (3).bak
-    │           │   │   └──[v3]
-    │           │   │       └──подсборка.a3d — копия (3).bak
-    │           │   ├──[ba7293d4-4cfb-426e-bb44-995d324a7237]
-    │           │   │   ├──[v1]
-    │           │   │   │   └──подсборка.a3d — копия (4).bak
-    │           │   │   ├──[v2]
-    │           │   │   │   └──подсборка.a3d — копия (4).bak
-    │           │   │   └──[v3]
-    │           │   │       └──подсборка.a3d — копия (4).bak
-    │           │   └──[e505f4ab-5ce3-4697-a4de-afac24c21d89]
+    │           │   ├──[cc9cba64-2921-4372-beb7-121dcd7eec74]
+    │           │   │   └──[v1]
+    │           │   │       └──подсборка.a3d — копия (9).bak
+    │           │   └──[ccaa9094-6cc0-4eb3-8d47-4ca2bbf20dcf]
     │           │       └──[v1]
-    │           │           └──СС-ПОМ — копия — копия.zip
+    │           │           └──подсборка.a3d — копия (7).bak
     │           └──[temp]
     ├──[Pages]
     │   ├──Index.cshtml
@@ -70,12 +96,12 @@
     │   ├──Login.cshtml.cs
     │   ├──Privacy.cshtml
     │   ├──Privacy.cshtml.cs
-    │   ├──TestUpload.cshtml
-    │   ├──TestUpload.cshtml.cs
     │   ├──_ContentProjects.cshtml
     │   ├──_ContentProjects.cshtml.cs
     │   └──_ViewImports.cshtml
     │   ├──[Content]
+    │   │   ├──chat_popup.cshtml
+    │   │   ├──chat_popup.cshtml.cs
     │   │   ├──contact_page.cshtml
     │   │   ├──contact_page.cshtml.cs
     │   │   ├──extra_page.cshtml
@@ -125,6 +151,7 @@
         │   │   ├──loginStyle.css
         │   │   └──mainStyle.css
         │   └──[sub_css]
+        │       ├──chat_popup.css
         │       ├──contact_page.css
         │       ├──extra_page.css
         │       ├──infographics_page.css
@@ -132,6 +159,7 @@
         │       └──project_page.css
         ├──[images]
         │   ├──archiveIcon.png
+        │   ├──chat-img.png
         │   ├──default_avatar.png
         │   ├──edit_icon.png
         │   ├──extra.png
@@ -147,6 +175,8 @@
         └──[js]
             ├──[auth]
             │   └──auth-login.js
+            ├──[chat]
+            │   └──chat.js
             ├──[profile]
             │   ├──profile-edit-info.js
             │   ├──profile-sidebar-popup.js
@@ -154,6 +184,7 @@
             │   └──userStatus.js
             │   ├──[storage]
             │   │   ├──sorttable.js
+            │   │   ├──storage-table.js
             │   │   ├──upload-conflict-modal.js
             │   │   └──upload-file.js
             │   └──[taskManager]
@@ -189,29 +220,51 @@ TasksController.cs методы:
 UploadController.cs методы:
  - GetShortId
  - BadRequest
+ - Conflict
  - Unauthorized
+ - if
  - BadRequest
  - FileStream
  - BadRequest
+ - TaskUpdate
  - Ok
  - Unauthorized
  - BadRequest
+ - TaskUpdate
  - FileStream
+ - TaskUpdate
  - BadRequest
  - FileStream
  - StatusCode
+ - TaskUpdate
  - Ok
  - DeleteDirectorySafe
  - Unauthorized
  - Ok
  - Ok
+ - Unauthorized
+ - BadRequest
+ - NotFound
+ - if
+ - StatusCode
+ - подпапки
+ - Ok
+ - Unauthorized
  - Ok
  - Unauthorized
  - Ok
  - Ok
- - Ok
+ - GetDirectorySize
+ - if
+ - FileInfo
  - Unauthorized
- - Ok
+ - Unauthorized
+ - BadRequest
+ - NotFound
+ - NotFound
+ - FileExtensionContentTypeProvider
+ - FileStream
+ - File
 
 AppDbContext.cs методы:
  - ApplicationDbContext
@@ -259,9 +312,6 @@ Privacy.cshtml.cs методы:
  - PrivacyModel
  - OnGet
 
-TestUpload.cshtml.cs методы:
- - OnGet
-
 _ContentProjects.cshtml.cs методы:
  - OnGet
 
@@ -288,6 +338,9 @@ UserStatusHub.cs методы:
  - OnConnectedAsync
  - OnDisconnectedAsync
  - ForceLogoutUser
+
+chat_popup.cshtml.cs методы:
+ - OnGet
 
 contact_page.cshtml.cs методы:
  - OnGet
@@ -370,6 +423,15 @@ auth-login.js методы:
  - hideLoader
  - validateInput
  - submitForm
+
+chat.js методы:
+ - initChat
+ - toggleChat
+ - closeChat
+ - minimizeChat
+ - openChatWithContact
+ - sendMessage
+ - simulateResponse
 
 profile-edit-info.js методы:
  - applyDateMask
@@ -458,34 +520,49 @@ sorttable.js методы:
  - handleEvent
  - fixEvent
 
+storage-table.js методы:
+ - initStorageTable
+ - fetchFiles
+ - renderTable
+ - renderVersionDropdown
+ - renderActions
+ - handleActionClick
+ - escapeHtml
+ - formatSize
+ - formatDate
+ - setupAllVersionDropdowns
+ - close
+ - setupAllActionDropdowns
+
 upload-conflict-modal.js методы:
  - showConflictModal
  - toggleList
 
 upload-file.js методы:
- - showResumeModal
  - checkConflictThenUpload
  - startUpload
  - computeSparkMD5Hash
- - loadNext
  - computeSHA256
+ - showResumeModal
  - showUploadErrorModal
- - closeUploadErrorModal
+ - updateStorageCounter
+ - formatSize
+ - cleanupTempUpload
 
 taskManager.js методы:
+ - getTaskKey
+ - addToBlacklist
+ - isInBlacklist
+ - removeFromBlacklist
+ - cleanupBlacklist
  - render
  - confirmAndTrigger
  - addOrUpdateTask
  - updateTimers
  - fetchTasks
  - triggerTask
- - formatTime
  - removeTask
- - clear
- - capitalize
  - escapeHtml
- - debugTasks
+ - capitalize
  - showCleanupWarningModal
- - newConfirm
- - newCancel
 

@@ -336,3 +336,4 @@ function simulateResponse() {
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
+

@@ -4,6 +4,11 @@ window.taskManager = (function () {
     const tasks = [];
     const removedTasks = new Map();
 
+    window.dumpTasks = () => {
+        console.log("dumpTasks:", window.taskManager?.getBlacklist());
+        console.log("current tasks:", [...document.querySelectorAll('.task-status')].map(el => el.dataset.taskkey));
+    };
+
     function getTaskKey(task) {
         const keys = [];
         if (task.taskKey) keys.push(task.taskKey);
@@ -80,7 +85,7 @@ window.taskManager = (function () {
 
                 const statusEl = existingCard.querySelector(".task-status");
                 if (statusEl) {
-                    if (statusEl && !task.nextRunUtc && statusEl.textContent !== task.statusText) {
+                    if (!task.nextRunUtc && statusEl.textContent !== task.statusText) {
                         statusEl.textContent = task.statusText;
                         hasChanged = true;
                     }
@@ -95,10 +100,23 @@ window.taskManager = (function () {
                     }
                 }
 
-                // optionally: update visibility of buttons if dynamic
+                const buttonsContainer = existingCard.querySelector(".task-buttons");
+                if (buttonsContainer) {
+                    const cancelBtn = buttonsContainer.querySelector(".task-cancel-btn");
+
+                    if (cancelBtn) {
+                        const shouldDisable = ['done', 'failed', 'canceled'].includes(task.statusClass);
+                        if (cancelBtn.disabled !== shouldDisable) {
+                            cancelBtn.disabled = shouldDisable;
+                            cancelBtn.textContent = shouldDisable ? "Завершено" : "Отменить";
+                            cancelBtn.style.opacity = shouldDisable ? "0.5" : "";
+                            cancelBtn.style.cursor = shouldDisable ? "not-allowed" : "";
+                            hasChanged = true;
+                        }
+                    }
+                }
 
             } else {
-                // Create new card
                 const card = document.createElement("div");
                 card.className = `task-card ${task.type}-task`;
 
@@ -106,26 +124,33 @@ window.taskManager = (function () {
                 const statusHtml = escapeHtml(task.statusText);
 
                 card.innerHTML = `
-				<div class="task-card-header">
-					<h4 class="task-title">${titleHtml}</h4>
-					<span class="task-status ${task.statusClass}" data-taskkey="${task.taskKey || ""}" style="${task.statusClass === 'waiting' ? 'color: var(--primary-color); background: none;' : ''}">
-						${statusHtml}
-					</span>
-				</div>
-				<div class="task-card-meta">
-					<span class="task-type">Тип: ${capitalize(task.type)}</span>
-					<div class="task-buttons">
-						${task.cancelable ? '<button class="task-cancel-btn">Отменить</button>' : ""}
-						${task.manualTrigger ? '<button class="button-sliding danger small call task-trigger-btn">Вызвать</button>' : ""}
-					</div>
-				</div>
-			`;
+                    <div class="task-card-header">
+                        <h4 class="task-title">${titleHtml}</h4>
+                        <span class="task-status ${task.statusClass}" data-taskkey="${task.taskKey || ""}" style="${task.statusClass === 'waiting' ? 'color: var(--primary-color); background: none;' : ''}">
+                            ${statusHtml}
+                        </span>
+                    </div>
+                    <div class="task-card-meta">
+                        <span class="task-type">Тип: ${capitalize(task.type)}</span>
+                        <div class="task-buttons">
+                            ${task.cancelable ? '<button class="task-cancel-btn">Отменить</button>' : ""}
+                            ${task.manualTrigger ? '<button class="button-sliding danger small call task-trigger-btn">Вызвать</button>' : ""}
+                        </div>
+                    </div>
+                `;
 
                 if (task.cancelable) {
                     const btn = card.querySelector(".task-cancel-btn");
                     btn.onclick = () => {
-                        if (typeof task.onCancel === "function") task.onCancel(task);
-                        removeTask(task);
+                        if (btn.disabled) return;
+                        if (task.taskKey?.startsWith("upload_")) {
+                            fetch(`/api/Upload/cancel?taskKey=${encodeURIComponent(task.taskKey)}`, {
+                                method: 'POST'
+                            }).catch(err => console.warn("Ошибка отмены загрузки", err));
+                        } else {
+                            if (typeof task.onCancel === "function") task.onCancel(task);
+                            removeTask(task);
+                        }
                     };
                 }
 
@@ -136,6 +161,7 @@ window.taskManager = (function () {
                         const confirmAndTrigger = () => {
                             btn.disabled = true;
                             triggerTask(task.taskKey);
+                            window.fetchFiles?.();
                             setTimeout(() => btn.disabled = false, 3000);
                         };
                         if (task.taskKey === "uploadCleanup_incomplete") {
@@ -171,13 +197,33 @@ window.taskManager = (function () {
         if (!task || (!task.taskKey && !task.title)) return;
         if (isInBlacklist(task)) return;
 
+        if (task.taskKey?.startsWith("upload_")) {
+            const hash = task.taskKey.substring("upload_".length);
+            const hashTaskKey = `hash_${hash}`;
+            const hashTask = tasks.find(t => t.taskKey === hashTaskKey);
+            if (hashTask) {
+                console.log(`[TaskManager] Удаляем старую задачу: ${hashTaskKey}`);
+                removeTask(hashTask, true);
+            } else {
+                console.log(`[TaskManager] Не найдена задача для удаления: ${hashTaskKey}`);
+            }
+        }
+
         let existing = tasks.find(t => t.taskKey && t.taskKey === task.taskKey);
         let justCompleted = false;
 
         if (existing) {
             const wasDone = existing.statusClass === "done";
             const oldStatus = existing.statusClass;
-            Object.assign(existing, task);
+
+            const preservedProps = {};
+            if (existing.onCancel && !task.onCancel) preservedProps.onCancel = existing.onCancel;
+            if (existing.cancelable && task.cancelable === false && !['done', 'failed', 'canceled'].includes(task.statusClass)) {
+                preservedProps.cancelable = existing.cancelable;
+            }
+
+            Object.assign(existing, task, preservedProps);
+
             if (oldStatus !== task.statusClass && task.statusClass !== "done") removeFromBlacklist(task);
             if (!wasDone && task.statusClass === "done") {
                 justCompleted = true;
@@ -207,18 +253,9 @@ window.taskManager = (function () {
                 if (!el) return;
                 const target = Date.parse(task.nextRunUtc);
                 const diff = Math.max(0, Math.floor((target - now) / 1000));
-                const mins = Math.floor(diff / 60);
-                const secs = diff % 60;
                 el.innerText = `${Math.floor(diff / 60)}:${(diff % 60).toString().padStart(2, "0")}`;
             }
         });
-    }
-
-    function fetchTasks() {
-        fetch("/api/tasks/active")
-            .then(res => res.json())
-            .then(result => Array.isArray(result) && result.forEach(addOrUpdateTask))
-            .catch(err => console.error("Ошибка при получении задач:", err));
     }
 
     function triggerTask(taskKey) {
@@ -265,17 +302,26 @@ window.taskManager = (function () {
             .withUrl("/hubs/tasks")
             .withAutomaticReconnect()
             .build();
-        connection.on("TaskUpdate", task => addOrUpdateTask(task));
+        connection.on("TaskUpdate", task => {
+            task.source = "server";
+            addOrUpdateTask(task);
+        });
+        connection.on("TaskComplete", ({ taskKey, removeAfter = 5000 }) => {
+            const task = tasks.find(t => t.taskKey === taskKey);
+            if (!task) return;
+            setTimeout(() => {
+                removeTask(task, true);
+            }, removeAfter);
+        });
         connection.start().catch(err => console.error("Ошибка подключения к TaskHub:", err));
     }
 
     setInterval(cleanupBlacklist, 30000);
     setInterval(updateTimers, 1000);
-    setInterval(fetchTasks, 10000);
-    fetchTasks();
 
     return {
         addTask: addOrUpdateTask,
+        removeTask,
         clear: () => { tasks.length = 0; render(); },
         render,
         clearBlacklist: () => removedTasks.clear(),

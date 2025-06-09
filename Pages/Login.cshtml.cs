@@ -4,6 +4,7 @@ using System.Security.Claims;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.SignalR;
@@ -123,8 +124,8 @@ namespace VCS_DOCs.Pages
 			};
 
 			await HttpContext.SignInAsync(
-				CookieAuthenticationDefaults.AuthenticationScheme,
-				new ClaimsPrincipal(new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme)),
+				IdentityConstants.ApplicationScheme,
+				new ClaimsPrincipal(new ClaimsIdentity(claims, IdentityConstants.ApplicationScheme)),
 				authProperties);
 
 			FailedLogins.TryRemove(ip, out _);

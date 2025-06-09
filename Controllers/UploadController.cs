@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using VCS_DOCs.Configuration;
 using VCS_DOCs.Hubs;
+using Microsoft.AspNetCore.StaticFiles;
 
 namespace VCS_DOCs.Controllers
 {
@@ -35,18 +36,26 @@ namespace VCS_DOCs.Controllers
 		[HttpPost("chunk")]
 		[DisableRequestSizeLimit]
 		public async Task<IActionResult> UploadChunk(
-			[FromForm] IFormFile chunk,
-			[FromForm] string hash,
-			[FromForm] int chunkIndex,
-			[FromForm] int totalChunks,
-			[FromForm] long fileSize,
-			[FromForm] int? replaceVersion,
-			[FromForm] string fileName)
+	[FromForm] IFormFile chunk,
+	[FromForm] string hash,
+	[FromForm] int chunkIndex,
+	[FromForm] int totalChunks,
+	[FromForm] long fileSize,
+	[FromForm] int? replaceVersion,
+	[FromForm] string fileName)
 		{
 			if (chunk == null || chunk.Length == 0)
 				return BadRequest("Файл не получен");
 
 			var userId = GetUserId();
+			var otherUpload = await _db.FileUploadSessions
+				.AnyAsync(s => s.UserId == userId && s.Status == "incomplete" && s.FileHash != hash);
+
+			if (otherUpload)
+			{
+				return Conflict(new { status = "busy", message = "У вас уже идёт загрузка/подготовка к загрузке другого файла. Подождите её завершения." });
+			}
+
 			if (string.IsNullOrEmpty(userId))
 				return Unauthorized("Пользователь не найден");
 
@@ -63,31 +72,25 @@ namespace VCS_DOCs.Controllers
 
 			if (session == null)
 			{
-				// Ищем любую существующую сессию с таким же именем файла
 				var existingFile = await _db.FileUploadSessions
 					.Where(x => x.UserId == userId && x.OriginalFileName == fileName && x.Status == "complete")
 					.OrderByDescending(x => x.Version)
 					.FirstOrDefaultAsync();
 
-				// Используем существующий FileId, если файл с таким именем уже существует
-				// Это исправление обеспечивает связь между версиями одного файла
 				Guid fileId;
 				int newVersion;
 
 				if (existingFile != null)
 				{
-					// Используем существующий FileId для сохранения связи между версиями
 					fileId = existingFile.FileId;
 					newVersion = existingFile.Version + 1;
 				}
 				else
 				{
-					// Только для новых файлов создаем новый FileId
 					fileId = Guid.NewGuid();
 					newVersion = 1;
 				}
 
-				// Если указана конкретная версия для замены
 				if (replaceVersion.HasValue)
 				{
 					var replacing = await _db.FileUploadSessions
@@ -103,8 +106,8 @@ namespace VCS_DOCs.Controllers
 						_db.FileUploadChunks.RemoveRange(replacing.Chunks);
 						_db.FileUploadSessions.Remove(replacing);
 						await _db.SaveChangesAsync();
-						fileId = replacing.FileId; // Используем FileId заменяемой версии
-						newVersion = replaceVersion.Value; // Сохраняем номер версии
+						fileId = replacing.FileId;
+						newVersion = replaceVersion.Value;
 					}
 				}
 
@@ -126,6 +129,16 @@ namespace VCS_DOCs.Controllers
 					session.Chunks.Add(new FileUploadChunk { Index = i });
 
 				_db.FileUploadSessions.Add(session);
+				await _hub.Clients.User(userId).SendAsync("TaskUpdate", new
+				{
+					taskKey = "upload_" + hash,
+					title = $"Загрузка файла: {fileName}",
+					type = "upload",
+					statusClass = "starting",
+					statusText = "Подготовка...",
+					cancelable = true
+				});
+
 				await _db.SaveChangesAsync();
 			}
 
@@ -180,7 +193,7 @@ namespace VCS_DOCs.Controllers
 			_logger.LogInformation("[{Time}] Push TaskUpdate (start compiling): {Title}", DateTime.Now, $"Сборка файла: {session.OriginalFileName}");
 			await _hub.Clients.User(userId).SendAsync("TaskUpdate", new
 			{
-				taskKey = $"compiling_{hash}",
+				taskKey = "upload_" + hash,
 				title = $"Сборка файла: {session.OriginalFileName}",
 				type = "upload",
 				statusClass = "in-progress",
@@ -210,10 +223,9 @@ namespace VCS_DOCs.Controllers
 					if (!System.IO.File.Exists(chunkPath))
 					{
 						_logger.LogInformation("[{Time}] Push TaskUpdate (start compiling): {Title}", DateTime.Now, $"Сборка файла: {session.OriginalFileName}");
-
 						await _hub.Clients.User(userId).SendAsync("TaskUpdate", new
 						{
-							taskKey = $"compiling_{hash}",
+							taskKey = "upload_" + hash,
 							title = $"Сборка файла: {session.OriginalFileName}",
 							type = "upload",
 							statusClass = "error",
@@ -232,7 +244,7 @@ namespace VCS_DOCs.Controllers
 				_logger.LogError(ex, "Ошибка при сборке");
 				await _hub.Clients.User(userId).SendAsync("TaskUpdate", new
 				{
-					taskKey = $"compiling_{hash}",
+					taskKey = "upload_" + hash,
 					title = $"Сборка файла: {session.OriginalFileName}",
 					type = "upload",
 					statusClass = "error",
@@ -256,17 +268,21 @@ namespace VCS_DOCs.Controllers
 			_logger.LogInformation("[{Time}] Push TaskUpdate (start compiling): {Title}", DateTime.Now, $"Сборка файла: {session.OriginalFileName}");
 			await _hub.Clients.User(userId).SendAsync("TaskUpdate", new
 			{
-				taskKey = $"compiling_{hash}",
+				taskKey = "upload_" + hash,
 				title = $"Сборка файла: {session.OriginalFileName}",
 				type = "upload",
 				statusClass = "done",
 				statusText = "Сборка завершена",
 				cancelable = false
 			});
+			await _hub.Clients.User(userId).SendAsync("TaskComplete", new
+			{
+				taskKey = "upload_" + hash,
+				removeAfter = 5000
+			});
 
 			return Ok(new { message = "Файл собран", FileName = versionedName, Version = newVersion });
 		}
-
 		private void DeleteDirectorySafe(string path)
 		{
 			try
@@ -311,6 +327,83 @@ namespace VCS_DOCs.Controllers
 				replaceVersion = latest.Version,
 				allVersions = allVersions // Добавляем все версии в ответ
 			});
+		}
+		[HttpDelete("delete/{fileId}/{version}")]
+		public async Task<IActionResult> DeleteVersion(string fileId, int version)
+		{
+			var userId = GetUserId();
+			if (string.IsNullOrEmpty(userId))
+				return Unauthorized(new { status = "unauthorized" });
+
+			if (!Guid.TryParse(fileId, out var fileGuid))
+				return BadRequest(new { status = "invalid_fileId" });
+
+			// находим запись в БД…
+			var session = await _db.FileUploadSessions
+				.Include(s => s.Chunks)
+				.FirstOrDefaultAsync(s =>
+				   s.UserId == userId &&
+				   s.FileId == fileGuid &&
+				   s.Version == version);
+
+			if (session == null)
+				return NotFound(new { status = "not_found" });
+
+			var shortId = GetShortId(userId);
+			var basePath = Path.Combine(_options.BasePath, $"u_{shortId}");
+			var versionDir = Path.Combine(basePath, "files", fileGuid.ToString(), $"v{version}");
+
+			// 1) Удаляем физически папку версии
+			if (Directory.Exists(versionDir))
+			{
+				try
+				{
+					Directory.Delete(versionDir, true);
+				}
+				catch (Exception ex)
+				{
+					_logger.LogError(ex, "Ошибка удаления каталога версии {Version}", version);
+					return StatusCode(500, new { status = "fs_error" });
+				}
+			}
+
+			// 1.1) Если после этого папка с fileId пустая — удаляем её
+			var fileFolder = Path.Combine(basePath, "files", fileGuid.ToString());
+			if (Directory.Exists(fileFolder))
+			{
+				// проверяем, остались ли внутри любые подпапки (v*)
+				var hasSubdirs = Directory.EnumerateDirectories(fileFolder).Any();
+				if (!hasSubdirs)
+				{
+					try
+					{
+						Directory.Delete(fileFolder, false);
+					}
+					catch (Exception ex)
+					{
+						_logger.LogWarning(ex, "Не удалось удалить пустую папку файла {FileId}", fileId);
+					}
+				}
+			}
+
+			// 2) Удаляем записи из БД
+			_db.FileUploadChunks.RemoveRange(session.Chunks);
+			_db.FileUploadSessions.Remove(session);
+			await _db.SaveChangesAsync();
+
+			// 3) Обновляем IsLatest у новой версии
+			var nextLatest = await _db.FileUploadSessions
+				.Where(s => s.UserId == userId && s.FileId == fileGuid && s.Status == "complete")
+				.OrderByDescending(s => s.Version)
+				.FirstOrDefaultAsync();
+
+			if (nextLatest != null)
+			{
+				nextLatest.IsLatest = true;
+				await _db.SaveChangesAsync();
+			}
+
+			return Ok(new { status = "deleted", newLatest = nextLatest?.Version });
 		}
 
 		[HttpGet("upload-status")]
@@ -367,6 +460,33 @@ namespace VCS_DOCs.Controllers
 
 			return Ok(versions);
 		}
+		private long GetDirectorySize(string path)
+		{
+			if (!Directory.Exists(path))
+				return 0;
+
+			long total = 0;
+			foreach (var file in Directory.EnumerateFiles(path, "*", SearchOption.AllDirectories))
+			{
+				try
+				{
+					// только если файл действительно существует
+					if (System.IO.File.Exists(file))
+						total += new FileInfo(file).Length;
+				}
+				catch (IOException)
+				{
+					// файл стал недоступен или права, пропускаем
+				}
+				catch (UnauthorizedAccessException)
+				{
+					// нет прав — пропускаем
+				}
+			}
+			return total;
+		}
+
+
 		[HttpGet("list")]
 		public async Task<IActionResult> ListFiles()
 		{
@@ -374,20 +494,18 @@ namespace VCS_DOCs.Controllers
 			if (string.IsNullOrEmpty(userId))
 				return Unauthorized();
 
-			// Получаем последние версии файлов
+			// 1) Собираем файлы как раньше
 			var latestSessions = await _db.FileUploadSessions
 				.Where(s => s.UserId == userId && s.Status == "complete" && s.IsLatest)
 				.OrderByDescending(s => s.UpdatedAt)
 				.ToListAsync();
 
-			// Получаем все версии для этих файлов
 			var fileIds = latestSessions.Select(s => s.FileId).Distinct().ToList();
-
 			var allVersions = await _db.FileUploadSessions
 				.Where(s => s.UserId == userId && fileIds.Contains(s.FileId) && s.Status == "complete")
 				.ToListAsync();
 
-			var result = latestSessions.Select(latest => new
+			var files = latestSessions.Select(latest => new
 			{
 				FileName = latest.OriginalFileName,
 				FileId = latest.FileId,
@@ -399,12 +517,107 @@ namespace VCS_DOCs.Controllers
 					.Select(v => new { v.Version, v.UpdatedAt })
 					.OrderByDescending(v => v.Version)
 					.ToList()
+			}).ToList();
+
+			// 2) Считаем места на диске
+			var shortId = GetShortId(userId);
+			var basePath = Path.Combine(_options.BasePath, $"u_{shortId}");
+			var filesDir = Path.Combine(basePath, "files");
+			var tempDir = Path.Combine(basePath, "temp");
+			long usedBytes = GetDirectorySize(filesDir);
+			long tempBytes = GetDirectorySize(tempDir);
+			long limitBytes = 10L * 1024 * 1024 * 1024; // 10 ГБ
+
+			return Ok(new
+			{
+				files,
+				usedBytes,
+				tempBytes,
+				limitBytes
+			});
+		}
+		[HttpGet("download/{fileId}/{version}")]
+		public async Task<IActionResult> DownloadVersion(string fileId, int version)
+		{
+			var userId = GetUserId();
+			if (string.IsNullOrEmpty(userId))
+				return Unauthorized();
+
+			if (!Guid.TryParse(fileId, out var fileGuid))
+				return BadRequest("Неверный идентификатор файла");
+
+			// Ищем в БД метаданные по сессии конкретной версии
+			var session = await _db.FileUploadSessions
+				.Where(s => s.UserId == userId && s.FileId == fileGuid && s.Version == version && s.Status == "complete")
+				.FirstOrDefaultAsync();
+
+			if (session == null)
+				return NotFound("Версия не найдена");
+
+			// Собираем путь к файлу на диске
+			var shortId = GetShortId(userId);
+			var basePath = Path.Combine(_options.BasePath, $"u_{shortId}", "files", fileGuid.ToString(), $"v{version}");
+			var fileName = session.OriginalFileName;
+			var filePath = Path.Combine(basePath, fileName);
+
+			if (!System.IO.File.Exists(filePath))
+				return NotFound("Файл отсутствует на сервере");
+
+			// Определяем MIME-тип (можете расширить карту по расширениям, если нужно)
+			var contentType = "application/octet-stream";
+			new FileExtensionContentTypeProvider()
+				.TryGetContentType(fileName, out var mappedType);
+			if (!string.IsNullOrEmpty(mappedType))
+				contentType = mappedType;
+
+			// Возвращаем файл вместе с правильным заголовком для скачивания
+			var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+			return File(stream, contentType, fileName);
+		}
+		[HttpPost("cancel")]
+		public async Task<IActionResult> CancelUpload([FromBody] CancelUploadRequest req)
+		{
+			var userId = GetUserId();
+			if (string.IsNullOrEmpty(userId))
+				return Unauthorized();
+
+			var session = await _db.FileUploadSessions
+				.Include(s => s.Chunks)
+				.FirstOrDefaultAsync(s => s.UserId == userId && s.FileHash == req.Hash && s.Status == "incomplete");
+
+			if (session != null)
+			{
+				_db.FileUploadChunks.RemoveRange(session.Chunks);
+				_db.FileUploadSessions.Remove(session);
+				await _db.SaveChangesAsync();
+
+				var shortId = GetShortId(userId);
+				var tempDir = Path.Combine(_options.BasePath, $"u_{shortId}", "temp", req.Hash);
+				DeleteDirectorySafe(tempDir);
+			}
+
+			await _hub.Clients.User(userId).SendAsync("TaskUpdate", new
+			{
+				taskKey = $"upload_{req.Hash}",
+				title = $"Загрузка отменена",
+				type = "upload",
+				statusClass = "canceled",
+				statusText = "Загрузка отменена",
+				cancelable = false
+			});
+			await _hub.Clients.User(userId).SendAsync("TaskComplete", new
+			{
+				taskKey = $"upload_{req.Hash}",
+				removeAfter = 5000
 			});
 
-			return Ok(result);
+			return Ok();
 		}
 	}
-
+	public class CancelUploadRequest
+	{
+		public string Hash { get; set; } = "";
+	}
 	public class ConflictCheckRequest
 	{
 		public string FileName { get; set; } = "";
