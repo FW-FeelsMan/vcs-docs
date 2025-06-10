@@ -48,18 +48,24 @@
                     type: "upload",
                     statusClass: "starting",
                     statusText: "Вычисление хеша...",
-                    cancelable: false,
+                    cancelable: true,
                     autoRemove: false
                 };
                 window.taskManager.addTask(hashTask);
             } catch (err) {
+                if (err === "Отменено") {
+                    console.log(`Пользователь отменил хеширование файла "${file.name}"`);
+                    if (uploadBtn) uploadBtn.disabled = false;
+                    return;
+                }
+
                 const failTask = {
                     taskKey: `hash_failed_${Date.now()}`,
                     title: `Хеширование: ${file.name}`,
                     type: "upload",
                     statusClass: "failed",
                     statusText: "Ошибка при хешировании",
-                    cancelable: false,
+                    cancelable: true,
                     autoRemove: true,
                     autoRemoveDelay: 5000
                 };
@@ -206,26 +212,79 @@
             const chunks = Math.ceil(file.size / chunkSize);
             let idx = 0;
 
+            const taskKey = `hash_progress_${Date.now()}`;
+            const hashTask = {
+                taskKey,
+                title: `Хеширование: ${file.name}`,
+                type: "upload",
+                statusClass: "starting",
+                statusText: "Хеширование: 0%",
+                cancelable: true,
+                autoRemove: true,
+                autoRemoveDelay: 2000,
+                onCancel: () => { isCanceled = true; }
+            };
+
+            // Добавляем задачу один раз
+            window.taskManager.addTask(hashTask);
+
             reader.onload = (e) => {
-                if (isCanceled) return reject("Отменено");
+                if (isCanceled) {
+                    window.taskManager.removeTask(hashTask);
+                    return reject("Отменено");
+                }
+
                 spark.append(e.target.result);
                 idx++;
-                if (idx < chunks) reader.readAsArrayBuffer(file.slice(idx * chunkSize, (idx + 1) * chunkSize));
-                else resolve(spark.end());
+
+                const percent = Math.floor((idx / chunks) * 100);
+                hashTask.statusText = `Хеширование: ${percent}%`;
+
+                // Просто перерендерим один раз, не добавляя заново
+                window.taskManager.render();
+
+                if (idx < chunks) {
+                    reader.readAsArrayBuffer(file.slice(idx * chunkSize, (idx + 1) * chunkSize));
+                } else {
+                    window.taskManager.removeTask(hashTask);
+                    resolve(spark.end());
+                }
             };
-            reader.onerror = () => reject("Ошибка чтения");
+
+            reader.onerror = () => {
+                window.taskManager.removeTask(hashTask);
+                reject("Ошибка чтения");
+            };
+
             reader.readAsArrayBuffer(file.slice(0, chunkSize));
         });
     }
 
     async function computeSHA256(file) {
         if (isCanceled) throw new Error("Отменено");
+
         const buf = await file.arrayBuffer();
         if (isCanceled) throw new Error("Отменено");
+
+        const hashTask = {
+            taskKey: `hash_progress_${Date.now()}`,
+            title: `Хеширование: ${file.name}`,
+            type: "upload",
+            statusClass: "starting",
+            statusText: "Хеширование SHA-256...",
+            cancelable: true,
+            autoRemove: true,
+            autoRemoveDelay: 2000,
+            onCancel: () => { isCanceled = true; }
+        };
+        window.taskManager.addTask(hashTask);
+
         const hash = await crypto.subtle.digest("SHA-256", buf);
+        if (isCanceled) throw new Error("Отменено");
+
+        window.taskManager.removeTask(hashTask);
         return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
     }
-
     function showResumeModal(fileName, onContinue, onRestart) {
         const modal = document.getElementById("upload-resume-modal");
         const message = modal.querySelector("#resume-modal-message");
