@@ -1,4 +1,5 @@
-﻿const contentCache = new Map();
+﻿//sidebar.js
+const contentCache = new Map();
 let currentContentId = null;
 
 document.addEventListener("DOMContentLoaded", function () {

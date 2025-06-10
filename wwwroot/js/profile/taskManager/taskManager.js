@@ -2,7 +2,8 @@
 window.currentUploadHash = null;
 window.isUploadCanceled = false;
 
-// Task Manager Module
+const TASK_REFRESH_INTERVAL_MS = 60000; // Интервал обновления задач с сервера (1 минута)
+
 window.taskManager = (function () {
     const taskListEl = document.getElementById("taskCardList");
     const tasks = [];
@@ -325,6 +326,21 @@ window.taskManager = (function () {
 
     setInterval(cleanupBlacklist, 30000);
     setInterval(updateTimers, 1000);
+    setInterval(async () => {
+        try {
+            const response = await fetch("/api/tasks/active");
+            if (!response.ok) throw new Error(`Ошибка ответа: ${response.status}`);
+            const fetchedTasks = await response.json();
+
+            if (Array.isArray(fetchedTasks)) {
+                fetchedTasks.forEach(task => {
+                    window.taskManager.addTask(task);
+                });
+            }
+        } catch (err) {
+            console.warn("[TaskManager] Ошибка при фоновом обновлении задач:", err);
+        }
+    }, TASK_REFRESH_INTERVAL_MS);
 
     return {
         addTask: addOrUpdateTask,
