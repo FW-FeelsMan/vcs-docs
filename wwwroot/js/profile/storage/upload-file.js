@@ -44,7 +44,7 @@
                 const hashTaskKey = `hash_${hash}`;
                 const hashTask = {
                     taskKey: hashTaskKey,
-                    title: `Хеширование: ${file.name}`,
+                    title: `Подготовка: ${file.name}`,
                     type: "upload",
                     statusClass: "starting",
                     statusText: "Вычисление хеша...",
@@ -61,7 +61,7 @@
 
                 const failTask = {
                     taskKey: `hash_failed_${Date.now()}`,
-                    title: `Хеширование: ${file.name}`,
+                    title: `Подготовка: ${file.name}`,
                     type: "upload",
                     statusClass: "failed",
                     statusText: "Ошибка при хешировании",
@@ -215,7 +215,7 @@
             const taskKey = `hash_progress_${Date.now()}`;
             const hashTask = {
                 taskKey,
-                title: `Хеширование: ${file.name}`,
+                title: `Подготовка: ${file.name}`,
                 type: "upload",
                 statusClass: "starting",
                 statusText: "Хеширование: 0%",
@@ -268,7 +268,7 @@
 
         const hashTask = {
             taskKey: `hash_progress_${Date.now()}`,
-            title: `Хеширование: ${file.name}`,
+            title: `Подготовка: ${file.name}`,
             type: "upload",
             statusClass: "starting",
             statusText: "Хеширование SHA-256...",

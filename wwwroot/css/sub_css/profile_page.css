@@ -726,6 +726,9 @@ hr.solid {
     transform: scale(0.5) rotate(-5deg);
     transition: opacity 0.5s ease, transform 0.5s ease;
 }
+.task-status.starting {
+    color: var(--primary-color);
+}
 
 /* --------- Таблицы файлов и action-dropdown --------- */
 .file-table {

@@ -187,13 +187,16 @@ namespace VCS_DOCs.Controllers
 
 			_logger.LogInformation("[{Time}] Push TaskUpdate (chunk upload): {Title}", DateTime.Now, $"Загрузка файла: {fileName}");
 
+			var uploaded = session.Chunks.Count(c => c.Uploaded);
+			var percent = (int)((double)uploaded / session.TotalChunks * 100);
+
 			await _hub.Clients.User(userId).SendAsync("TaskUpdate", new
 			{
 				taskKey = "upload_" + hash,
 				title = $"Загрузка файла: {fileName}",
 				type = "upload",
 				statusClass = "in-progress",
-				statusText = $"{session.Chunks.Count(c => c.Uploaded)} / {session.TotalChunks} чанков",
+				statusText = $"Загружено: {percent}%",
 				cancelable = false
 			});
 

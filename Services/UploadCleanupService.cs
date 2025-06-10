@@ -72,7 +72,7 @@ public class UploadCleanupService : BackgroundService
 		using var scope = _services.CreateScope();
 		var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-		var cutoff = now.AddMinutes(-15); 
+		var cutoff = now.AddMinutes(-15);
 
 		var sessions = await db.FileUploadSessions
 			.Include(s => s.Chunks)
@@ -81,12 +81,6 @@ public class UploadCleanupService : BackgroundService
 
 		if (!force)
 			sessions = sessions.Where(s => s.UpdatedAt < cutoff).ToList();
-
-		if (sessions.Count == 0)
-		{
-			//_logger.LogInformation("Нет сессий для очистки со статусом '{Status}'", status);
-			return;
-		}
 
 		foreach (var session in sessions)
 		{
@@ -133,7 +127,48 @@ public class UploadCleanupService : BackgroundService
 				});
 			}
 		}
+
+		CleanupOrphanTempDirs(status);
+
 		await db.SaveChangesAsync();
+	}
+
+	private void CleanupOrphanTempDirs(string status)
+	{
+		_logger.LogInformation("Запущена очистка осиротевших temp-директорий для статуса: {Status}", status);
+
+		var baseTempPath = Path.Combine("Data", "userData");
+		if (!Directory.Exists(baseTempPath)) return;
+
+		using var scope = _services.CreateScope();
+		var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+		var knownHashes = new HashSet<string>(
+			db.FileUploadSessions.Select(s => s.FileHash).ToList()
+		);
+
+		foreach (var userDir in Directory.GetDirectories(baseTempPath))
+		{
+			var tempDir = Path.Combine(userDir, "temp");
+			if (!Directory.Exists(tempDir)) continue;
+
+			foreach (var hashDir in Directory.GetDirectories(tempDir))
+			{
+				var hash = Path.GetFileName(hashDir);
+
+				if (!knownHashes.Contains(hash))
+				{
+					try
+					{
+						Directory.Delete(hashDir, true);
+						_logger.LogWarning("Удалена осиротевшая temp-папка без сессии: {Path}", hashDir);
+					}
+					catch (Exception ex)
+					{
+						_logger.LogError(ex, "Ошибка при удалении осиротевшей папки: {Path}", hashDir);
+					}
+				}
+			}
+		}
 	}
 
 	private string GetTempDir(string userId, string fileHash)
