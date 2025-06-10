@@ -48,16 +48,16 @@ namespace VCS_DOCs.Controllers
 				return BadRequest("Файл не получен");
 
 			var userId = GetUserId();
+			if (string.IsNullOrEmpty(userId))
+				return Unauthorized("Пользователь не найден");
+
 			var otherUpload = await _db.FileUploadSessions
 				.AnyAsync(s => s.UserId == userId && s.Status == "incomplete" && s.FileHash != hash);
 
 			if (otherUpload)
 			{
-				return Conflict(new { status = "busy", message = "У вас уже идёт загрузка/подготовка к загрузке другого файла. Подождите её завершения." });
+				return Conflict(new { status = "busy", message = "У вас уже идёт загрузка/подготовка к загрузке другого файла." });
 			}
-
-			if (string.IsNullOrEmpty(userId))
-				return Unauthorized("Пользователь не найден");
 
 			var shortId = GetShortId(userId);
 			var chunkDir = Path.Combine(_options.BasePath, $"u_{shortId}", "temp", hash);
@@ -105,7 +105,18 @@ namespace VCS_DOCs.Controllers
 					{
 						_db.FileUploadChunks.RemoveRange(replacing.Chunks);
 						_db.FileUploadSessions.Remove(replacing);
-						await _db.SaveChangesAsync();
+						await _hub.Clients.User(userId).SendAsync("StopUpload", hash);
+
+						try
+						{
+							await _db.SaveChangesAsync();
+						}
+						catch (DbUpdateConcurrencyException ex)
+						{
+							_logger.LogWarning("Upload canceled: Session removed for user {UserId}, hash: {Hash}. Exception: {Message}", userId, hash, ex.Message);
+							return Conflict(new { status = "canceled", message = "Загрузка была отменена." });
+						}
+
 						fileId = replacing.FileId;
 						newVersion = replaceVersion.Value;
 					}
@@ -129,6 +140,7 @@ namespace VCS_DOCs.Controllers
 					session.Chunks.Add(new FileUploadChunk { Index = i });
 
 				_db.FileUploadSessions.Add(session);
+
 				await _hub.Clients.User(userId).SendAsync("TaskUpdate", new
 				{
 					taskKey = "upload_" + hash,
@@ -162,8 +174,19 @@ namespace VCS_DOCs.Controllers
 			chunkEntry.Uploaded = true;
 			chunkEntry.UpdatedAt = DateTime.Now;
 			session.UpdatedAt = DateTime.Now;
-			await _db.SaveChangesAsync();
+
+			try
+			{
+				await _db.SaveChangesAsync();
+			}
+			catch (DbUpdateConcurrencyException ex)
+			{
+				_logger.LogWarning("Chunk not saved: session removed concurrently. {Message}", ex.Message);
+				return Conflict("Загрузка была отменена.");
+			}
+
 			_logger.LogInformation("[{Time}] Push TaskUpdate (chunk upload): {Title}", DateTime.Now, $"Загрузка файла: {fileName}");
+
 			await _hub.Clients.User(userId).SendAsync("TaskUpdate", new
 			{
 				taskKey = "upload_" + hash,
@@ -580,7 +603,8 @@ namespace VCS_DOCs.Controllers
 			var userId = GetUserId();
 			if (string.IsNullOrEmpty(userId))
 				return Unauthorized();
-
+			await _hub.Clients.User(userId).SendAsync("StopUpload", req.Hash);
+			await Task.Delay(500);
 			var session = await _db.FileUploadSessions
 				.Include(s => s.Chunks)
 				.FirstOrDefaultAsync(s => s.UserId == userId && s.FileHash == req.Hash && s.Status == "incomplete");

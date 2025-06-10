@@ -516,7 +516,7 @@ hr.solid {
         display: flex;
         flex-direction: column;
         flex: 1 1 auto;
-        overflow: visible;
+        overflow: hidden;
     }
 
 .content-scrollable {

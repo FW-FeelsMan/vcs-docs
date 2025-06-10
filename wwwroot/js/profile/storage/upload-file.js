@@ -146,17 +146,29 @@
             try {
                 const res = await fetch('/api/Upload/chunk', { method: 'POST', body: form });
                 if (!res.ok) {
-                    const errBody = res.status === 409
-                        ? await res.json()
-                        : { message: await res.text() };
+                    let errBody = {};
+                    try {
+                        const contentType = res.headers.get("content-type") || "";
+                        if (contentType.includes("application/json")) {
+                            errBody = await res.json();
+                        } else {
+                            const text = await res.text();
+                            errBody.message = text;
+                        }
+                    } catch (parseError) {
+                        errBody.message = "Не удалось прочитать сообщение об ошибке";
+                    }
+
                     if (res.status === 409 && errBody.status === "busy") {
                         alert(errBody.message || "Идёт другая загрузка");
                         isUploadInProgress = false;
                         if (uploadBtn) uploadBtn.disabled = false;
                         return;
                     }
-                    throw new Error(errBody.message);
+
+                    throw new Error(errBody.message || `Ошибка HTTP ${res.status}`);
                 }
+
                 await updateStorageCounter();
             } catch (err) {
                 showUploadErrorModal(file.name, i, err.message);

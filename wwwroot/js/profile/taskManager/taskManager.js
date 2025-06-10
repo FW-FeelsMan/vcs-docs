@@ -1,4 +1,8 @@
-﻿// Task Manager Module
+﻿// Глобальные переменные для управления загрузкой
+window.currentUploadHash = null;
+window.isUploadCanceled = false;
+
+// Task Manager Module
 window.taskManager = (function () {
     const taskListEl = document.getElementById("taskCardList");
     const tasks = [];
@@ -144,8 +148,13 @@ window.taskManager = (function () {
                     btn.onclick = () => {
                         if (btn.disabled) return;
                         if (task.taskKey?.startsWith("upload_")) {
-                            fetch(`/api/Upload/cancel?taskKey=${encodeURIComponent(task.taskKey)}`, {
-                                method: 'POST'
+                            const hash = task.taskKey.substring("upload_".length);
+                            window.currentUploadHash = hash;
+                            window.isUploadCanceled = true;
+                            fetch(`/api/Upload/cancel`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ hash })
                             }).catch(err => console.warn("Ошибка отмены загрузки", err));
                         } else {
                             if (typeof task.onCancel === "function") task.onCancel(task);
@@ -171,13 +180,6 @@ window.taskManager = (function () {
                                 onConfirm: confirmAndTrigger,
                                 onCancel: () => console.log("Очистка INCOMPLETE отменена.")
                             });
-                        } else if (task.taskKey === "uploadCleanup_compiling") {
-                            showCleanupWarningModal({
-                                title: "Очистка COMPILING",
-                                message: "Будут удалены чанки в статусе COMPILING. Это может оборвать сборку больших файлов. Уверены?",
-                                onConfirm: confirmAndTrigger,
-                                onCancel: () => console.log("Очистка COMPILING отменена.")
-                            });
                         } else {
                             confirmAndTrigger();
                         }
@@ -201,12 +203,7 @@ window.taskManager = (function () {
             const hash = task.taskKey.substring("upload_".length);
             const hashTaskKey = `hash_${hash}`;
             const hashTask = tasks.find(t => t.taskKey === hashTaskKey);
-            if (hashTask) {
-                console.log(`[TaskManager] Удаляем старую задачу: ${hashTaskKey}`);
-                removeTask(hashTask, true);
-            } else {
-                console.log(`[TaskManager] Не найдена задача для удаления: ${hashTaskKey}`);
-            }
+            if (hashTask) removeTask(hashTask, true);
         }
 
         let existing = tasks.find(t => t.taskKey && t.taskKey === task.taskKey);
@@ -296,16 +293,25 @@ window.taskManager = (function () {
         return s.charAt(0).toUpperCase() + s.slice(1);
     }
 
-    // Init
+    // Init SignalR
     if (window.signalR?.HubConnectionBuilder) {
         const connection = new signalR.HubConnectionBuilder()
             .withUrl("/hubs/tasks")
             .withAutomaticReconnect()
             .build();
+
+        connection.on("StopUpload", (hash) => {
+            if (window.currentUploadHash === hash) {
+                console.warn("[TaskManager] Сервер попросил остановить загрузку для:", hash);
+                window.isUploadCanceled = true;
+            }
+        });
+
         connection.on("TaskUpdate", task => {
             task.source = "server";
             addOrUpdateTask(task);
         });
+
         connection.on("TaskComplete", ({ taskKey, removeAfter = 5000 }) => {
             const task = tasks.find(t => t.taskKey === taskKey);
             if (!task) return;
@@ -313,6 +319,7 @@ window.taskManager = (function () {
                 removeTask(task, true);
             }, removeAfter);
         });
+
         connection.start().catch(err => console.error("Ошибка подключения к TaskHub:", err));
     }
 
