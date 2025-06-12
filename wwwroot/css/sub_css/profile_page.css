@@ -662,6 +662,9 @@ hr.solid {
     .task-status.failed {
         background-color: #dc3545;
     }
+    .task-status.error {
+        background-color: #dc3545;
+    }
 
     .task-status.completed {
         background-color: #007bff;

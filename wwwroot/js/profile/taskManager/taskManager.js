@@ -233,7 +233,15 @@ window.taskManager = (function () {
         }
 
         render();
-
+        if (task.taskKey?.startsWith("hash_")) {
+            setTimeout(() => {
+                const stillExists = tasks.find(t => t.taskKey === task.taskKey);
+                const hasUpload = tasks.some(t => t.taskKey === `upload_${task.taskKey.substring(5)}`);
+                if (stillExists && !hasUpload) {
+                    removeTask(task, true);
+                }
+            }, 10000);
+        }
         const autoRemove = task.autoRemove ?? (task.type !== "system");
         if (justCompleted && autoRemove) {
             setTimeout(() => {

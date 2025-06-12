@@ -1,4 +1,5 @@
-﻿function showConflictModal(fileName, conflictType, { onReplace, onNewVersion, onCancel }) {
+﻿//upload-conflict-modal.js
+function showConflictModal(fileName, conflictType, { onReplace, onNewVersion, onCancel }) {
 	const modal = document.getElementById("upload-version-modal");
 	if (!modal) return console.error("Модалка upload-version-modal не найдена");
 
@@ -82,10 +83,15 @@
 			alert("Выберите версию для замены.");
 		}
 	};
-
 	cancelBtn.onclick = () => {
-		modal.style.display = "none";
-		onCancel?.();
+		try {
+			modal.style.display = "none";
+			isCanceled = true;
+			if (typeof onCancel === 'function') onCancel();
+		} finally {
+			const uploadBtn = document.getElementById('uploadFileButton');
+			if (uploadBtn) uploadBtn.disabled = false;
+		}
 	};
 
 	versionBtn.onclick = () => {

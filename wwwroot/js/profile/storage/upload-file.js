@@ -1,4 +1,5 @@
-﻿(function ($) {
+﻿//upload-file.js
+(function ($) {
     let uploadFileInitialized = false;
     let isUploadInProgress = false;
     let isCanceled = false;
@@ -113,7 +114,10 @@
             showConflictModal(file.name, conflict.status, {
                 onReplace: sel => startUpload(file, hash, sel, null, new Set()),
                 onNewVersion: () => startUpload(file, hash, null, null, new Set()),
-                onCancel: () => console.log("Пользователь отменил.")
+                onCancel: () => {
+                    console.log("Пользователь отменил.");
+                    window.taskManager.removeTask({ taskKey: `hash_${hash}` });
+                }
             });
         } else {
             console.error('Неожиданный ответ:', conflict);
@@ -151,6 +155,13 @@
 
             try {
                 const res = await fetch('/api/Upload/chunk', { method: 'POST', body: form });
+                if (res.status === 400 && errBody.message?.includes("не разрешены к загрузке")) {
+                    window.taskManager.removeTask({ taskKey: `hash_${hash}` });
+                    alert(errBody.message);
+                    isUploadInProgress = false;
+                    if (uploadBtn) uploadBtn.disabled = false;
+                    return;
+                }
                 if (!res.ok) {
                     let errBody = {};
                     try {
@@ -206,13 +217,20 @@
     }
 
     function computeSparkMD5Hash(file, chunkSize = 10 * 1024 * 1024) {
+        if (isCanceled) return Promise.reject("Отменено");
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             const spark = new SparkMD5.ArrayBuffer();
             const chunks = Math.ceil(file.size / chunkSize);
             let idx = 0;
 
-            const taskKey = `hash_progress_${Date.now()}`;
+            const taskKey = `hash_${file.name}_${file.size}`;
+            const existing = document.querySelector(`.task-status[data-taskkey="${taskKey}"]`);
+            if (existing) {
+                console.warn(`Задача уже существует: ${taskKey}`);
+                return reject("Отменено");
+            }
+
             const hashTask = {
                 taskKey,
                 title: `Подготовка: ${file.name}`,
@@ -225,7 +243,6 @@
                 onCancel: () => { isCanceled = true; }
             };
 
-            // Добавляем задачу один раз
             window.taskManager.addTask(hashTask);
 
             reader.onload = (e) => {
@@ -239,8 +256,6 @@
 
                 const percent = Math.floor((idx / chunks) * 100);
                 hashTask.statusText = `Хеширование: ${percent}%`;
-
-                // Просто перерендерим один раз, не добавляя заново
                 window.taskManager.render();
 
                 if (idx < chunks) {
@@ -259,15 +274,19 @@
             reader.readAsArrayBuffer(file.slice(0, chunkSize));
         });
     }
-
     async function computeSHA256(file) {
-        if (isCanceled) throw new Error("Отменено");
-
         const buf = await file.arrayBuffer();
         if (isCanceled) throw new Error("Отменено");
 
+        const taskKey = `hash_${file.name}_${file.size}`;
+        const existing = document.querySelector(`.task-status[data-taskkey="${taskKey}"]`);
+        if (existing) {
+            console.warn(`Задача уже существует: ${taskKey}`);
+            throw new Error("Отменено");
+        }
+
         const hashTask = {
-            taskKey: `hash_progress_${Date.now()}`,
+            taskKey,
             title: `Подготовка: ${file.name}`,
             type: "upload",
             statusClass: "starting",
@@ -277,6 +296,7 @@
             autoRemoveDelay: 2000,
             onCancel: () => { isCanceled = true; }
         };
+
         window.taskManager.addTask(hashTask);
 
         const hash = await crypto.subtle.digest("SHA-256", buf);
@@ -306,7 +326,10 @@
 
         cancelBtn.onclick = () => {
             modal.style.display = "none";
-            onRestart?.();
+            isCanceled = true;
+            if (typeof onRestart === 'function') onRestart();
+            const uploadBtn = document.getElementById('uploadFileButton');
+            if (uploadBtn) uploadBtn.disabled = false;
         };
 
         modal.style.display = "block";

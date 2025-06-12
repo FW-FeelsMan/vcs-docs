@@ -6,6 +6,7 @@ using System.Security.Claims;
 using VCS_DOCs.Configuration;
 using VCS_DOCs.Hubs;
 using Microsoft.AspNetCore.StaticFiles;
+using System.Text.RegularExpressions;
 
 namespace VCS_DOCs.Controllers
 {
@@ -44,12 +45,46 @@ namespace VCS_DOCs.Controllers
 	[FromForm] int? replaceVersion,
 	[FromForm] string fileName)
 		{
+			fileName = SafeFileName(fileName);
+
 			if (chunk == null || chunk.Length == 0)
 				return BadRequest("Файл не получен");
 
 			var userId = GetUserId();
 			if (string.IsNullOrEmpty(userId))
 				return Unauthorized("Пользователь не найден");
+
+			string extension = Path.GetExtension(fileName).ToLowerInvariant();
+			string[] forbidden = [
+				".exe", ".bat", ".cmd", ".js", ".vbs", ".scr", ".ps1",
+				".msi", ".hta", ".jar", ".dll", ".com", ".pif", ".cpl"
+			];
+
+			if (chunk.ContentType.StartsWith("application/x-msdownload"))
+			{
+				return BadRequest("Этот файл выглядит как исполняемый. Запрещено загружать исполняемые файлы.");
+			}
+			if (forbidden.Contains(extension))
+			{
+				_logger.LogWarning("Пользователь {UserId} попытался загрузить запрещённый файл: {FileName}", userId, fileName);
+
+				await _hub.Clients.User(userId).SendAsync("TaskUpdate", new
+				{
+					taskKey = "upload_" + hash,
+					title = $"Загрузка файла: {fileName}",
+					type = "upload",
+					statusClass = "error",
+					statusText = $"Файл не разрешён к загрузке ({extension})",
+					cancelable = false
+				});
+				await _hub.Clients.User(userId).SendAsync("TaskComplete", new
+				{
+					taskKey = "upload_" + hash,
+					removeAfter = 5000
+				});
+
+				return BadRequest($"Файлы с расширением {extension} не разрешены к загрузке.");
+			}
 
 			var otherUpload = await _db.FileUploadSessions
 				.AnyAsync(s => s.UserId == userId && s.Status == "incomplete" && s.FileHash != hash);
@@ -185,8 +220,6 @@ namespace VCS_DOCs.Controllers
 				return Conflict("Загрузка была отменена.");
 			}
 
-			_logger.LogInformation("[{Time}] Push TaskUpdate (chunk upload): {Title}", DateTime.Now, $"Загрузка файла: {fileName}");
-
 			var uploaded = session.Chunks.Count(c => c.Uploaded);
 			var percent = (int)((double)uploaded / session.TotalChunks * 100);
 
@@ -216,7 +249,7 @@ namespace VCS_DOCs.Controllers
 
 			if (session == null || session.Chunks.Any(c => !c.Uploaded))
 				return BadRequest("Ошибка сессии или не все чанки загружены");
-			_logger.LogInformation("[{Time}] Push TaskUpdate (start compiling): {Title}", DateTime.Now, $"Сборка файла: {session.OriginalFileName}");
+
 			await _hub.Clients.User(userId).SendAsync("TaskUpdate", new
 			{
 				taskKey = "upload_" + hash,
@@ -248,7 +281,6 @@ namespace VCS_DOCs.Controllers
 					var chunkPath = Path.Combine(tempDir, $"chunk_{i:D4}");
 					if (!System.IO.File.Exists(chunkPath))
 					{
-						_logger.LogInformation("[{Time}] Push TaskUpdate (start compiling): {Title}", DateTime.Now, $"Сборка файла: {session.OriginalFileName}");
 						await _hub.Clients.User(userId).SendAsync("TaskUpdate", new
 						{
 							taskKey = "upload_" + hash,
@@ -291,7 +323,7 @@ namespace VCS_DOCs.Controllers
 			_db.FileUploadChunks.RemoveRange(session.Chunks);
 			await _db.SaveChangesAsync();
 			DeleteDirectorySafe(tempDir);
-			_logger.LogInformation("[{Time}] Push TaskUpdate (start compiling): {Title}", DateTime.Now, $"Сборка файла: {session.OriginalFileName}");
+
 			await _hub.Clients.User(userId).SendAsync("TaskUpdate", new
 			{
 				taskKey = "upload_" + hash,
@@ -301,6 +333,7 @@ namespace VCS_DOCs.Controllers
 				statusText = "Сборка завершена",
 				cancelable = false
 			});
+
 			await _hub.Clients.User(userId).SendAsync("TaskComplete", new
 			{
 				taskKey = "upload_" + hash,
@@ -309,6 +342,7 @@ namespace VCS_DOCs.Controllers
 
 			return Ok(new { message = "Файл собран", FileName = versionedName, Version = newVersion });
 		}
+
 		private void DeleteDirectorySafe(string path)
 		{
 			try
@@ -639,6 +673,21 @@ namespace VCS_DOCs.Controllers
 			});
 
 			return Ok();
+		}
+		private string SafeFileName(string fileName)
+		{
+			if (string.IsNullOrWhiteSpace(fileName))
+				return "unnamed";
+
+			var invalidChars = Path.GetInvalidFileNameChars();
+			var cleaned = new string(fileName.Where(ch => !invalidChars.Contains(ch)).ToArray());
+
+			cleaned = cleaned.Trim().TrimStart('.', '/', '\\');
+
+			if (cleaned.Length > 255)
+				cleaned = cleaned.Substring(0, 255);
+
+			return string.IsNullOrWhiteSpace(cleaned) ? "file" : cleaned;
 		}
 	}
 	public class CancelUploadRequest
