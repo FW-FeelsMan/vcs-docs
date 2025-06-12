@@ -1,10 +1,11 @@
-﻿<link href='https://fonts.googleapis.com/css?family=Open+Sans:400,600,700' rel='stylesheet' type='text/css'>
-
-<div id="chatbox">
-    <div id="chatbox-close" title="Закрыть чат">
-        <div class="cy"></div>
-        <div class="cx"></div>
+﻿<div id="chat-toggle-button" title="Открыть чат">
+    <span class="chat-label">Чат / Уведомления</span>
+    <div style="display: flex; align-items: center;">
+        <div class="notification-badge" style="display: none;">0</div>
     </div>
+</div>
+<div id="chatbox" class="collapsed">
+    
     <div id="friendslist">
         <div id="topmenu">
             <span class="active">Контакты</span>
@@ -91,45 +92,3 @@
         </div>
     </div>
 </div>
-
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-<script>
-    $(document).ready(function () {
-        const chatToggleBtn = $('#chat-toggle-button');
-        const chatBox = $('#chatbox');
-        const chatCloseBtn = $('#close');
-
-        // Сначала скрываем чат
-        chatBox.hide();
-
-        // Открыть чат по клику
-        chatToggleBtn.on('click', function () {
-            chatBox.fadeIn(200);
-        });
-
-        // Закрыть чат по кнопке закрытия
-        chatCloseBtn.on('click', function () {
-            chatBox.fadeOut(200);
-        });
-
-        // Опционально: свернуть чат по кнопке minimize
-        $('#minimize').on('click', function () {
-            chatBox.fadeOut(200);
-        });
-    });
-    $('#close').on('click', function () {
-        $('#chatbox').fadeOut(200);
-    });
-    document.getElementById('chatbox-close')
-        .addEventListener('click', () => {
-            document.getElementById('chatbox')
-                .classList.add('fadeOut');
-            setTimeout(() => {
-                document.getElementById('chatbox')
-                    .style.display = 'none';
-                document.getElementById('chatbox')
-                    .classList.remove('fadeIn', 'fadeOut');
-            }, 300);
-        });
-
-</script>

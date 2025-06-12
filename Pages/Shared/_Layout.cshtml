@@ -32,6 +32,9 @@
         @Html.AntiForgeryToken()
     </div>
 
+    <!-- Чат-попап заранее -->
+    @await Html.PartialAsync("~/Pages/Content/chat_popup.cshtml")
+
     <!-- Основное содержимое -->
     @RenderBody()
 
@@ -53,6 +56,6 @@
     <!-- Скрипты страницы -->
     @await RenderSectionAsync("Scripts", required: false)
     <mini-profiler />
-    @await Html.PartialAsync("~/Pages/Content/chat_popup.cshtml")
+    <script src="~/js/chat/chat.js" defer></script>
 </body>
 </html>
