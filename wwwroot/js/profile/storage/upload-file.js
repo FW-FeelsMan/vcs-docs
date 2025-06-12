@@ -7,7 +7,6 @@
     window.initUploadFile = function () {
         if (uploadFileInitialized) return;
         uploadFileInitialized = true;
-        console.log("initUploadFile: скрипт загружен");
 
         $(document).on('click', '#uploadFileButton', () => {
             const fileInput = document.getElementById('hiddenFileInput');

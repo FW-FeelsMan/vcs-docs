@@ -9,15 +9,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Data\userData\demo_user\**" />
     <Compile Remove="wwwroot\htmlExtra\**" />
     <Compile Remove="wwwroot\lib\online-3d-viewer\**" />
     <Compile Remove="wwwroot\models\**" />
+    <Content Remove="Data\userData\demo_user\**" />
     <Content Remove="wwwroot\htmlExtra\**" />
     <Content Remove="wwwroot\lib\online-3d-viewer\**" />
     <Content Remove="wwwroot\models\**" />
+    <EmbeddedResource Remove="Data\userData\demo_user\**" />
     <EmbeddedResource Remove="wwwroot\htmlExtra\**" />
     <EmbeddedResource Remove="wwwroot\lib\online-3d-viewer\**" />
     <EmbeddedResource Remove="wwwroot\models\**" />
+    <None Remove="Data\userData\demo_user\**" />
     <None Remove="wwwroot\htmlExtra\**" />
     <None Remove="wwwroot\lib\online-3d-viewer\**" />
     <None Remove="wwwroot\models\**" />
@@ -70,8 +74,6 @@
 
   <ItemGroup>
     <Folder Include="Data\Entities\" />
-    <Folder Include="Data\userData\demo_user\completed\" />
-    <Folder Include="Data\userData\demo_user\uploads\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Moq" Version="4.20.72" />

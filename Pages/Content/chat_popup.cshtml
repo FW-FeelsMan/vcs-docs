@@ -1,94 +1,107 @@
 ﻿<div id="chat-toggle-button" title="Открыть чат">
-    <span class="chat-label">Чат / Уведомления</span>
-    <div style="display: flex; align-items: center;">
+    <span class="chat-label">Центр уведомлений</span>
+    <div class="chat-arrow-container">
         <div class="notification-badge" style="display: none;">0</div>
+        <div class="chat-arrow"></div>
     </div>
 </div>
+
 <div id="chatbox" class="collapsed">
-    
-    <div id="friendslist">
-        <div id="topmenu">
-            <span class="active">Контакты</span>
-            <span>Чаты</span>
-            <span>Задачи</span>
-        </div>
-
-        <div id="friends">
-            <div class="friend">
-                <img src="~/images/default_avatar.png" />
-                <p>
-                    <strong>Колотов Михаил Викторович</strong>
-                    <span>warmenzim@gmail.com</span>
-                </p>
-                <div class="status available"></div>
-            </div>
-
-        </div>
-        <input type="text" id="searchfield" placeholder="Поиск контактов..." />
+    <!-- Верхнее меню вкладок -->
+    <div id="topmenu">
+        <span class="active">Контакты</span>
+        <span>Чаты</span>
+        <span>Задачи</span>
     </div>
 
-    <div id="chatview" class="p1">
-        <div id="profile">
-            <div id="minimize" title="Свернуть чат"></div>
-            <div id="close" title="Закрыть чат">
-                <div class="cy"></div>
-                <div class="cx"></div>
+    <!-- Контакты -->
+    <div id="chat-tab-contacts" class="chat-tab-content">
+        <div id="friendslist">
+            <div id="friends">
+                <div class="friend">
+                    <img src="~/images/default_avatar.png" />
+                    <p>
+                        <strong>Колотов Михаил Викторович</strong>
+                        <span>warmenzim@gmail.com</span>
+                    </p>
+                    <div class="status available"></div>
+                </div>
+            </div>
+            <input type="text" id="searchfield" placeholder="Поиск контактов..." />
+        </div>
+    </div>
+
+    <!-- Чаты -->
+    <div id="chat-tab-chats" class="chat-tab-content" style="display: none;">
+        <div id="chatview" class="p1">
+            <div id="profile">
+                <div id="minimize" title="Свернуть чат"></div>
+                <div id="close" title="Закрыть чат">
+                    <div class="cy"></div>
+                    <div class="cx"></div>
+                </div>
+
+                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/245657/1_copy.jpg" />
+                <div id="profile-info">
+                    <p>Алексей Петров</p>
+                    <span>alexey.petrov@example.com</span>
+                </div>
             </div>
 
-            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/245657/1_copy.jpg" />
-            <div id="profile-info">
-                <p>Алексей Петров</p>
-                <span>alexey.petrov@example.com</span>
+            <div id="chat-messages">
+                <label>Сегодня</label>
+
+                <div class="message">
+                    <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/245657/1_copy.jpg" />
+                    <div class="bubble">
+                        Привет! Как продвигается работа над проектом?
+                        <span>10:42</span>
+                    </div>
+                </div>
+
+                <div class="message right">
+                    <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/245657/2_copy.jpg" />
+                    <div class="bubble">
+                        Привет! Всё идёт по плану, уже закончил основную часть.
+                        <span>10:45</span>
+                    </div>
+                </div>
+
+                <div class="message">
+                    <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/245657/1_copy.jpg" />
+                    <div class="bubble">
+                        Отлично! Когда планируешь сдать финальную версию?
+                        <span>10:47</span>
+                    </div>
+                </div>
+
+                <div class="message right">
+                    <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/245657/2_copy.jpg" />
+                    <div class="bubble">
+                        Думаю, к концу недели всё будет готово. Нужно ещё протестировать.
+                        <span>10:49</span>
+                    </div>
+                </div>
+
+                <div class="message">
+                    <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/245657/1_copy.jpg" />
+                    <div class="bubble">
+                        Хорошо, буду ждать. Если нужна помощь - пиши!
+                        <span>10:51</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sendmessage">
+                <input type="text" placeholder="Введите сообщение..." />
+                <button id="send"></button>
             </div>
         </div>
-
-        <div id="chat-messages">
-            <label>Сегодня</label>
-
-            <div class="message">
-                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/245657/1_copy.jpg" />
-                <div class="bubble">
-                    Привет! Как продвигается работа над проектом?
-                    <span>10:42</span>
-                </div>
-            </div>
-
-            <div class="message right">
-                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/245657/2_copy.jpg" />
-                <div class="bubble">
-                    Привет! Всё идёт по плану, уже закончил основную часть.
-                    <span>10:45</span>
-                </div>
-            </div>
-
-            <div class="message">
-                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/245657/1_copy.jpg" />
-                <div class="bubble">
-                    Отлично! Когда планируешь сдать финальную версию?
-                    <span>10:47</span>
-                </div>
-            </div>
-
-            <div class="message right">
-                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/245657/2_copy.jpg" />
-                <div class="bubble">
-                    Думаю, к концу недели всё будет готово. Нужно ещё протестировать.
-                    <span>10:49</span>
-                </div>
-            </div>
-
-            <div class="message">
-                <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/245657/1_copy.jpg" />
-                <div class="bubble">
-                    Хорошо, буду ждать. Если нужна помощь - пиши!
-                    <span>10:51</span>
-                </div>
-            </div>
-        </div>
-
-        <div id="sendmessage">
-            <input type="text" placeholder="Введите сообщение..." />
-            <button id="send"></button>
+    </div>
+    <!-- Задачи -->
+    <div id="chat-tab-tasks" class="chat-tab-content" style="display: none;">
+        <div style="padding: 20px; color: white;">
+            <div id="taskCardListChat" class="tasks-grid" style="padding: 10px;"></div>
         </div>
     </div>
 </div>

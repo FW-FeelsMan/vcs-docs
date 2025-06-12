@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Options;
 using VCS_DOCs.Hubs;
 using Microsoft.AspNetCore.Http.Features;
+using VCS_DOCs.Services.Tasks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -79,6 +80,7 @@ builder.Services.AddAntiforgery(options =>
 
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 builder.Services.AddSingleton<UserServiceManager>();
+builder.Services.AddSingleton<TaskPushService>();
 
 builder.Services.AddCors(options =>
 {

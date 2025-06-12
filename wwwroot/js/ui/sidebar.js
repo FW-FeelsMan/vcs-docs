@@ -1,4 +1,4 @@
-﻿//sidebar.js
+﻿// sidebar.js
 const contentCache = new Map();
 let currentContentId = null;
 
@@ -71,6 +71,7 @@ async function loadContent(contentId) {
         const html = await response.text();
 
         contentContainer.innerHTML = html;
+
         if (contentId === 'profile_page') {
             await loadProfileScripts();
             if (typeof window.initUploadFile === "function") {
@@ -85,17 +86,17 @@ async function loadContent(contentId) {
     }
 }
 
-    async function loadProfileScripts() {
-        const scripts = [
-            "/js/profile/profile.js",
-            "/js/profile/profile-edit-info.js",
-            "/js/profile/storage/storage-sortable.js",
-            "/js/profile/storage/upload-file.js",
-            "/js/profile/storage/storage-table.js",
-            "/js/profile/storage/upload-conflict-modal.js",
-           // "/js/profile/storage/sorttable.js",
-            "/js/profile/taskManager/taskManager.js"
-        ];
+async function loadProfileScripts() {
+    const scripts = [
+        "/js/profile/profile.js",
+        "/js/profile/profile-edit-info.js",
+        "/js/profile/storage/storage-sortable.js",
+        "/js/profile/storage/upload-file.js",
+        "/js/profile/storage/storage-table.js",
+        "/js/profile/storage/upload-conflict-modal.js",
+        // "/js/profile/storage/sorttable.js",
+        // "/js/profile/taskManager/taskManager.js"
+    ];
 
     const promises = scripts.map(src => {
         return new Promise((resolve, reject) => {
@@ -111,6 +112,7 @@ async function loadContent(contentId) {
     await Promise.all(promises);
 
     initAvatarUpload();
+
     if (typeof window.initUserStorage === "function") {
         window.initUserStorage();
     }
@@ -125,12 +127,31 @@ async function loadContent(contentId) {
                 tasks.forEach(task => {
                     window.taskManager.addTask(task);
                 });
+
+                const observer = new MutationObserver((mutations, obs) => {
+                    const list = document.querySelector('#tasks .tasks-grid#taskCardList');
+                    if (list) {
+                        obs.disconnect();
+                        taskManager.render();
+                    }
+                });
+                observer.observe(document.getElementById("content"), {
+                    childList: true,
+                    subtree: true
+                });
+
+                observer.observe(document.body, {
+                    childList: true,
+                    subtree: true
+                });
+
             }
         } catch (err) {
             console.error("Ошибка при получении задач с сервера:", err);
         }
     }
 }
+
 function showCachedContent(contentId) {
     const contentContainer = document.getElementById('content');
     const cachedData = contentCache.get(contentId);

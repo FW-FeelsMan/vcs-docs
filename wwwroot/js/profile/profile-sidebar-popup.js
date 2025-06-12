@@ -1,4 +1,5 @@
-﻿function ensurePopupExists() {
+﻿//profile-sidebar-popup.js скрипт модалки
+function ensurePopupExists() {
     if (document.querySelector('.sidebar-upload-popup')) return;
 
     const popup = document.createElement('div');

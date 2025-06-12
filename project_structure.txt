@@ -38,7 +38,15 @@
     │           │   ├──[09bfb383-a956-40b3-87c6-7f256689ba3c]
     │           │   │   ├──[v1]
     │           │   │   │   └──подсборка.a3d — копия (4).bak
-    │           │   │   └──[v2]
+    │           │   │   ├──[v2]
+    │           │   │   │   └──подсборка.a3d — копия (4).bak
+    │           │   │   ├──[v3]
+    │           │   │   │   └──подсборка.a3d — копия (4).bak
+    │           │   │   ├──[v4]
+    │           │   │   │   └──подсборка.a3d — копия (4).bak
+    │           │   │   ├──[v5]
+    │           │   │   │   └──подсборка.a3d — копия (4).bak
+    │           │   │   └──[v6]
     │           │   │       └──подсборка.a3d — копия (4).bak
     │           │   ├──[0e1e6e6e-1d5e-44e8-90bf-5ab1d4443e7a]
     │           │   │   ├──[v1]
@@ -49,15 +57,25 @@
     │           │   │   │   └──подсборка.a3d — копия (3).bak
     │           │   │   ├──[v4]
     │           │   │   │   └──подсборка.a3d — копия (3).bak
-    │           │   │   └──[v5]
+    │           │   │   ├──[v5]
+    │           │   │   │   └──подсборка.a3d — копия (3).bak
+    │           │   │   ├──[v6]
+    │           │   │   │   └──подсборка.a3d — копия (3).bak
+    │           │   │   ├──[v7]
+    │           │   │   │   └──подсборка.a3d — копия (3).bak
+    │           │   │   └──[v8]
     │           │   │       └──подсборка.a3d — копия (3).bak
     │           │   ├──[180b3a34-c6bc-4a84-b09c-c3dffc3a0e62]
-    │           │   │   └──[v1]
+    │           │   │   ├──[v1]
+    │           │   │   │   └──подсборка.a3d — копия (8).bak
+    │           │   │   └──[v2]
     │           │   │       └──подсборка.a3d — копия (8).bak
     │           │   ├──[20d728b8-72c1-4a24-816d-14375db5ad6d]
     │           │   │   ├──[v1]
     │           │   │   │   └──подсборка.a3d — копия (5).bak
-    │           │   │   └──[v2]
+    │           │   │   ├──[v2]
+    │           │   │   │   └──подсборка.a3d — копия (5).bak
+    │           │   │   └──[v3]
     │           │   │       └──подсборка.a3d — копия (5).bak
     │           │   ├──[35eadae1-1bbe-4e4f-9dbf-e4f5e826a473]
     │           │   │   ├──[v1]
@@ -75,18 +93,15 @@
     │           │   │   │   └──подсборка.a3d — копия (6).bak
     │           │   │   └──[v2]
     │           │   │       └──подсборка.a3d — копия (6).bak
-    │           │   ├──[ad99567a-dc04-426a-849a-45901c94bbe5]
-    │           │   │   ├──[v1]
-    │           │   │   │   └──РУ-700 (17.02.25 PDM ЕКБ).zip
-    │           │   │   ├──[v2]
-    │           │   │   │   └──РУ-700 (17.02.25 PDM ЕКБ).zip
-    │           │   │   └──[v3]
-    │           │   │       └──РУ-700 (17.02.25 PDM ЕКБ).zip
     │           │   ├──[cc9cba64-2921-4372-beb7-121dcd7eec74]
     │           │   │   └──[v1]
     │           │   │       └──подсборка.a3d — копия (9).bak
     │           │   └──[ccaa9094-6cc0-4eb3-8d47-4ca2bbf20dcf]
-    │           │       └──[v1]
+    │           │       ├──[v1]
+    │           │       │   └──подсборка.a3d — копия (7).bak
+    │           │       ├──[v2]
+    │           │       │   └──подсборка.a3d — копия (7).bak
+    │           │       └──[v3]
     │           │           └──подсборка.a3d — копия (7).bak
     │           └──[temp]
     ├──[Pages]
@@ -159,7 +174,6 @@
         │       └──project_page.css
         ├──[images]
         │   ├──archiveIcon.png
-        │   ├──chat-img.png
         │   ├──default_avatar.png
         │   ├──edit_icon.png
         │   ├──extra.png
@@ -183,16 +197,12 @@
             │   ├──profile.js
             │   └──userStatus.js
             │   ├──[storage]
-            │   │   ├──sorttable.js
+            │   │   ├──storage-sortable.js
             │   │   ├──storage-table.js
             │   │   ├──upload-conflict-modal.js
             │   │   └──upload-file.js
             │   └──[taskManager]
             │       └──taskManager.js
-            ├──[storage(old)]
-            │   ├──storage-model.js
-            │   ├──upload-file.js
-            │   └──user-storage.js
             └──[ui]
                 ├──context-menu.js
                 ├──extra-tabbar.js
@@ -220,23 +230,23 @@ TasksController.cs методы:
 UploadController.cs методы:
  - GetShortId
  - BadRequest
- - Conflict
  - Unauthorized
- - if
+ - BadRequest
+ - загрузке
+ - BadRequest
+ - Conflict
+ - Conflict
  - BadRequest
  - FileStream
  - BadRequest
- - TaskUpdate
+ - Conflict
  - Ok
  - Unauthorized
  - BadRequest
- - TaskUpdate
  - FileStream
- - TaskUpdate
  - BadRequest
  - FileStream
  - StatusCode
- - TaskUpdate
  - Ok
  - DeleteDirectorySafe
  - Unauthorized
@@ -265,6 +275,10 @@ UploadController.cs методы:
  - FileExtensionContentTypeProvider
  - FileStream
  - File
+ - Unauthorized
+ - Ok
+ - SafeFileName
+ - string
 
 AppDbContext.cs методы:
  - ApplicationDbContext
@@ -329,6 +343,7 @@ UploadCleanupService.cs методы:
  - RunCleanupByStatusAsync
  - RunCleanupByStatusAsync
  - найдена
+ - CleanupOrphanTempDirs
  - GetTempDir
 
 CustomUserIdProvider.cs методы:
@@ -425,13 +440,10 @@ auth-login.js методы:
  - submitForm
 
 chat.js методы:
- - initChat
- - toggleChat
+ - tryInitChat
+ - openChat
  - closeChat
- - minimizeChat
- - openChatWithContact
- - sendMessage
- - simulateResponse
+ - toggleChat
 
 profile-edit-info.js методы:
  - applyDateMask
@@ -459,40 +471,6 @@ userStatus.js методы:
  - getUserStatusEl
  - setUserStatus
 
-storage-model.js методы:
- - notify
- - notifyUploadsOnly
- - getState
- - renderUploadedFiles
- - renderUploadingFiles
-
-upload-file.js методы:
- - getFileKey
- - formatFileSize
- - reserveFile
- - releaseFile
- - updateChunkSize
- - enqueueFileUpload
- - processUploadQueue
- - updateProgressThrottled
- - processUpdates
- - uploadChunks
- - uploadChunk
- - scheduleNextChunks
- - uploadSelectedFile
-
-user-storage.js методы:
- - initUserStorage
- - waitForStorageTab
- - ensureConnectionReady
- - requestFiles
- - updateNonUploadingRows
- - setupVersionDropdown
- - deleteFile
- - refreshStorageStatus
- - setupMultiButtonEvents
- - downloadFile
-
 extra-tabbar.js методы:
  - setActiveTab
 
@@ -510,15 +488,9 @@ sidebar.js методы:
  - initExtraPage
  - handleFileUpload
 
-sorttable.js методы:
- - has
- - so
- - takes
- - to
- - dean_addEvent
- - removeEvent
- - handleEvent
- - fixEvent
+storage-sortable.js методы:
+ - parseCustomDate
+ - applySorting
 
 storage-table.js методы:
  - initStorageTable
@@ -559,7 +531,6 @@ taskManager.js методы:
  - confirmAndTrigger
  - addOrUpdateTask
  - updateTimers
- - fetchTasks
  - triggerTask
  - removeTask
  - escapeHtml

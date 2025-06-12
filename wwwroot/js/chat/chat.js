@@ -1,4 +1,5 @@
-﻿document.addEventListener("DOMContentLoaded", function () {
+﻿// chat.js
+document.addEventListener("DOMContentLoaded", function () {
     const tryInitChat = () => {
         const chatBox = document.getElementById("chatbox");
         const toggleBtn = document.getElementById("chat-toggle-button");
@@ -10,7 +11,6 @@
             return false;
         }
 
-        console.log("Скрипт чата запущен");
         if (window.chatInitialized) return true;
         window.chatInitialized = true;
 
@@ -36,14 +36,12 @@
             const isCollapsed = chatBox.classList.contains("collapsed");
 
             if (isCollapsed) {
-                // Открываем
                 chatBox.classList.remove("collapsed");
                 chatBox.classList.remove("fadeOut");
                 chatBox.classList.add("fadeIn");
                 chatBox.style.display = "block";
                 toggleBtn.classList.add("lifted");
             } else {
-                // Сворачиваем
                 chatBox.classList.remove("fadeIn");
                 chatBox.classList.add("fadeOut");
                 chatBox.classList.add("collapsed");
@@ -54,10 +52,45 @@
                 }, 300);
             }
         };
+
         toggleBtn.addEventListener("click", toggleChat);
         closeBtn.addEventListener("click", closeChat);
         minimizeBtn?.addEventListener("click", closeChat);
 
+        // Вкладки
+        const tabButtons = document.querySelectorAll("#topmenu span");
+        const tabContents = {
+            "Контакты": document.getElementById("chat-tab-contacts"),
+            "Чаты": document.getElementById("chat-tab-chats"),
+            "Задачи": document.getElementById("chat-tab-tasks"),
+        };
+
+        tabButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                tabButtons.forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+
+                Object.keys(tabContents).forEach(key => {
+                    tabContents[key].style.display = key === btn.textContent ? "block" : "none";
+                });
+
+                sessionStorage.setItem("chatActiveTab", btn.textContent);
+            });
+        });
+
+        // Восстановление активной вкладки
+        const restoreChatTab = () => {
+            const savedTab = sessionStorage.getItem("chatActiveTab") || "Контакты";
+            const btn = [...tabButtons].find(b => b.textContent === savedTab);
+            if (btn) btn.click();
+        };
+        restoreChatTab();
+
+       // window.addEventListener("taskUpdate", async (e) => {
+       //     const { renderChatMiniTaskCard } = await import('/js/common/tasks-shared.js');
+        //    console.log("[Chat] Получена задача:", e.detail);
+       //     renderChatMiniTaskCard(e.detail);
+      //  });
         return true;
     };
 
