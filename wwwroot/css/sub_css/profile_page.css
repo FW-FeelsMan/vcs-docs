@@ -1157,4 +1157,16 @@ hr.solid {
             background: var(--primary-color);
             color: white;
         }
+th.asc::after {
+    content: "▲";
+    margin-left: 5px;
+    font-size: 0.8em;
+    color: var(--primary-color);
+}
 
+th.desc::after {
+    content: "▼";
+    margin-left: 5px;
+    font-size: 0.8em;
+    color: var(--primary-color);
+}

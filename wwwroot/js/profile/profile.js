@@ -20,7 +20,9 @@ function handleDomChanges() {
             const targetSection = document.getElementById(this.dataset.target);
             if (targetSection) {
                 targetSection.classList.add('active');
-
+                if (this.dataset.target === "storage" && typeof window.initStorageSorting === "function") {
+                    window.initStorageSorting();
+                }
                 requestAnimationFrame(() => {
                     updateTooltips(true);
                 });
