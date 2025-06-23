@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <RootNamespace>VCS_DOCs.WebCAD</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\\VCS-DOCs.Models\\VCS-DOCs.Models.csproj" />
+		<ProjectReference Include="..\\VCS-DOCs.Configuration\\VCS-DOCs.Configuration.csproj" />
+	</ItemGroup>
+</Project>

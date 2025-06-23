@@ -1,0 +1,77 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>VCS_DOCs</RootNamespace>
+    <Platforms>AnyCPU;x86</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="wwwroot\htmlExtra\**" />
+    <Compile Remove="wwwroot\lib\online-3d-viewer\**" />
+    <Compile Remove="wwwroot\models\**" />
+    <Content Remove="wwwroot\htmlExtra\**" />
+    <Content Remove="wwwroot\lib\online-3d-viewer\**" />
+    <Content Remove="wwwroot\models\**" />
+    <EmbeddedResource Remove="wwwroot\htmlExtra\**" />
+    <EmbeddedResource Remove="wwwroot\lib\online-3d-viewer\**" />
+    <EmbeddedResource Remove="wwwroot\models\**" />
+    <None Remove="wwwroot\htmlExtra\**" />
+    <None Remove="wwwroot\lib\online-3d-viewer\**" />
+    <None Remove="wwwroot\models\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="bin\Debug\net9.0\*.dll">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+   
+    <PackageReference Include="AspNetCoreRateLimit" Version="5.0.0" />
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="9.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="9.0.6" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.6" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="MiniProfiler.AspNetCore.Mvc" Version="4.5.4" />
+    <PackageReference Include="MiniProfiler.EntityFrameworkCore" Version="4.5.4" />
+    <PackageReference Include="MySql.EntityFrameworkCore" Version="9.0.3" />
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0-preview.2.efcore.9.0.0" />
+    <PackageReference Include="Serilog.Extensions.Logging.File" Version="3.0.0" />
+    <PackageReference Include="System.Formats.Asn1" Version="9.0.6" />
+    <PackageReference Include="System.ServiceModel.Security" Version="6.0.0" />
+    <PackageReference Include="Xbim.Essentials" Version="6.0.521" />
+    <PackageReference Include="XbimWebUI" Version="0.1.41" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.6" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.1">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Data\Entities\" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Moq" Version="4.20.72" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.6" />
+    <ProjectReference Include="..\VCS-DOCs.Upload.Core\VCS-DOCs.Upload.Core.csproj" />
+    <ProjectReference Include="..\VCS-DOCs.WebCAD\VCS-DOCs.WebCAD.csproj" />
+	  <ProjectReference Include="..\\VCS-DOCs.Models\\VCS-DOCs.Models.csproj" />
+	  <ProjectReference Include="..\\VCS-DOCs.Core\\VCS-DOCs.Core.csproj" />
+	  <ProjectReference Include="..\\VCS-DOCs.Infrastructure\\VCS-DOCs.Infrastructure.csproj" />
+	  <ProjectReference Include="..\\VCS-DOCs.Configuration\\VCS-DOCs.Configuration.csproj" />
+	  <ProjectReference Include="..\\VCS-DOCs.Notifications\\VCS-DOCs.Notifications.csproj" />
+  </ItemGroup>
+  <PropertyGroup>
+    <NoWarn>CS8812</NoWarn>
+    <NoWarn>CS7072</NoWarn>
+  </PropertyGroup>
+
+</Project>

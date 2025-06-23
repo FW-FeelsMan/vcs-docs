@@ -1,0 +1,80 @@
+﻿@page
+@model IndexModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Главная страница";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/sub_css/profile_page.css" />
+}
+
+<div id="loader" class="loader hidden"></div>
+<div class="background"></div>
+<div class="header-container">
+    <div class="header-title">VCS-DOCs</div>
+    <p class="menu_divider">Version<br>Control<br>System</p>
+</div>
+
+<div class="sidebar">
+    <div class="sidebar-button" data-content="project_page" data-style="projectsStyle" id="button1">
+        <img src="~/images/projectsIcon.png" alt="Icon" class="button-icon">
+        <span class="button-text">Проекты</span>
+        <span class="button-number">1</span>
+    </div>
+    <div class="sidebar-button" data-content="profile_page" data-style="profileStyle" id="button2">
+        <img src="~/images/personalIcon.png" alt="Icon" class="button-icon">
+        <span class="button-text">Профиль</span>
+        <span class="button-number">2</span>
+    </div>
+    <div class="sidebar-button" data-content="infographics_page" data-style="infographicsStyle" id="button3">
+        <img src="~/images/infographicIcon.png" alt="Icon" class="button-icon">
+        <span class="button-text">Инфографика</span>
+        <span class="button-number">3</span>
+    </div>
+    <div class="sidebar-button" data-content="contact_page" data-style="contactStyle" id="button4">
+        <img src="~/images/helpIcon.png" alt="Icon" class="button-icon">
+        <span class="button-text">Обратная связь</span>
+        <span class="button-number">4</span>
+    </div>
+    <div class="sidebar-button" data-content="extra_page" data-style="extraStyle" id="button5">
+        <img src="~/images/extra.png" alt="Icon" class="button-icon">
+        <span class="button-text">Дополнения</span>
+        <span class="button-number">5</span>
+    </div>
+
+    <div class="user-block">
+        <img id="sidebarAvatar"
+             src="@Model.AvatarUrl"
+             alt="Avatar"
+             class="sidebar-avatar-img" />
+
+        <div class="user-info">
+            <div class="user-name">@Model.CurrentUser?.UserName</div>
+            <div class="user-status">Проверка статуса...</div>
+        </div>
+    </div>
+    <form method="post" asp-page-handler="Logout">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="logout-button">
+            <img src="~/images/logout_icon.png" alt="Выход" class="logout-icon">
+        </button>
+    </form>
+
+</div>
+
+<div id="content" class="content-field">
+    @await Html.PartialAsync("_ContentProjects")
+</div>
+<div class="context-menu">
+    <ul>
+        <li>Открыть</li>
+        <li>Вырезать</li>
+        <li>Печать</li>
+        <li>Настройки</li>
+        <li>Выход</li>
+    </ul>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("~/Pages/Shared/Scripts/Scripts_Index.cshtml")
+}

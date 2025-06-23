@@ -1,0 +1,163 @@
+﻿@page
+@model profile_pageModel
+@{
+}
+@using System.Globalization
+
+<input type="file" id="hiddenFileInput" style="display: none;" />
+
+<div style="display:none;">
+    @Html.AntiForgeryToken()
+    @if (Model.CurrentUser != null)
+    {
+        <meta name="user-id" content="@Model.CurrentUser.Id" />
+    }
+</div>
+<div class="profile_background">
+    <div class="button-container">
+        <h2>VCS-DOSc Account</h2>
+        <button class="button-sliding primary">Выйти</button>
+    </div>
+    <hr class="solid">
+    <div class="profile-container">
+        <div class="profile-sidebar">
+            <input type="file" id="avatarFileInput" style="display: none;" accept="image/*" />
+
+            <div class="avatar-wrapper">
+                <label for="avatarFileInput" class="avatar-upload-label">
+                    <img id="avatarImage" src="@($"{Model.AvatarPath}?v={DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}")" alt="Avatar" />
+                </label>
+                <p data-field="FullName" class="username">@Model.CurrentUser?.UserName</p>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li class="active" data-target="personal-data">Персональные данные</li>
+                <li data-target="storage">Личное хранилище</li>
+                <li data-target="tasks">Задачи</li>
+            </ul>
+        </div>
+        <div class="profile-content">
+            <div id="personal-data" class="content-section active">
+                <h2>Персональные данные</h2>
+                <h3>Раздел управления личными данными</h3>
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h4>ФИО <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>
+                        <p data-field="FullName">@Model.CurrentUser?.FullName</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>Дата рождения <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>
+                        <input type="text"
+                               class="date-input"
+                               data-field="DateOfBirth"
+                               value="@($"{Model.CurrentUser?.DateOfBirth:dd.MM.yyyy}")"
+                               placeholder="ДД.ММ.ГГГГ"
+                               pattern="\d{2}\.\d{2}\.\d{4}"
+                               disabled />
+                    </div>
+                    <div class="info-card">
+                        <h4>Организация <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>
+                        <p data-field="Organization">@Model.CurrentUser?.Organization</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>Подразделение <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>
+                        <p data-field="Department">@Model.CurrentUser?.Department</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>Должность <button class="edit-button"><img src="~/images/edit_icon.png" alt="Edit"></button></h4>
+                        <p data-field="Speciality">@Model.CurrentUser?.Speciality</p>
+                    </div>
+                    <div class="info-card">
+                        <h4>Удаление аккаунта</h4>
+                        <button class="button-sliding danger">Удалить</button>
+                    </div>
+                </div>
+            </div>
+            <div id="storage" class="content-section">
+                <h2>Личное хранилище</h2>
+                <div class="storage-header" style="display: flex; align-items: center; justify-content: space-between;">
+
+                    <div style="display: flex; align-items: center;">
+                        <div style="margin-right: 10px;">
+                            <span id="storageCounter"></span>
+                        </div>
+
+                    </div>
+                        <button id="uploadFileButton"
+                                type="button"
+                                class="button-sliding primary"
+                                style="margin-left: auto; margin-right: 30px;">
+                            Загрузить файл
+                        </button>
+
+                </div>
+                <div class="content-scrollable">
+                    <table id="userFilesTable" class="file-table">
+                        <thead>
+                            <tr>
+                                <th data-type="string">Имя файла</th>
+                                <th>Версия</th>
+                                <th data-type="number">Размер</th>
+                                <th data-type="date">Загружен</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+            <div id="tasks" class="content-section">
+                <h2>Задачи</h2>
+                <h3>Задачи пользователя, обрабатываемые на сервере</h3>
+                <div class="tasks-container" id="tasksContainer">
+                    <div class="tasks-scrollable">
+                        <div class="tasks-grid" id="taskCardList">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="upload-version-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h3 id="version-modal-title">Подтверждение</h3>
+            <p id="version-conflict-message">Сообщение по умолчанию.</p>
+            <div class="modal-buttons">
+                <div class="multi-button split-button" id="split-button">
+                    <div class="button-part label">Заменить:</div>
+                    <div id="selected-version" class="button-part version">V4</div>
+                    <div id="version-dropdown" class="button-part dropdown">&#9662;</div>
+                </div>
+                <div id="version-list" class="version-list" style="display: none;"></div>
+                <button id="conflict-new-version" class="button-sliding primary">Новая версия</button>
+                <button id="conflict-cancel" class="button-sliding primary">Отмена</button>
+            </div>
+        </div>
+    </div>
+   <div id="upload-warning-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h3 id="warning-modal-title">Предупреждение</h3>
+            <p id="warning-message">Подтверждение действия</p>
+            <div class="modal-buttons">
+                <button id="warning-confirm" class="button-sliding danger">Удалить</button>
+                <button id="warning-cancel" class="button-sliding">Отмена</button>
+            </div>
+        </div>
+    </div>
+    <div id="upload-resume-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h3 id="resume-modal-title">Продолжить загрузку?</h3>
+            <p id="resume-modal-message">Файл уже загружался. Хотите продолжить?</p>
+            <div class="modal-buttons">
+                <button id="resume-confirm" class="button-sliding">Продолжить</button>
+                <button id="resume-cancel" class="button-sliding">Начать заново</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+    @await Html.PartialAsync("~/Pages/Shared/Scripts/Scripts_profile_page.cshtml")
+}

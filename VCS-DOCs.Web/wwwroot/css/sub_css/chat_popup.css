@@ -1,0 +1,402 @@
+﻿#chatbox {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    width: 320px;
+    height: 495px;
+    background: rgba(20, 20, 20, 0.95);
+    border-radius: 8px;
+    border: 1px solid rgba(80, 80, 80, 0.5);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+    display: none;
+}
+
+    #chatbox.collapsed {
+        transform: translateY(calc(100% - 40px));
+    }
+
+.notification-badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #e74c3c;
+    width: 18px;
+    height: 18px;
+    font-size: 11px;
+    font-weight: bold;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#chatbox-close {
+    position: absolute;
+    top: -30px;
+    right: 0;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    z-index: 10;
+}
+
+    #chatbox-close .cx,
+    #chatbox-close .cy {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background: #fff;
+        transform-origin: center;
+        transition: background 0.2s ease;
+    }
+
+    #chatbox-close .cx {
+        transform: translateY(-50%) rotate(45deg);
+    }
+
+    #chatbox-close .cy {
+        transform: translateY(-50%) rotate(-45deg);
+    }
+
+    #chatbox-close:hover .cx,
+    #chatbox-close:hover .cy {
+        background: var(--primary-hover, #3d7bbf);
+    }
+
+#friendslist {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+}
+
+#topmenu {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 50px;
+    background: rgba(30, 30, 30, 1);
+    border-bottom: 1px solid rgba(80, 80, 80, 0.5);
+}
+
+    #topmenu span {
+        flex: 1;
+        text-align: center;
+        color: #fff;
+        cursor: pointer;
+        font-size: 14px;
+        padding: 10px 0;
+    }
+
+        #topmenu span.active {
+            border-bottom: 2px solid var(--primary-color, #5a9bd5);
+            background-color: rgba(40, 40, 40, 1);
+        }
+
+#friends {
+    overflow-y: auto;
+    height: calc(100% - 100px);
+    padding: 5px 10px;
+}
+
+.friend {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid rgba(80, 80, 80, 0.3);
+    transition: background 0.2s ease;
+}
+
+    .friend:hover {
+        background: rgba(50, 50, 50, 0.8);
+        cursor: pointer;
+    }
+
+    .friend img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 12px;
+        object-fit: cover;
+    }
+
+    .friend p {
+        margin: 0;
+        color: white;
+        font-size: 13px;
+        flex-grow: 1;
+    }
+
+        .friend p strong {
+            display: block;
+            font-weight: 600;
+        }
+
+        .friend p span {
+            font-size: 11px;
+            color: #aaa;
+        }
+
+    .friend .status {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-left: auto;
+    }
+
+.status.available {
+    background: limegreen;
+}
+
+#searchfield {
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    font-size: 14px;
+    color: white;
+    background: rgba(40, 40, 40, 0.8);
+    outline: none;
+    border-top: 1px solid rgba(80, 80, 80, 0.3);
+}
+
+    #searchfield::placeholder {
+        color: rgba(200, 200, 200, 0.5);
+    }
+
+#chatview {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(25, 25, 25, 0.95);
+}
+
+#profile {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    background: rgba(30, 30, 30, 1);
+    border-bottom: 1px solid rgba(80, 80, 80, 0.3);
+    position: relative;
+}
+
+    #profile img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-right: 10px;
+    }
+
+#profile-info p {
+    margin: 0;
+    font-weight: 600;
+    color: white;
+}
+
+#profile-info span {
+    font-size: 13px;
+    color: #aaa;
+}
+
+#chat-messages {
+    overflow-y: auto;
+    height: calc(100% - 140px);
+    padding: 10px;
+    background: rgba(30, 30, 30, 1);
+}
+
+.message {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+    .message.right {
+        flex-direction: row-reverse;
+    }
+
+    .message img {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        margin: 0 10px;
+        object-fit: cover;
+    }
+
+.bubble {
+    max-width: 70%;
+    background: rgba(50, 50, 50, 0.8);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 18px;
+    position: relative;
+}
+
+.message.right .bubble {
+    background: var(--primary-color, #5a9bd5);
+}
+
+.bubble span {
+    font-size: 11px;
+    color: #ccc;
+    position: absolute;
+    right: 10px;
+    bottom: -18px;
+}
+
+#sendmessage {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    background: rgba(30, 30, 30, 1);
+    border-top: 1px solid rgba(80, 80, 80, 0.3);
+}
+
+    #sendmessage input {
+        flex: 1;
+        padding: 10px;
+        border-radius: 20px;
+        background: rgba(50, 50, 50, 0.8);
+        border: none;
+        color: white;
+        font-size: 14px;
+    }
+
+        #sendmessage input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--primary-color, #5a9bd5);
+        }
+
+    #sendmessage button {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--primary-color, #5a9bd5);
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: 10px;
+        cursor: pointer;
+    }
+
+        #sendmessage button:after {
+            content: "\2192";
+            font-size: 16px;
+            color: white;
+        }
+
+#chat-toggle-button {
+    position: fixed;
+    bottom: 13px;
+    right: 10px;
+    width: 290px;
+    height: 30px;
+    padding: 0 16px;
+    border-radius: 8px;
+    background: rgba(30, 30, 30, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    z-index: 10001;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+}
+
+    #chat-toggle-button.lifted {
+        transform: translateY(-504px);
+    }
+
+.chat-arrow-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: auto;
+}
+
+.chat-arrow {
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 8px solid white;
+    transition: transform 0.3s ease;
+}
+
+#chat-toggle-button.lifted .chat-arrow {
+    transform: rotate(180deg);
+}
+
+.chat-task-style.tasks-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    margin: 0;
+    overflow-y: auto;
+    max-height: 400px;
+}
+
+.chat-task-style .task-card {
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: white;
+    transition: background 0.3s ease;
+}
+
+    .chat-task-style .task-card:hover {
+        background: rgba(255, 255, 255, 0.12);
+    }
+
+.chat-task-style .task-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 4px;
+}
+
+.chat-task-style .task-status {
+    font-size: 12px;
+    font-weight: 500;
+    color:  white;
+    background: none;
+    margin-bottom: 6px;
+    display: inline-block;
+}
+
+.chat-task-style .task-type {
+    font-size: 11px;
+    color: #aaa;
+}
+
+.chat-task-style .task-buttons button {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    margin-top: 6px;
+    margin-right: 5px;
+    background: rgba(90, 155, 213, 0.2);
+    color: white;
+    border: 1px solid rgba(90, 155, 213, 0.4);
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+    .chat-task-style .task-buttons button:hover {
+        background: rgba(90, 155, 213, 0.4);
+    }

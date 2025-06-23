@@ -1,0 +1,27 @@
+﻿@page "{code:int}"
+@model ErrorModel
+@{
+    Layout = null;
+    var statusCode = RouteData.Values["code"]?.ToString();
+}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <title>@statusCode — Страница не найдена</title>
+    <link rel="stylesheet" href="~/css/mainStyle.css" />
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-code">@statusCode</div>
+        <div class="error-message">Страница не найдена</div>
+        <div class="error-description">
+            Увы, но этой страницы не существует. Возможно, она была удалена или вы ошиблись адресом.
+        </div>
+        <div class="error-buttons">
+            <a href="/">На главную</a>
+            <a href="mailto:support@yourdomain.local">Поддержка</a>
+        </div>
+    </div>
+</body>
+</html>
