@@ -36,8 +36,8 @@ function handleDomChanges() {
 
 
     if (typeof window.initUploadFile === "function") {
-        // window.initUploadFile();
-        alert("Загрузка временно отключена. Идёт переход на новую систему.");
+        window.initUploadFile();
+       // alert("Загрузка временно отключена. Идёт переход на новую систему.");
     }
 }
 

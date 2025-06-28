@@ -19,6 +19,8 @@ using VCS_DOCs.Models.Entities;
 using VCS_DOCs.Upload.Core;
 using VCS_DOCs.Infrastructure.Services.Storage;
 using VCS_DOCs.Core.Interfaces;
+using VCS_DOCs.Services;
+using VCS_DOCs.Upload.Core.Services;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -60,7 +62,6 @@ builder.Services.AddSignalR(options =>
 });
 
 builder.Services.AddScoped<IUserService, UserService>();
-//builder.Services.AddScoped<IUserFileService, UserFileService>();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
@@ -138,8 +139,7 @@ builder.Services.Configure<IpRateLimitOptions>(options =>
 		}
 	];
 });
-//builder.Services.AddScoped<IUploadCleanupService, UploadCleanupService>();
-//builder.Services.AddHostedService<UploadCleanupHostedService>();
+builder.Services.AddScoped<IUserFileService, UserFileService>();
 
 builder.Logging.ClearProviders(); 
 builder.Logging.AddConsole();

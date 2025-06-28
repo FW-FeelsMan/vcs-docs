@@ -17,5 +17,6 @@ namespace VCS_DOCs.Models.Entities
 		public int Access { get; set; }
 		public string? JwtId { get; set; }
 		public bool IsDeleted { get; set; } = false;
+		public long? StorageLimitBytes { get; set; }
 	}
 }

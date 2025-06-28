@@ -26,7 +26,7 @@
 
             await updateStorageCounter();
 
-            const list = await (await fetch('/api/Upload/list')).json();
+            const list = await (await fetch('/api/storage/files')).json();
             const freeBytes = list.limitBytes - list.usedBytes - list.tempBytes;
             if (file.size > freeBytes) {
                 alert(`Невозможно загрузить "${file.name}", мало места (${formatSize(freeBytes)})`);
@@ -384,7 +384,7 @@
         const counter = document.getElementById('storageCounter');
         if (!counter) return;
         try {
-            const res = await fetch('/api/Upload/list');
+            const res = await fetch('/api/storage/files');
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             const used = formatSize(data.usedBytes);

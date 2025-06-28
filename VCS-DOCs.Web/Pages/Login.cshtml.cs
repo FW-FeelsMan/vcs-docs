@@ -180,7 +180,8 @@ namespace VCS_DOCs.Pages
 					CreatedAt = DateTime.Now,
 					UpdatedAt = DateTime.Now,
 					IsDeleted = false,
-					Access = 0
+					Access = 0,
+					StorageLimitBytes = 10L * 1024 * 1024 * 1024
 				};
 
 				_context.Users.Add(newUser);
@@ -188,10 +189,11 @@ namespace VCS_DOCs.Pages
 
 				string appDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData");
 
-				string userFolderName = $"userData_{newUser.Id}";
+				string shortUserId = newUser.Id.Replace("-", "").Substring(0, 8);
+				string userFolderName = $"u_{shortUserId}";
 				string userDataPath = Path.Combine(appDataPath, userFolderName);
 
-				string historyFileName = $"history_{newUser.Id}.ini";
+				string historyFileName = $"history_{shortUserId}.ini";
 				string historyFilePath = Path.Combine(userDataPath, historyFileName);
 
 				int fullFolderPathLength = Path.Combine(appDataPath, userFolderName).Length;
