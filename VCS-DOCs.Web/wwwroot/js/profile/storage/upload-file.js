@@ -1,5 +1,4 @@
-﻿//upload-file.js
-(function ($) {
+﻿(function ($) {
     let uploadFileInitialized = false;
     let isUploadInProgress = false;
     let isCanceled = false;
@@ -36,22 +35,9 @@
 
             let hash;
             try {
-                if (file.size <= 100 * 1024 * 1024)
-                    hash = await computeSHA256(file);
-                else
-                    hash = await computeSparkMD5Hash(file);
-
-                const hashTaskKey = `hash_${hash}`;
-                const hashTask = {
-                    taskKey: hashTaskKey,
-                    title: `Подготовка: ${file.name}`,
-                    type: "upload",
-                    statusClass: "starting",
-                    statusText: "Вычисление хеша...",
-                    cancelable: true,
-                    autoRemove: false
-                };
-                window.taskManager.addTask(hashTask);
+                hash = file.size <= 100 * 1024 * 1024
+                    ? await computeSHA256(file)
+                    : await computeSparkMD5Hash(file);
             } catch (err) {
                 if (err === "Отменено") {
                     console.log(`Пользователь отменил хеширование файла "${file.name}"`);
@@ -59,17 +45,6 @@
                     return;
                 }
 
-                const failTask = {
-                    taskKey: `hash_failed_${Date.now()}`,
-                    title: `Подготовка: ${file.name}`,
-                    type: "upload",
-                    statusClass: "failed",
-                    statusText: "Ошибка при хешировании",
-                    cancelable: true,
-                    autoRemove: true,
-                    autoRemoveDelay: 5000
-                };
-                window.taskManager.addTask(failTask);
                 alert("Не удалось вычислить хеш");
                 if (uploadBtn) uploadBtn.disabled = false;
                 return;
@@ -109,18 +84,26 @@
 
         if (!conflict || conflict.status === "ok") {
             startUpload(file, hash, null, null, new Set());
+        } else if (conflict.status === "conflict") {
+            showConflictModal(file.name, conflict.status, {
+                onReplace: sel => startUpload(file, hash, sel, null, new Set()),
+                onNewVersion: () => startUpload(file, hash, null, null, new Set()),
+                onCancel: () => {
+                    console.log("Пользователь отменил.");
+                }
+            });
         } else if (["exists", "uploading"].includes(conflict.status)) {
             showConflictModal(file.name, conflict.status, {
                 onReplace: sel => startUpload(file, hash, sel, null, new Set()),
                 onNewVersion: () => startUpload(file, hash, null, null, new Set()),
                 onCancel: () => {
                     console.log("Пользователь отменил.");
-                    window.taskManager.removeTask({ taskKey: `hash_${hash}` });
                 }
             });
         } else {
             console.error('Неожиданный ответ:', conflict);
         }
+
     }
 
     async function startUpload(file, hash, replaceVersion, sessionId, alreadyUploaded) {
@@ -130,24 +113,10 @@
 
         isUploadInProgress = true;
 
-        // Добавляем задачу на загрузку
-        const uploadTask = {
-            taskKey: `upload_${hash}`,
-            title: `Загрузка: ${file.name}`,
-            type: "upload",
-            statusClass: "active",
-            statusText: "Загрузка 0%",
-            cancelable: true,
-            autoRemove: false,
-            onCancel: () => { isCanceled = true; }
-        };
-        window.taskManager.addTask(uploadTask);
-
         for (let i = 0; i < totalChunks; i++) {
             if (isCanceled) {
                 await cleanupTempUpload(hash);
                 isUploadInProgress = false;
-                window.taskManager.removeTask(uploadTask);
                 if (uploadBtn) uploadBtn.disabled = false;
                 return;
             }
@@ -183,7 +152,6 @@
                     }
 
                     if (res.status === 400 && errBody.message?.includes("не разрешены к загрузке")) {
-                        window.taskManager.removeTask(uploadTask);
                         alert(errBody.message);
                         isUploadInProgress = false;
                         if (uploadBtn) uploadBtn.disabled = false;
@@ -200,15 +168,10 @@
                     throw new Error(errBody.message || `Ошибка HTTP ${res.status}`);
                 }
 
-                const percent = Math.floor((i + 1) / totalChunks * 100);
-                uploadTask.statusText = `Загрузка: ${percent}%`;
-                window.taskManager.render();
-
                 await updateStorageCounter();
             } catch (err) {
                 showUploadErrorModal(file.name, i, err.message);
                 isUploadInProgress = false;
-                window.taskManager.removeTask(uploadTask);
                 if (uploadBtn) uploadBtn.disabled = false;
                 return;
             }
@@ -230,11 +193,11 @@
             showUploadErrorModal(file.name, -1, err.message);
         } finally {
             isUploadInProgress = false;
-            window.taskManager.removeTask(uploadTask);
             if (uploadBtn) uploadBtn.disabled = false;
             await updateStorageCounter();
         }
     }
+
     function computeSparkMD5Hash(file, chunkSize = 10 * 1024 * 1024) {
         if (isCanceled) return Promise.reject("Отменено");
         return new Promise((resolve, reject) => {
@@ -243,54 +206,23 @@
             const chunks = Math.ceil(file.size / chunkSize);
             let idx = 0;
 
-            const taskKey = `hash_${file.name}_${file.size}`;
-            const existing = document.querySelector(`.task-status[data-taskkey="${taskKey}"]`);
-            if (existing) {
-                console.warn(`Задача уже существует: ${taskKey}`);
-                return reject("Отменено");
-            }
-
-            const hashTask = {
-                taskKey,
-                title: `Подготовка: ${file.name}`,
-                type: "upload",
-                statusClass: "starting",
-                statusText: "Хеширование: 0%",
-                cancelable: true,
-                autoRemove: true,
-                autoRemoveDelay: 2000,
-                onCancel: () => { isCanceled = true; }
-            };
-
-            window.taskManager.addTask(hashTask);
-
             reader.onload = (e) => {
                 if (isCanceled) {
                     reader.abort();
-                    window.taskManager.removeTask(hashTask);
                     return reject("Отменено");
                 }
 
                 spark.append(e.target.result);
                 idx++;
 
-                const percent = Math.floor((idx / chunks) * 100);
-                hashTask.statusText = `Хеширование: ${percent}%`;
-                window.taskManager.render();
-
                 if (idx < chunks) {
                     reader.readAsArrayBuffer(file.slice(idx * chunkSize, (idx + 1) * chunkSize));
                 } else {
-                    window.taskManager.removeTask(hashTask);
                     resolve(spark.end());
                 }
             };
 
-            reader.onerror = () => {
-                window.taskManager.removeTask(hashTask);
-                reject("Ошибка чтения");
-            };
-
+            reader.onerror = () => reject("Ошибка чтения");
             reader.readAsArrayBuffer(file.slice(0, chunkSize));
         });
     }
@@ -298,34 +230,11 @@
     async function computeSHA256(file) {
         const buf = await file.arrayBuffer();
         if (isCanceled) throw new Error("Отменено");
-
-        const taskKey = `hash_${file.name}_${file.size}`;
-        const existing = document.querySelector(`.task-status[data-taskkey="${taskKey}"]`);
-        if (existing) {
-            console.warn(`Задача уже существует: ${taskKey}`);
-            throw new Error("Отменено");
-        }
-
-        const hashTask = {
-            taskKey,
-            title: `Подготовка: ${file.name}`,
-            type: "upload",
-            statusClass: "starting",
-            statusText: "Хеширование SHA-256...",
-            cancelable: true,
-            autoRemove: true,
-            autoRemoveDelay: 2000,
-            onCancel: () => { isCanceled = true; }
-        };
-
-        window.taskManager.addTask(hashTask);
-
         const hash = await crypto.subtle.digest("SHA-256", buf);
         if (isCanceled) throw new Error("Отменено");
-
-        window.taskManager.removeTask(hashTask);
         return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
     }
+
     function showResumeModal(fileName, onContinue, onRestart) {
         const modal = document.getElementById("upload-resume-modal");
         const message = modal.querySelector("#resume-modal-message");

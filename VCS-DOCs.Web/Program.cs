@@ -19,6 +19,10 @@ using VCS_DOCs.Upload.Core;
 using VCS_DOCs.Core.Interfaces;
 using VCS_DOCs.Services;
 using VCS_DOCs.Upload.Core.Services;
+using VCS_DOCs.TaskEngine;
+using VCS_DOCs.Upload.Core.Services.Tasks;
+using Microsoft.Extensions.Options;
+using VCS_DOCs.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -105,6 +109,9 @@ builder.Services.AddScoped<IUploadDbContext>(provider =>
 	(IUploadDbContext)provider.GetRequiredService<ApplicationDbContext>());
 builder.Services.AddScoped<IFileStorageService, PhysicalFileStorageService>();
 builder.Services.AddScoped<UploadManager>();
+builder.Services.AddScoped<FilePathValidator>();
+builder.Services.AddScoped<IServerSettingsService, ServerSettingsService>();
+builder.Services.AddScoped<IUserInfoProvider, UserInfoProvider>();
 
 // === MVC + Profiling ===
 builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
@@ -123,6 +130,22 @@ builder.Services.Configure<IpRateLimitOptions>(options =>
 		new RateLimitRule { Endpoint = "*", Limit = 50, Period = "10s" },
 		new RateLimitRule { Endpoint = "/hub/*", Limit = 0, Period = "1s" }
 	];
+});
+// === Connected Task-Engine ===
+builder.Services.AddSingleton<TaskRunner>(sp => {
+	var config = sp.GetRequiredService<IConfiguration>();
+	var modulesPath = Path.Combine(builder.Environment.ContentRootPath, config["TaskEngineOptions:ModulesPath"]);
+	return new TaskRunner(modulesPath);
+});
+builder.Services.AddSingleton<ChunkHashService>(sp =>
+{
+	var userPaths = sp.GetRequiredService<UserStoragePaths>();
+	return new ChunkHashService(userPaths);
+});
+builder.Services.AddSingleton(sp =>
+{
+	var options = sp.GetRequiredService<IOptions<UserDataPathOptions>>();
+	return new UserStoragePaths(options.Value.BasePath);
 });
 
 // === Logging ===
@@ -165,4 +188,47 @@ app.MapHub<UserStatusHub>("/Data/userStatusHub");
 
 // === Error Handling ===
 app.UseStatusCodePagesWithReExecute("/Errors/{0}");
+var cancellationTokenSource = new CancellationTokenSource();
+var token = cancellationTokenSource.Token;
+
+var inputTask = Task.Run(async () =>
+{
+	while (!token.IsCancellationRequested)
+	{
+		var command = Console.ReadLine();
+		if (command?.ToLower() == "eject-ram")
+		{
+			await RamDiskManager.CleanupAsync();
+			Console.WriteLine("RAM-диск был удалЄн вручную командой eject-ram");
+		}
+	}
+}, token);
+
+// —оздаЄм RAM-диск
+var settingsService = app.Services.CreateScope()
+	.ServiceProvider.GetRequiredService<IServerSettingsService>();
+
+int ramSizeGb = await settingsService.GetRamDiskSizeGbAsync();
+
+if (ramSizeGb > 0 && RamDiskManager.InitializeRamDisk(ramSizeGb))
+{
+	Console.WriteLine($"[RAM-DISK] создан на букве {RamDiskManager.RamDriveLetter}:");
+}
+else
+{
+	Console.WriteLine("[RAM-DISK] не создан Ч размер = 0 или всЄ плохо");
+}
+
+app.Lifetime.ApplicationStopping.Register(() =>
+{
+	Task.Run(async () =>
+	{
+		await RamDiskManager.CleanupAsync();
+		Console.WriteLine("RAM-диск был удалЄн при остановке приложени€");
+	}).GetAwaiter().GetResult();
+
+	cancellationTokenSource.Cancel();
+});
+
+await app.RunAsync(); 
 app.Run();

@@ -13,5 +13,9 @@ namespace VCS_DOCs.Models.Entities
 		public string Status { get; set; } = "pending";
 		public DateTime UpdatedAt { get; set; }
 		public int Version { get; set; }
-	}
+        public Guid FileGroupId
+        {
+            get; set;
+        }
+    }
 }

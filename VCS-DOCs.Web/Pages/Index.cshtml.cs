@@ -57,9 +57,7 @@ namespace VCS_DOCs.Pages
 			ViewData["UserStorageBasePath"] = _userDataOptions.BasePath;
 
 			var shortId = CurrentUser.Id.Replace("-", "").Substring(0, 8);
-			//var avatarPath = Path.Combine(_env.WebRootPath, "userdata", $"u_{shortId}", "a", "avatar.jpg");
 			var avatarPath = Path.Combine(_userDataOptions.BasePath, $"u_{shortId}", "a", "avatar.jpg");
-			//_logger.LogInformation("Реальный путь к аватарке: {RealPath}", avatarPath);
 
 			if (System.IO.File.Exists(avatarPath))
 			{

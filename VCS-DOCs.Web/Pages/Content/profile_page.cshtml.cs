@@ -18,6 +18,7 @@ namespace VCS_DOCs.Pages.Content
 		private readonly ApplicationDbContext _context;
 		private readonly IAntiforgery _antiforgery;
 		private readonly UserDataPathOptions _options;
+		private readonly UserStoragePaths _userPaths;
 		public string AvatarPath { get; private set; } = "/images/default_avatar.png";
 		public double UsedGb { get; private set; }
 		public double FreeGb { get; private set; }
@@ -27,11 +28,14 @@ namespace VCS_DOCs.Pages.Content
 		public profile_pageModel(
 			ApplicationDbContext context,
 			IAntiforgery antiforgery,
-			IOptions<UserDataPathOptions> options)
+			IOptions<UserDataPathOptions> options
+			,
+			UserStoragePaths userPaths)
 		{
 			_context = context;
 			_antiforgery = antiforgery;
 			_options = options.Value;
+			_userPaths = userPaths;
 		}
 
 		public async Task OnGetAsync()
@@ -65,7 +69,7 @@ namespace VCS_DOCs.Pages.Content
 				}
 			}
 		}
-		public async Task<IActionResult> OnPostDeleteFileAsync(string fileName)
+		/*public async Task<IActionResult> OnPostDeleteFileAsync(string fileName)
 		{
 			string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 			if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(fileName))
@@ -84,7 +88,7 @@ namespace VCS_DOCs.Pages.Content
 				return new JsonResult(new { success = false, error = ex.Message });
 			}
 		}
-
+		*/
 		public async Task<IActionResult> OnPostUpdateUserDataAsync([FromBody] UpdateUserRequest request)
 		{
 			try { await _antiforgery.ValidateRequestAsync(HttpContext); }
@@ -171,14 +175,14 @@ namespace VCS_DOCs.Pages.Content
 				return new JsonResult(new { success = false, error = "Файл не получен" });
 
 			var shortUserId = userId.Replace("-", "").Substring(0, 8);
-			string avatarDir = Path.Combine(_options.BasePath, $"u_{shortUserId}", "a");
+			string avatarPath = _userPaths.GetAvatarPath(shortUserId);
+			string avatarDir = Path.GetDirectoryName(avatarPath)!;
 			Directory.CreateDirectory(avatarDir);
 
 			string ext = Path.GetExtension(file.FileName).ToLower();
 			if (ext != ".jpg" && ext != ".jpeg" && ext != ".png")
 				return new JsonResult(new { success = false, error = "Неверный формат файла" });
 
-			string avatarPath = Path.Combine(avatarDir, "avatar.jpg");
 			long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
 			try

@@ -9,7 +9,11 @@
 
 		public int LatestVersion { get; set; }
 		public List<VersionDto> Versions { get; set; } = new();
-	}
+        public Guid FileGroupId
+        {
+            get; set;
+        }
+    }
 
 	public class VersionDto
 	{

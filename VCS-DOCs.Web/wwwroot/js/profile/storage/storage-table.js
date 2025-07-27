@@ -8,13 +8,13 @@ function initStorageTable() {
     // Загрузка и отрисовка списка файлов + счётчика
     async function fetchFiles() {
         try {
-            const res = await fetch('/api/storage/files');
+            const res = await fetch('/api/Upload/user-files');
 
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
 
             renderTable(data.files);
-
+            console.log("Пришёл список файлов:", data.files);
             const used = formatSize(data.usedBytes);
             const temp = formatSize(data.tempBytes);
             const limit = formatSize(data.limitBytes);
@@ -32,15 +32,27 @@ function initStorageTable() {
         tableBody.innerHTML = '';
         files.forEach(file => {
             const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${escapeHtml(file.FileName)}</td>
-                <td>${renderVersionDropdown(file)}</td>
-                <td>${formatSize(file.FileSize)}</td>
-                <td>${formatDate(file.UpdatedAt)}</td>
-                <td>${renderActions()}</td>
-            `;
+            row.dataset.fileGroupId = file.FileGroupId; 
+
+            const fileNameCell = document.createElement('td');
+            fileNameCell.innerHTML = escapeHtml(file.FileName);
+
+            const versionCell = document.createElement('td');
+            versionCell.innerHTML = renderVersionDropdown(file);
+
+            const sizeCell = document.createElement('td');
+            sizeCell.innerHTML = formatSize(file.FileSize);
+
+            const dateCell = document.createElement('td');
+            dateCell.innerHTML = formatDate(file.UpdatedAt);
+
+            const actionsCell = document.createElement('td');
+            actionsCell.innerHTML = renderActions();
+
+            row.append(fileNameCell, versionCell, sizeCell, dateCell, actionsCell);
             tableBody.appendChild(row);
         });
+
         setupAllVersionDropdowns(files);
         setupAllActionDropdowns(files);
     }
@@ -75,10 +87,9 @@ function initStorageTable() {
             </div>`;
     }
 
-    function handleActionClick(action, file) {
-        const fileId = file.FileId;
+    function handleActionClick(action, file, fileGroupId) {
         const version = file.LatestVersion;
-        const downloadUrl = `/api/upload/download/${fileId}/${version}`;
+        const downloadUrl = `/api/upload/download/${fileGroupId}/${version}`;
 
         switch (action) {
             case 'download':
@@ -94,7 +105,10 @@ function initStorageTable() {
                 break;
             case 'delete':
                 if (!confirm("Удалить файл?")) return;
-                fetch(`/api/upload/delete/${fileId}/${version}`, { method: 'DELETE' })
+
+                console.log("DELETE request:", fileGroupId, version);
+
+                fetch(`/api/upload/delete/${fileGroupId}/${version}`, { method: 'DELETE' })
                     .then(r => {
                         if (!r.ok) throw new Error("Ошибка удаления");
                         return r.json();
@@ -128,7 +142,6 @@ function initStorageTable() {
         return new Date(dateStr).toLocaleString();
     }
 
-    // Версионный дропдаун
     function setupAllVersionDropdowns(files) {
         document.getElementById('version-dropdown-menu')?.remove();
 
@@ -184,7 +197,6 @@ function initStorageTable() {
         });
     }
 
-    // Дропдаун действий
     function setupAllActionDropdowns(files) {
         document.querySelectorAll('.action-multibutton').forEach(dropdown => {
             const btn = dropdown.querySelector('.action-button');
@@ -204,7 +216,10 @@ function initStorageTable() {
                 const row = dropdown.closest('tr');
                 const fileId = row.querySelector('.version-multibutton').dataset.fileId;
                 const version = row.querySelector('.version-button').dataset.version;
-                handleActionClick(selectedAction, { FileId: fileId, LatestVersion: version });
+                const fileGroupId = row.dataset.fileGroupId;
+                console.log("Удаление: fileId=", fileId, "version=", version, "fileGroupId=", fileGroupId);
+
+                handleActionClick(selectedAction, { FileId: fileId, LatestVersion: version }, fileGroupId);
             };
 
             items.forEach(item => {
@@ -222,7 +237,6 @@ function initStorageTable() {
         });
     }
 
-    // Запустить
     fetchFiles();
     window.fetchFiles = fetchFiles;
 }

@@ -19,6 +19,14 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VCS-DOCs.Notifications", "V
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VCS-DOCs.WebCAD", "VCS-DOCs.WebCAD\VCS-DOCs.WebCAD.csproj", "{5AC0D922-FD45-4267-8816-A58A295E6EC3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VCS-DOCs.TaskEngine", "VCS-DOCs.TaskEngine\VCS-DOCs.TaskEngine.csproj", "{DE8C9896-D6D3-403D-BC63-AB240DE4EC2C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "VCS-DOCs.Resources", "VCS-DOCs.Resources", "{22D3FC5A-D5C1-4D54-8B96-6D757342021D}"
+	ProjectSection(SolutionItems) = preProject
+		VCS-DOCs.Resources\files.cab = VCS-DOCs.Resources\files.cab
+		VCS-DOCs.Resources\install.bat = VCS-DOCs.Resources\install.bat
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +65,10 @@ Global
 		{5AC0D922-FD45-4267-8816-A58A295E6EC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5AC0D922-FD45-4267-8816-A58A295E6EC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5AC0D922-FD45-4267-8816-A58A295E6EC3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DE8C9896-D6D3-403D-BC63-AB240DE4EC2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DE8C9896-D6D3-403D-BC63-AB240DE4EC2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DE8C9896-D6D3-403D-BC63-AB240DE4EC2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DE8C9896-D6D3-403D-BC63-AB240DE4EC2C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

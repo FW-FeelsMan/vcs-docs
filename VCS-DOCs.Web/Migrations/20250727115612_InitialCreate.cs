@@ -30,6 +30,20 @@ namespace VCS_DOCs.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "TEXT", nullable: false),
+                    FullName = table.Column<string>(type: "TEXT", nullable: false),
+                    DateOfBirth = table.Column<string>(type: "TEXT", nullable: false),
+                    Organization = table.Column<string>(type: "TEXT", nullable: false),
+                    Department = table.Column<string>(type: "TEXT", nullable: false),
+                    Speciality = table.Column<string>(type: "TEXT", nullable: true),
+                    StatusOnline = table.Column<int>(type: "INTEGER", nullable: false),
+                    HardwareId = table.Column<string>(type: "TEXT", nullable: true),
+                    LastEntry = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    Access = table.Column<int>(type: "INTEGER", nullable: false),
+                    JwtId = table.Column<string>(type: "TEXT", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "INTEGER", nullable: false),
+                    StorageLimitBytes = table.Column<long>(type: "INTEGER", nullable: true),
                     UserName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "TEXT", maxLength: 256, nullable: true),
@@ -51,24 +65,34 @@ namespace VCS_DOCs.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Users",
+                name: "FileUploadSessions",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    Username = table.Column<string>(type: "TEXT", nullable: false),
-                    Password = table.Column<string>(type: "TEXT", nullable: false),
-                    Speciality = table.Column<string>(type: "TEXT", nullable: true),
-                    StatusOnline = table.Column<int>(type: "INTEGER", nullable: false),
-                    HardwareId = table.Column<string>(type: "TEXT", nullable: true),
-                    LastEntry = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    FileId = table.Column<Guid>(type: "TEXT", nullable: false),
+                    UserId = table.Column<string>(type: "TEXT", nullable: false),
+                    OriginalFileName = table.Column<string>(type: "TEXT", nullable: false),
+                    FileHash = table.Column<string>(type: "TEXT", nullable: false),
+                    FileSize = table.Column<long>(type: "INTEGER", nullable: false),
+                    Status = table.Column<string>(type: "TEXT", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    Access = table.Column<int>(type: "INTEGER", nullable: false)
+                    Version = table.Column<int>(type: "INTEGER", nullable: false),
+                    FileGroupId = table.Column<Guid>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Users", x => x.Id);
+                    table.PrimaryKey("PK_FileUploadSessions", x => x.FileId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ServerSettings",
+                columns: table => new
+                {
+                    Key = table.Column<string>(type: "TEXT", nullable: false),
+                    Value = table.Column<string>(type: "TEXT", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ServerSettings", x => x.Key);
                 });
 
             migrationBuilder.CreateTable(
@@ -234,7 +258,10 @@ namespace VCS_DOCs.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "Users");
+                name: "FileUploadSessions");
+
+            migrationBuilder.DropTable(
+                name: "ServerSettings");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

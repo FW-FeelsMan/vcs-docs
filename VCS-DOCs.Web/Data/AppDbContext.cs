@@ -12,6 +12,8 @@ namespace VCS_DOCs.Data
 		{
 		}
 		public DbSet<FileUploadSessionModel> FileUploadSessions { get; set; }
+		public DbSet<ServerSettingModel> ServerSettings { get; set; } 
+
 		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 		{
 			if (!optionsBuilder.IsConfigured)

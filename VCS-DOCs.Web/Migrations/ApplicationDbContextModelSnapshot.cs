@@ -151,6 +151,9 @@ namespace VCS_DOCs.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<Guid>("FileGroupId")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("FileHash")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -179,6 +182,20 @@ namespace VCS_DOCs.Migrations
                     b.HasKey("FileId");
 
                     b.ToTable("FileUploadSessions");
+                });
+
+            modelBuilder.Entity("VCS_DOCs.Models.Entities.ServerSettingModel", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("ServerSettings");
                 });
 
             modelBuilder.Entity("VCS_DOCs.Models.Entities.User", b =>

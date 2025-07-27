@@ -10,15 +10,15 @@ using VCS_DOCs.Data;
 
 namespace VCS_DOCs.Migrations
 {
-	[DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250531202245_AddFileUploadChunkTable")]
-    partial class AddFileUploadChunkTable
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20250727115612_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.3");
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.6");
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
@@ -148,51 +148,20 @@ namespace VCS_DOCs.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("VCS_DOCs.FileUploadChunk", b =>
+            modelBuilder.Entity("VCS_DOCs.Models.Entities.FileUploadSessionModel", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<Guid>("FileId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Index")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid>("SessionId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("Uploaded")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SessionId");
-
-                    b.ToTable("FileUploadChunks");
-                });
-
-            modelBuilder.Entity("VCS_DOCs.FileUploadSession", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<Guid>("FileGroupId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("FileHash")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<Guid>("FileId")
-                        .HasColumnType("TEXT");
-
                     b.Property<long>("FileSize")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<bool>("IsLatest")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("OriginalFileName")
@@ -202,9 +171,6 @@ namespace VCS_DOCs.Migrations
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("TEXT");
-
-                    b.Property<int>("TotalChunks")
-                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("TEXT");
@@ -216,12 +182,26 @@ namespace VCS_DOCs.Migrations
                     b.Property<int>("Version")
                         .HasColumnType("INTEGER");
 
-                    b.HasKey("Id");
+                    b.HasKey("FileId");
 
                     b.ToTable("FileUploadSessions");
                 });
 
-            modelBuilder.Entity("VCS_DOCs.User", b =>
+            modelBuilder.Entity("VCS_DOCs.Models.Entities.ServerSettingModel", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("ServerSettings");
+                });
+
+            modelBuilder.Entity("VCS_DOCs.Models.Entities.User", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
@@ -306,6 +286,9 @@ namespace VCS_DOCs.Migrations
                     b.Property<int>("StatusOnline")
                         .HasColumnType("INTEGER");
 
+                    b.Property<long?>("StorageLimitBytes")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("INTEGER");
 
@@ -339,7 +322,7 @@ namespace VCS_DOCs.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("VCS_DOCs.User", null)
+                    b.HasOne("VCS_DOCs.Models.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -348,7 +331,7 @@ namespace VCS_DOCs.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("VCS_DOCs.User", null)
+                    b.HasOne("VCS_DOCs.Models.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -363,7 +346,7 @@ namespace VCS_DOCs.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("VCS_DOCs.User", null)
+                    b.HasOne("VCS_DOCs.Models.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -372,27 +355,11 @@ namespace VCS_DOCs.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("VCS_DOCs.User", null)
+                    b.HasOne("VCS_DOCs.Models.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("VCS_DOCs.FileUploadChunk", b =>
-                {
-                    b.HasOne("VCS_DOCs.FileUploadSession", "Session")
-                        .WithMany("Chunks")
-                        .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Session");
-                });
-
-            modelBuilder.Entity("VCS_DOCs.FileUploadSession", b =>
-                {
-                    b.Navigation("Chunks");
                 });
 #pragma warning restore 612, 618
         }
