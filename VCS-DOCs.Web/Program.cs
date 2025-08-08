@@ -23,6 +23,7 @@ using VCS_DOCs.TaskEngine;
 using VCS_DOCs.Upload.Core.Services.Tasks;
 using Microsoft.Extensions.Options;
 using VCS_DOCs.Infrastructure;
+using VCS_DOCs.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

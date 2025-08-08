@@ -1,5 +1,8 @@
-﻿namespace VCS_DOCs.Core.Interfaces;
-public interface IUserInfoProvider
+﻿namespace VCS_DOCs.Core.Interfaces
 {
-    Task<long> GetUserStorageLimitAsync(string shortUserId);
+    public interface IUserInfoProvider
+    {
+        Task<long> GetUserStorageLimitAsync(string shortUserId);
+        string ResolveFullUserId(string shortUserId);
+    }
 }

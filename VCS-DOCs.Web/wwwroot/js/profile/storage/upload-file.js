@@ -1,326 +1,354 @@
 ﻿(function ($) {
-    let uploadFileInitialized = false;
-    let isUploadInProgress = false;
-    let isCanceled = false;
-
-    window.initUploadFile = function () {
-        if (uploadFileInitialized) return;
-        uploadFileInitialized = true;
-
-        $(document).on('click', '#uploadFileButton', () => {
-            const fileInput = document.getElementById('hiddenFileInput');
-            if (fileInput) {
-                fileInput.value = null;
-                fileInput.click();
-            }
-        });
-
-        $(document).on('change', '#hiddenFileInput', async (event) => {
-            isCanceled = false;
-            const uploadBtn = document.getElementById('uploadFileButton');
-            if (uploadBtn) uploadBtn.disabled = true;
-
-            const file = event.target.files[0];
-            if (!file) return console.warn("Файл не выбран");
-
-            await updateStorageCounter();
-
-            const list = await (await fetch('/api/storage/files')).json();
-            const freeBytes = list.limitBytes - list.usedBytes - list.tempBytes;
-            if (file.size > freeBytes) {
-                alert(`Невозможно загрузить "${file.name}", мало места (${formatSize(freeBytes)})`);
-                if (uploadBtn) uploadBtn.disabled = false;
-                return;
-            }
-
-            let hash;
-            try {
-                hash = file.size <= 100 * 1024 * 1024
-                    ? await computeSHA256(file)
-                    : await computeSparkMD5Hash(file);
-            } catch (err) {
-                if (err === "Отменено") {
-                    console.log(`Пользователь отменил хеширование файла "${file.name}"`);
-                    if (uploadBtn) uploadBtn.disabled = false;
-                    return;
-                }
-
-                alert("Не удалось вычислить хеш");
-                if (uploadBtn) uploadBtn.disabled = false;
-                return;
-            }
-
-            try {
-                const status = await (await fetch(`/api/Upload/upload-status?fileHash=${hash}`)).json();
-                if (status.found) {
-                    showResumeModal(file.name,
-                        () => startUpload(file, hash, null, status.sessionId, new Set(status.uploaded)),
-                        () => checkConflictThenUpload(file, hash)
-                    );
-                    return;
-                }
-            } catch (err) {
-                console.warn("Проверка старой загрузки провалилась", err);
-            }
-
-            checkConflictThenUpload(file, hash);
-        });
+    var cfg = {
+        buttonSelector: '#uploadFileButton',
+        inputSelector: '#hiddenFileInput',
+        chunkSize: 2 * 1024 * 1024,
+        endpoints: {
+            active: '/api/Upload/active',
+            status: '/api/Upload/upload-status',
+            check: '/api/Upload/check-version-conflict',
+            restart: '/api/Upload/restart',
+            chunk: '/api/Upload/chunk',
+            userFiles: '/api/Upload/user-files',
+            delete: '/api/Upload/delete/'
+        }
     };
 
-    async function checkConflictThenUpload(file, hash) {
-        let conflict;
-        try {
-            const conflictRes = await fetch('/api/Upload/conflict-check', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ fileName: file.name, hash })
-            });
-            conflict = conflictRes.ok ? await conflictRes.json() : null;
-        } catch (error) {
-            console.error('Ошибка запроса конфликта:', error);
-            alert('Не удалось проверить конфликт.');
-            return;
-        }
+    var LS_KEY = 'vcs-upload-busy';
 
-        if (!conflict || conflict.status === "ok") {
-            startUpload(file, hash, null, null, new Set());
-        } else if (conflict.status === "conflict") {
-            showConflictModal(file.name, conflict.status, {
-                onReplace: sel => startUpload(file, hash, sel, null, new Set()),
-                onNewVersion: () => startUpload(file, hash, null, null, new Set()),
-                onCancel: () => {
-                    console.log("Пользователь отменил.");
-                }
-            });
-        } else if (["exists", "uploading"].includes(conflict.status)) {
-            showConflictModal(file.name, conflict.status, {
-                onReplace: sel => startUpload(file, hash, sel, null, new Set()),
-                onNewVersion: () => startUpload(file, hash, null, null, new Set()),
-                onCancel: () => {
-                    console.log("Пользователь отменил.");
-                }
-            });
-        } else {
-            console.error('Неожиданный ответ:', conflict);
-        }
+    var state = {
+        inited: false,
+        isUploading: false,
+        activeInfo: null,
+        file: null,
+        hash: null,
+        index: 0,
+        total: 0,
+        skip: null
+    };
 
-    }
-
-    async function startUpload(file, hash, replaceVersion, sessionId, alreadyUploaded) {
-        const uploadBtn = document.getElementById('uploadFileButton');
-        const chunkSize = 1 * 1024 * 1024;
-        const totalChunks = Math.ceil(file.size / chunkSize);
-
-        isUploadInProgress = true;
-
-        for (let i = 0; i < totalChunks; i++) {
-            if (isCanceled) {
-                await cleanupTempUpload(hash);
-                isUploadInProgress = false;
-                if (uploadBtn) uploadBtn.disabled = false;
-                return;
-            }
-            if (alreadyUploaded.has(i)) continue;
-            const chunk = file.slice(i * chunkSize, (i + 1) * chunkSize);
-
-            const form = new FormData();
-            form.append("chunk", chunk);
-            form.append("hash", hash);
-            form.append("chunkIndex", i);
-            form.append("totalChunks", totalChunks);
-            form.append("fileSize", file.size);
-            form.append("fileName", file.name);
-            if (replaceVersion != null) form.append("replaceVersion", replaceVersion);
-            if (sessionId != null) form.append("sessionId", sessionId);
-
-            if (uploadBtn) uploadBtn.disabled = true;
-
-            try {
-                const res = await fetch('/api/Upload/chunk', { method: 'POST', body: form });
-                if (!res.ok) {
-                    let errBody = {};
-                    try {
-                        const contentType = res.headers.get("content-type") || "";
-                        if (contentType.includes("application/json")) {
-                            errBody = await res.json();
-                        } else {
-                            const text = await res.text();
-                            errBody.message = text;
-                        }
-                    } catch (parseError) {
-                        errBody.message = "Не удалось прочитать сообщение об ошибке";
-                    }
-
-                    if (res.status === 400 && errBody.message?.includes("не разрешены к загрузке")) {
-                        alert(errBody.message);
-                        isUploadInProgress = false;
-                        if (uploadBtn) uploadBtn.disabled = false;
-                        return;
-                    }
-
-                    if (res.status === 409 && errBody.status === "busy") {
-                        alert(errBody.message || "Идёт другая загрузка");
-                        isUploadInProgress = false;
-                        if (uploadBtn) uploadBtn.disabled = false;
-                        return;
-                    }
-
-                    throw new Error(errBody.message || `Ошибка HTTP ${res.status}`);
-                }
-
-                await updateStorageCounter();
-            } catch (err) {
-                showUploadErrorModal(file.name, i, err.message);
-                isUploadInProgress = false;
-                if (uploadBtn) uploadBtn.disabled = false;
-                return;
-            }
-        }
-
-        try {
-            const form = new FormData();
-            form.append("hash", hash);
-            const res = await fetch('/api/Upload/complete', {
-                method: 'POST',
-                body: form,
-                headers: { 'X-CSRF-TOKEN': document.querySelector('input[name="__RequestVerificationToken"]')?.value }
-            });
-            if (!res.ok) throw new Error(await res.text());
-
-            if (typeof initStorageTable === 'function') initStorageTable();
-            else if (typeof fetchFiles === 'function') fetchFiles();
-        } catch (err) {
-            showUploadErrorModal(file.name, -1, err.message);
-        } finally {
-            isUploadInProgress = false;
-            if (uploadBtn) uploadBtn.disabled = false;
-            await updateStorageCounter();
-        }
-    }
-
-    function computeSparkMD5Hash(file, chunkSize = 10 * 1024 * 1024) {
-        if (isCanceled) return Promise.reject("Отменено");
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            const spark = new SparkMD5.ArrayBuffer();
-            const chunks = Math.ceil(file.size / chunkSize);
-            let idx = 0;
-
-            reader.onload = (e) => {
-                if (isCanceled) {
-                    reader.abort();
-                    return reject("Отменено");
-                }
-
-                spark.append(e.target.result);
-                idx++;
-
-                if (idx < chunks) {
-                    reader.readAsArrayBuffer(file.slice(idx * chunkSize, (idx + 1) * chunkSize));
-                } else {
-                    resolve(spark.end());
-                }
-            };
-
-            reader.onerror = () => reject("Ошибка чтения");
-            reader.readAsArrayBuffer(file.slice(0, chunkSize));
-        });
-    }
-
-    async function computeSHA256(file) {
-        const buf = await file.arrayBuffer();
-        if (isCanceled) throw new Error("Отменено");
-        const hash = await crypto.subtle.digest("SHA-256", buf);
-        if (isCanceled) throw new Error("Отменено");
-        return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+    function disableBtn(disabled) {
+        var btn = document.querySelector(cfg.buttonSelector);
+        if (btn) btn.disabled = !!disabled;
     }
 
     function showResumeModal(fileName, onContinue, onRestart) {
-        const modal = document.getElementById("upload-resume-modal");
-        const message = modal.querySelector("#resume-modal-message");
-        const confirmBtn = modal.querySelector("#resume-confirm");
-        const cancelBtn = modal.querySelector("#resume-cancel");
-
+        var modal = document.getElementById("upload-resume-modal");
+        var message = modal && modal.querySelector("#resume-modal-message");
+        var confirmBtn = modal && modal.querySelector("#resume-confirm");
+        var cancelBtn = modal && modal.querySelector("#resume-cancel");
         if (!modal || !message || !confirmBtn || !cancelBtn) {
-            const answer = confirm("Файл уже загружался. Продолжить загрузку?");
-            answer ? onContinue?.() : onRestart?.();
+            var answer = confirm('Файл "' + fileName + '" уже загружался. Продолжить? Отмена — начать заново.');
+            if (answer) onContinue && onContinue(); else onRestart && onRestart();
             return;
         }
-
-        message.textContent = `Файл "${fileName}" уже загружался. Хотите продолжить с того места?`;
-
-        confirmBtn.onclick = () => {
-            modal.style.display = "none";
-            onContinue?.();
-        };
-
-        cancelBtn.onclick = () => {
-            modal.style.display = "none";
-            isCanceled = true;
-            if (typeof onRestart === 'function') onRestart();
-            const uploadBtn = document.getElementById('uploadFileButton');
-            if (uploadBtn) uploadBtn.disabled = false;
-        };
-
+        message.textContent = 'Файл "' + fileName + '" уже загружался. Хотите продолжить с того места?';
+        confirmBtn.onclick = function () { modal.style.display = "none"; onContinue && onContinue(); };
+        cancelBtn.onclick = function () { modal.style.display = "none"; onRestart && onRestart(); };
         modal.style.display = "block";
     }
 
-    function showUploadErrorModal(fileName, chunkIndex, error) {
-        const modal = document.getElementById("upload-error-modal");
-        const title = document.getElementById("upload-error-title");
-        const message = document.getElementById("upload-error-message");
-
-        if (!modal || !title || !message) {
-            alert(`Ошибка загрузки файла ${fileName} на чанке ${chunkIndex + 1}. ${error}.\nЗагрузка прервана!`);
-            return;
+    function ensureBanner() {
+        var banner = document.getElementById('upload-busy-banner');
+        if (!banner) {
+            banner = document.createElement('div');
+            banner.id = 'upload-busy-banner';
+            banner.style.position = 'fixed';
+            banner.style.left = '0';
+            banner.style.right = '0';
+            banner.style.bottom = '0';
+            banner.style.padding = '10px 14px';
+            banner.style.background = '#b91c1c';
+            banner.style.color = '#fff';
+            banner.style.fontSize = '14px';
+            banner.style.textAlign = 'center';
+            banner.style.zIndex = '9999';
+            banner.style.display = 'none';
+            document.body.appendChild(banner);
         }
-
-        title.textContent = "Ошибка загрузки";
-        message.textContent = `Файл: ${fileName}\nЧанк: ${chunkIndex + 1}\nОписание: ${error}`;
-        modal.style.display = "block";
+        return banner;
     }
 
-    window.addEventListener("beforeunload", function (e) {
-        if (isUploadInProgress) {
-            const message = "Файл всё ещё загружается. Уход со страницы прервёт загрузку.";
+    function toggleWarning(flag, msg) {
+        var holder = document.getElementById('uploadWarning');
+        var text = msg || 'Идёт загрузка. Если закроете страницу или обновите — загрузка прервётся.';
+        if (holder) {
+            holder.textContent = flag ? text : '';
+            holder.style.display = flag ? '' : 'none';
+        } else {
+            var banner = ensureBanner();
+            banner.textContent = text;
+            banner.style.display = flag ? 'block' : 'none';
+        }
+    }
+
+    function markBusyLS(on, meta) {
+        try {
+            if (on) localStorage.setItem(LS_KEY, JSON.stringify(meta || { t: Date.now() }));
+            else localStorage.removeItem(LS_KEY);
+        } catch { }
+    }
+
+    function setUploading(flag, meta) {
+        state.isUploading = !!flag;
+        disableBtn(flag);
+        toggleWarning(flag);
+        markBusyLS(flag, meta);
+    }
+
+    window.addEventListener('beforeunload', function (e) {
+        if (state.isUploading) {
+            var msg = 'Идёт загрузка файла. Закроете или обновите страницу — загрузка прервётся.';
             e.preventDefault();
-            e.returnValue = message;
-            return message;
+            e.returnValue = msg;
+            return msg;
         }
     });
 
     async function updateStorageCounter() {
-        const counter = document.getElementById('storageCounter');
-        if (!counter) return;
+        var el = document.getElementById('storageCounter');
+        if (!el) return;
         try {
-            const res = await fetch('/api/storage/files');
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-            const used = formatSize(data.usedBytes);
-            const temp = formatSize(data.tempBytes);
-            const limit = formatSize(data.limitBytes);
-            const free = formatSize(data.limitBytes - data.usedBytes - data.tempBytes);
-            counter.textContent =
-                `Использовано: ${used} из ${limit} (временных: ${temp}); свободно: ${free}`;
-        } catch (e) {
-            console.error("Не удалось обновить счётчик хранилища", e);
+            var res = await fetch(cfg.endpoints.userFiles);
+            if (!res.ok) return;
+            var data = await res.json();
+            var used = (data.usedBytes / 1024 / 1024).toFixed(2) + ' МБ';
+            var temp = (data.tempBytes / 1024 / 1024).toFixed(2) + ' МБ';
+            var limit = (data.limitBytes / 1024 / 1024).toFixed(2) + ' МБ';
+            var free = ((data.limitBytes - data.usedBytes - data.tempBytes) / 1024 / 1024).toFixed(2) + ' МБ';
+            el.textContent = 'Использовано: ' + used + ' из ' + limit + ' (временных: ' + temp + '); свободно: ' + free;
+        } catch { }
+    }
+
+    function computeSparkMD5Hash(file, chunkSize) {
+        if (!window.SparkMD5 || !SparkMD5.ArrayBuffer) return Promise.reject(new Error('SparkMD5 не подключён'));
+        chunkSize = chunkSize || 10 * 1024 * 1024;
+        var chunks = Math.ceil(file.size / chunkSize);
+        var currentChunk = 0;
+        var spark = new SparkMD5.ArrayBuffer();
+        return new Promise(function (resolve, reject) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                spark.append(e.target.result);
+                currentChunk++;
+                if (currentChunk < chunks) loadNext(); else resolve(spark.end());
+            };
+            reader.onerror = function () { reject(new Error('Ошибка чтения')); };
+            function loadNext() {
+                var start = currentChunk * chunkSize;
+                var end = Math.min(start + chunkSize, file.size);
+                reader.readAsArrayBuffer(file.slice(start, end));
+            }
+            loadNext();
+        });
+    }
+
+    async function ensureNoVersionConflict(file) {
+        var fd = new FormData();
+        fd.append('fileName', file.name);
+        var res = await fetch(cfg.endpoints.check, { method: 'POST', body: fd });
+        if (!res.ok) throw new Error('check failed');
+        var data = await res.json();
+        return !!data.conflict;
+    }
+
+    async function restartOnServerByHash(hash, fileName) {
+        var fd = new FormData();
+        fd.append('fileName', fileName);
+        fd.append('fileHash', hash);
+        var res = await fetch(cfg.endpoints.restart, { method: 'POST', body: fd });
+        if (!res.ok) throw new Error('restart failed');
+        return res.json();
+    }
+
+    async function uploadChunk(file, hash, index, total) {
+        var start = index * cfg.chunkSize;
+        var end = Math.min(start + cfg.chunkSize, file.size);
+        var blob = file.slice(start, end);
+        var fd = new FormData();
+        fd.append('chunk', blob, 'chunk_' + index);
+        fd.append('hash', hash);
+        fd.append('chunkIndex', index.toString());
+        fd.append('totalChunks', total.toString());
+        fd.append('fileSize', file.size.toString());
+        fd.append('fileName', file.name);
+        var res = await fetch(cfg.endpoints.chunk, { method: 'POST', body: fd });
+        var data = {};
+        try { data = await res.json(); } catch { }
+        if (res.status === 409 && data && (data.status === 'busy' || data.message)) {
+            toggleWarning(true, data.message || 'Идёт другая загрузка.');
+            disableBtn(true);
+            throw new Error('busy');
+        }
+        if (!res.ok) throw new Error((data && data.message) ? data.message : 'upload failed');
+        return data;
+    }
+
+    async function startUpload(file, skipSet) {
+        state.index = 0;
+        state.total = Math.ceil(file.size / cfg.chunkSize);
+        state.skip = skipSet || null;
+        setUploading(true, { t: Date.now(), name: file.name });
+        try {
+            while (state.index < state.total) {
+                if (state.skip && state.skip.has(state.index)) {
+                    var progEl = document.getElementById('uploadProgress');
+                    if (progEl) {
+                        var percent = Math.min(100, Math.floor(((state.index + 1) / state.total) * 100));
+                        progEl.textContent = percent + '%';
+                    }
+                    state.index++;
+                    continue;
+                }
+                var r = await uploadChunk(file, state.hash, state.index, state.total);
+                var next = (typeof r.nextExpectedIndex === 'number') ? r.nextExpectedIndex : (state.index + 1);
+                state.index = next;
+                var prog = document.getElementById('uploadProgress');
+                if (prog) {
+                    var p = Math.min(100, Math.floor((state.index / state.total) * 100));
+                    prog.textContent = p + '%';
+                }
+                await updateStorageCounter();
+            }
+            if (typeof window.initStorageTable === 'function') window.initStorageTable();
+            else if (typeof window.fetchFiles === 'function') window.fetchFiles();
+            await updateStorageCounter();
+        } finally {
+            setUploading(false);
+            state.activeInfo = null;
         }
     }
 
-    function formatSize(bytes) {
-        return (bytes / 1024 / 1024).toFixed(2) + ' МБ';
+    async function checkActiveOnServer() {
+        try {
+            var r = await fetch(cfg.endpoints.active);
+            if (!r.ok) return null;
+            var data = await r.json();
+            if (!data.found) return null;
+            return data;
+        } catch { return null; }
     }
 
-    async function cleanupTempUpload(hash) {
-        try {
-            await fetch('/api/Upload/cleanup-temp', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ hash })
-            });
-            console.log("Очистил temp-чАнки");
-        } catch (err) {
-            console.warn("Не смог очистить temp:", err);
-        }
+    function bindHandlers() {
+        $(document).off('click.uploadFile').on('click.uploadFile', cfg.buttonSelector, async function () {
+            var active = await checkActiveOnServer();
+            if (active) {
+                state.activeInfo = active;
+                disableBtn(true);
+                showResumeModal(active.fileName, async function () {
+                    var input = document.querySelector(cfg.inputSelector);
+                    if (!input) return;
+                    input.onchange = async function (e) {
+                        var f = e.target.files && e.target.files[0];
+                        if (!f) { disableBtn(false); return; }
+                        var md5 = await computeSparkMD5Hash(f);
+                        if (md5.toLowerCase() !== String(active.fileHash || '').toLowerCase()) {
+                            alert('Выбран другой файл. Выберите тот же файл: ' + active.fileName);
+                            disableBtn(false);
+                            return;
+                        }
+                        state.file = f;
+                        state.hash = md5;
+                        var set = new Set(Array.isArray(active.uploaded) ? active.uploaded : []);
+                        await startUpload(f, set);
+                    };
+                    input.value = null;
+                    input.click();
+                }, async function () {
+                    await restartOnServerByHash(active.fileHash, active.fileName);
+                    disableBtn(false);
+                });
+                return;
+            }
+            var input2 = document.querySelector(cfg.inputSelector);
+            if (input2) {
+                input2.value = null;
+                input2.click();
+            }
+        });
+
+        $(document).off('change.uploadFile').on('change.uploadFile', cfg.inputSelector, async function (e) {
+            var file = e.target.files && e.target.files[0];
+            if (!file) return;
+            var active = await checkActiveOnServer();
+            if (active) {
+                state.activeInfo = active;
+                disableBtn(true);
+                showResumeModal(active.fileName, async function () {
+                    var md5 = await computeSparkMD5Hash(file);
+                    if (md5.toLowerCase() !== String(active.fileHash || '').toLowerCase()) {
+                        alert('Выбран другой файл. Выберите: ' + active.fileName);
+                        disableBtn(false);
+                        return;
+                    }
+                    state.file = file;
+                    state.hash = md5;
+                    var set = new Set(Array.isArray(active.uploaded) ? active.uploaded : []);
+                    await startUpload(file, set);
+                }, async function () {
+                    await restartOnServerByHash(active.fileHash, active.fileName);
+                    disableBtn(false);
+                });
+                return;
+            }
+            disableBtn(true);
+            try {
+                state.hash = await computeSparkMD5Hash(file);
+            } catch (err) {
+                alert('Не удалось вычислить MD5: ' + err.message + '. Подключи spark-md5.min.js');
+                disableBtn(false);
+                return;
+            }
+            var st = await fetch(cfg.endpoints.status + '?fileHash=' + encodeURIComponent(state.hash));
+            var sdata = st.ok ? await st.json() : { found: false };
+            if (sdata.found && Array.isArray(sdata.uploaded)) {
+                var set2 = new Set(sdata.uploaded);
+                showResumeModal(file.name,
+                    async function () { await startUpload(file, set2); },
+                    async function () { await restartOnServerByHash(state.hash, file.name); await startUpload(file, null); }
+                );
+                return;
+            }
+            var hasConflict = await ensureNoVersionConflict(file);
+            if (hasConflict && typeof window.showConflictModal === 'function') {
+                window.showConflictModal(
+                    file.name,
+                    'conflict',
+                    {
+                        onReplace: async function (version) {
+                            try {
+                                var uf = await fetch(cfg.endpoints.userFiles);
+                                var data = await uf.json();
+                                var files = Array.isArray(data.files) ? data.files : [];
+                                var entry = files.find(function (f) { return f.fileName === file.name || f.FileName === file.name; });
+                                if (!entry) { alert('Файл не найден'); disableBtn(false); return; }
+                                var gid = entry.fileGroupId || entry.FileGroupId;
+                                var del = await fetch(cfg.endpoints.delete + gid + '/' + version, { method: 'DELETE' });
+                                if (!del.ok) { alert('Не удалось удалить выбранную версию'); disableBtn(false); return; }
+                            } catch { alert('Не удалось удалить выбранную версию'); disableBtn(false); return; }
+                            await startUpload(file, null);
+                        },
+                        onNewVersion: async function () { await startUpload(file, null); },
+                        onCancel: function () { disableBtn(false); }
+                    }
+                );
+                return;
+            }
+            await startUpload(file, null);
+        });
     }
+
+    window.initUploadFile = function () {
+        if (state.inited) return;
+        state.inited = true;
+        bindHandlers();
+        (async function initGate() {
+            var active = await checkActiveOnServer();
+            if (active) {
+                state.activeInfo = active;
+                disableBtn(true);
+                toggleWarning(true, 'Обнаружена незавершённая загрузка: ' + active.fileName + '. Нажмите «Загрузить файл» для продолжения или очистите загрузку.');
+            }
+        })();
+    };
 })(jQuery);

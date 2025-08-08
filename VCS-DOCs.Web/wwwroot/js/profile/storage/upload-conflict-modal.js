@@ -1,103 +1,89 @@
-﻿//upload-conflict-modal.js
-function showConflictModal(fileName, conflictType, { onReplace, onNewVersion, onCancel }) {
-	const modal = document.getElementById("upload-version-modal");
-	if (!modal) return console.error("Модалка upload-version-modal не найдена");
+﻿(function () {
+    function $(sel, root) { return (root || document).querySelector(sel); }
 
-	const title = modal.querySelector("#version-modal-title");
-	const message = modal.querySelector("#version-conflict-message");
-	const cancelBtn = modal.querySelector("#conflict-cancel");
-	const versionBtn = modal.querySelector("#conflict-new-version");
+    function showConflictModal(fileName, conflictType, handlers) {
+        var modal = $("#upload-version-modal");
+        if (!modal) { console.error("upload-version-modal not found"); return; }
 
-	const replaceContainer = modal.querySelector("#split-button");
-	const selectedVersionSpan = modal.querySelector("#selected-version");
-	const dropdownArrow = modal.querySelector("#version-dropdown");
-	const versionList = modal.querySelector("#version-list");
+        var title = $("#version-modal-title", modal);
+        var message = $("#version-conflict-message", modal);
+        var cancelBtn = $("#conflict-cancel", modal);
+        var newVersionBtn = $("#conflict-new-version", modal);
 
-	if (!title || !message || !cancelBtn || !versionBtn || !replaceContainer || !dropdownArrow || !versionList || !selectedVersionSpan) {
-		console.error("Элементы модалки не найдены");
-		return;
-	}
+        var replaceContainer = $("#split-button", modal);
+        var selectedVersionSpan = $("#selected-version", modal);
+        var dropdownArrow = $("#version-dropdown", modal);
+        var versionList = $("#version-list", modal);
 
-	let selectedVersion = null;
+        if (!title || !message || !cancelBtn || !newVersionBtn || !replaceContainer || !selectedVersionSpan || !dropdownArrow || !versionList) {
+            console.error("modal parts missing");
+            return;
+        }
 
-	title.textContent = "Конфликт версий";
-	message.textContent = `Файл "${fileName}" уже существует. Выберите действие.`;
+        title.textContent = "Конфликт версий";
+        message.textContent = 'Файл "' + fileName + '" уже существует. Выберите действие.';
 
-	selectedVersionSpan.textContent = "V?";
-	versionList.innerHTML = "";
-	versionList.style.display = "none";
+        var selectedVersion = null;
+        selectedVersionSpan.textContent = "V?";
+        versionList.innerHTML = "";
+        versionList.style.display = "none";
 
-	// Подгружаем версии
-	fetch(`/api/Upload/versions/${encodeURIComponent(fileName)}`)
-		.then(res => res.json())
-		.then(versions => {
-			if (versions.length > 0) {
-				selectedVersion = versions[0].Version;
-				selectedVersionSpan.textContent = `V${selectedVersion}`;
+        fetch('/api/Upload/versions?fileName=' + encodeURIComponent(fileName))
+            .then(function (r) { return r.ok ? r.json() : []; })
+            .then(function (versions) {
+                if (Array.isArray(versions) && versions.length) {
+                    selectedVersion = versions[0].version ?? versions[0].Version;
+                    selectedVersionSpan.textContent = "V" + selectedVersion;
+                    versions.forEach(function (ver) {
+                        var v = ver.version ?? ver.Version;
+                        var dt = ver.uploadedAt ?? ver.UploadedAt;
+                        var item = document.createElement("div");
+                        item.className = "dropdown-item";
+                        item.textContent = "V" + v + " (" + new Date(dt).toLocaleString() + ")";
+                        item.onclick = function () {
+                            selectedVersion = v;
+                            selectedVersionSpan.textContent = "V" + v;
+                            versionList.style.display = "none";
+                        };
+                        versionList.appendChild(item);
+                    });
+                } else {
+                    selectedVersionSpan.textContent = "Нет версий";
+                }
+            })
+            .catch(function (e) {
+                console.error("versions load error", e);
+                selectedVersionSpan.textContent = "Ошибка";
+            });
 
-				versions.forEach(ver => {
-					const item = document.createElement("div");
-					item.className = "dropdown-item";
-					item.textContent = `V${ver.Version} (${new Date(ver.UpdatedAt).toLocaleString()})`;
-					item.onclick = () => {
-						selectedVersion = ver.Version;
-						selectedVersionSpan.textContent = `V${selectedVersion}`;
-						versionList.style.display = "none";
-					};
-					versionList.appendChild(item);
-				});
-			} else {
-				selectedVersionSpan.textContent = "Нет версий";
-			}
-		})
-		.catch(err => {
-			console.error("Ошибка загрузки версий:", err);
-			selectedVersionSpan.textContent = "Ошибка";
-		});
+        function toggleList(e) {
+            var vis = versionList.style.display === "block";
+            versionList.style.display = vis ? "none" : "block";
+            if (e) e.stopPropagation();
+        }
+        dropdownArrow.onclick = toggleList;
+        selectedVersionSpan.onclick = toggleList;
+        document.addEventListener("click", function (e) {
+            if (!replaceContainer.contains(e.target)) versionList.style.display = "none";
+        });
 
-	// Показываем список
-	const toggleList = (e) => {
-		const visible = versionList.style.display === "block";
-		versionList.style.display = visible ? "none" : "block";
-		e?.stopPropagation();
-	};
+        replaceContainer.onclick = function (e) {
+            if (e.target === dropdownArrow || e.target === selectedVersionSpan) return;
+            if (selectedVersion == null) { alert("Выберите версию для замены"); return; }
+            modal.style.display = "none";
+            if (handlers && typeof handlers.onReplace === "function") handlers.onReplace(selectedVersion);
+        };
+        newVersionBtn.onclick = function () {
+            modal.style.display = "none";
+            if (handlers && typeof handlers.onNewVersion === "function") handlers.onNewVersion();
+        };
+        cancelBtn.onclick = function () {
+            modal.style.display = "none";
+            if (handlers && typeof handlers.onCancel === "function") handlers.onCancel();
+        };
 
-	dropdownArrow.onclick = toggleList;
-	selectedVersionSpan.onclick = toggleList;
+        modal.style.display = "block";
+    }
 
-	// Скрыть при клике вне
-	document.addEventListener("click", (e) => {
-		if (!replaceContainer.contains(e.target)) {
-			versionList.style.display = "none";
-		}
-	});
-
-	// Клик по замене
-	replaceContainer.onclick = (e) => {
-		if (e.target === dropdownArrow || e.target === selectedVersionSpan) return;
-
-		if (selectedVersion !== null) {
-			modal.style.display = "none";
-			onReplace?.(selectedVersion);
-		} else {
-			alert("Выберите версию для замены.");
-		}
-	};
-	cancelBtn.onclick = () => {
-		try {
-			modal.style.display = "none";
-			isCanceled = true;
-			if (typeof onCancel === 'function') onCancel();
-		} finally {
-			const uploadBtn = document.getElementById('uploadFileButton');
-			if (uploadBtn) uploadBtn.disabled = false;
-		}
-	};
-
-	versionBtn.onclick = () => {
-		modal.style.display = "none";
-		onNewVersion?.();
-	};
-
-	modal.style.display = "block";
-}
+    window.showConflictModal = showConflictModal;
+})();

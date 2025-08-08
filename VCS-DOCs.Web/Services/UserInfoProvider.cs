@@ -1,21 +1,36 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Core.Interfaces;
 using VCS_DOCs.Data;
 
-public class UserInfoProvider : IUserInfoProvider
+namespace VCS_DOCs.Infrastructure.Services
 {
-    private readonly ApplicationDbContext _db;
-
-    public UserInfoProvider(ApplicationDbContext db)
+    public class UserInfoProvider : IUserInfoProvider
     {
-        _db = db;
-    }
+        private readonly ApplicationDbContext _db;
 
-    public async Task<long> GetUserStorageLimitAsync(string shortUserId)
-    {
-        var user = await _db.Users
-            .FirstOrDefaultAsync(u => u.Id.Replace("-", "").StartsWith(shortUserId));
+        public UserInfoProvider(ApplicationDbContext db)
+        {
+            _db = db;
+        }
 
-        return user?.StorageLimitBytes ?? 10L * 1024 * 1024 * 1024;
+        public async Task<long> GetUserStorageLimitAsync(string shortUserId)
+        {
+            var user = await _db.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id.Replace("-", "").StartsWith(shortUserId));
+            return user?.StorageLimitBytes ?? 10L * 1024 * 1024 * 1024;
+        }
+
+        public string ResolveFullUserId(string shortUserId)
+        {
+            var id = _db.Users
+                .AsNoTracking()
+                .Where(u => u.Id.Replace("-", "").StartsWith(shortUserId))
+                .Select(u => u.Id)
+                .FirstOrDefault();
+            return id ?? shortUserId;
+        }
     }
 }
