@@ -1,242 +1,314 @@
-﻿initStorageTable();
+﻿// storage-table.js — only date formatting adjusted as safety fallback.
+// If server already sends DateTimeOffset with Z/+00:00, this just works.
 
-function initStorageTable() {
-    const tableBody = document.querySelector('#userFilesTable tbody');
-    const counter = document.getElementById('storageCounter');
-    if (!tableBody) return console.warn("Элемент таблицы не найден");
+(function () {
+    window.initStorageTable = function initStorageTable() {
+        const tableBody = document.querySelector('#userFilesTable tbody');
+        const counter = document.getElementById('storageCounter');
+        if (!tableBody) return;
 
-    // Загрузка и отрисовка списка файлов + счётчика
-    async function fetchFiles() {
-        try {
-            const res = await fetch('/api/Upload/user-files');
-
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-
-            renderTable(data.files);
-            console.log("Пришёл список файлов:", data.files);
-            const used = formatSize(data.usedBytes);
-            const temp = formatSize(data.tempBytes);
-            const limit = formatSize(data.limitBytes);
-            const free = formatSize(data.limitBytes - data.usedBytes - data.tempBytes);
-
-            counter.textContent =
-                `Использовано: ${used} из ${limit} (временных: ${temp}); свободно: ${free}`;
-        } catch (err) {
-            console.error("Не удалось загрузить список файлов", err);
-            counter.textContent = "Ошибка загрузки";
+        function ensureIsoWithZone(s) {
+            const raw = String(s || '');
+            return /Z$|[+\-]\d{2}:?\d{2}$/.test(raw) ? raw : (raw + 'Z');
         }
-    }
 
-    function renderTable(files) {
-        tableBody.innerHTML = '';
-        files.forEach(file => {
-            const row = document.createElement('tr');
-            row.dataset.fileGroupId = file.FileGroupId; 
-
-            const fileNameCell = document.createElement('td');
-            fileNameCell.innerHTML = escapeHtml(file.FileName);
-
-            const versionCell = document.createElement('td');
-            versionCell.innerHTML = renderVersionDropdown(file);
-
-            const sizeCell = document.createElement('td');
-            sizeCell.innerHTML = formatSize(file.FileSize);
-
-            const dateCell = document.createElement('td');
-            dateCell.innerHTML = formatDate(file.UpdatedAt);
-
-            const actionsCell = document.createElement('td');
-            actionsCell.innerHTML = renderActions();
-
-            row.append(fileNameCell, versionCell, sizeCell, dateCell, actionsCell);
-            tableBody.appendChild(row);
-        });
-
-        setupAllVersionDropdowns(files);
-        setupAllActionDropdowns(files);
-    }
-
-    function renderVersionDropdown(file) {
-        return `
-            <div class="multi-button compact version-multibutton"
-                 data-file-id="${file.FileId}"
-                 data-current-version="${file.LatestVersion}">
-                <button class="button-sliding primary compact version-button"
-                        data-version="${file.LatestVersion}">
-                    v${file.LatestVersion}
-                </button>
-                <div class="dropdown-arrow compact">&#9662;</div>
-            </div>`;
-    }
-
-    function renderActions() {
-        return `
-            <div class="multi-button compact action-multibutton" style="position: relative;">
-                <button class="button-sliding primary compact action-button" data-action="delete">
-                    Удалить
-                </button>
-                <div class="dropdown-arrow compact">&#9662;</div>
-                <div class="action-dropdown-menu compact"
-                     style="display: none; position: absolute; min-width: 120px;">
-                    <div class="dropdown-item" data-action="download">Скачать</div>
-                    <div class="dropdown-item" data-action="delete">Удалить</div>
-                    <div class="dropdown-item" data-action="view">Просмотр</div>
-                    <div class="dropdown-item" data-action="share">Поделиться</div>
-                </div>
-            </div>`;
-    }
-
-    function handleActionClick(action, file, fileGroupId) {
-        const version = file.LatestVersion;
-        const downloadUrl = `/api/upload/download/${fileGroupId}/${version}`;
-
-        switch (action) {
-            case 'download':
-                window.location.href = downloadUrl;
-                break;
-            case 'view':
-                window.open(downloadUrl, '_blank');
-                break;
-            case 'share':
-                navigator.clipboard.writeText(window.location.origin + downloadUrl)
-                    .then(() => alert("Ссылка скопирована в буфер"))
-                    .catch(() => alert("Не удалось скопировать ссылку"));
-                break;
-            case 'delete':
-                if (!confirm("Удалить файл?")) return;
-
-                console.log("DELETE request:", fileGroupId, version);
-
-                fetch(`/api/upload/delete/${fileGroupId}/${version}`, { method: 'DELETE' })
-                    .then(r => {
-                        if (!r.ok) throw new Error("Ошибка удаления");
-                        return r.json();
-                    })
-                    .then(data => {
-                        if (data.status === 'deleted') {
-                            fetchFiles();
-                        } else {
-                            alert("Не удалось удалить файл");
-                        }
-                    })
-                    .catch(err => {
-                        console.error("Ошибка при удалении файла:", err);
-                        alert("Не удалось удалить файл");
-                    });
-                break;
+        function formatSize(bytes) {
+            const val = Number(bytes || 0);
+            return (val / 1024 / 1024).toFixed(2) + ' МБ';
         }
-    }
 
-    function escapeHtml(str) {
-        const div = document.createElement("div");
-        div.textContent = str;
-        return div.innerHTML;
-    }
+        function formatDate(dateStr) {
+            const d = new Date(ensureIsoWithZone(dateStr));
+            return d.toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', hour12: false });
+        }
 
-    function formatSize(bytes) {
-        return (bytes / 1024 / 1024).toFixed(2) + ' МБ';
-    }
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = String(str ?? '');
+            return div.innerHTML;
+        }
 
-    function formatDate(dateStr) {
-        return new Date(dateStr).toLocaleString();
-    }
+        function wrapCell(text) {
+            const esc = escapeHtml(String(text ?? ''));
+            return `<div class="cell-content" title="${esc}">${esc}</div>`;
+        }
 
-    function setupAllVersionDropdowns(files) {
-        document.getElementById('version-dropdown-menu')?.remove();
+        function normalizeFile(file) {
+            const normVersions = (file.Versions ?? file.versions ?? []).map(v => ({
+                Version: v.Version ?? v.version,
+                UploadedAt: v.UploadedAt ?? v.uploadedAt,
+                FileSize: v.FileSize ?? v.fileSize ?? 0
+            }));
+            return {
+                FileId: file.FileId ?? file.fileId,
+                FileGroupId: file.FileGroupId ?? file.fileGroupId,
+                FileName: file.FileName ?? file.fileName,
+                FileSize: file.FileSize ?? file.fileSize ?? 0,
+                UpdatedAt: file.UpdatedAt ?? file.updatedAt,
+                LatestVersion: file.LatestVersion ?? file.latestVersion ?? 1,
+                Versions: normVersions
+            };
+        }
 
-        document.querySelectorAll('.version-multibutton').forEach(wrapper => {
-            const arrow = wrapper.querySelector('.dropdown-arrow');
-            const button = wrapper.querySelector('.version-button');
-            const fileId = wrapper.dataset.fileId;
-            let currentVersion = wrapper.dataset.currentVersion;
-            const file = files.find(f => f.FileId == fileId);
-            if (!file) return;
+        async function fetchFiles() {
+            try {
+                const res = await fetch('/api/Upload/user-files', { cache: 'no-store' });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
 
-            arrow.onclick = e => {
-                e.stopPropagation();
-                document.getElementById('version-dropdown-menu')?.remove();
+                const files = Array.isArray(data.files) ? data.files.map(normalizeFile) : [];
+                renderTable(files);
 
-                const menu = document.createElement('div');
-                menu.id = 'version-dropdown-menu';
-                menu.className = 'compact';
-                const rect = wrapper.getBoundingClientRect();
-                menu.style.position = 'absolute';
-                menu.style.left = rect.left + 'px';
-                menu.style.top = rect.bottom + 'px';
-                menu.style.width = rect.width + 'px';
+                if (counter) {
+                    const used = formatSize(data.usedBytes);
+                    const temp = formatSize(data.tempBytes);
+                    const limit = formatSize(data.limitBytes);
+                    const free = formatSize((data.limitBytes - data.usedBytes - data.tempBytes));
+                    counter.textContent = `Использовано: ${used} из ${limit} (временных: ${temp}); свободно: ${free}`;
+                }
+            } catch (err) {
+                console.error('Не удалось загрузить список файлов', err);
+                if (counter) counter.textContent = 'Ошибка загрузки';
+            }
+        }
 
-                file.Versions.forEach(v => {
-                    const item = document.createElement('div');
-                    item.className = 'dropdown-item';
-                    item.textContent = 'v' + v.Version;
-                    if (v.Version == currentVersion) {
-                        item.style.background = '#e5f1fb';
-                        item.style.fontWeight = 'bold';
-                    }
-                    item.onclick = () => {
-                        button.textContent = 'v' + v.Version;
-                        wrapper.dataset.currentVersion = v.Version;
-                        button.dataset.version = v.Version;
-                        currentVersion = v.Version;
-                        menu.remove();
-                    };
-                    menu.appendChild(item);
-                });
+        function renderTable(files) {
+            tableBody.innerHTML = '';
 
-                document.body.appendChild(menu);
-                setTimeout(() => {
-                    document.addEventListener('click', function close(e) {
-                        if (!menu.contains(e.target)) {
-                            menu.remove();
-                            document.removeEventListener('click', close);
+            files.forEach(file => {
+                const row = document.createElement('tr');
+                row.dataset.fileGroupId = file.FileGroupId;
+                row.dataset.fileId = file.FileId;
+                row.dataset.fileName = file.FileName;
+                row.dataset.currentVersion = file.LatestVersion;
+                try { row.dataset.versions = JSON.stringify(file.Versions || []); } catch { row.dataset.versions = '[]'; }
+
+                const fileNameCell = document.createElement('td');
+                fileNameCell.innerHTML = wrapCell(file.FileName);
+
+                const versionCell = document.createElement('td');
+                versionCell.innerHTML = renderVersionDropdown(file);
+
+                const sizeCell = document.createElement('td');
+                sizeCell.className = 'size-cell';
+                sizeCell.innerHTML = wrapCell(formatSize(file.FileSize));
+
+                const dateCell = document.createElement('td');
+                dateCell.className = 'date-cell';
+                dateCell.innerHTML = wrapCell(formatDate(file.UpdatedAt));
+
+                const actionsCell = document.createElement('td');
+                actionsCell.innerHTML = renderActions();
+
+                row.append(fileNameCell, versionCell, sizeCell, dateCell, actionsCell);
+                tableBody.appendChild(row);
+
+                const versions = JSON.parse(row.dataset.versions || '[]');
+                updateRowByVersion(row, Number(row.dataset.currentVersion), versions);
+            });
+
+            setupAllVersionDropdowns();
+            setupAllActionDropdowns();
+            if (typeof window.reapplyStorageSort === 'function') window.reapplyStorageSort();
+        }
+
+        function renderVersionDropdown(file) {
+            return `
+        <div class="multi-button compact version-multibutton"
+             data-current-version="${file.LatestVersion}">
+          <button class="button-sliding primary compact version-button"
+                  data-version="${file.LatestVersion}">
+            v${file.LatestVersion}
+          </button>
+          <div class="dropdown-arrow compact">&#9662;</div>
+        </div>`;
+        }
+
+        function renderActions() {
+            return `
+        <div class="multi-button compact action-multibutton" style="position: relative;">
+          <button class="button-sliding primary compact action-button" data-action="download">
+            Скачать
+          </button>
+          <div class="dropdown-arrow compact">&#9662;</div>
+          <div class="action-dropdown-menu compact"
+               style="display: none; position: absolute; min-width: 140px;">
+            <div class="dropdown-item" data-action="download">Скачать</div>
+            <div class="dropdown-item" data-action="view">Просмотр</div>
+            <div class="dropdown-item" data-action="share">Поделиться</div>
+            <div class="dropdown-item" data-action="delete">Удалить</div>
+          </div>
+        </div>`;
+        }
+
+        function updateRowByVersion(row, selectedVersion, versions) {
+            row.dataset.currentVersion = selectedVersion;
+
+            const versionBtn = row.querySelector('.version-button');
+            if (versionBtn) {
+                versionBtn.dataset.version = selectedVersion;
+                versionBtn.textContent = 'v' + selectedVersion;
+            }
+
+            const sizeCell = row.querySelector('.size-cell .cell-content') || row.querySelector('.size-cell');
+            const dateCell = row.querySelector('.date-cell .cell-content') || row.querySelector('.date-cell');
+
+            const meta = (versions || []).find(v => Number(v.Version ?? v.version) === Number(selectedVersion));
+            if (meta) {
+                if (sizeCell) sizeCell.textContent = formatSize(meta.FileSize ?? meta.fileSize ?? 0);
+                if (dateCell) dateCell.textContent = formatDate(meta.UploadedAt ?? meta.uploadedAt);
+            }
+        }
+
+        function setupAllVersionDropdowns() {
+            document.getElementById('version-dropdown-menu')?.remove();
+
+            document.querySelectorAll('.version-multibutton').forEach(wrapper => {
+                const arrow = wrapper.querySelector('.dropdown-arrow');
+                const button = wrapper.querySelector('.version-button');
+                const row = wrapper.closest('tr');
+                if (!row || !arrow || !button) return;
+
+                const versions = JSON.parse(row.dataset.versions || '[]');
+                let currentVersion = Number(wrapper.dataset.currentVersion);
+
+                arrow.onclick = e => {
+                    e.stopPropagation();
+                    document.getElementById('version-dropdown-menu')?.remove();
+
+                    const menu = document.createElement('div');
+                    menu.id = 'version-dropdown_menu';
+                    menu.className = 'compact';
+                    const rect = wrapper.getBoundingClientRect();
+                    menu.style.position = 'absolute';
+                    menu.style.left = rect.left + 'px';
+                    menu.style.top = rect.bottom + 'px';
+                    menu.style.width = rect.width + 'px';
+                    menu.style.zIndex = '9999';
+
+                    versions.slice().sort((a, b) => Number(b.Version ?? b.version) - Number(a.Version ?? a.version))
+                        .forEach(v => {
+                            const ver = Number(v.Version ?? v.version);
+                            const item = document.createElement('div');
+                            item.className = 'dropdown-item';
+                            item.textContent = 'v' + ver;
+                            if (ver === currentVersion) {
+                                item.style.background = '#e5f1fb';
+                                item.style.fontWeight = 'bold';
+                            }
+                            item.onclick = () => {
+                                button.textContent = 'v' + ver;
+                                wrapper.dataset.currentVersion = String(ver);
+                                currentVersion = ver;
+                                updateRowByVersion(row, ver, versions);
+                                menu.remove();
+                            };
+                            menu.appendChild(item);
+                        });
+
+                    document.body.appendChild(menu);
+                    setTimeout(() => {
+                        function closeOnOutside(e2) {
+                            if (!menu.contains(e2.target)) {
+                                menu.remove();
+                                document.removeEventListener('click', closeOnOutside);
+                            }
                         }
-                    });
-                }, 0);
-            };
-        });
-    }
-
-    function setupAllActionDropdowns(files) {
-        document.querySelectorAll('.action-multibutton').forEach(dropdown => {
-            const btn = dropdown.querySelector('.action-button');
-            const arrow = dropdown.querySelector('.dropdown-arrow');
-            const menu = dropdown.querySelector('.action-dropdown-menu');
-            const items = menu.querySelectorAll('.dropdown-item');
-            let selectedAction = btn.dataset.action || 'delete';
-
-            arrow.onclick = e => {
-                e.stopPropagation();
-                document.querySelectorAll('.action-dropdown-menu')
-                    .forEach(m => m !== menu && (m.style.display = 'none'));
-                menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-            };
-
-            btn.onclick = () => {
-                const row = dropdown.closest('tr');
-                const fileId = row.querySelector('.version-multibutton').dataset.fileId;
-                const version = row.querySelector('.version-button').dataset.version;
-                const fileGroupId = row.dataset.fileGroupId;
-                console.log("Удаление: fileId=", fileId, "version=", version, "fileGroupId=", fileGroupId);
-
-                handleActionClick(selectedAction, { FileId: fileId, LatestVersion: version }, fileGroupId);
-            };
-
-            items.forEach(item => {
-                item.onclick = () => {
-                    selectedAction = item.dataset.action;
-                    btn.textContent = item.textContent;
-                    btn.dataset.action = selectedAction;
-                    menu.style.display = 'none';
+                        document.addEventListener('click', closeOnOutside);
+                    }, 0);
                 };
             });
+        }
 
-            document.addEventListener('click', e => {
-                if (!dropdown.contains(e.target)) menu.style.display = 'none';
+        function setupAllActionDropdowns() {
+            document.querySelectorAll('.action-multibutton').forEach(dropdown => {
+                const btn = dropdown.querySelector('.action-button');
+                const arrow = dropdown.querySelector('.dropdown-arrow');
+                const menu = dropdown.querySelector('.action-dropdown-menu');
+                const items = menu ? menu.querySelectorAll('.dropdown-item') : [];
+                let selectedAction = btn?.dataset.action || 'download';
+                if (!btn || !arrow || !menu) return;
+
+                arrow.onclick = e => {
+                    e.stopPropagation();
+                    document.querySelectorAll('.action-dropdown-menu')
+                        .forEach(m => m !== menu && (m.style.display = 'none'));
+                    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+                };
+
+                btn.onclick = () => {
+                    const row = dropdown.closest('tr');
+                    if (!row) return;
+                    const fileGroupId = row.dataset.fileGroupId;
+                    const version = row.querySelector('.version-button')?.dataset.version || row.dataset.currentVersion;
+                    handleActionClick(selectedAction, fileGroupId, version);
+                };
+
+                items.forEach(item => {
+                    item.onclick = () => {
+                        selectedAction = item.dataset.action;
+                        btn.textContent = item.textContent;
+                        btn.dataset.action = selectedAction;
+                        menu.style.display = 'none';
+                        if (selectedAction === 'download' || selectedAction === 'view' || selectedAction === 'share') {
+                            const row = dropdown.closest('tr');
+                            if (!row) return;
+                            const fileGroupId = row.dataset.fileGroupId;
+                            const version = row.querySelector('.version-button')?.dataset.version || row.dataset.currentVersion;
+                            handleActionClick(selectedAction, fileGroupId, version);
+                        }
+                    };
+                });
+
+                document.addEventListener('click', e => {
+                    if (!dropdown.contains(e.target)) menu.style.display = 'none';
+                });
             });
-        });
-    }
+        }
 
-    fetchFiles();
-    window.fetchFiles = fetchFiles;
-}
+        function handleActionClick(action, fileGroupId, version) {
+            const v = Number(version);
+            const downloadUrl = `/api/upload/download/${fileGroupId}/${v}`;
+            switch (action) {
+                case 'download':
+                    window.location.href = downloadUrl;
+                    break;
+                case 'view':
+                    window.open(downloadUrl, '_blank');
+                    break;
+                case 'share':
+                    navigator.clipboard.writeText(window.location.origin + downloadUrl)
+                        .then(() => alert('Ссылка скопирована в буфер'))
+                        .catch(() => alert('Не удалось скопировать ссылку'));
+                    break;
+                case 'delete':
+                    if (!confirm(`Удалить v${v}?`)) return;
+                    fetch(`/api/upload/delete/${fileGroupId}/${v}`, { method: 'DELETE' })
+                        .then(r => {
+                            if (!r.ok) throw new Error('Ошибка удаления');
+                            return r.json();
+                        })
+                        .then(data => {
+                            if (data.status === 'deleted') {
+                                fetchFiles();
+                            } else {
+                                alert('Не удалось удалить файл');
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Ошибка при удалении файла:', err);
+                            alert('Не удалось удалить файл');
+                        });
+                    break;
+            }
+        }
+
+        window.fetchFiles = fetchFiles;
+        fetchFiles();
+    };
+})();
+(function autoInit() {
+    const run = () => window.initStorageTable && window.initStorageTable();
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', run);
+    else run();
+})();

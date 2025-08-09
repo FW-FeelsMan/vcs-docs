@@ -1,6 +1,15 @@
 ﻿(function () {
     function $(sel, root) { return (root || document).querySelector(sel); }
 
+    function ensureIsoWithZone(s) {
+        const raw = String(s || '');
+        return /Z$|[+\-]\d{2}:?\d{2}$/.test(raw) ? raw : (raw + 'Z');
+    }
+    function fmtMsk(dt) {
+        const d = new Date(ensureIsoWithZone(dt));
+        return d.toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', hour12: false });
+    }
+
     function showConflictModal(fileName, conflictType, handlers) {
         var modal = $("#upload-version-modal");
         if (!modal) { console.error("upload-version-modal not found"); return; }
@@ -39,7 +48,7 @@
                         var dt = ver.uploadedAt ?? ver.UploadedAt;
                         var item = document.createElement("div");
                         item.className = "dropdown-item";
-                        item.textContent = "V" + v + " (" + new Date(dt).toLocaleString() + ")";
+                        item.textContent = "V" + v + " (" + fmtMsk(dt) + ")";
                         item.onclick = function () {
                             selectedVersion = v;
                             selectedVersionSpan.textContent = "V" + v;

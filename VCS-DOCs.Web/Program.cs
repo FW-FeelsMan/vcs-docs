@@ -204,7 +204,7 @@ var inputTask = Task.Run(async () =>
 		}
 	}
 }, token);
-
+/*
 // Создаём RAM-диск
 var settingsService = app.Services.CreateScope()
 	.ServiceProvider.GetRequiredService<IServerSettingsService>();
@@ -230,6 +230,6 @@ app.Lifetime.ApplicationStopping.Register(() =>
 
 	cancellationTokenSource.Cancel();
 });
-
+*/
 await app.RunAsync(); 
 app.Run();

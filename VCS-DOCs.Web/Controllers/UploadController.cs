@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Security.Claims;
-using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
@@ -16,6 +15,7 @@ namespace VCS_DOCs.Controllers
     [Authorize]
     public class UploadController : ControllerBase
     {
+        private const int FreshSeconds = 60;
         private readonly UploadManager _uploadManager;
         private readonly IUserInfoProvider _userInfoProvider;
 
@@ -31,31 +31,41 @@ namespace VCS_DOCs.Controllers
             var shortUserId = GetRequiredShortUserId();
             var info = await _uploadManager.GetActiveUploadForUserAsync(shortUserId, ct);
             if (info == null) return Ok(new { found = false });
+
+            var ageSec = (int)Math.Max(0, Math.Floor((DateTimeOffset.UtcNow - info.UpdatedAt).TotalSeconds));
+            var isFresh = ageSec <= FreshSeconds && !info.Stopped;
+
             return Ok(new
             {
                 found = true,
+                isFresh,
+                ageSec,
+                stopped = info.Stopped,
                 sessionId = info.SessionId,
                 fileGroupId = info.FileGroupId,
                 fileName = info.FileName,
                 fileHash = info.FileHash,
                 version = info.Version,
                 fileSize = info.FileSize,
-                updatedAt = info.UpdatedAt,
-                uploaded = info.Uploaded
+                uploaded = info.Uploaded,
+                uploadedBytes = info.UploadedBytes,
+                updatedAt = info.UpdatedAt // DateTimeOffset -> JSON with Z
             });
         }
 
-        public class CleanupRequest
-        {
-            [JsonPropertyName("hash")]
-            public string Hash { get; set; } = "";
-        }
-
-        [HttpPost("cleanup-temp")]
-        public async Task<IActionResult> CleanupTemp([FromBody] CleanupRequest body, CancellationToken ct)
+        [HttpPost("heartbeat")]
+        public async Task<IActionResult> Heartbeat([FromForm] string fileHash, CancellationToken ct)
         {
             var shortUserId = GetRequiredShortUserId();
-            await _uploadManager.CleanupTempByHashAsync(shortUserId, body.Hash ?? "", ct);
+            await _uploadManager.TouchActiveAsync(shortUserId, fileHash, ct);
+            return Ok(new { ok = true });
+        }
+
+        [HttpPost("stopped")]
+        public async Task<IActionResult> Stopped([FromForm] string fileHash, CancellationToken ct)
+        {
+            var shortUserId = GetRequiredShortUserId();
+            await _uploadManager.MarkStoppedAsync(shortUserId, fileHash, ct);
             return Ok(new { ok = true });
         }
 
@@ -74,15 +84,6 @@ namespace VCS_DOCs.Controllers
             });
         }
 
-        [HttpPost("check-version-conflict")]
-        public async Task<IActionResult> CheckVersionConflict([FromForm] string fileName, CancellationToken ct)
-        {
-            var shortUserId = GetRequiredShortUserId();
-            var userId = _userInfoProvider.ResolveFullUserId(shortUserId);
-            var conflict = await _uploadManager.HasCompletedVersionAsync(userId, fileName, ct);
-            return Ok(new { conflict });
-        }
-
         [HttpGet("upload-status")]
         public async Task<IActionResult> UploadStatus([FromQuery] string fileHash, CancellationToken ct)
         {
@@ -90,6 +91,15 @@ namespace VCS_DOCs.Controllers
             var r = await _uploadManager.GetOngoingUploadAsync(shortUserId, fileHash, ct);
             if (r.SessionId == Guid.Empty) return Ok(new { found = false });
             return Ok(new { found = true, sessionId = r.SessionId, uploaded = r.Uploaded });
+        }
+
+        [HttpPost("check-version-conflict")]
+        public async Task<IActionResult> CheckVersionConflict([FromForm] string fileName, CancellationToken ct)
+        {
+            var shortUserId = GetRequiredShortUserId();
+            var fullUserId = _userInfoProvider.ResolveFullUserId(shortUserId);
+            var conflict = await _uploadManager.HasCompletedVersionAsync(fullUserId, fileName, ct);
+            return Ok(new { conflict });
         }
 
         [HttpPost("restart")]
@@ -105,13 +115,16 @@ namespace VCS_DOCs.Controllers
         public async Task<IActionResult> UploadChunk([FromForm] IFormFile chunk, [FromForm] string hash, [FromForm] int chunkIndex, [FromForm] int totalChunks, [FromForm] long fileSize, [FromForm] string fileName, CancellationToken ct)
         {
             if (chunk == null || chunk.Length == 0) return BadRequest("empty chunk");
+
             var shortUserId = GetRequiredShortUserId();
-            if (await _uploadManager.GetActiveUploadForUserAsync(shortUserId, ct) is { } act && !string.Equals(act.FileHash, hash, StringComparison.OrdinalIgnoreCase))
-            {
-                return Conflict(new { status = "busy", message = "Идёт другая загрузка. Дождитесь окончания или нажмите «Заново» в текущей." });
-            }
             var r = await _uploadManager.HandleChunkUploadAsync(shortUserId, chunk, hash, chunkIndex, totalChunks, fileSize, fileName, ct);
-            if (!r.ok) return Conflict(new { message = r.message, nextExpectedIndex = r.nextExpectedIndex, sessionId = r.sessionId });
+
+            if (!r.ok)
+            {
+                if (r.message == "insufficient_storage") return StatusCode(507, new { message = "Недостаточно места на диске" });
+                return Conflict(new { message = r.message, nextExpectedIndex = r.nextExpectedIndex, sessionId = r.sessionId });
+            }
+
             return Ok(new { nextExpectedIndex = r.nextExpectedIndex, sessionId = r.sessionId, completed = r.nextExpectedIndex == totalChunks });
         }
 

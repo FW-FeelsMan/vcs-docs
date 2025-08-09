@@ -157,6 +157,21 @@
             </div>
         </div>
     </div>
+    <!-- NEW: Cancel upload modal styled like others -->
+    <div id="upload-cancel-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h3 id="cancel-modal-title">Отмена загрузки</h3>
+            <p id="upload-cancel-message">
+                Вы уверены? Было загружено 0%<br />
+                ИмяФайла.ext<br />
+                Отмена загрузки очистит прогресс.
+            </p>
+            <div class="modal-buttons">
+                <button id="upload-cancel-confirm" class="button-sliding danger">Да, отменить</button>
+                <button id="upload-cancel-close" class="button-sliding">Отмена</button>
+            </div>
+        </div>
+    </div>
     <div id="upload-busy-modal" style="display:none">
         <div class="upload-busy-message"></div>
         <button class="upload-busy-ok">Ок</button>
