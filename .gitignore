@@ -5,6 +5,23 @@
 
 # dotenv files
 .env
+### VCS-DOCs: secrets, builds, storage (auto-appended) ###
+# Secret config file (do not commit):
+VCS-DOCs.Web/appsettings.Secrets.json
+
+# Local storage content (do not commit large user files):
+VCS-DOCs.Web/storage/
+
+# .NET build output:
+**/bin/
+**/obj/
+**/out/
+**/publish/
+
+# User-specific IDE files:
+.vs/
+*.user
+*.suo
 
 # User-specific files
 *.rsuser

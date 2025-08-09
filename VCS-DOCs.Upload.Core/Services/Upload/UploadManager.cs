@@ -473,5 +473,19 @@ namespace VCS_DOCs.Upload.Core
 
             return true;
         }
+        public async Task<FileUploadSessionModel?> FindCompletedByOwnerAsync(string shortUserId, Guid fileGroupId, int version, CancellationToken ct = default)
+        {
+            var full = _userInfoProvider.ResolveFullUserId(shortUserId);
+            return await _db.FileUploadSessions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.UserId == full && s.FileGroupId == fileGroupId && s.Version == version && s.Status == "complete", ct);
+        }
+
+        public async Task<FileUploadSessionModel?> FindAnyCompletedByGroupVersionAsync(Guid fileGroupId, int version, CancellationToken ct = default)
+        {
+            return await _db.FileUploadSessions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.FileGroupId == fileGroupId && s.Version == version && s.Status == "complete", ct);
+        }
     }
 }

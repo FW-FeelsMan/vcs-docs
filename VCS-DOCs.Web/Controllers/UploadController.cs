@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using VCS_DOCs.Core.Interfaces;
 using VCS_DOCs.Upload.Core;
 
@@ -18,11 +21,13 @@ namespace VCS_DOCs.Controllers
         private const int FreshSeconds = 60;
         private readonly UploadManager _uploadManager;
         private readonly IUserInfoProvider _userInfoProvider;
+        private readonly IConfiguration _cfg;
 
-        public UploadController(UploadManager uploadManager, IUserInfoProvider userInfoProvider)
+        public UploadController(UploadManager uploadManager, IUserInfoProvider userInfoProvider, IConfiguration cfg)
         {
             _uploadManager = uploadManager;
             _userInfoProvider = userInfoProvider;
+            _cfg = cfg;
         }
 
         [HttpGet("active")]
@@ -49,7 +54,7 @@ namespace VCS_DOCs.Controllers
                 fileSize = info.FileSize,
                 uploaded = info.Uploaded,
                 uploadedBytes = info.UploadedBytes,
-                updatedAt = info.UpdatedAt // DateTimeOffset -> JSON with Z
+                updatedAt = info.UpdatedAt
             });
         }
 
@@ -117,6 +122,15 @@ namespace VCS_DOCs.Controllers
             if (chunk == null || chunk.Length == 0) return BadRequest("empty chunk");
 
             var shortUserId = GetRequiredShortUserId();
+
+            var act = await _uploadManager.GetActiveUploadForUserAsync(shortUserId, ct);
+            if (act != null && !string.Equals(act.FileHash, hash, StringComparison.OrdinalIgnoreCase))
+            {
+                var ageSec = (int)Math.Max(0, Math.Floor((DateTimeOffset.UtcNow - act.UpdatedAt).TotalSeconds));
+                if (ageSec <= FreshSeconds && !act.Stopped)
+                    return Conflict(new { status = "busy", message = "Идёт другая загрузка. Дождитесь окончания или нажмите «Заново» в текущей." });
+            }
+
             var r = await _uploadManager.HandleChunkUploadAsync(shortUserId, chunk, hash, chunkIndex, totalChunks, fileSize, fileName, ct);
 
             if (!r.ok)
@@ -152,6 +166,81 @@ namespace VCS_DOCs.Controllers
             var result = await _uploadManager.DeleteFileVersionAsync(shortUserId, fileGroupId, version);
             if (!result) return BadRequest("Не удалось удалить файл");
             return Ok(new { status = "deleted" });
+        }
+
+        // ----------------------
+        //  SHARING (signed link)
+        // ----------------------
+
+        // Creates a time-limited signed link that can be opened by anyone who has the URL
+        // No DB migrations required.
+        [HttpPost("share-link")]
+        public async Task<IActionResult> CreateShareLink([FromForm] Guid fileGroupId, [FromForm] int version, [FromForm] int ttlHours = 168, CancellationToken ct = default)
+        {
+            if (version <= 0) return BadRequest("invalid version");
+            if (ttlHours <= 0 || ttlHours > 24 * 30) ttlHours = 168; // clamp
+
+            var shortUserId = GetRequiredShortUserId();
+            // verify ownership exists
+            var session = await _uploadManager.FindCompletedByOwnerAsync(shortUserId, fileGroupId, version, ct);
+            if (session == null) return NotFound();
+
+            var exp = DateTimeOffset.UtcNow.AddHours(ttlHours).ToUnixTimeSeconds();
+            var token = BuildSignature(fileGroupId, version, exp);
+
+            var origin = $"{Request.Scheme}://{Request.Host}";
+            var url = $"{origin}/api/Upload/public?g={fileGroupId:N}&v={version}&exp={exp}&sig={token}";
+            return Ok(new { url, expiresAt = exp });
+        }
+
+        // Public download via signed link
+        [AllowAnonymous]
+        [HttpGet("public")]
+        [Produces("application/octet-stream")]
+        public async Task<IActionResult> PublicDownload([FromQuery] Guid g, [FromQuery] int v, [FromQuery] long exp, [FromQuery] string sig, CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(sig) || v <= 0) return NotFound();
+            if (DateTimeOffset.UtcNow.ToUnixTimeSeconds() > exp) return NotFound();
+
+            var expected = BuildSignature(g, v, exp);
+            if (!TimeSafeEquals(expected, sig)) return NotFound();
+
+            // find file session by fileGroupId+version regardless of user
+            var session = await _uploadManager.FindAnyCompletedByGroupVersionAsync(g, v, ct);
+            if (session == null) return NotFound();
+
+            var ownerShort = session.UserId.Replace("-", "").Substring(0, 8);
+            var file = await _uploadManager.GetFileVersionAsync(ownerShort, g, v);
+            if (file == null) return NotFound();
+
+            return File(file.Content, "application/octet-stream", file.FileName);
+        }
+
+        private string BuildSignature(Guid groupId, int version, long exp)
+        {
+            var secret = _cfg["ShareLinks:Secret"];
+            if (string.IsNullOrEmpty(secret))
+            {
+                // fallback dev secret; set ShareLinks:Secret in appsettings
+                secret = "CHANGE_ME_SUPER_SECRET_256bit_key_minimum";
+            }
+            var payload = $"{groupId:N}.{version}.{exp}";
+            using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
+            var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
+            return ToBase64Url(hash);
+        }
+
+        private static bool TimeSafeEquals(string a, string b)
+        {
+            if (a == null || b == null || a.Length != b.Length) return false;
+            int diff = 0;
+            for (int i = 0; i < a.Length; i++) diff |= a[i] ^ b[i];
+            return diff == 0;
+        }
+
+        private static string ToBase64Url(byte[] bytes)
+        {
+            return Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
         }
 
         private string GetRequiredShortUserId()

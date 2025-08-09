@@ -229,6 +229,7 @@
                 let selectedAction = btn?.dataset.action || 'download';
                 if (!btn || !arrow || !menu) return;
 
+                // открыть/закрыть меню
                 arrow.onclick = e => {
                     e.stopPropagation();
                     document.querySelectorAll('.action-dropdown-menu')
@@ -236,6 +237,7 @@
                     menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
                 };
 
+                // выполнить текущее выбранное действие
                 btn.onclick = () => {
                     const row = dropdown.closest('tr');
                     if (!row) return;
@@ -246,17 +248,10 @@
 
                 items.forEach(item => {
                     item.onclick = () => {
-                        selectedAction = item.dataset.action;
-                        btn.textContent = item.textContent;
-                        btn.dataset.action = selectedAction;
-                        menu.style.display = 'none';
-                        if (selectedAction === 'download' || selectedAction === 'view' || selectedAction === 'share') {
-                            const row = dropdown.closest('tr');
-                            if (!row) return;
-                            const fileGroupId = row.dataset.fileGroupId;
-                            const version = row.querySelector('.version-button')?.dataset.version || row.dataset.currentVersion;
-                            handleActionClick(selectedAction, fileGroupId, version);
-                        }
+                        selectedAction = item.dataset.action;       // 'download' | 'view' | 'share' | 'delete'
+                        btn.textContent = item.textContent;         // обновляем лейбл
+                        btn.dataset.action = selectedAction;        // сохраняем состояние
+                        menu.style.display = 'none';                // закрываем меню
                     };
                 });
 
@@ -265,10 +260,10 @@
                 });
             });
         }
-
         function handleActionClick(action, fileGroupId, version) {
             const v = Number(version);
             const downloadUrl = `/api/upload/download/${fileGroupId}/${v}`;
+
             switch (action) {
                 case 'download':
                     window.location.href = downloadUrl;
@@ -277,9 +272,28 @@
                     window.open(downloadUrl, '_blank');
                     break;
                 case 'share':
-                    navigator.clipboard.writeText(window.location.origin + downloadUrl)
-                        .then(() => alert('Ссылка скопирована в буфер'))
-                        .catch(() => alert('Не удалось скопировать ссылку'));
+                    // NEW: request a signed public link from the server
+                    const fd = new FormData();
+                    fd.append('fileGroupId', fileGroupId);
+                    fd.append('version', String(v));
+                    // optional: fd.append('ttlHours', '168');
+                    fetch('/api/upload/share-link', { method: 'POST', body: fd })
+                        .then(r => r.ok ? r.json() : Promise.reject(new Error('share-link failed')))
+                        .then(data => {
+                            const url = data && data.url;
+                            if (!url) throw new Error('no url');
+                            return navigator.clipboard.writeText(url)
+                                .then(() => alert('Публичная ссылка скопирована в буфер'))
+                                .catch(() => { prompt('Публичная ссылка (скопируйте вручную):', url); });
+                        })
+                        .catch(err => {
+                            console.error('share error', err);
+                            // fallback to old behavior for owner-only link
+                            const ownLink = window.location.origin + downloadUrl;
+                            navigator.clipboard.writeText(ownLink)
+                                .then(() => alert('Скопирована ссылка для владельца (требуется авторизация)'))
+                                .catch(() => { prompt('Ссылка для владельца:', ownLink); });
+                        });
                     break;
                 case 'delete':
                     if (!confirm(`Удалить v${v}?`)) return;

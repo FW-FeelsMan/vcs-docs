@@ -153,6 +153,8 @@ builder.Services.AddSingleton(sp =>
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Debug);
+builder.Configuration
+    .AddJsonFile("appsettings.Secrets.json", optional: true, reloadOnChange: true);
 
 // === App Build ===
 var app = builder.Build();
