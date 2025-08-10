@@ -1,8 +1,7 @@
 ﻿using System.Security.Cryptography;
-using ClamAV.Net.Client; 
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration; 
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using VCS_DOCs.Core.Interfaces;
 using VCS_DOCs.Infrastructure.Services.Storage;

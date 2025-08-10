@@ -113,6 +113,7 @@ builder.Services.AddCors(options =>
 });
 
 // === Custom Services ===
+builder.Services.AddScoped<ISharedLinkService, VCS_DOCs.Infrastructure.Services.SharedLinkService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserFileService, UserFileService>();
 builder.Services.AddScoped<IUploadDbContext>(provider =>

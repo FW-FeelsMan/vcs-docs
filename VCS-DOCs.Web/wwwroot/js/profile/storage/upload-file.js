@@ -30,7 +30,7 @@
         freeBytes: null
     };
 
-    var UI_STALE_SECONDS = 6;
+    var UI_STALE_SECONDS = 30; // запас, чтобы баннер не мигал на долгих аплоадах
     var hbTimer = null;
     var statsTimer = null;
 
@@ -45,18 +45,18 @@
 
     async function updateStorageCounter() {
         try {
-            // 1) Пытаемся получить чистые статы
+            // Пытаемся получить чистые статы
             var res = await fetch(cfg.endpoints.stats, { cache: 'no-store' });
             var data = null;
             if (res.ok) {
                 data = await res.json();
             } else if (res.status === 404) {
-                // 2) Fallback: берём статы из user-files
+                // Fallback: берём их из user-files
                 var uf = await fetch(cfg.endpoints.userFiles, { cache: 'no-store' });
                 if (!uf.ok) return;
                 data = await uf.json();
             } else {
-                return; // молча выходим (сеть/ошибка)
+                return; // сеть/ошибка — молча
             }
 
             var used = data.usedBytes || 0, temp = data.tempBytes || 0, limit = data.limitBytes || 0;
@@ -84,7 +84,6 @@
             banner.style.bottom = '12px';
             banner.style.left = '50%';
             banner.style.transform = 'translateX(-50%)';
-
             banner.style.display = 'none';
             banner.style.padding = '10px 14px';
             banner.style.background = '#111827';
@@ -93,26 +92,12 @@
             banner.style.zIndex = '9999';
             banner.style.borderRadius = '12px';
             banner.style.boxShadow = '0 8px 24px rgba(0,0,0,.25)';
-
             banner.style.maxWidth = 'min(90vw, 800px)';
-            banner.style.width = 'auto';
             banner.style.boxSizing = 'border-box';
-
-            // компактная вёрстка
-            banner.style.display = 'none';
             banner.style.alignItems = 'center';
             banner.style.gap = '12px';
             banner.style.whiteSpace = 'normal';
             banner.style.wordBreak = 'break-word';
-
-            // контент
-            banner.style.display = 'none';
-            banner.style.padding = '10px 14px';
-            banner.style.display = 'none';
-            banner.style.display = 'none'; //просто гарантируем начальное скрытие
-
-            // сделаем контейнер flex
-            banner.style.display = 'none';
             banner.style.display = 'flex';
 
             var span = document.createElement('span');
@@ -165,7 +150,7 @@
     function showCancelConfirm(percent, fileName, onConfirm) {
         var m = ensureCancelModal();
         if (!m) {
-            if (confirm('Вы уверены? Было загружено ' + percent + '%\\n' + fileName + '\\nОтмена загрузки очистит прогресс.')) {
+            if (confirm('Вы уверены? Было загружено ' + percent + '%\n' + fileName + '\nОтмена загрузки очистит прогресс.')) {
                 if (typeof onConfirm === 'function') onConfirm();
             }
             return;
@@ -183,12 +168,19 @@
         };
     }
 
+    function preferFresh(active) {
+        if (!active) return false;
+        if (typeof active.isFresh === 'boolean') return active.isFresh && !active.stopped;
+        if (typeof active.ageSec === 'number') return active.ageSec <= UI_STALE_SECONDS && !active.stopped;
+        return false;
+    }
+
     function computePercent(active) {
-        if (active && typeof active.uploadedBytes === 'number' && active.fileSize > 0) {
-            return Math.max(0, Math.min(99, Math.floor((active.uploadedBytes / active.fileSize) * 100)));
-        }
         if (state.isUploading && state.total > 0) {
             return Math.min(99, Math.floor((state.index / state.total) * 100));
+        }
+        if (active && typeof active.uploadedBytes === 'number' && active.fileSize > 0) {
+            return Math.max(0, Math.min(99, Math.floor((active.uploadedBytes / active.fileSize) * 100)));
         }
         if (active && Array.isArray(active.uploaded) && active.fileSize > 0) {
             var approx = (active.uploaded.length * cfg.chunkSize) / active.fileSize;
@@ -235,13 +227,14 @@
         var span = b.querySelector('.upload-busy-message');
         var btnCancel = document.getElementById('upload-cancel-btn');
         var btnContinue = document.getElementById('upload-continue-btn');
+
         var percent = computePercent(active);
         var name = (active && active.fileName) || (state.file && state.file.name) || 'файл';
 
-        var uiFresh = !!(active && typeof active.ageSec === 'number' && active.ageSec <= UI_STALE_SECONDS);
-        var isStopped = !!(active && active.stopped === true);
+        // ключ: если клиент сейчас грузит — это «идёт загрузка», даже если сервер прислал stale
+        var live = !!state.isUploading || preferFresh(active);
 
-        if (active && uiFresh && !isStopped) {
+        if (active && live) {
             span.textContent = 'Идёт загрузка: ' + name + ' — ' + percent + '% . Если закроете страницу или обновите — загрузка прервётся.';
             btnContinue.style.display = 'none';
             btnCancel.style.display = 'inline-block';
@@ -259,10 +252,7 @@
         btnContinue.onclick = async function () {
             if (!active) return;
             var input = document.querySelector(cfg.inputSelector);
-            if (input) {
-                input.value = null;
-                input.click();
-            }
+            if (input) { input.value = null; input.click(); }
         };
         btnCancel.onclick = function () {
             var cur = active || state.active || {};
@@ -284,7 +274,6 @@
             });
         };
     }
-
     function showBanner(active, on) {
         renderBanner(active, on);
     }
@@ -294,9 +283,11 @@
             var r = await fetch(cfg.endpoints.active, { cache: 'no-store' });
             if (!r.ok) return;
             var active = await r.json();
+            console.log('active=', active, 'isUploading=', state.isUploading);
             if (active && active.found) {
                 state.active = active;
-                disableBtn(active.ageSec <= UI_STALE_SECONDS && !active.stopped);
+                var isFresh = preferFresh(active);
+                disableBtn(isFresh && !active.stopped);
                 showBanner(active, true);
             } else {
                 showBanner(null, false);
@@ -348,55 +339,49 @@
     }
 
     async function uploadChunk(file, hash, index, total) {
-        const start = index * cfg.chunkSize;
-        const end = Math.min(start + cfg.chunkSize, file.size);
-        const blob = file.slice(start, end);
-
-        const fd = new FormData();
+        var start = index * cfg.chunkSize;
+        var end = Math.min(start + cfg.chunkSize, file.size);
+        var blob = file.slice(start, end);
+        var fd = new FormData();
         fd.append('chunk', blob, 'chunk_' + index);
         fd.append('hash', hash);
         fd.append('chunkIndex', index.toString());
         fd.append('totalChunks', total.toString());
         fd.append('fileSize', file.size.toString());
         fd.append('fileName', file.name);
-
-        const res = await fetch(cfg.endpoints.chunk, { method: 'POST', body: fd });
-
-        let data = null;
-        try { data = await res.json(); } catch { /* ignore */ }
-
+        var res = await fetch(cfg.endpoints.chunk, { method: 'POST', body: fd });
+        var data = null;
+        try { data = await res.json(); } catch { }
         if (!res.ok) {
-            let msg = (data && data.message) ? data.message : '';
+            var msg = (data && data.message) ? data.message : '';
             if (!msg) { try { msg = await res.text(); } catch { } }
 
             // 507 — недостаточно места
             if (res.status === 507 || /Недостаточно места/i.test(msg)) {
                 alert('Недостаточно места на диске. Освободите место и попробуйте снова.');
-                return { aborted: true, reason: 'insufficient_storage' };
+                throw new Error('insufficient_storage');
             }
 
             // 503 — антивирус недоступен/таймаут
-            if (res.status === 503 || /(antivirus|service unavailable|timeout|av_unavailable|av_timeout)/i.test(msg || '')) {
+            if (res.status === 503 || /(antivirus|clamav|service unavailable|timeout|av_unavailable|av_timeout)/i.test(msg || '')) {
                 alert('Антивирус временно недоступен. Повторите попытку позже.');
-                return { aborted: true, reason: 'av_unavailable' };
+                throw new Error('av_unavailable');
             }
 
-            // 409 — заражён
+            // 409 infected
             if (res.status === 409 && /infected/i.test(msg)) {
                 alert('Файл отклонён антивирусной проверкой. Он не был сохранён.');
-                return { aborted: true, reason: 'infected' };
+                throw new Error('infected');
             }
 
-            // 409 — другие конфликты (busy/hash mismatch и т.п.)
+            // 409 другие конфликты (busy/hash mismatch и т.п.) — покажем текст
             if (res.status === 409 && (msg || '').length) {
                 alert(msg);
-                return { aborted: true, reason: 'conflict', message: msg };
+                throw new Error(msg);
             }
 
-            // неизвестная ошибка — оставим как исключение
             throw new Error(msg || 'upload failed');
         }
-
         return data || {};
     }
 
@@ -418,38 +403,28 @@
                     } catch { }
                     break;
                 }
-
                 if (state.skip && state.skip.has(state.index)) {
-                    const progEl = document.getElementById('uploadProgress');
+                    var progEl = document.getElementById('uploadProgress');
                     if (progEl) {
-                        const percent = Math.min(100, Math.floor(((state.index + 1) / state.total) * 100));
+                        var percent = Math.min(100, Math.floor(((state.index + 1) / state.total) * 100));
                         progEl.textContent = percent + '%';
                     }
                     state.index++;
                     showBanner(state.active, true);
-                    updateStorageCounter();
+                    if (state.index % 8 === 0) await fetchAndRenderGate();
                     continue;
                 }
-
-                const r = await uploadChunk(file, state.hash, state.index, state.total);
-
-                // НОВОЕ: мягкая остановка без исключений
-                if (r && r.aborted) {
-                    break;
-                }
-
-                const next = (typeof r.nextExpectedIndex === 'number') ? r.nextExpectedIndex : (state.index + 1);
+                var r = await uploadChunk(file, state.hash, state.index, state.total);
+                var next = (typeof r.nextExpectedIndex === 'number') ? r.nextExpectedIndex : (state.index + 1);
                 state.index = next;
 
-                const prog = document.getElementById('uploadProgress');
+                var prog = document.getElementById('uploadProgress');
                 if (prog) {
-                    const p = Math.min(100, Math.floor((state.index / state.total) * 100));
+                    var p = Math.min(100, Math.floor((state.index / state.total) * 100));
                     prog.textContent = p + '%';
                 }
-                showBanner(state.active, true);
-                updateStorageCounter();
+                if (state.index % 4 === 0) await fetchAndRenderGate();
             }
-
             if (!state.cancelRequested) {
                 if (typeof window.initStorageTable === 'function') window.initStorageTable();
                 else if (typeof window.fetchFiles === 'function') window.fetchFiles();
@@ -467,7 +442,7 @@
             await fetchAndRenderGate();
             await updateStorageCounter();
             if ((state.freeBytes !== null && state.freeBytes <= 0) ||
-                (state.active && state.active.ageSec <= UI_STALE_SECONDS && !state.active.stopped)) return;
+                (state.active && preferFresh(state.active))) return;
             var input = document.querySelector(cfg.inputSelector);
             if (input) {
                 input.value = null;
@@ -482,17 +457,18 @@
             await fetchAndRenderGate();
             await updateStorageCounter();
             if ((state.freeBytes !== null && file.size > state.freeBytes)) {
-                alert('Невозможно начать загрузку: недостаточно места.\\nСвободно: ' + fmtSize(state.freeBytes) + ', файл: ' + fmtSize(file.size));
+                alert('Невозможно начать загрузку: недостаточно места.\nСвободно: ' + fmtSize(state.freeBytes) + ', файл: ' + fmtSize(file.size));
                 return;
             }
-            if (state.active && state.active.ageSec <= UI_STALE_SECONDS && !state.active.stopped) return;
+            if (state.active && preferFresh(state.active)) return;
 
-            if (state.active && (state.active.ageSec > UI_STALE_SECONDS || state.active.stopped === true)) {
+            if (state.active && (!preferFresh(state.active) || state.active.stopped === true)) {
                 var fp = await quickFingerprint(file);
                 if (fp.toLowerCase() === String(state.active.fileHash || '').toLowerCase() &&
                     String(file.name || '') === String(state.active.fileName || '')) {
                     var set = new Set(Array.isArray(state.active.uploaded) ? state.active.uploaded : []);
                     state.hash = fp;
+                    setUploading(true); // ранний heartbeat
                     await startUpload(file, set);
                     return;
                 } else {
@@ -502,6 +478,7 @@
                             sendStopped(state.active.fileHash || '');
                             await restartOnServer(state.active.fileName || file.name, state.active.fileHash || '');
                             state.hash = fp;
+                            setUploading(true); // ранний heartbeat
                             await startUpload(file, null);
                         } catch { }
                     });
@@ -509,37 +486,8 @@
                 }
             }
 
-            var fd = new FormData();
-            fd.append('fileName', file.name);
-            var res = await fetch(cfg.endpoints.check, { method: 'POST', body: fd });
-            var conflict = res.ok ? (await res.json()).conflict : false;
-            if (conflict && typeof window.showConflictModal === 'function') {
-                window.showConflictModal(
-                    file.name,
-                    'conflict',
-                    {
-                        onReplace: async function (version) {
-                            try {
-                                var uf = await fetch(cfg.endpoints.userFiles);
-                                var data = await uf.json();
-                                var files = Array.isArray(data.files) ? data.files : [];
-                                var entry = files.find(function (f) { return f.fileName === file.name || f.FileName === file.name; });
-                                if (!entry) { alert('Файл не найден'); disableBtn(false); return; }
-                                var gid = entry.fileGroupId || entry.FileGroupId;
-                                var del = await fetch(cfg.endpoints.delete + gid + '/' + version, { method: 'DELETE' });
-                                if (!del.ok) { alert('Не удалось удалить выбранную версию'); disableBtn(false); return; }
-                            } catch { alert('Не удалось удалить выбранную версию'); disableBtn(false); return; }
-                            state.hash = await quickFingerprint(file);
-                            await startUpload(file, null);
-                        },
-                        onNewVersion: async function () { state.hash = await quickFingerprint(file); await startUpload(file, null); },
-                        onCancel: function () { disableBtn(false); }
-                    }
-                );
-                return;
-            }
-
             state.hash = await quickFingerprint(file);
+            setUploading(true); // ранний heartbeat
             await startUpload(file, null);
         });
     }

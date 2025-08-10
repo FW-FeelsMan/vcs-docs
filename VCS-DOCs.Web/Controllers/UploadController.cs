@@ -22,12 +22,18 @@ namespace VCS_DOCs.Controllers
         private readonly UploadManager _uploadManager;
         private readonly IUserInfoProvider _userInfoProvider;
         private readonly IConfiguration _cfg;
+        private readonly ISharedLinkService _sharedLinks;
 
-        public UploadController(UploadManager uploadManager, IUserInfoProvider userInfoProvider, IConfiguration cfg)
+        public UploadController(
+            UploadManager uploadManager,
+            IUserInfoProvider userInfoProvider,
+            IConfiguration cfg,
+            ISharedLinkService sharedLinks)
         {
             _uploadManager = uploadManager;
             _userInfoProvider = userInfoProvider;
             _cfg = cfg;
+            _sharedLinks = sharedLinks;
         }
 
         [HttpGet("active")]
@@ -178,8 +184,7 @@ namespace VCS_DOCs.Controllers
             return Ok(new { status = "deleted" });
         }
 
-        // ---------------------- SHARING (signed link) ----------------------
-
+        // ---------------------- SHARING (legacy HMAC) ----------------------
         [HttpPost("share-link")]
         public async Task<IActionResult> CreateShareLink([FromForm] Guid fileGroupId, [FromForm] int version, [FromForm] int ttlHours = 168, CancellationToken ct = default)
         {
@@ -188,10 +193,9 @@ namespace VCS_DOCs.Controllers
 
             var shortUserId = GetRequiredShortUserId();
 
-            // лёгкая проверка владения — файл должен существовать
             var opened = await _uploadManager.OpenFileVersionStreamAsync(shortUserId, fileGroupId, version, ct);
             if (opened == null) return NotFound();
-            await opened.Stream.DisposeAsync(); // мы лишь проверяли
+            await opened.Stream.DisposeAsync();
 
             var exp = DateTimeOffset.UtcNow.AddHours(ttlHours).ToUnixTimeSeconds();
             var token = BuildSignature(fileGroupId, version, exp);
@@ -212,11 +216,70 @@ namespace VCS_DOCs.Controllers
             var expected = BuildSignature(g, v, exp);
             if (!TimeSafeEquals(expected, sig)) return NotFound();
 
-            // ключ: ищем владельца по группе/версии
             var found = await _uploadManager.FindAnyCompletedByGroupVersionAsync(g, v, ct);
             if (found == null) return NotFound();
 
             var opened = await _uploadManager.OpenFileVersionStreamAsync(found.Value.ownerShort, g, v, ct);
+            if (opened == null) return NotFound();
+
+            return File(opened.Stream, "application/octet-stream", opened.FileName, enableRangeProcessing: true);
+        }
+
+        // ---------------------- SHARING (DB) ----------------------
+
+        [HttpPost("share-db")]
+        public async Task<IActionResult> CreateShareDb([FromForm] Guid fileGroupId, [FromForm] int version, [FromForm] int ttlHours = 168,
+                                                       [FromForm] int? maxDownloads = null, [FromForm] bool requireAuth = false, CancellationToken ct = default)
+        {
+            if (version <= 0) return BadRequest("invalid version");
+            if (ttlHours <= 0 || ttlHours > 24 * 30) ttlHours = 168;
+
+            // Проверим, что файл существует у текущего пользователя (владелец)
+            var shortUserId = GetRequiredShortUserId();
+            var opened = await _uploadManager.OpenFileVersionStreamAsync(shortUserId, fileGroupId, version, ct);
+            if (opened == null) return NotFound();
+            await opened.Stream.DisposeAsync();
+
+            var link = await _sharedLinks.CreateAsync(shortUserId, fileGroupId, version, ttlHours, maxDownloads, requireAuth, ct);
+
+            var origin = $"{Request.Scheme}://{Request.Host}";
+            var url = $"{origin}/api/Upload/public/{link.Id:D}";
+            return Ok(new
+            {
+                id = link.Id,
+                url,
+                expiresAt = link.Exp,
+                maxDownloads = link.MaxDownloads,
+                requireAuth = link.RequireAuth
+            });
+        }
+
+        [AllowAnonymous]
+        [HttpGet("public/{id:guid}")]
+        [Produces("application/octet-stream")]
+        public async Task<IActionResult> PublicDbDownload([FromRoute] Guid id, CancellationToken ct = default)
+        {
+            var shortId = GetRequiredShortUserIdSafe(); // может быть null (аноним)
+            var link = await _sharedLinks.GetAsync(id, ct);
+            if (link == null) return NotFound();
+
+            var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            if (link.Exp <= now) return NotFound();
+
+            if (link.RequireAuth && string.IsNullOrWhiteSpace(shortId))
+            {
+                return Unauthorized();
+            }
+
+            // Найдём владельца файла по группе/версии
+            var found = await _uploadManager.FindAnyCompletedByGroupVersionAsync(link.FileGroupId, link.Version, ct);
+            if (found == null) return NotFound();
+
+            // Пытаемся списать 1 скачивание (атомарно)
+            var consumed = await _sharedLinks.TryConsumeAsync(id, ct);
+            if (consumed.link == null) return NotFound(); // лимит исчерпан/просрочено
+
+            var opened = await _uploadManager.OpenFileVersionStreamAsync(found.Value.ownerShort, link.FileGroupId, link.Version, ct);
             if (opened == null) return NotFound();
 
             return File(opened.Stream, "application/octet-stream", opened.FileName, enableRangeProcessing: true);
@@ -229,6 +292,7 @@ namespace VCS_DOCs.Controllers
             var (used, temp, limit) = await _uploadManager.GetStorageStatsAsync(shortUserId, ct);
             return Ok(new { usedBytes = used, tempBytes = temp, limitBytes = limit });
         }
+
         private string? GetRequiredShortUserIdSafe()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -245,6 +309,7 @@ namespace VCS_DOCs.Controllers
 
         private string BuildSignature(Guid groupId, int version, long exp)
         {
+            // Prefer reading from configuration. Do NOT hardcode secrets in source control.
             var secret = _cfg["ShareLinks:Secret"];
             if (string.IsNullOrEmpty(secret))
                 secret = "CHANGE_ME_SUPER_SECRET_256bit_key_minimum";
