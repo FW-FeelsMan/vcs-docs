@@ -45,10 +45,21 @@
 
     async function updateStorageCounter() {
         try {
+            // 1) Пытаемся получить чистые статы
             var res = await fetch(cfg.endpoints.stats, { cache: 'no-store' });
-            if (!res.ok) return;
-            var s = await res.json();
-            var used = s.usedBytes || 0, temp = s.tempBytes || 0, limit = s.limitBytes || 0;
+            var data = null;
+            if (res.ok) {
+                data = await res.json();
+            } else if (res.status === 404) {
+                // 2) Fallback: берём статы из user-files
+                var uf = await fetch(cfg.endpoints.userFiles, { cache: 'no-store' });
+                if (!uf.ok) return;
+                data = await uf.json();
+            } else {
+                return; // молча выходим (сеть/ошибка)
+            }
+
+            var used = data.usedBytes || 0, temp = data.tempBytes || 0, limit = data.limitBytes || 0;
             var free = Math.max(0, (limit - used - temp));
             state.freeBytes = free;
             var el = document.getElementById('storageCounter');
@@ -142,8 +153,6 @@
         return banner;
     }
 
-
-    // Markup-driven cancel modal (no inline styles)
     function ensureCancelModal() {
         var modal = document.getElementById('upload-cancel-modal');
         var msg = document.getElementById('upload-cancel-message');
@@ -156,7 +165,7 @@
     function showCancelConfirm(percent, fileName, onConfirm) {
         var m = ensureCancelModal();
         if (!m) {
-            if (confirm('Вы уверены? Было загружено ' + percent + '%\n' + fileName + '\nОтмена загрузки очистит прогресс.')) {
+            if (confirm('Вы уверены? Было загружено ' + percent + '%\\n' + fileName + '\\nОтмена загрузки очистит прогресс.')) {
                 if (typeof onConfirm === 'function') onConfirm();
             }
             return;
@@ -339,33 +348,55 @@
     }
 
     async function uploadChunk(file, hash, index, total) {
-        var start = index * cfg.chunkSize;
-        var end = Math.min(start + cfg.chunkSize, file.size);
-        var blob = file.slice(start, end);
-        var fd = new FormData();
+        const start = index * cfg.chunkSize;
+        const end = Math.min(start + cfg.chunkSize, file.size);
+        const blob = file.slice(start, end);
+
+        const fd = new FormData();
         fd.append('chunk', blob, 'chunk_' + index);
         fd.append('hash', hash);
         fd.append('chunkIndex', index.toString());
         fd.append('totalChunks', total.toString());
         fd.append('fileSize', file.size.toString());
         fd.append('fileName', file.name);
-        var res = await fetch(cfg.endpoints.chunk, { method: 'POST', body: fd });
-        var data = null;
-        try { data = await res.json(); } catch { }
+
+        const res = await fetch(cfg.endpoints.chunk, { method: 'POST', body: fd });
+
+        let data = null;
+        try { data = await res.json(); } catch { /* ignore */ }
+
         if (!res.ok) {
-            var msg = (data && data.message) ? data.message : '';
-            if (!msg) {
-                try { msg = await res.text(); } catch { }
-            }
+            let msg = (data && data.message) ? data.message : '';
+            if (!msg) { try { msg = await res.text(); } catch { } }
+
+            // 507 — недостаточно места
             if (res.status === 507 || /Недостаточно места/i.test(msg)) {
                 alert('Недостаточно места на диске. Освободите место и попробуйте снова.');
-                throw new Error('insufficient_storage');
+                return { aborted: true, reason: 'insufficient_storage' };
             }
+
+            // 503 — антивирус недоступен/таймаут
+            if (res.status === 503 || /(antivirus|service unavailable|timeout|av_unavailable|av_timeout)/i.test(msg || '')) {
+                alert('Антивирус временно недоступен. Повторите попытку позже.');
+                return { aborted: true, reason: 'av_unavailable' };
+            }
+
+            // 409 — заражён
+            if (res.status === 409 && /infected/i.test(msg)) {
+                alert('Файл отклонён антивирусной проверкой. Он не был сохранён.');
+                return { aborted: true, reason: 'infected' };
+            }
+
+            // 409 — другие конфликты (busy/hash mismatch и т.п.)
             if (res.status === 409 && (msg || '').length) {
-                throw new Error(msg);
+                alert(msg);
+                return { aborted: true, reason: 'conflict', message: msg };
             }
+
+            // неизвестная ошибка — оставим как исключение
             throw new Error(msg || 'upload failed');
         }
+
         return data || {};
     }
 
@@ -375,7 +406,9 @@
         state.total = Math.ceil(file.size / cfg.chunkSize);
         state.skip = skipSet || null;
         state.cancelRequested = false;
+
         setUploading(true);
+
         try {
             while (state.index < state.total) {
                 if (state.cancelRequested) {
@@ -385,10 +418,11 @@
                     } catch { }
                     break;
                 }
+
                 if (state.skip && state.skip.has(state.index)) {
-                    var progEl = document.getElementById('uploadProgress');
+                    const progEl = document.getElementById('uploadProgress');
                     if (progEl) {
-                        var percent = Math.min(100, Math.floor(((state.index + 1) / state.total) * 100));
+                        const percent = Math.min(100, Math.floor(((state.index + 1) / state.total) * 100));
                         progEl.textContent = percent + '%';
                     }
                     state.index++;
@@ -396,17 +430,26 @@
                     updateStorageCounter();
                     continue;
                 }
-                var r = await uploadChunk(file, state.hash, state.index, state.total);
-                var next = (typeof r.nextExpectedIndex === 'number') ? r.nextExpectedIndex : (state.index + 1);
+
+                const r = await uploadChunk(file, state.hash, state.index, state.total);
+
+                // НОВОЕ: мягкая остановка без исключений
+                if (r && r.aborted) {
+                    break;
+                }
+
+                const next = (typeof r.nextExpectedIndex === 'number') ? r.nextExpectedIndex : (state.index + 1);
                 state.index = next;
-                var prog = document.getElementById('uploadProgress');
+
+                const prog = document.getElementById('uploadProgress');
                 if (prog) {
-                    var p = Math.min(100, Math.floor((state.index / state.total) * 100));
+                    const p = Math.min(100, Math.floor((state.index / state.total) * 100));
                     prog.textContent = p + '%';
                 }
                 showBanner(state.active, true);
                 updateStorageCounter();
             }
+
             if (!state.cancelRequested) {
                 if (typeof window.initStorageTable === 'function') window.initStorageTable();
                 else if (typeof window.fetchFiles === 'function') window.fetchFiles();
@@ -439,7 +482,7 @@
             await fetchAndRenderGate();
             await updateStorageCounter();
             if ((state.freeBytes !== null && file.size > state.freeBytes)) {
-                alert('Невозможно начать загрузку: недостаточно места.\nСвободно: ' + fmtSize(state.freeBytes) + ', файл: ' + fmtSize(file.size));
+                alert('Невозможно начать загрузку: недостаточно места.\\nСвободно: ' + fmtSize(state.freeBytes) + ', файл: ' + fmtSize(file.size));
                 return;
             }
             if (state.active && state.active.ageSec <= UI_STALE_SECONDS && !state.active.stopped) return;

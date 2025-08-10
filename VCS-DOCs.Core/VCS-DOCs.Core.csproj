@@ -7,6 +7,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="ClamAV.Net" Version="0.1.166" />
+  </ItemGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\\VCS-DOCs.Models\\VCS-DOCs.Models.csproj" />
 		<ProjectReference Include="..\\VCS-DOCs.Configuration\\VCS-DOCs.Configuration.csproj" />

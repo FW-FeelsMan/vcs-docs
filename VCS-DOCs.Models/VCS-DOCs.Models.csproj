@@ -6,6 +6,7 @@
     <RootNamespace>VCS_DOCs.Models</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="ClamAV.Net" Version="0.1.166" />
     <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.1" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.6" />
   </ItemGroup>

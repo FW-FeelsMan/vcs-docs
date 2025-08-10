@@ -24,6 +24,8 @@ using VCS_DOCs.Upload.Core.Services.Tasks;
 using Microsoft.Extensions.Options;
 using VCS_DOCs.Infrastructure;
 using VCS_DOCs.Infrastructure.Services;
+using VCS_DOCs.Upload.Core.Services.Antivirus;
+using ClamAV.Net.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -73,7 +75,14 @@ builder.Services.AddSignalR(options =>
 	options.EnableDetailedErrors = true;
 });
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
-
+builder.Services.AddSingleton<IAntivirusScanner>(sp =>
+{
+    var cfg = sp.GetRequiredService<IConfiguration>();
+    var loggerFactory = sp.GetService<ILoggerFactory>();
+    var amsi = new AmsiScanner("VCS-DOCs", loggerFactory?.CreateLogger<AmsiScanner>());
+    var simple = new SimpleSignaturesScanner(cfg);
+    return new CompositeScanner(amsi, simple);
+});
 // === App Cookies ===
 builder.Services.ConfigureApplicationCookie(options =>
 {
@@ -159,6 +168,25 @@ builder.Configuration
 // === App Build ===
 var app = builder.Build();
 
+app.Lifetime.ApplicationStarted.Register(async () =>
+{
+    try
+    {
+        var cfg = app.Services.GetRequiredService<IConfiguration>();
+        var clamEnabled = string.Equals(cfg["ClamAV:Enabled"], "true", StringComparison.OrdinalIgnoreCase);
+        if (!clamEnabled) return; // <-- Ќ»„≈√ќ Ќ≈ ѕ»Ќ√”≈ћ
+
+        var clam = app.Services.GetRequiredService<IClamAvClient>();
+        await clam.PingAsync();
+        var ver = await clam.GetVersionAsync();
+        app.Logger.LogInformation("ClamAV OK; version: {Version}", ver);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "ClamAV is not reachable");
+    }
+});
+
 // === Ensure User Data Directory ===
 if (!Directory.Exists(absoluteUserDataPath))
 	Directory.CreateDirectory(absoluteUserDataPath);
@@ -194,44 +222,4 @@ app.UseStatusCodePagesWithReExecute("/Errors/{0}");
 var cancellationTokenSource = new CancellationTokenSource();
 var token = cancellationTokenSource.Token;
 
-var inputTask = Task.Run(async () =>
-{
-	while (!token.IsCancellationRequested)
-	{
-		var command = Console.ReadLine();
-		if (command?.ToLower() == "eject-ram")
-		{
-			await RamDiskManager.CleanupAsync();
-			Console.WriteLine("RAM-диск был удалЄн вручную командой eject-ram");
-		}
-	}
-}, token);
-/*
-// —оздаЄм RAM-диск
-var settingsService = app.Services.CreateScope()
-	.ServiceProvider.GetRequiredService<IServerSettingsService>();
-
-int ramSizeGb = await settingsService.GetRamDiskSizeGbAsync();
-
-if (ramSizeGb > 0 && RamDiskManager.InitializeRamDisk(ramSizeGb))
-{
-	Console.WriteLine($"[RAM-DISK] создан на букве {RamDiskManager.RamDriveLetter}:");
-}
-else
-{
-	Console.WriteLine("[RAM-DISK] не создан Ч размер = 0 или всЄ плохо");
-}
-
-app.Lifetime.ApplicationStopping.Register(() =>
-{
-	Task.Run(async () =>
-	{
-		await RamDiskManager.CleanupAsync();
-		Console.WriteLine("RAM-диск был удалЄн при остановке приложени€");
-	}).GetAwaiter().GetResult();
-
-	cancellationTokenSource.Cancel();
-});
-*/
-await app.RunAsync(); 
 app.Run();

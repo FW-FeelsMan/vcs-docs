@@ -1,16 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Security.Cryptography;
+using ClamAV.Net.Client; 
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration; 
+using Microsoft.Extensions.Logging;
 using VCS_DOCs.Core.Interfaces;
 using VCS_DOCs.Infrastructure.Services.Storage;
 using VCS_DOCs.Models.Entities;
 using VCS_DOCs.Upload.Core.Models;
+using VCS_DOCs.Upload.Core.Services.Antivirus;
 
 namespace VCS_DOCs.Upload.Core
 {
@@ -21,16 +19,28 @@ namespace VCS_DOCs.Upload.Core
         private readonly FilePathValidator _pathValidator;
         private readonly UserStoragePaths _paths;
         private readonly IUserInfoProvider _userInfoProvider;
+        private readonly IAntivirusScanner _av;
+        private readonly IConfiguration _cfg;
+        private readonly ILogger<UploadManager>? _log;
 
-        public UploadManager(IUploadDbContext db, IFileStorageService storage, FilePathValidator pathValidator, UserStoragePaths paths, IUserInfoProvider userInfoProvider)
+        public UploadManager(
+            IUploadDbContext db,
+            IFileStorageService storage,
+            FilePathValidator pathValidator,
+            UserStoragePaths paths,
+            IUserInfoProvider userInfoProvider,
+            IAntivirusScanner av,          // <--- вместо IClamAvClient
+            IConfiguration cfg
+        )
         {
             _db = db;
             _storage = storage;
             _pathValidator = pathValidator;
             _paths = paths;
             _userInfoProvider = userInfoProvider;
+            _av = av;                       // <---
+            _cfg = cfg;
         }
-
         public async Task<(long usedBytes, long tempBytes, long limitBytes)> GetStorageStatsAsync(string shortUserId, CancellationToken ct = default)
         {
             var used = await _storage.GetUsedBytesAsync(shortUserId);
@@ -134,7 +144,7 @@ namespace VCS_DOCs.Upload.Core
             session.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync(ct);
 
-            // If not last chunk — tell client the next expected
+            // Next expected
             var existsCount = Directory.EnumerateFiles(chunkDir, "chunk_*", SearchOption.TopDirectoryOnly).Count();
             var next = Math.Min(existsCount, totalChunks);
             if (existsCount < totalChunks)
@@ -142,82 +152,117 @@ namespace VCS_DOCs.Upload.Core
                 return (true, "chunk saved", next, session.FileId);
             }
 
-            // Assemble final file
-            var filesRoot = _paths.GetFileRoot(shortUserId);
-            Directory.CreateDirectory(filesRoot);
+            // ---- All chunks received: antivirus scan via AMSI (or other IAntivirusScanner) ----
+            var chunkFiles = Enumerable.Range(0, totalChunks)
+                .Select(i => Path.Combine(chunkDir, $"chunk_{i:D8}"))
+                .ToArray();
+
+            var timeoutMs = CfgInt("Antivirus:TimeoutMs", 30000);
+            using (var concatForScan = new ConcatenatedReadStream(chunkFiles))
+            using (var cts = CancellationTokenSource.CreateLinkedTokenSource(ct))
+            {
+                cts.CancelAfter(timeoutMs);
+                var verdict = await _av.ScanAsync(concatForScan, originalFileName, cts.Token);
+
+                if (verdict == ScanVerdict.Infected)
+                {
+                    session.Status = "deleted";
+                    session.UpdatedAt = DateTime.UtcNow;
+                    await _db.SaveChangesAsync(ct);
+                    try { Directory.Delete(chunkDir, true); } catch { }
+                    return (false, "infected", totalChunks, session.FileId);
+                }
+                if (verdict == ScanVerdict.Unavailable || verdict == ScanVerdict.Error)
+                {
+                    if (CfgBool("Antivirus:BlockWhenNoAV", true))
+                    {
+                        // Блокируем — на фронте это 503 → «временная недоступность антивируса»
+                        return (false, "av_unavailable", totalChunks, session.FileId);
+                    }
+                    // иначе пропускаем без скана
+                }
+            }
+
+            // Full MD5 without assembling (read concatenated stream)
+            string? computedMd5 = null;
+            using (var md5 = MD5.Create())
+            using (var concatForHash = new ConcatenatedReadStream(chunkFiles))
+            {
+                var hash = md5.ComputeHash(concatForHash);
+                computedMd5 = Convert.ToHexString(hash);
+            }
+
+            bool isFingerprint = fileHash != null && fileHash.StartsWith("fp:", StringComparison.OrdinalIgnoreCase);
+            if (!isFingerprint && !string.Equals(computedMd5, fileHash, StringComparison.OrdinalIgnoreCase))
+            {
+                // bad hash
+                try { Directory.Delete(chunkDir, true); } catch { }
+                session.Status = "deleted";
+                session.UpdatedAt = DateTime.UtcNow;
+                await _db.SaveChangesAsync(ct);
+                return (false, "hash mismatch", totalChunks, session.FileId);
+            }
+            if (isFingerprint && computedMd5 != null)
+            {
+                session.FileHash = computedMd5;
+            }
+
+            // ---- LAZY materialization:
+            // move chunks into the version folder and DO NOT assemble final file
             var versionFolder = _paths.GetVersionedFileFolder(shortUserId, session.FileGroupId.ToString(), session.Version);
             Directory.CreateDirectory(versionFolder);
-            var finalFilePath = _paths.GetFilePath(shortUserId, session.FileGroupId.ToString(), session.Version, originalFileName);
 
-            try
+            foreach (var p in chunkFiles)
             {
-                using (var fs = File.Create(finalFilePath))
+                var dest = Path.Combine(versionFolder, Path.GetFileName(p));
+                try
                 {
-                    for (int i = 0; i < totalChunks; i++)
-                    {
-                        var p = Path.Combine(chunkDir, $"chunk_{i:D8}");
-                        using (var rs = File.OpenRead(p))
-                        {
-                            await rs.CopyToAsync(fs, ct);
-                        }
-                        try { File.Delete(p); } catch { }
-                    }
+                    if (File.Exists(dest)) File.Delete(dest);
+                    File.Move(p, dest);
+                }
+                catch
+                {
+                    // fallback copy+delete
+                    try { File.Copy(p, dest, overwrite: true); } catch { }
+                    try { File.Delete(p); } catch { }
                 }
             }
-            catch (IOException)
-            {
-                try { if (File.Exists(finalFilePath)) File.Delete(finalFilePath); } catch { }
-                try { if (Directory.Exists(versionFolder) && Directory.GetFiles(versionFolder).Length == 0) Directory.Delete(versionFolder); } catch { }
-                return (false, "insufficient_storage", next, session.FileId);
-            }
+            // cleanup chunk temp dir
+            try { Directory.Delete(chunkDir, true); } catch { }
 
-            // Hash check (skip for fp: but persist real hash)
-            using (var md5 = MD5.Create())
-            using (var fs = File.OpenRead(finalFilePath))
-            {
-                var finalHash = Convert.ToHexString(md5.ComputeHash(fs));
-                bool isFingerprint = fileHash != null && fileHash.StartsWith("fp:", StringComparison.OrdinalIgnoreCase);
-                if (!isFingerprint && !finalHash.Equals(fileHash, StringComparison.OrdinalIgnoreCase))
-                {
-                    try { File.Delete(finalFilePath); } catch { }
-                    try { if (Directory.Exists(versionFolder) && Directory.GetFiles(versionFolder).Length == 0) Directory.Delete(versionFolder); } catch { }
-                    return (false, "hash mismatch", next, session.FileId);
-                }
-                if (isFingerprint)
-                {
-                    session.FileHash = finalHash;
-                }
-            }
-
+            // mark complete
             session.Status = "complete";
             session.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync(ct);
 
-            if (Directory.Exists(chunkDir))
-            {
-                try { Directory.Delete(chunkDir, true); } catch { }
-            }
-
             return (true, "completed", totalChunks, session.FileId);
+        }
+        public async Task<(string ownerShort, FileUploadSessionModel session)?> FindAnyCompletedByGroupVersionAsync(
+            Guid fileGroupId, int version, CancellationToken ct = default)
+        {
+            var s = await _db.FileUploadSessions.AsNoTracking()
+                .FirstOrDefaultAsync(x => x.FileGroupId == fileGroupId
+                                          && x.Version == version
+                                          && x.Status == "complete", ct);
+            if (s == null) return null;
+            var ownerShort = s.UserId.Replace("-", "").Substring(0, 8);
+            return (ownerShort, s);
         }
 
         public async Task<List<VersionDto>> GetAllVersionsAsync(string shortUserId, string originalFileName, CancellationToken ct = default)
         {
             var userId = _userInfoProvider.ResolveFullUserId(shortUserId);
-
-            var rows = await _db.FileUploadSessions
-                .AsNoTracking()
+            var list = await _db.FileUploadSessions
                 .Where(x => x.UserId == userId && x.OriginalFileName == originalFileName && x.Status == "complete")
                 .OrderByDescending(x => x.Version)
-                .Select(x => new { x.Version, x.UpdatedAt, x.FileSize })
+                .Select(x => new VersionDto
+                {
+                    Version = x.Version,
+                    UploadedAt = x.UpdatedAt,
+                    FileSize = x.FileSize
+                })
                 .ToListAsync(ct);
-
-            return rows.Select(x => new VersionDto
-            {
-                Version = x.Version,
-                UploadedAt = new DateTimeOffset(DateTime.SpecifyKind(x.UpdatedAt, DateTimeKind.Utc)),
-                FileSize = x.FileSize
-            }).ToList();
+            return list;
         }
 
         public async Task<List<UserFileDto>> GetAllUserFilesAsync(string shortUserId, CancellationToken ct = default)
@@ -241,14 +286,14 @@ namespace VCS_DOCs.Upload.Core
                         FileGroupId = latest.FileGroupId,
                         FileName = g.Key,
                         FileSize = latest.FileSize,
-                        UpdatedAt = new DateTimeOffset(DateTime.SpecifyKind(latest.UpdatedAt, DateTimeKind.Utc)),
+                        UpdatedAt = latest.UpdatedAt,
                         LatestVersion = latest.Version,
                         Versions = g
                             .OrderByDescending(x => x.Version)
                             .Select(x => new VersionDto
                             {
                                 Version = x.Version,
-                                UploadedAt = new DateTimeOffset(DateTime.SpecifyKind(x.UpdatedAt, DateTimeKind.Utc)),
+                                UploadedAt = x.UpdatedAt,
                                 FileSize = x.FileSize
                             })
                             .ToList()
@@ -320,13 +365,10 @@ namespace VCS_DOCs.Upload.Core
             {
                 get; set;
             }
-
-            // IMPORTANT: DateTimeOffset
-            public DateTimeOffset UpdatedAt
+            public DateTime UpdatedAt
             {
                 get; set;
             }
-
             public bool Stopped
             {
                 get; set;
@@ -386,9 +428,7 @@ namespace VCS_DOCs.Upload.Core
                 FileSize = session.FileSize,
                 Uploaded = uploaded.OrderBy(x => x).ToList(),
                 UploadedBytes = uploadedBytes,
-
-                // force UTC
-                UpdatedAt = new DateTimeOffset(DateTime.SpecifyKind(session.UpdatedAt, DateTimeKind.Utc)),
+                UpdatedAt = session.UpdatedAt,
                 Stopped = IsStopped(chunkDir)
             };
         }
@@ -434,12 +474,157 @@ namespace VCS_DOCs.Upload.Core
             }
             catch { }
         }
+        // ---- Helpers: config without Microsoft.Extensions.Configuration.Binder
+        private bool CfgBool(string key, bool defValue)
+        {
+            try
+            {
+                var s = _cfg[key];
+                if (bool.TryParse(s, out var b)) return b;
+                if (int.TryParse(s, out var i)) return i != 0;
+                return defValue;
+            }
+            catch { return defValue; }
+        }
+
+        private int CfgInt(string key, int defValue)
+        {
+            try
+            {
+                var s = _cfg[key];
+                return int.TryParse(s, out var i) ? i : defValue;
+            }
+            catch { return defValue; }
+        }
+
+        // ---- Helper: make ClamAV ScanResult decision robust across libs/versions
+        private static bool IsScanClean(object scan)
+        {
+            if (scan == null) return false;
+            var t = scan.GetType();
+
+            // 1) Явные bool "infected"-флаги
+            foreach (var name in new[] { "Infected", "IsInfected", "HasInfection", "HasVirus", "IsVirusFound" })
+            {
+                var p = t.GetProperty(name);
+                if (p != null && p.PropertyType == typeof(bool))
+                {
+                    var infected = (bool)(p.GetValue(scan) ?? false);
+                    return !infected;
+                }
+            }
+
+            // 2) Явные bool "ок/чисто"
+            foreach (var name in new[] { "IsSafe", "Ok", "Success", "Clean", "IsOk" })
+            {
+                var p = t.GetProperty(name);
+                if (p != null && p.PropertyType == typeof(bool))
+                {
+                    var ok = (bool)(p.GetValue(scan) ?? false);
+                    return ok;
+                }
+            }
+
+            // 3) Название сигнатуры/вируса
+            foreach (var name in new[] { "MalwareName", "Signature", "VirusName" })
+            {
+                var p = t.GetProperty(name);
+                if (p != null)
+                {
+                    var s = p.GetValue(scan)?.ToString();
+                    if (!string.IsNullOrWhiteSpace(s)) return false; // есть имя — заражено
+                    return true; // пусто — чисто
+                }
+            }
+
+            // 4) Enum/строковый Status
+            var statusProp = t.GetProperty("Status");
+            if (statusProp != null)
+            {
+                var statusText = statusProp.GetValue(scan)?.ToString() ?? "";
+                if (statusText.IndexOf("FOUND", StringComparison.OrdinalIgnoreCase) >= 0
+                 || statusText.IndexOf("INFECT", StringComparison.OrdinalIgnoreCase) >= 0)
+                    return false;
+                if (statusText.IndexOf("OK", StringComparison.OrdinalIgnoreCase) >= 0
+                 || statusText.IndexOf("CLEAN", StringComparison.OrdinalIgnoreCase) >= 0
+                 || statusText.IndexOf("PASSED", StringComparison.OrdinalIgnoreCase) >= 0)
+                    return true;
+            }
+
+            // 5) Fallback: ToString()
+            var txt = scan.ToString() ?? "";
+            if (txt.IndexOf("FOUND", StringComparison.OrdinalIgnoreCase) >= 0
+             || txt.IndexOf("INFECT", StringComparison.OrdinalIgnoreCase) >= 0)
+                return false;
+            if (txt.IndexOf("OK", StringComparison.OrdinalIgnoreCase) >= 0
+             || txt.IndexOf("CLEAN", StringComparison.OrdinalIgnoreCase) >= 0)
+                return true;
+
+            // По умолчанию считаем "не ок", чтобы не пропустить
+            return false;
+        }
+
+        // ========= NEW: Streamed open (assembled file OR lazy chunks) =========
+        public sealed class FileOpenResult
+        {
+            public required Stream Stream
+            {
+                get; init;
+            }
+            public required string FileName
+            {
+                get; init;
+            }
+            public long? Length
+            {
+                get; init;
+            }
+        }
+
+        public async Task<FileOpenResult?> OpenFileVersionStreamAsync(string shortUserId, Guid fileGroupId, int version, CancellationToken ct = default)
+        {
+            var session = await _db.FileUploadSessions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s =>
+                    s.UserId == _userInfoProvider.ResolveFullUserId(shortUserId)
+                    && s.FileGroupId == fileGroupId
+                    && s.Version == version
+                    && s.Status == "complete", ct);
+
+            if (session == null) return null;
+
+            var finalPath = _paths.GetFilePath(shortUserId, session.FileGroupId.ToString(), session.Version, session.OriginalFileName);
+            if (File.Exists(finalPath))
+            {
+                var fs = new FileStream(finalPath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                return new FileOpenResult { Stream = fs, FileName = session.OriginalFileName, Length = fs.Length };
+            }
+
+            var versionDir = _paths.GetVersionedFileFolder(shortUserId, session.FileGroupId.ToString(), version);
+            if (!Directory.Exists(versionDir)) return null;
+
+            var chunkFiles = Directory.EnumerateFiles(versionDir, "chunk_*", SearchOption.TopDirectoryOnly)
+                                      .OrderBy(p => p, StringComparer.Ordinal)
+                                      .ToArray();
+            if (chunkFiles.Length == 0) return null;
+
+            long? totalLen = 0;
+            foreach (var p in chunkFiles)
+            {
+                try { totalLen += new FileInfo(p).Length; } catch { totalLen = null; break; }
+            }
+
+            var concat = new ConcatenatedReadStream(chunkFiles); // caller disposes via File()
+            return new FileOpenResult { Stream = concat, FileName = session.OriginalFileName, Length = totalLen };
+        }
 
         public async Task<FileContentResultModel?> GetFileVersionAsync(string shortUserId, Guid fileGroupId, int version)
         {
+            // kept for backward compatibility (not used by controller after patch)
             var session = await _db.FileUploadSessions
                 .FirstOrDefaultAsync(s => s.UserId == _userInfoProvider.ResolveFullUserId(shortUserId) && s.FileGroupId == fileGroupId && s.Version == version && s.Status == "complete");
             if (session == null) return null;
+
             var content = await _storage.ReadFileAsync(shortUserId, session.FileGroupId, session.Version, session.OriginalFileName);
             return new FileContentResultModel
             {
@@ -457,35 +642,84 @@ namespace VCS_DOCs.Upload.Core
             _db.FileUploadSessions.Remove(session);
             await _db.SaveChangesAsync();
 
+            // delete assembled file (if any)
             await _storage.DeleteFileAsync(shortUserId, session.FileGroupId, session.Version, session.OriginalFileName);
 
+            // also delete chunked version folder (lazy)
             var versionDir = _paths.GetVersionedFileFolder(shortUserId, session.FileGroupId.ToString(), version);
-            var fileGroupDir = Path.Combine(_paths.GetFileRoot(shortUserId), session.FileGroupId.ToString());
-
             try
             {
-                var metaPath = Path.Combine(versionDir, "meta.json");
-                if (File.Exists(metaPath)) File.Delete(metaPath);
-                if (Directory.Exists(versionDir) && Directory.GetFiles(versionDir).Length == 0) Directory.Delete(versionDir);
-                if (Directory.Exists(fileGroupDir) && Directory.GetDirectories(fileGroupDir).Length == 0) Directory.Delete(fileGroupDir);
+                if (Directory.Exists(versionDir)) Directory.Delete(versionDir, true);
+                var fileGroupDir = Path.Combine(_paths.GetFileRoot(shortUserId), session.FileGroupId.ToString());
+                if (Directory.Exists(fileGroupDir) && Directory.GetDirectories(fileGroupDir).Length == 0 && Directory.GetFiles(fileGroupDir).Length == 0)
+                    Directory.Delete(fileGroupDir);
             }
             catch { }
 
             return true;
         }
-        public async Task<FileUploadSessionModel?> FindCompletedByOwnerAsync(string shortUserId, Guid fileGroupId, int version, CancellationToken ct = default)
-        {
-            var full = _userInfoProvider.ResolveFullUserId(shortUserId);
-            return await _db.FileUploadSessions
-                .AsNoTracking()
-                .FirstOrDefaultAsync(s => s.UserId == full && s.FileGroupId == fileGroupId && s.Version == version && s.Status == "complete", ct);
-        }
 
-        public async Task<FileUploadSessionModel?> FindAnyCompletedByGroupVersionAsync(Guid fileGroupId, int version, CancellationToken ct = default)
+        // ========= NEW: simple concat stream over chunk files =========
+        private sealed class ConcatenatedReadStream : Stream
         {
-            return await _db.FileUploadSessions
-                .AsNoTracking()
-                .FirstOrDefaultAsync(s => s.FileGroupId == fileGroupId && s.Version == version && s.Status == "complete", ct);
+            private readonly Queue<string> _paths;
+            private FileStream? _current;
+
+            public ConcatenatedReadStream(IEnumerable<string> paths) => _paths = new Queue<string>(paths);
+
+            public override bool CanRead => true;
+            public override bool CanSeek => false;
+            public override bool CanWrite => false;
+            public override long Length => throw new NotSupportedException();
+            public override long Position
+            {
+                get => throw new NotSupportedException(); set => throw new NotSupportedException();
+            }
+
+            private void EnsureCurrent()
+            {
+                while (_current == null || _current.Position >= _current.Length)
+                {
+                    _current?.Dispose();
+                    if (_paths.Count == 0) { _current = null; break; }
+                    _current = new FileStream(_paths.Dequeue(), FileMode.Open, FileAccess.Read, FileShare.Read);
+                }
+            }
+
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                EnsureCurrent();
+                if (_current == null) return 0;
+                int read = _current.Read(buffer, offset, count);
+                if (read == 0)
+                {
+                    EnsureCurrent();
+                    return Read(buffer, offset, count);
+                }
+                return read;
+            }
+
+            public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken ct)
+            {
+                EnsureCurrent();
+                if (_current == null) return 0;
+                int read = await _current.ReadAsync(buffer.AsMemory(offset, count), ct);
+                if (read == 0)
+                {
+                    EnsureCurrent();
+                    return await ReadAsync(buffer, offset, count, ct);
+                }
+                return read;
+            }
+
+            protected override void Dispose(bool disposing)
+            {
+                _current?.Dispose(); base.Dispose(disposing);
+            }
+            public override void Flush() => throw new NotSupportedException();
+            public override long Seek(long o, SeekOrigin so) => throw new NotSupportedException();
+            public override void SetLength(long v) => throw new NotSupportedException();
+            public override void Write(byte[] b, int o, int c) => throw new NotSupportedException();
         }
     }
 }

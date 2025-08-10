@@ -135,7 +135,15 @@ namespace VCS_DOCs.Controllers
 
             if (!r.ok)
             {
-                if (r.message == "insufficient_storage") return StatusCode(507, new { message = "Недостаточно места на диске" });
+                if (r.message == "insufficient_storage")
+                    return StatusCode(507, new { message = "Недостаточно места на диске" });
+
+                if (r.message == "infected")
+                    return Conflict(new { message = "infected", nextExpectedIndex = r.nextExpectedIndex, sessionId = r.sessionId });
+
+                if (r.message == "av_timeout" || r.message == "av_unavailable")
+                    return StatusCode(503, new { message = r.message });
+
                 return Conflict(new { message = r.message, nextExpectedIndex = r.nextExpectedIndex, sessionId = r.sessionId });
             }
 
@@ -150,13 +158,15 @@ namespace VCS_DOCs.Controllers
             return Ok(versions);
         }
 
+        // ====== STREAMED download (assembled file or lazy chunks) ======
         [HttpGet("download/{fileGroupId:guid}/{version:int}")]
-        public async Task<IActionResult> DownloadFile(Guid fileGroupId, int version)
+        [AllowAnonymous] // если хотите оставить доступ только владельцу — уберите
+        public async Task<IActionResult> DownloadFile(Guid fileGroupId, int version, CancellationToken ct)
         {
             var shortUserId = GetRequiredShortUserId();
-            var file = await _uploadManager.GetFileVersionAsync(shortUserId, fileGroupId, version);
-            if (file == null) return NotFound();
-            return File(file.Content, "application/octet-stream", file.FileName);
+            var opened = await _uploadManager.OpenFileVersionStreamAsync(shortUserId, fileGroupId, version, ct);
+            if (opened == null) return NotFound();
+            return File(opened.Stream, "application/octet-stream", opened.FileName, enableRangeProcessing: true);
         }
 
         [HttpDelete("delete/{fileGroupId:guid}/{version:int}")]
@@ -168,22 +178,20 @@ namespace VCS_DOCs.Controllers
             return Ok(new { status = "deleted" });
         }
 
-        // ----------------------
-        //  SHARING (signed link)
-        // ----------------------
+        // ---------------------- SHARING (signed link) ----------------------
 
-        // Creates a time-limited signed link that can be opened by anyone who has the URL
-        // No DB migrations required.
         [HttpPost("share-link")]
         public async Task<IActionResult> CreateShareLink([FromForm] Guid fileGroupId, [FromForm] int version, [FromForm] int ttlHours = 168, CancellationToken ct = default)
         {
             if (version <= 0) return BadRequest("invalid version");
-            if (ttlHours <= 0 || ttlHours > 24 * 30) ttlHours = 168; // clamp
+            if (ttlHours <= 0 || ttlHours > 24 * 30) ttlHours = 168;
 
             var shortUserId = GetRequiredShortUserId();
-            // verify ownership exists
-            var session = await _uploadManager.FindCompletedByOwnerAsync(shortUserId, fileGroupId, version, ct);
-            if (session == null) return NotFound();
+
+            // лёгкая проверка владения — файл должен существовать
+            var opened = await _uploadManager.OpenFileVersionStreamAsync(shortUserId, fileGroupId, version, ct);
+            if (opened == null) return NotFound();
+            await opened.Stream.DisposeAsync(); // мы лишь проверяли
 
             var exp = DateTimeOffset.UtcNow.AddHours(ttlHours).ToUnixTimeSeconds();
             var token = BuildSignature(fileGroupId, version, exp);
@@ -193,7 +201,6 @@ namespace VCS_DOCs.Controllers
             return Ok(new { url, expiresAt = exp });
         }
 
-        // Public download via signed link
         [AllowAnonymous]
         [HttpGet("public")]
         [Produces("application/octet-stream")]
@@ -205,29 +212,47 @@ namespace VCS_DOCs.Controllers
             var expected = BuildSignature(g, v, exp);
             if (!TimeSafeEquals(expected, sig)) return NotFound();
 
-            // find file session by fileGroupId+version regardless of user
-            var session = await _uploadManager.FindAnyCompletedByGroupVersionAsync(g, v, ct);
-            if (session == null) return NotFound();
+            // ключ: ищем владельца по группе/версии
+            var found = await _uploadManager.FindAnyCompletedByGroupVersionAsync(g, v, ct);
+            if (found == null) return NotFound();
 
-            var ownerShort = session.UserId.Replace("-", "").Substring(0, 8);
-            var file = await _uploadManager.GetFileVersionAsync(ownerShort, g, v);
-            if (file == null) return NotFound();
+            var opened = await _uploadManager.OpenFileVersionStreamAsync(found.Value.ownerShort, g, v, ct);
+            if (opened == null) return NotFound();
 
-            return File(file.Content, "application/octet-stream", file.FileName);
+            return File(opened.Stream, "application/octet-stream", opened.FileName, enableRangeProcessing: true);
+        }
+
+        [HttpGet("stats")]
+        public async Task<IActionResult> GetStats(CancellationToken ct)
+        {
+            var shortUserId = GetRequiredShortUserId();
+            var (used, temp, limit) = await _uploadManager.GetStorageStatsAsync(shortUserId, ct);
+            return Ok(new { usedBytes = used, tempBytes = temp, limitBytes = limit });
+        }
+        private string? GetRequiredShortUserIdSafe()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId)) return null;
+            return userId.Replace("-", "").Substring(0, 8);
+        }
+
+        private string GetRequiredShortUserId()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrWhiteSpace(userId)) throw new UnauthorizedAccessException("no user");
+            return userId.Replace("-", "").Substring(0, 8);
         }
 
         private string BuildSignature(Guid groupId, int version, long exp)
         {
             var secret = _cfg["ShareLinks:Secret"];
             if (string.IsNullOrEmpty(secret))
-            {
-                // fallback dev secret; set ShareLinks:Secret in appsettings
                 secret = "CHANGE_ME_SUPER_SECRET_256bit_key_minimum";
-            }
+
             var payload = $"{groupId:N}.{version}.{exp}";
             using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(secret));
             var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));
-            return ToBase64Url(hash);
+            return Convert.ToBase64String(hash).TrimEnd('=').Replace('+', '-').Replace('/', '_');
         }
 
         private static bool TimeSafeEquals(string a, string b)
@@ -236,18 +261,6 @@ namespace VCS_DOCs.Controllers
             int diff = 0;
             for (int i = 0; i < a.Length; i++) diff |= a[i] ^ b[i];
             return diff == 0;
-        }
-
-        private static string ToBase64Url(byte[] bytes)
-        {
-            return Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
-        }
-
-        private string GetRequiredShortUserId()
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrWhiteSpace(userId)) throw new UnauthorizedAccessException("no user");
-            return userId.Replace("-", "").Substring(0, 8);
         }
     }
 }
