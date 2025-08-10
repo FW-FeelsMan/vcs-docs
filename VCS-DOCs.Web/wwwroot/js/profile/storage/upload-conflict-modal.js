@@ -96,3 +96,139 @@
 
     window.showConflictModal = showConflictModal;
 })();
+// ===== SHARE LINK MODAL =====
+(function () {
+    var $doc = $(document);
+    var $modal = $('#share-link-modal');
+    var ctx = { gid: null, version: null, filename: null };
+
+    function openMenu($wrap) {
+        closeAllMenus();
+        $wrap.find('.action-dropdown-menu').show();
+    }
+    function closeAllMenus() {
+        $modal.find('.action-dropdown-menu').hide();
+    }
+    function setSplitButton($wrap, text, value) {
+        var $btn = $wrap.find('> .button-sliding').first();
+        $btn.text(text).attr('data-value', value);
+    }
+    function getSplitValue($wrap) {
+        return $wrap.find('> .button-sliding').first().attr('data-value');
+    }
+
+    // Меню TTL
+    $modal.on('click', '#share-ttl .dropdown-toggle', function () {
+        openMenu($('#share-ttl'));
+    });
+    $modal.on('click', '#share-ttl .dropdown-item', function () {
+        var v = $(this).attr('data-value');
+        var txt = $(this).text();
+        setSplitButton($('#share-ttl'), txt, v);
+        closeAllMenus();
+    });
+
+    // Меню лимита
+    $modal.on('click', '#share-limit .dropdown-toggle', function () {
+        openMenu($('#share-limit'));
+    });
+    $modal.on('click', '#share-limit .dropdown-item', function () {
+        var v = $(this).attr('data-value');
+        var txt = $(this).text();
+        setSplitButton($('#share-limit'), txt, v);
+        closeAllMenus();
+    });
+
+    // Клик снаружи — закрыть выпадашки
+    $(document).on('click', function (e) {
+        if ($modal.is(':visible') && !$(e.target).closest('#share-link-modal .split-button').length) {
+            closeAllMenus();
+        }
+    });
+
+    // Открытие модалки из меню действий
+    // ожидаем элемент с data-action="share" внутри строки файла
+    $doc.off('click.shareOpen').on('click.shareOpen', '[data-action="share"]', function (e) {
+        e.preventDefault();
+
+        var $row = $(this).closest('tr');
+        var gid = $(this).data('gid') || $row.data('gid') || $row.attr('data-gid');
+        var fileName = $(this).data('filename') || $row.find('[data-filename]').data('filename') || $row.find('.file-name').text();
+        var verSel = $row.find('select.version-select, select[data-role="version"]').val();
+        var version = $(this).data('version') || (verSel ? parseInt(String(verSel).replace(/[^\d]/g, ''), 10) : 1);
+
+        if (!gid || !version) {
+            alert('Не удалось определить файл/версию для публикации.');
+            return;
+        }
+
+        ctx = { gid: gid, version: version, filename: fileName };
+
+        // дефолтные значения
+        setSplitButton($('#share-ttl'), '7 дней (168 ч)', '168');
+        setSplitButton($('#share-limit'), '10 скачиваний', '10');
+        $('#share-auth-only').prop('checked', true);
+        $('#share-link-url').hide().val('');
+
+        $modal.show();
+    });
+
+    // Закрытие
+    $modal.on('click', '#share-cancel', function () {
+        $modal.hide();
+    });
+
+    // Генерация + копирование
+    $modal.on('click', '#share-generate-copy', async function () {
+        try {
+            var ttl = parseInt(getSplitValue($('#share-ttl')), 10);
+            var limitVal = getSplitValue($('#share-limit'));
+            var requireAuth = $('#share-auth-only').is(':checked');
+
+            if (!ttl || ttl <= 0) ttl = 168;
+
+            var fd = new FormData();
+            fd.append('fileGroupId', ctx.gid);
+            fd.append('version', ctx.version);
+            fd.append('ttlHours', ttl);
+            if (String(limitVal) !== 'unlimited') fd.append('maxDownloads', limitVal);
+            fd.append('requireAuth', requireAuth ? 'true' : 'false');
+
+            var btn = $(this);
+            btn.prop('disabled', true);
+
+            var res = await fetch('/api/Upload/share-db', { method: 'POST', body: fd });
+            if (!res.ok) {
+                if (res.status === 404) { alert('Файл/версия не найдены.'); }
+                else if (res.status === 401) { alert('Требуется вход в систему.'); }
+                else { alert('Не удалось создать ссылку. Код: ' + res.status); }
+                btn.prop('disabled', false);
+                return;
+            }
+
+            var data = await res.json();
+            var url = data && data.url ? data.url : '';
+
+            if (!url) {
+                alert('Сервис вернул пустую ссылку.');
+                btn.prop('disabled', false);
+                return;
+            }
+
+            var $out = $('#share-link-url').val(url).show();
+            $out[0].focus(); $out[0].select();
+            try { document.execCommand('copy'); } catch { /* ignore */ }
+
+            btn.text('Ссылка скопирована!');
+            setTimeout(function () {
+                btn.text('Скопировать ссылку');
+                btn.prop('disabled', false);
+                $modal.hide();
+            }, 800);
+        } catch (err) {
+            console.error(err);
+            alert('Ошибка при создании ссылки.');
+            $('#share-generate-copy').prop('disabled', false);
+        }
+    });
+})();

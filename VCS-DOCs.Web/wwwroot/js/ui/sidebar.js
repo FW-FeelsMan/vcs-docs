@@ -92,8 +92,9 @@ async function loadProfileScripts() {
         "/js/profile/profile-edit-info.js",
         "/js/profile/storage/storage-sortable.js",
         "/js/profile/storage/upload-file.js",
-        "/js/profile/storage/storage-table.js",
         "/js/profile/storage/upload-conflict-modal.js",
+        "/js/profile/storage/storage-table.js",
+        "/js/profile/storage/share-link-modal.js"
         // "/js/profile/storage/sorttable.js",
         // "/js/profile/taskManager/taskManager.js"
     ];

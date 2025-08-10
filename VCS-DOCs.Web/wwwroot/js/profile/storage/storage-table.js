@@ -1,5 +1,5 @@
-﻿// storage-table.js — only date formatting adjusted as safety fallback.
-// If server already sends DateTimeOffset with Z/+00:00, this just works.
+﻿
+// storage-table.js — fixed share modal integration and version menu id mismatch.
 
 (function () {
     window.initStorageTable = function initStorageTable() {
@@ -177,7 +177,7 @@
                     document.getElementById('version-dropdown-menu')?.remove();
 
                     const menu = document.createElement('div');
-                    menu.id = 'version-dropdown_menu';
+                    menu.id = 'version-dropdown-menu'; // fixed id (was version-dropdown_menu)
                     menu.className = 'compact';
                     const rect = wrapper.getBoundingClientRect();
                     menu.style.position = 'absolute';
@@ -229,7 +229,6 @@
                 let selectedAction = btn?.dataset.action || 'download';
                 if (!btn || !arrow || !menu) return;
 
-                // открыть/закрыть меню
                 arrow.onclick = e => {
                     e.stopPropagation();
                     document.querySelectorAll('.action-dropdown-menu')
@@ -237,21 +236,27 @@
                     menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
                 };
 
-                // выполнить текущее выбранное действие
                 btn.onclick = () => {
                     const row = dropdown.closest('tr');
                     if (!row) return;
                     const fileGroupId = row.dataset.fileGroupId;
                     const version = row.querySelector('.version-button')?.dataset.version || row.dataset.currentVersion;
-                    handleActionClick(selectedAction, fileGroupId, version);
+
+                    if (selectedAction === 'share') {
+                        if (window.openShareLinkModalFromRow) {
+                            window.openShareLinkModalFromRow(row);
+                            return;
+                        }
+                    }
+                    handleActionClick(selectedAction, fileGroupId, version, row);
                 };
 
                 items.forEach(item => {
                     item.onclick = () => {
-                        selectedAction = item.dataset.action;       // 'download' | 'view' | 'share' | 'delete'
-                        btn.textContent = item.textContent;         // обновляем лейбл
-                        btn.dataset.action = selectedAction;        // сохраняем состояние
-                        menu.style.display = 'none';                // закрываем меню
+                        selectedAction = item.dataset.action;
+                        btn.textContent = item.textContent;
+                        btn.dataset.action = selectedAction;
+                        menu.style.display = 'none';
                     };
                 });
 
@@ -260,7 +265,8 @@
                 });
             });
         }
-        function handleActionClick(action, fileGroupId, version) {
+
+        function handleActionClick(action, fileGroupId, version, row) {
             const v = Number(version);
             const downloadUrl = `/api/upload/download/${fileGroupId}/${v}`;
 
@@ -272,11 +278,13 @@
                     window.open(downloadUrl, '_blank');
                     break;
                 case 'share':
-                    // NEW: request a signed public link from the server
+                    if (window.openShareLinkModalFromRow && row) {
+                        window.openShareLinkModalFromRow(row);
+                        return;
+                    }
                     const fd = new FormData();
                     fd.append('fileGroupId', fileGroupId);
                     fd.append('version', String(v));
-                    // optional: fd.append('ttlHours', '168');
                     fetch('/api/upload/share-link', { method: 'POST', body: fd })
                         .then(r => r.ok ? r.json() : Promise.reject(new Error('share-link failed')))
                         .then(data => {
@@ -288,7 +296,6 @@
                         })
                         .catch(err => {
                             console.error('share error', err);
-                            // fallback to old behavior for owner-only link
                             const ownLink = window.location.origin + downloadUrl;
                             navigator.clipboard.writeText(ownLink)
                                 .then(() => alert('Скопирована ссылка для владельца (требуется авторизация)'))

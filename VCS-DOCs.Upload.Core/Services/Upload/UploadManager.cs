@@ -8,6 +8,12 @@ using VCS_DOCs.Infrastructure.Services.Storage;
 using VCS_DOCs.Models.Entities;
 using VCS_DOCs.Upload.Core.Models;
 using VCS_DOCs.Upload.Core.Services.Antivirus;
+using System;
+using System.IO;
+using System.Linq;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace VCS_DOCs.Upload.Core
 {
@@ -28,7 +34,7 @@ namespace VCS_DOCs.Upload.Core
             FilePathValidator pathValidator,
             UserStoragePaths paths,
             IUserInfoProvider userInfoProvider,
-            IAntivirusScanner av,          // <--- вместо IClamAvClient
+            IAntivirusScanner av,
             IConfiguration cfg
         )
         {
@@ -37,9 +43,10 @@ namespace VCS_DOCs.Upload.Core
             _pathValidator = pathValidator;
             _paths = paths;
             _userInfoProvider = userInfoProvider;
-            _av = av;                       // <---
+            _av = av;
             _cfg = cfg;
         }
+
         public async Task<(long usedBytes, long tempBytes, long limitBytes)> GetStorageStatsAsync(string shortUserId, CancellationToken ct = default)
         {
             var used = await _storage.GetUsedBytesAsync(shortUserId);
@@ -124,15 +131,59 @@ namespace VCS_DOCs.Upload.Core
             }
         }
 
-        public async Task<(bool ok, string message, int nextExpectedIndex, Guid sessionId)> HandleChunkUploadAsync(
-            string shortUserId, IFormFile chunk, string fileHash, int chunkIndex, int totalChunks, long fileSize, string originalFileName, CancellationToken ct = default)
+        // Backward-compatible wrapper (8 args)
+        public Task<(bool ok, string message, int nextExpectedIndex, Guid sessionId)> HandleChunkUploadAsync(
+            string shortUserId, IFormFile chunk, string fileHash, int chunkIndex, int totalChunks,
+            long fileSize, string originalFileName, CancellationToken ct = default)
         {
+            return HandleChunkUploadAsync(shortUserId, chunk, fileHash, chunkIndex, totalChunks, fileSize, originalFileName, null, ct);
+        }
+
+        // Main overload (9 args) with targetVersion support
+        public async Task<(bool ok, string message, int nextExpectedIndex, Guid sessionId)> HandleChunkUploadAsync(
+            string shortUserId, IFormFile chunk, string fileHash, int chunkIndex, int totalChunks,
+            long fileSize, string originalFileName, int? targetVersion, CancellationToken ct = default)
+        {
+            // Start/continue session
             var session = await StartOrContinueSessionAsync(shortUserId, originalFileName, fileHash, fileSize, ct);
+
+            // Replace in-place if requested
+            if (targetVersion.HasValue && targetVersion.Value > 0 && session.Version != targetVersion.Value)
+            {
+                var userId = _userInfoProvider.ResolveFullUserId(shortUserId);
+
+                var existing = await _db.FileUploadSessions
+                    .FirstOrDefaultAsync(x => x.UserId == userId
+                                           && x.FileGroupId == session.FileGroupId
+                                           && x.OriginalFileName == originalFileName
+                                           && x.Version == targetVersion.Value
+                                           && x.Status == "complete", ct);
+
+                if (existing != null)
+                {
+                    _db.FileUploadSessions.Remove(existing);
+                    await _db.SaveChangesAsync(ct);
+
+                    try { await _storage.DeleteFileAsync(shortUserId, existing.FileGroupId, existing.Version, existing.OriginalFileName); }
+                    catch { /* ignore */ }
+
+                    try
+                    {
+                        var versionDir = _paths.GetVersionedFileFolder(shortUserId, existing.FileGroupId.ToString(), existing.Version);
+                        if (Directory.Exists(versionDir)) Directory.Delete(versionDir, true);
+                    }
+                    catch { /* ignore */ }
+                }
+
+                session.Version = targetVersion.Value;
+                await _db.SaveChangesAsync(ct);
+            }
+
+            // Save chunk to session temp
             var chunkDir = _pathValidator.GetChunkDirectory(shortUserId, session.FileId);
             Directory.CreateDirectory(chunkDir);
             TryClearStoppedFlag(chunkDir);
 
-            // Save chunk
             var chunkPath = Path.Combine(chunkDir, $"chunk_{chunkIndex:D8}");
             using (var s = chunk.OpenReadStream())
             using (var fs = File.Create(chunkPath))
@@ -151,7 +202,7 @@ namespace VCS_DOCs.Upload.Core
                 return (true, "chunk saved", next, session.FileId);
             }
 
-            // ---- All chunks received: antivirus scan via AMSI (or other IAntivirusScanner) ----
+            // Antivirus on concatenated stream
             var chunkFiles = Enumerable.Range(0, totalChunks)
                 .Select(i => Path.Combine(chunkDir, $"chunk_{i:D8}"))
                 .ToArray();
@@ -175,14 +226,13 @@ namespace VCS_DOCs.Upload.Core
                 {
                     if (CfgBool("Antivirus:BlockWhenNoAV", true))
                     {
-                        // Блокируем — на фронте это 503 → «временная недоступность антивируса»
                         return (false, "av_unavailable", totalChunks, session.FileId);
                     }
-                    // иначе пропускаем без скана
+                    // else: allow without AV
                 }
             }
 
-            // Full MD5 without assembling (read concatenated stream)
+            // MD5 hash over concatenated stream (if fileHash is true MD5)
             string? computedMd5 = null;
             using (var md5 = MD5.Create())
             using (var concatForHash = new ConcatenatedReadStream(chunkFiles))
@@ -194,7 +244,6 @@ namespace VCS_DOCs.Upload.Core
             bool isFingerprint = fileHash != null && fileHash.StartsWith("fp:", StringComparison.OrdinalIgnoreCase);
             if (!isFingerprint && !string.Equals(computedMd5, fileHash, StringComparison.OrdinalIgnoreCase))
             {
-                // bad hash
                 try { Directory.Delete(chunkDir, true); } catch { }
                 session.Status = "deleted";
                 session.UpdatedAt = DateTime.UtcNow;
@@ -206,8 +255,7 @@ namespace VCS_DOCs.Upload.Core
                 session.FileHash = computedMd5;
             }
 
-            // ---- LAZY materialization:
-            // move chunks into the version folder and DO NOT assemble final file
+            // Move chunks into version folder (lazy materialization)
             var versionFolder = _paths.GetVersionedFileFolder(shortUserId, session.FileGroupId.ToString(), session.Version);
             Directory.CreateDirectory(versionFolder);
 
@@ -221,21 +269,19 @@ namespace VCS_DOCs.Upload.Core
                 }
                 catch
                 {
-                    // fallback copy+delete
                     try { File.Copy(p, dest, overwrite: true); } catch { }
                     try { File.Delete(p); } catch { }
                 }
             }
-            // cleanup chunk temp dir
             try { Directory.Delete(chunkDir, true); } catch { }
 
-            // mark complete
             session.Status = "complete";
             session.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync(ct);
 
             return (true, "completed", totalChunks, session.FileId);
         }
+
         public async Task<(string ownerShort, FileUploadSessionModel session)?> FindAnyCompletedByGroupVersionAsync(
             Guid fileGroupId, int version, CancellationToken ct = default)
         {
@@ -473,7 +519,7 @@ namespace VCS_DOCs.Upload.Core
             }
             catch { }
         }
-        // ---- Helpers: config without Microsoft.Extensions.Configuration.Binder
+
         private bool CfgBool(string key, bool defValue)
         {
             try
@@ -494,73 +540,6 @@ namespace VCS_DOCs.Upload.Core
                 return int.TryParse(s, out var i) ? i : defValue;
             }
             catch { return defValue; }
-        }
-
-        // ---- Helper: make ClamAV ScanResult decision robust across libs/versions
-        private static bool IsScanClean(object scan)
-        {
-            if (scan == null) return false;
-            var t = scan.GetType();
-
-            // 1) Явные bool "infected"-флаги
-            foreach (var name in new[] { "Infected", "IsInfected", "HasInfection", "HasVirus", "IsVirusFound" })
-            {
-                var p = t.GetProperty(name);
-                if (p != null && p.PropertyType == typeof(bool))
-                {
-                    var infected = (bool)(p.GetValue(scan) ?? false);
-                    return !infected;
-                }
-            }
-
-            // 2) Явные bool "ок/чисто"
-            foreach (var name in new[] { "IsSafe", "Ok", "Success", "Clean", "IsOk" })
-            {
-                var p = t.GetProperty(name);
-                if (p != null && p.PropertyType == typeof(bool))
-                {
-                    var ok = (bool)(p.GetValue(scan) ?? false);
-                    return ok;
-                }
-            }
-
-            // 3) Название сигнатуры/вируса
-            foreach (var name in new[] { "MalwareName", "Signature", "VirusName" })
-            {
-                var p = t.GetProperty(name);
-                if (p != null)
-                {
-                    var s = p.GetValue(scan)?.ToString();
-                    if (!string.IsNullOrWhiteSpace(s)) return false; // есть имя — заражено
-                    return true; // пусто — чисто
-                }
-            }
-
-            // 4) Enum/строковый Status
-            var statusProp = t.GetProperty("Status");
-            if (statusProp != null)
-            {
-                var statusText = statusProp.GetValue(scan)?.ToString() ?? "";
-                if (statusText.IndexOf("FOUND", StringComparison.OrdinalIgnoreCase) >= 0
-                 || statusText.IndexOf("INFECT", StringComparison.OrdinalIgnoreCase) >= 0)
-                    return false;
-                if (statusText.IndexOf("OK", StringComparison.OrdinalIgnoreCase) >= 0
-                 || statusText.IndexOf("CLEAN", StringComparison.OrdinalIgnoreCase) >= 0
-                 || statusText.IndexOf("PASSED", StringComparison.OrdinalIgnoreCase) >= 0)
-                    return true;
-            }
-
-            // 5) Fallback: ToString()
-            var txt = scan.ToString() ?? "";
-            if (txt.IndexOf("FOUND", StringComparison.OrdinalIgnoreCase) >= 0
-             || txt.IndexOf("INFECT", StringComparison.OrdinalIgnoreCase) >= 0)
-                return false;
-            if (txt.IndexOf("OK", StringComparison.OrdinalIgnoreCase) >= 0
-             || txt.IndexOf("CLEAN", StringComparison.OrdinalIgnoreCase) >= 0)
-                return true;
-
-            // По умолчанию считаем "не ок", чтобы не пропустить
-            return false;
         }
 
         // ========= NEW: Streamed open (assembled file OR lazy chunks) =========
@@ -613,13 +592,12 @@ namespace VCS_DOCs.Upload.Core
                 try { totalLen += new FileInfo(p).Length; } catch { totalLen = null; break; }
             }
 
-            var concat = new ConcatenatedReadStream(chunkFiles); // caller disposes via File()
+            var concat = new ConcatenatedReadStream(chunkFiles);
             return new FileOpenResult { Stream = concat, FileName = session.OriginalFileName, Length = totalLen };
         }
 
         public async Task<FileContentResultModel?> GetFileVersionAsync(string shortUserId, Guid fileGroupId, int version)
         {
-            // kept for backward compatibility (not used by controller after patch)
             var session = await _db.FileUploadSessions
                 .FirstOrDefaultAsync(s => s.UserId == _userInfoProvider.ResolveFullUserId(shortUserId) && s.FileGroupId == fileGroupId && s.Version == version && s.Status == "complete");
             if (session == null) return null;
@@ -641,10 +619,8 @@ namespace VCS_DOCs.Upload.Core
             _db.FileUploadSessions.Remove(session);
             await _db.SaveChangesAsync();
 
-            // delete assembled file (if any)
             await _storage.DeleteFileAsync(shortUserId, session.FileGroupId, session.Version, session.OriginalFileName);
 
-            // also delete chunked version folder (lazy)
             var versionDir = _paths.GetVersionedFileFolder(shortUserId, session.FileGroupId.ToString(), version);
             try
             {
@@ -658,13 +634,13 @@ namespace VCS_DOCs.Upload.Core
             return true;
         }
 
-        // ========= NEW: simple concat stream over chunk files =========
+        // ========= simple concat stream over chunk files =========
         private sealed class ConcatenatedReadStream : Stream
         {
-            private readonly Queue<string> _paths;
+            private readonly Queue<string> _pathsQueue;
             private FileStream? _current;
 
-            public ConcatenatedReadStream(IEnumerable<string> paths) => _paths = new Queue<string>(paths);
+            public ConcatenatedReadStream(IEnumerable<string> paths) => _pathsQueue = new Queue<string>(paths);
 
             public override bool CanRead => true;
             public override bool CanSeek => false;
@@ -680,8 +656,8 @@ namespace VCS_DOCs.Upload.Core
                 while (_current == null || _current.Position >= _current.Length)
                 {
                     _current?.Dispose();
-                    if (_paths.Count == 0) { _current = null; break; }
-                    _current = new FileStream(_paths.Dequeue(), FileMode.Open, FileAccess.Read, FileShare.Read);
+                    if (_pathsQueue.Count == 0) { _current = null; break; }
+                    _current = new FileStream(_pathsQueue.Dequeue(), FileMode.Open, FileAccess.Read, FileShare.Read);
                 }
             }
 
@@ -698,27 +674,29 @@ namespace VCS_DOCs.Upload.Core
                 return read;
             }
 
-            public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken ct)
+            public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             {
                 EnsureCurrent();
                 if (_current == null) return 0;
-                int read = await _current.ReadAsync(buffer.AsMemory(offset, count), ct);
+                int read = await _current.ReadAsync(buffer.AsMemory(offset, count), cancellationToken);
                 if (read == 0)
                 {
                     EnsureCurrent();
-                    return await ReadAsync(buffer, offset, count, ct);
+                    return await ReadAsync(buffer, offset, count, cancellationToken);
                 }
                 return read;
             }
 
             protected override void Dispose(bool disposing)
             {
-                _current?.Dispose(); base.Dispose(disposing);
+                _current?.Dispose();
+                base.Dispose(disposing);
             }
+
             public override void Flush() => throw new NotSupportedException();
-            public override long Seek(long o, SeekOrigin so) => throw new NotSupportedException();
-            public override void SetLength(long v) => throw new NotSupportedException();
-            public override void Write(byte[] b, int o, int c) => throw new NotSupportedException();
+            public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+            public override void SetLength(long value) => throw new NotSupportedException();
+            public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
         }
     }
 }

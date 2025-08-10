@@ -19,6 +19,7 @@ namespace VCS_DOCs.Controllers
     public class UploadController : ControllerBase
     {
         private const int FreshSeconds = 60;
+
         private readonly UploadManager _uploadManager;
         private readonly IUserInfoProvider _userInfoProvider;
         private readonly IConfiguration _cfg;
@@ -36,6 +37,7 @@ namespace VCS_DOCs.Controllers
             _sharedLinks = sharedLinks;
         }
 
+        // ====== ACTIVE STATE ======
         [HttpGet("active")]
         public async Task<IActionResult> Active(CancellationToken ct)
         {
@@ -80,6 +82,7 @@ namespace VCS_DOCs.Controllers
             return Ok(new { ok = true });
         }
 
+        // ====== LIST / STATS ======
         [HttpGet("user-files")]
         public async Task<IActionResult> GetUserFiles(CancellationToken ct)
         {
@@ -95,6 +98,15 @@ namespace VCS_DOCs.Controllers
             });
         }
 
+        [HttpGet("stats")]
+        public async Task<IActionResult> GetStats(CancellationToken ct)
+        {
+            var shortUserId = GetRequiredShortUserId();
+            var (used, temp, limit) = await _uploadManager.GetStorageStatsAsync(shortUserId, ct);
+            return Ok(new { usedBytes = used, tempBytes = temp, limitBytes = limit });
+        }
+
+        // ====== STATUS / RESTART ======
         [HttpGet("upload-status")]
         public async Task<IActionResult> UploadStatus([FromQuery] string fileHash, CancellationToken ct)
         {
@@ -121,9 +133,18 @@ namespace VCS_DOCs.Controllers
             return Ok(new { restarted = true });
         }
 
+        // ====== CHUNK UPLOAD ======
         [HttpPost("chunk")]
         [RequestSizeLimit(long.MaxValue)]
-        public async Task<IActionResult> UploadChunk([FromForm] IFormFile chunk, [FromForm] string hash, [FromForm] int chunkIndex, [FromForm] int totalChunks, [FromForm] long fileSize, [FromForm] string fileName, CancellationToken ct)
+        public async Task<IActionResult> UploadChunk(
+            [FromForm] IFormFile chunk,
+            [FromForm] string hash,
+            [FromForm] int chunkIndex,
+            [FromForm] int totalChunks,
+            [FromForm] long fileSize,
+            [FromForm] string fileName,
+            [FromForm] int? targetVersion,
+            CancellationToken ct)
         {
             if (chunk == null || chunk.Length == 0) return BadRequest("empty chunk");
 
@@ -137,7 +158,18 @@ namespace VCS_DOCs.Controllers
                     return Conflict(new { status = "busy", message = "Идёт другая загрузка. Дождитесь окончания или нажмите «Заново» в текущей." });
             }
 
-            var r = await _uploadManager.HandleChunkUploadAsync(shortUserId, chunk, hash, chunkIndex, totalChunks, fileSize, fileName, ct);
+            // IMPORTANT: pass targetVersion BEFORE ct to match manager signature
+            var r = await _uploadManager.HandleChunkUploadAsync(
+                shortUserId,
+                chunk,
+                hash,
+                chunkIndex,
+                totalChunks,
+                fileSize,
+                fileName,
+                targetVersion,
+                ct
+            );
 
             if (!r.ok)
             {
@@ -156,6 +188,7 @@ namespace VCS_DOCs.Controllers
             return Ok(new { nextExpectedIndex = r.nextExpectedIndex, sessionId = r.sessionId, completed = r.nextExpectedIndex == totalChunks });
         }
 
+        // ====== VERSIONS / DOWNLOAD / DELETE ======
         [HttpGet("versions")]
         public async Task<IActionResult> Versions([FromQuery] string fileName, CancellationToken ct)
         {
@@ -164,9 +197,8 @@ namespace VCS_DOCs.Controllers
             return Ok(versions);
         }
 
-        // ====== STREAMED download (assembled file or lazy chunks) ======
         [HttpGet("download/{fileGroupId:guid}/{version:int}")]
-        [AllowAnonymous] // если хотите оставить доступ только владельцу — уберите
+        [AllowAnonymous]
         public async Task<IActionResult> DownloadFile(Guid fileGroupId, int version, CancellationToken ct)
         {
             var shortUserId = GetRequiredShortUserId();
@@ -184,7 +216,7 @@ namespace VCS_DOCs.Controllers
             return Ok(new { status = "deleted" });
         }
 
-        // ---------------------- SHARING (legacy HMAC) ----------------------
+        // ====== SHARING: Legacy HMAC ======
         [HttpPost("share-link")]
         public async Task<IActionResult> CreateShareLink([FromForm] Guid fileGroupId, [FromForm] int version, [FromForm] int ttlHours = 168, CancellationToken ct = default)
         {
@@ -197,7 +229,7 @@ namespace VCS_DOCs.Controllers
             if (opened == null) return NotFound();
             await opened.Stream.DisposeAsync();
 
-            var exp = DateTimeOffset.UtcNow.AddHours(ttlHours).ToUnixTimeSeconds();
+            var exp = DateTimeOffset.UtcNow.ToUnixTimeSeconds() + ttlHours * 3600L;
             var token = BuildSignature(fileGroupId, version, exp);
 
             var origin = $"{Request.Scheme}://{Request.Host}";
@@ -225,8 +257,7 @@ namespace VCS_DOCs.Controllers
             return File(opened.Stream, "application/octet-stream", opened.FileName, enableRangeProcessing: true);
         }
 
-        // ---------------------- SHARING (DB) ----------------------
-
+        // ====== SHARING: DB-backed links ======
         [HttpPost("share-db")]
         public async Task<IActionResult> CreateShareDb([FromForm] Guid fileGroupId, [FromForm] int version, [FromForm] int ttlHours = 168,
                                                        [FromForm] int? maxDownloads = null, [FromForm] bool requireAuth = false, CancellationToken ct = default)
@@ -234,7 +265,6 @@ namespace VCS_DOCs.Controllers
             if (version <= 0) return BadRequest("invalid version");
             if (ttlHours <= 0 || ttlHours > 24 * 30) ttlHours = 168;
 
-            // Проверим, что файл существует у текущего пользователя (владелец)
             var shortUserId = GetRequiredShortUserId();
             var opened = await _uploadManager.OpenFileVersionStreamAsync(shortUserId, fileGroupId, version, ct);
             if (opened == null) return NotFound();
@@ -259,7 +289,7 @@ namespace VCS_DOCs.Controllers
         [Produces("application/octet-stream")]
         public async Task<IActionResult> PublicDbDownload([FromRoute] Guid id, CancellationToken ct = default)
         {
-            var shortId = GetRequiredShortUserIdSafe(); // может быть null (аноним)
+            var shortId = GetRequiredShortUserIdSafe(); // null if anonymous
             var link = await _sharedLinks.GetAsync(id, ct);
             if (link == null) return NotFound();
 
@@ -271,13 +301,11 @@ namespace VCS_DOCs.Controllers
                 return Unauthorized();
             }
 
-            // Найдём владельца файла по группе/версии
             var found = await _uploadManager.FindAnyCompletedByGroupVersionAsync(link.FileGroupId, link.Version, ct);
             if (found == null) return NotFound();
 
-            // Пытаемся списать 1 скачивание (атомарно)
             var consumed = await _sharedLinks.TryConsumeAsync(id, ct);
-            if (consumed.link == null) return NotFound(); // лимит исчерпан/просрочено
+            if (consumed.link == null) return NotFound();
 
             var opened = await _uploadManager.OpenFileVersionStreamAsync(found.Value.ownerShort, link.FileGroupId, link.Version, ct);
             if (opened == null) return NotFound();
@@ -285,14 +313,7 @@ namespace VCS_DOCs.Controllers
             return File(opened.Stream, "application/octet-stream", opened.FileName, enableRangeProcessing: true);
         }
 
-        [HttpGet("stats")]
-        public async Task<IActionResult> GetStats(CancellationToken ct)
-        {
-            var shortUserId = GetRequiredShortUserId();
-            var (used, temp, limit) = await _uploadManager.GetStorageStatsAsync(shortUserId, ct);
-            return Ok(new { usedBytes = used, tempBytes = temp, limitBytes = limit });
-        }
-
+        // ====== Helpers ======
         private string? GetRequiredShortUserIdSafe()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -309,7 +330,6 @@ namespace VCS_DOCs.Controllers
 
         private string BuildSignature(Guid groupId, int version, long exp)
         {
-            // Prefer reading from configuration. Do NOT hardcode secrets in source control.
             var secret = _cfg["ShareLinks:Secret"];
             if (string.IsNullOrEmpty(secret))
                 secret = "CHANGE_ME_SUPER_SECRET_256bit_key_minimum";
