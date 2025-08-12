@@ -34,6 +34,7 @@
                 <li class="active" data-target="personal-data">Персональные данные</li>
                 <li data-target="storage">Личное хранилище</li>
                 <li data-target="tasks">Задачи</li>
+                <li data-target="tasks">Настройки</li> <!--!Новаяв вкладка-->
             </ul>
         </div>
         <div class="profile-content">
@@ -181,11 +182,11 @@
         <div class="modal-content">
             <h3>Поделиться файлом</h3>
 
-            <div class="row" style="margin-bottom:10px;">
-                <label style="display:block;margin-bottom:6px;">Срок действия ссылки</label>
-                <div class="split-button inline" id="share-ttl">
-                    <button type="button" class="button-sliding" data-value="168">7 дней (168 ч)</button>
-                    <button type="button" class="button-sliding dropdown-toggle" aria-label="Открыть варианты">▾</button>
+            <div class="row" style="display:flex; gap:12px; align-items:center; justify-content:center; margin:12px 0 16px;">
+                <div class="multi-button split-button" id="share-ttl">
+                    <div class="button-part label">Срок:</div>
+                    <div class="button-part value" data-value="168">7 дней (168 ч)</div>
+                    <div class="button-part dropdown" aria-label="Открыть варианты">▾</div>
                     <div class="action-dropdown-menu compact" style="display:none; min-width:260px;">
                         <div class="dropdown-item" data-value="12">12 часов</div>
                         <div class="dropdown-item" data-value="24">1 день (24 ч)</div>
@@ -195,13 +196,11 @@
                         <div class="dropdown-item" data-value="720">30 дней (720 ч)</div>
                     </div>
                 </div>
-            </div>
 
-            <div class="row" style="margin-bottom:10px;">
-                <label style="display:block;margin-bottom:6px;">Лимит скачиваний</label>
-                <div class="split-button inline" id="share-limit">
-                    <button type="button" class="button-sliding" data-value="10">10 скачиваний</button>
-                    <button type="button" class="button-sliding dropdown-toggle" aria-label="Открыть варианты">▾</button>
+                <div class="multi-button split-button" id="share-limit">
+                    <div class="button-part label">Лимит:</div>
+                    <div class="button-part value" data-value="10">10 скачиваний</div>
+                    <div class="button-part dropdown" aria-label="Открыть варианты">▾</div>
                     <div class="action-dropdown-menu compact" style="display:none; min-width:260px;">
                         <div class="dropdown-item" data-value="1">1 скачивание</div>
                         <div class="dropdown-item" data-value="10">10 скачиваний</div>
@@ -212,9 +211,9 @@
                 </div>
             </div>
 
-            <div class="row" style="margin:12px 0 18px;">
+            <div class="row" style="margin:12px 0 16px;">
                 <label class="checkbox">
-                    <input id="share-auth-only" type="checkbox" checked />
+                    <input id="share-auth-only" type="checkbox" checked>
                     <span>Только для зарегистрированных пользователей</span>
                 </label>
             </div>
@@ -222,7 +221,7 @@
             <div class="row" style="margin-bottom:8px;">
                 <input id="share-link-url" type="text" readonly
                        style="width:100%; box-sizing:border-box; display:none;"
-                       placeholder="Ссылка появится после создания" />
+                       placeholder="Ссылка появится после создания">
             </div>
 
             <div class="modal-buttons">

@@ -1,4 +1,6 @@
-﻿:root {
+﻿/* profile_styles_fixed_v3.css — unified split-button typography & alignment, tighter label:value spacing */
+
+:root {
     --primary-color: #5a9bd5;
     --primary-hover: #3d7bbf;
     --background-light: #dddedf;
@@ -11,6 +13,8 @@
     --modal-button-font-weight: bold;
     --version-list-font-size: 13px;
     --version-list-max-height: 220px;
+    --split-h: 40px;
+    --split-h-compact: 32px;
 }
 
 @keyframes slideInRight {
@@ -86,7 +90,7 @@ hr.solid {
     width: 100%;
 }
 
-/* --------- Кнопки и модальные --------- */
+/* ---------- Buttons & Modals ---------- */
 .button-sliding {
     --btn-color: var(--primary-color);
     --btn-border: var(--btn-color);
@@ -148,6 +152,7 @@ hr.solid {
         --btn-color: #11f80d;
         --btn-border: #11f80d;
     }
+
     .button-sliding.success {
         --btn-color: #28a745;
         --btn-border: #28a745;
@@ -182,31 +187,7 @@ hr.solid {
         --btn-border: #ff4444;
     }
 
-        .button-sliding.call::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 0;
-            background: var(--btn-color);
-            z-index: -1;
-            transition: all 0.3s ease;
-        }
-
         .button-sliding.call:hover {
-            color: #fff;
-        }
-
-            .button-sliding.call:hover::after {
-                width: 100%;
-            }
-
-        .button-sliding.call:disabled {
-            cursor: not-allowed;
-            opacity: 0.5;
-            background-color: #ccc;
-            border-color: #ccc;
             color: #fff;
         }
 
@@ -233,91 +214,89 @@ hr.solid {
     box-shadow: inset 160px 0 0 0 var(--primary-color);
 }
 
-/* --------- Split-кнопки (универсальные) --------- */
+/* ---------- Split Buttons (unified) ---------- */
 .button-split-wrapper, .split-button, .multi-button {
     display: inline-flex;
     position: relative;
-    border-radius: 4px;
+    border-radius: 6px;
     vertical-align: middle;
     background: #fff;
     overflow: visible;
 }
 
+/* Base split-button */
 .split-button {
     border: 2px solid var(--primary-color);
     cursor: pointer;
     user-select: none;
+    height: var(--split-h);
+    align-items: stretch;
 }
 
     .split-button .button-part {
         display: flex;
         align-items: center;
-        height: 40px;
+        justify-content: center;
+        padding: 0 10px;
+        height: 100%;
+        line-height: 1;
+        font-size: var(--modal-button-font-size);
         font-weight: var(--modal-button-font-weight);
+        color: var(--primary-color);
+        box-sizing: border-box;
     }
 
     .split-button .label {
         background: transparent;
-        color: var(--primary-color);
-        font-size: var(--modal-button-font-size);
-        padding: 0 10px;
-        height: 37px;
-        display: flex;
-        align-items: center;
+        padding-right: 6px;
     }
 
-    .split-button .version {
-        color: var(--primary-color);
-        min-width: 50px;
-        font-size: var(--version-list-font-size);
+    .split-button .value {
+        min-width: 56px;
+        white-space: nowrap;
+        padding-left: 6px;
     }
 
     .split-button .dropdown {
         background: var(--primary-color);
-        color: white;
-        font-size: 35px;
+        color: #fff;
+        width: 36px;
+        font-size: 18px;
+        padding: 0;
     }
 
+    /* Inline/compact (tables) */
     .split-button.inline {
-        display: inline-flex;
-        align-items: center;
-        border: 2px solid var(--btn-border);
         border-radius: 5px;
         font-size: 0.8rem;
-        height: 28px;
-        max-width: 160px;
+        height: var(--split-h-compact);
     }
 
         .split-button.inline .button-part {
             padding: 0 6px;
-            height: 100%;
-            color: var(--btn-color);
-            background: #fff;
-            white-space: nowrap;
+            font-size: 0.8rem;
         }
 
         .split-button.inline .label {
-            border-right: 1px solid var(--btn-border);
+            border-right: 1px solid var(--primary-color);
             font-size: 0.75rem;
             color: var(--text-light);
+            padding-right: 4px;
         }
 
         .split-button.inline .value {
             font-size: 0.8rem;
             font-weight: bold;
+            padding-left: 4px;
         }
 
         .split-button.inline .dropdown {
-            background: var(--btn-color);
-            color: var(--primary-color);
-            width: 24px;
-            justify-content: center;
+            width: 28px;
             font-size: 14px;
-            border-left: 1px solid var(--btn-border);
-            padding: 0;
+            border-left: 1px solid var(--primary-color);
         }
 
-/* --------- Модальные --------- */
+/* ---------- Modals ---------- */
 .modal {
     position: fixed;
     z-index: 9999;
@@ -376,7 +355,7 @@ hr.solid {
     --btn-border: #ff4444;
 }
 
-/* --------- Профиль, sidebar, info --------- */
+/* ---------- Profile & Layout ---------- */
 .profile_background {
     background-color: var(--background-dark);
     border-radius: 6px;
@@ -509,7 +488,6 @@ hr.solid {
     display: none;
     animation: fadeInSlideIn 0.5s ease-out;
     flex-grow: 1;
-    
 }
 
     .content-section.active {
@@ -598,7 +576,7 @@ hr.solid {
     text-align: center;
 }
 
-/* --------- Задачи и карточки --------- */
+/* ---------- Tasks ---------- */
 .tasks-scrollable {
     flex: 1 1 auto;
     overflow-y: auto;
@@ -659,10 +637,7 @@ hr.solid {
         color: #333;
     }
 
-    .task-status.failed {
-        background-color: #dc3545;
-    }
-    .task-status.error {
+    .task-status.failed, .task-status.error {
         background-color: #dc3545;
     }
 
@@ -729,11 +704,12 @@ hr.solid {
     transform: scale(0.5) rotate(-5deg);
     transition: opacity 0.5s ease, transform 0.5s ease;
 }
+
 .task-status.starting {
     color: var(--primary-color);
 }
 
-/* --------- Таблицы файлов и action-dropdown --------- */
+/* ---------- File Table & Action Dropdown ---------- */
 .file-table {
     width: 100%;
     border-collapse: collapse;
@@ -764,12 +740,12 @@ hr.solid {
 
 .file-table .split-button {
     font-size: 0.85rem;
-    height: 32px;
+    height: var(--split-h-compact);
     min-width: 160px;
 }
 
     .file-table .split-button .button-part {
-        height: 32px;
+        height: 100%;
         padding: 0 8px;
         font-size: 0.85rem;
         white-space: nowrap;
@@ -777,7 +753,7 @@ hr.solid {
 
     .file-table .split-button .label {
         font-size: 0.8rem;
-        padding: 0 6px;
+        padding: 0 6px 0 8px;
     }
 
     .file-table .split-button .version {
@@ -796,7 +772,7 @@ hr.solid {
     white-space: nowrap;
 }
 
-/* --------- Выпадающие меню для split-кнопки "Версия" --------- */
+/* ---------- Version multibutton in table ---------- */
 .multi-button {
     display: inline-flex;
     align-items: stretch;
@@ -805,7 +781,7 @@ hr.solid {
     overflow: visible;
     background: #fff;
     vertical-align: middle;
-    height: 40px;
+    height: var(--split-h);
 }
 
 .version-button {
@@ -846,8 +822,9 @@ hr.solid {
         color: #fff;
     }
 
+/* Version dropdown */
 #version-dropdown-menu {
-    position: fixed;
+    position: absolute;
     width: 130px;
     background: #fff;
     border: 1.5px solid var(--primary-color);
@@ -858,8 +835,8 @@ hr.solid {
     margin: 0;
     max-height: var(--version-list-max-height);
     overflow-y: auto;
-    animation: dropdown-fade-slide 0.16s cubic-bezier(.39,.58,.57,1.01);
     overflow-x: hidden;
+    animation: dropdown-fade-slide 0.16s cubic-bezier(.39,.58,.57,1.01);
 }
 
 .dropdown-item {
@@ -874,8 +851,7 @@ hr.solid {
     transition: background 0.16s, color 0.16s;
 }
 
-    .dropdown-item:hover,
-    .dropdown-item:focus {
+    .dropdown-item:hover, .dropdown-item:focus {
         background: var(--primary-color);
         color: #fff;
         outline: none;
@@ -885,12 +861,13 @@ hr.solid {
         background: #e5f1fb !important;
         color: var(--primary-hover) !important;
     }
+
 .multi-button.action-multibutton {
     border-radius: 6px;
     background: #fff;
     overflow: visible;
     position: relative;
-    height: 40px;
+    height: var(--split-h);
     display: inline-flex;
     align-items: stretch;
     vertical-align: middle;
@@ -937,7 +914,7 @@ hr.solid {
 .action-dropdown-menu {
     position: absolute;
     left: 0;
-    top: 120%;
+    top: calc(100% + 4px);
     min-width: 140px;
     background: #fff;
     border: 1.5px solid var(--primary-color);
@@ -948,8 +925,8 @@ hr.solid {
     margin: 0;
     max-height: 220px;
     overflow-y: auto;
-    animation: dropdown-fade-slide 0.16s cubic-bezier(.39,.58,.57,1.01);
     overflow-x: hidden;
+    animation: dropdown-fade-slide 0.16s cubic-bezier(.39,.58,.57,1.01);
 }
 
     .action-dropdown-menu .dropdown-item {
@@ -964,16 +941,16 @@ hr.solid {
         transition: background 0.16s, color 0.16s;
     }
 
-        .action-dropdown-menu .dropdown-item:hover,
-        .action-dropdown-menu .dropdown-item:focus {
+        .action-dropdown-menu .dropdown-item:hover, .action-dropdown-menu .dropdown-item:focus {
             background: var(--primary-color);
             color: #fff;
             outline: none;
         }
+
 #version-list {
     position: absolute;
     top: 100%;
-    left:0px;
+    left: 0;
     width: 170px;
     background: #fff;
     border: 1.5px solid var(--primary-color);
@@ -983,12 +960,15 @@ hr.solid {
     padding: 0;
     margin-top: 4px;
     max-height: var(--version-list-max-height);
-    overflow-x:hidden;
+    overflow-x: hidden;
     animation: dropdown-fade-slide 0.16s cubic-bezier(.39,.58,.57,1.01);
 }
+
 #split-button {
-    position: relative; 
+    position: relative;
 }
+
+/* Large version multibutton */
 .version-multibutton-lg {
     height: 45px;
     border: 2px solid var(--primary-color);
@@ -1038,25 +1018,17 @@ hr.solid {
             background: var(--primary-hover);
             color: #fff;
         }
-/* Стили для компактных кнопок */
 
-/* Компактная мульти-кнопка */
+/* ---------- Compact helpers ---------- */
 .multi-button.compact {
-    display: inline-flex;
-    position: relative;
-    border-radius: 4px;
-    vertical-align: middle;
-    background: #fff;
-    overflow: visible;
-    height: 32px;
+    height: var(--split-h-compact);
 }
 
-/* Компактная кнопка с эффектом скольжения */
 .button-sliding.compact {
     --btn-color: var(--primary-color);
     --btn-border: var(--btn-color);
     min-width: 90px;
-    height: 32px;
+    height: var(--split-h-compact);
     padding: 0 8px;
     font-weight: bold;
     font-size: 12px;
@@ -1094,7 +1066,6 @@ hr.solid {
             width: 100%;
         }
 
-/* Компактная стрелка выпадающего списка */
 .dropdown-arrow.compact {
     background: var(--primary-color);
     color: white;
@@ -1112,7 +1083,6 @@ hr.solid {
         background: var(--primary-hover);
     }
 
-/* Компактное выпадающее меню */
 .action-dropdown-menu.compact {
     background: white;
     border: 1.5px solid var(--primary-color);
@@ -1137,12 +1107,10 @@ hr.solid {
             color: white;
         }
 
-/* Стили для выпадающего меню версий */
 #version-dropdown-menu.compact {
     position: absolute;
     min-width: 90px;
     background: #fff;
-   
     z-index: 99999;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 0;
@@ -1160,6 +1128,8 @@ hr.solid {
             background: var(--primary-color);
             color: white;
         }
+
+/* ---------- Sorting icons ---------- */
 th.asc::after {
     content: "▲";
     margin-left: 5px;
@@ -1173,3 +1143,34 @@ th.desc::after {
     font-size: 0.8em;
     color: var(--primary-color);
 }
+
+/* ---------- Share modal helpers ---------- */
+#share-link-modal .split-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    margin: 12px 0 16px;
+}
+
+#share-link-modal .split-button {
+    height: var(--split-h-compact);
+}
+
+    #share-link-modal .split-button .button-part {
+        padding: 0 6px;
+        font-size: 14px;
+    }
+
+    #share-link-modal .split-button .label {
+        padding-right: 4px;
+    }
+
+    #share-link-modal .split-button .value {
+        padding-left: 4px;
+    }
+
+    #share-link-modal .split-button .dropdown {
+        width: 28px;
+        font-size: 14px;
+    }
