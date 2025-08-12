@@ -506,3 +506,5 @@ VCS-DOCs.Web/obj/
 
 # Ignore user data
 VCS-DOCs.Web/Data/userData/
+# Protect secrets – ignore local appsettings in Web project
+VCS-DOCs.Web/appsettings.json
