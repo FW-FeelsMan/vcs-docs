@@ -1,4 +1,4 @@
-using AspNetCoreRateLimit;
+﻿using AspNetCoreRateLimit;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
@@ -30,51 +30,58 @@ using ClamAV.Net.Client;
 var builder = WebApplication.CreateBuilder(args);
 
 // === Razor Pages + JSON ===
-builder.Services.AddRazorPages(options =>
-{
-	options.Conventions.ConfigureFilter(new AutoValidateAntiforgeryTokenAttribute());
-})
-.AddJsonOptions(jsonOptions =>
-{
-	jsonOptions.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-	jsonOptions.JsonSerializerOptions.PropertyNamingPolicy = null;
-});
+builder.Services
+    .AddRazorPages(options =>
+    {
+        options.Conventions.ConfigureFilter(new AutoValidateAntiforgeryTokenAttribute());
+    })
+    // Один файл Pages/Errors/404.cshtml обслуживает все коды: /Errors/{code}
+    .AddRazorPagesOptions(o =>
+    {
+        o.Conventions.AddPageRoute("/Errors/404", "/Errors/{code:int}");
+    })
+    .AddJsonOptions(jsonOptions =>
+    {
+        jsonOptions.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+        jsonOptions.JsonSerializerOptions.PropertyNamingPolicy = null;
+    });
 
 // === User Data Path ===
+builder.Services.AddHttpClient();
 builder.Services.Configure<UserDataPathOptions>(builder.Configuration.GetSection("UserDataPathOptions"));
-
 var configPath = builder.Configuration.GetSection("UserDataPathOptions")["BasePath"];
 var absoluteUserDataPath = Path.GetFullPath(configPath ?? throw new InvalidOperationException("UserData path not found"));
-
 builder.Services.Configure<UserDataPathOptions>(options =>
 {
-	options.BasePath = absoluteUserDataPath;
+    options.BasePath = absoluteUserDataPath;
 });
 
 // === File Upload Limits ===
 builder.Services.Configure<FormOptions>(options =>
 {
-	options.MultipartBodyLengthLimit = long.MaxValue;
+    options.MultipartBodyLengthLimit = long.MaxValue;
 });
 
 builder.WebHost.ConfigureKestrel(options =>
 {
-	options.Limits.MaxRequestBodySize = 10L * 1024 * 1024 * 1024;
+    options.Limits.MaxRequestBodySize = 10L * 1024 * 1024 * 1024; // 10 GB
 });
 
 // === DB + Identity ===
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-	options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddIdentity<User, IdentityRole>()
-	.AddEntityFrameworkStores<ApplicationDbContext>()
-	.AddDefaultTokenProviders();
+    .AddEntityFrameworkStores<ApplicationDbContext>();
+builder.Services.AddAuthentication().AddCookie(); // ensure cookie auth present
+builder.Services.AddAuthorization();
 
 // === SignalR + Hubs ===
 builder.Services.AddSignalR(options =>
 {
-	options.EnableDetailedErrors = true;
+    options.EnableDetailedErrors = true;
 });
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
+
 builder.Services.AddSingleton<IAntivirusScanner>(sp =>
 {
     var cfg = sp.GetRequiredService<IConfiguration>();
@@ -83,33 +90,34 @@ builder.Services.AddSingleton<IAntivirusScanner>(sp =>
     var simple = new SimpleSignaturesScanner(cfg);
     return new CompositeScanner(amsi, simple);
 });
+
 // === App Cookies ===
 builder.Services.ConfigureApplicationCookie(options =>
 {
-	options.Cookie.HttpOnly = true;
-	options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-	options.Cookie.SameSite = SameSiteMode.Lax;
-	options.LoginPath = "/Login";
-	options.AccessDeniedPath = "/Login";
-	options.ExpireTimeSpan = TimeSpan.FromDays(7);
-	options.SlidingExpiration = true;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.LoginPath = "/Login";
+    options.AccessDeniedPath = "/Login";
+    options.ExpireTimeSpan = TimeSpan.FromDays(7);
+    options.SlidingExpiration = true;
 });
 
 // === Session + Middleware ===
 builder.Services.AddSession(options =>
 {
-	options.IdleTimeout = TimeSpan.FromMinutes(30);
-	options.Cookie.HttpOnly = true;
-	options.Cookie.IsEssential = true;
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
 });
 builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
 
 builder.Services.AddCors(options =>
 {
-	options.AddPolicy("AllowAll", policy =>
-	{
-		policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
-	});
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+    });
 });
 
 // === Custom Services ===
@@ -117,7 +125,7 @@ builder.Services.AddScoped<ISharedLinkService, VCS_DOCs.Infrastructure.Services.
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserFileService, UserFileService>();
 builder.Services.AddScoped<IUploadDbContext>(provider =>
-	(IUploadDbContext)provider.GetRequiredService<ApplicationDbContext>());
+    (IUploadDbContext)provider.GetRequiredService<ApplicationDbContext>());
 builder.Services.AddScoped<IFileStorageService, PhysicalFileStorageService>();
 builder.Services.AddScoped<UploadManager>();
 builder.Services.AddScoped<FilePathValidator>();
@@ -128,85 +136,89 @@ builder.Services.AddScoped<IUserInfoProvider, UserInfoProvider>();
 builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
 builder.Services.AddMiniProfiler(options =>
 {
-	options.RouteBasePath = "/profiler";
-	options.ShouldProfile = _ => builder.Environment.IsDevelopment();
-	options.ResultsAuthorize = _ => true;
+    options.RouteBasePath = "/profiler";
+    options.ShouldProfile = _ => builder.Environment.IsDevelopment();
+    options.ResultsAuthorize = _ => true;
 });
 
 // === Rate Limiting ===
 builder.Services.Configure<IpRateLimitOptions>(options =>
 {
-	options.GeneralRules =
-	[
-		new RateLimitRule { Endpoint = "*", Limit = 50, Period = "10s" },
-		new RateLimitRule { Endpoint = "/hub/*", Limit = 0, Period = "1s" }
-	];
+    options.GeneralRules =
+    [
+        new RateLimitRule { Endpoint = "*", Limit = 50, Period = "10s" },
+        new RateLimitRule { Endpoint = "/hub/*", Limit = 0, Period = "1s" }
+    ];
 });
+
 // === Connected Task-Engine ===
-builder.Services.AddSingleton<TaskRunner>(sp => {
-	var config = sp.GetRequiredService<IConfiguration>();
-	var modulesPath = Path.Combine(builder.Environment.ContentRootPath, config["TaskEngineOptions:ModulesPath"]);
-	return new TaskRunner(modulesPath);
+builder.Services.AddSingleton<TaskRunner>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var modulesPath = Path.Combine(builder.Environment.ContentRootPath, config["TaskEngineOptions:ModulesPath"]);
+    return new TaskRunner(modulesPath);
 });
 builder.Services.AddSingleton<ChunkHashService>(sp =>
 {
-	var userPaths = sp.GetRequiredService<UserStoragePaths>();
-	return new ChunkHashService(userPaths);
+    var userPaths = sp.GetRequiredService<UserStoragePaths>();
+    return new ChunkHashService(userPaths);
 });
 builder.Services.AddSingleton(sp =>
 {
-	var options = sp.GetRequiredService<IOptions<UserDataPathOptions>>();
-	return new UserStoragePaths(options.Value.BasePath);
+    var options = sp.GetRequiredService<IOptions<UserDataPathOptions>>();
+    return new UserStoragePaths(options.Value.BasePath);
 });
 
 // === Logging ===
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Debug);
-builder.Configuration
-    .AddJsonFile("appsettings.Secrets.json", optional: true, reloadOnChange: true);
+builder.Configuration.AddJsonFile("appsettings.Secrets.json", optional: true, reloadOnChange: true);
 
 // === App Build ===
 var app = builder.Build();
 
-app.Lifetime.ApplicationStarted.Register(async () =>
-{
-    try
-    {
-        var cfg = app.Services.GetRequiredService<IConfiguration>();
-        var clamEnabled = string.Equals(cfg["ClamAV:Enabled"], "true", StringComparison.OrdinalIgnoreCase);
-        if (!clamEnabled) return; // <-- ������ �� �������
-
-        var clam = app.Services.GetRequiredService<IClamAvClient>();
-        await clam.PingAsync();
-        var ver = await clam.GetVersionAsync();
-        app.Logger.LogInformation("ClamAV OK; version: {Version}", ver);
-    }
-    catch (Exception ex)
-    {
-        app.Logger.LogError(ex, "ClamAV is not reachable");
-    }
-});
-
 // === Ensure User Data Directory ===
 if (!Directory.Exists(absoluteUserDataPath))
-	Directory.CreateDirectory(absoluteUserDataPath);
+    Directory.CreateDirectory(absoluteUserDataPath);
 
-// === Static Files for User Data ===
+// === Status code pages (pretty) ===
+app.UseHttpsRedirection();
+
+// Для всех НЕ-API отдаём красивую Razor-страницу /Errors/{code}
+app.UseWhen(ctx => !ctx.Request.Path.StartsWithSegments("/api"), branch =>
+{
+    branch.UseStatusCodePagesWithReExecute("/Errors/{0}");
+});
+// Для браузерной навигации на публичные API-ссылки тоже хотим Razor-страницу
+app.UseWhen(ctx =>
+{
+    if (!ctx.Request.Path.StartsWithSegments("/api/Upload/public", out _)) return false;
+    if (!HttpMethods.IsGet(ctx.Request.Method)) return false;
+    var accept = ctx.Request.Headers["Accept"].ToString();
+    return string.IsNullOrEmpty(accept)
+           || accept.Contains("text/html", StringComparison.OrdinalIgnoreCase)
+           || accept.Contains("*/*", StringComparison.OrdinalIgnoreCase);
+},
+branch =>
+{
+    branch.UseStatusCodePagesWithReExecute("/Errors/{0}");
+});
+
+// === Static Files ===
 app.UseStaticFiles(new StaticFileOptions
 {
-	FileProvider = new PhysicalFileProvider(absoluteUserDataPath),
-	RequestPath = "/userdata"
+    FileProvider = new PhysicalFileProvider(absoluteUserDataPath),
+    RequestPath = "/userdata"
 });
+app.UseStaticFiles(); // wwwroot
 
 // === MiniProfiler ===
 var memoryCache = app.Services.GetRequiredService<IMemoryCache>();
 MiniProfiler.DefaultOptions.Storage = new MemoryCacheStorage(memoryCache, TimeSpan.FromMinutes(30));
 app.UseMiniProfiler();
 
-// === Middleware ===
-app.UseHttpsRedirection();
-app.UseStaticFiles(); // wwwroot
+// === Rest of pipeline ===
 app.UseSession();
 app.UseRouting();
 app.UseCors("AllowAll");
@@ -217,10 +229,5 @@ app.UseAuthorization();
 app.MapRazorPages();
 app.MapControllers();
 app.MapHub<UserStatusHub>("/Data/userStatusHub");
-
-// === Error Handling ===
-app.UseStatusCodePagesWithReExecute("/Errors/{0}");
-var cancellationTokenSource = new CancellationTokenSource();
-var token = cancellationTokenSource.Token;
 
 app.Run();

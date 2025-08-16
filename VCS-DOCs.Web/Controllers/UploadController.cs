@@ -37,6 +37,20 @@ namespace VCS_DOCs.Controllers
             _sharedLinks = sharedLinks;
         }
 
+        // ===== Helpers for pretty HTML errors from /api/Upload/public =====
+        private static bool IsBrowserRequest(HttpRequest req)
+        {
+            var accept = req.Headers["Accept"].ToString();
+            if (string.IsNullOrEmpty(accept)) return true;
+            return accept.Contains("text/html", StringComparison.OrdinalIgnoreCase)
+                   || accept.Contains("*/*", StringComparison.OrdinalIgnoreCase);
+        }
+        private IActionResult HtmlStatus(int statusCode)
+        {
+            Response.StatusCode = statusCode;
+            return new EmptyResult(); // no body -> UseStatusCodePagesWithReExecute will render /Errors/{code}
+        }
+
         // ====== ACTIVE STATE ======
         [HttpGet("active")]
         public async Task<IActionResult> Active(CancellationToken ct)
@@ -158,7 +172,6 @@ namespace VCS_DOCs.Controllers
                     return Conflict(new { status = "busy", message = "Идёт другая загрузка. Дождитесь окончания или нажмите «Заново» в текущей." });
             }
 
-            // IMPORTANT: pass targetVersion BEFORE ct to match manager signature
             var r = await _uploadManager.HandleChunkUploadAsync(
                 shortUserId,
                 chunk,
@@ -242,17 +255,23 @@ namespace VCS_DOCs.Controllers
         [Produces("application/octet-stream")]
         public async Task<IActionResult> PublicDownload([FromQuery] Guid g, [FromQuery] int v, [FromQuery] long exp, [FromQuery] string sig, CancellationToken ct = default)
         {
-            if (string.IsNullOrWhiteSpace(sig) || v <= 0) return NotFound();
-            if (DateTimeOffset.UtcNow.ToUnixTimeSeconds() > exp) return NotFound();
+            var isBrowser = IsBrowserRequest(Request);
+
+            if (string.IsNullOrWhiteSpace(sig) || v <= 0)
+                return isBrowser ? HtmlStatus(StatusCodes.Status404NotFound) : NotFound();
+
+            if (DateTimeOffset.UtcNow.ToUnixTimeSeconds() > exp)
+                return isBrowser ? HtmlStatus(StatusCodes.Status410Gone) : NotFound();
 
             var expected = BuildSignature(g, v, exp);
-            if (!TimeSafeEquals(expected, sig)) return NotFound();
+            if (!TimeSafeEquals(expected, sig))
+                return isBrowser ? HtmlStatus(StatusCodes.Status404NotFound) : NotFound();
 
             var found = await _uploadManager.FindAnyCompletedByGroupVersionAsync(g, v, ct);
-            if (found == null) return NotFound();
+            if (found == null) return isBrowser ? HtmlStatus(StatusCodes.Status404NotFound) : NotFound();
 
             var opened = await _uploadManager.OpenFileVersionStreamAsync(found.Value.ownerShort, g, v, ct);
-            if (opened == null) return NotFound();
+            if (opened == null) return isBrowser ? HtmlStatus(StatusCodes.Status404NotFound) : NotFound();
 
             return File(opened.Stream, "application/octet-stream", opened.FileName, enableRangeProcessing: true);
         }
@@ -289,26 +308,25 @@ namespace VCS_DOCs.Controllers
         [Produces("application/octet-stream")]
         public async Task<IActionResult> PublicDbDownload([FromRoute] Guid id, CancellationToken ct = default)
         {
+            var isBrowser = IsBrowserRequest(Request);
             var shortId = GetRequiredShortUserIdSafe(); // null if anonymous
             var link = await _sharedLinks.GetAsync(id, ct);
-            if (link == null) return NotFound();
+            if (link == null) return isBrowser ? HtmlStatus(StatusCodes.Status404NotFound) : NotFound();
 
             var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            if (link.Exp <= now) return NotFound();
+            if (link.Exp <= now) return isBrowser ? HtmlStatus(StatusCodes.Status410Gone) : NotFound();
 
             if (link.RequireAuth && string.IsNullOrWhiteSpace(shortId))
-            {
-                return Unauthorized();
-            }
+                return isBrowser ? HtmlStatus(StatusCodes.Status401Unauthorized) : Unauthorized();
 
             var found = await _uploadManager.FindAnyCompletedByGroupVersionAsync(link.FileGroupId, link.Version, ct);
-            if (found == null) return NotFound();
+            if (found == null) return isBrowser ? HtmlStatus(StatusCodes.Status404NotFound) : NotFound();
 
             var consumed = await _sharedLinks.TryConsumeAsync(id, ct);
-            if (consumed.link == null) return NotFound();
+            if (consumed.link == null) return isBrowser ? HtmlStatus(StatusCodes.Status410Gone) : NotFound();
 
             var opened = await _uploadManager.OpenFileVersionStreamAsync(found.Value.ownerShort, link.FileGroupId, link.Version, ct);
-            if (opened == null) return NotFound();
+            if (opened == null) return isBrowser ? HtmlStatus(StatusCodes.Status404NotFound) : NotFound();
 
             return File(opened.Stream, "application/octet-stream", opened.FileName, enableRangeProcessing: true);
         }

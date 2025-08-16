@@ -7,21 +7,101 @@
 <html lang="ru">
 <head>
     <meta charset="utf-8" />
-    <title>Страница не найдена</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>@Model.PageTitle</title>
+
     <link rel="stylesheet" href="/css/main_css/mainStyle.css" />
+    <link rel="stylesheet" href="/css/sub_css/support_modalStyle.css" />
 </head>
 <body>
     <div class="error-background"></div>
+
     <div class="error-container">
-        <div class="error-code">404</div>
-        <div class="error-message">Страница не найдена</div>
+        <div class="error-code">@Model.Code</div>
+        <div class="error-message">@Model.Title</div>
+
         <div class="error-description">
-            Увы, но этой страницы не существует. Возможно, она была удалена или вы ошиблись адресом.
+            @Model.Description
+            @if (!string.IsNullOrWhiteSpace(Model.OriginalPath))
+            {
+                <div style="margin-top:8px; opacity:.7; font-size:.9em;">
+                    Запрошенный адрес: <code>@Model.OriginalPath</code>
+                </div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.TraceId))
+            {
+                <div style="opacity:.7; font-size:.9em;">
+                    TraceId: <code>@Model.TraceId</code>
+                </div>
+            }
         </div>
-        <div class="error-buttons">
-            <a href="/">На главную</a>
-            <a href="mailto:support@yourdomain.local">Поддержка</a>
+
+        <div class="error-actions">
+            <a class="button-sliding" href="/">На главную</a>
+            <button id="btnSupport" class="button-sliding" type="button">Написать в поддержку</button>
         </div>
     </div>
+
+    <!-- Modal: Обращение в поддержку -->
+    <div id="supportModal"
+         class="modal"
+         aria-hidden="true"
+         data-code="@Model.Code"
+         data-original-path="@Model.OriginalPath"
+         data-trace-id="@Model.TraceId"
+         data-captcha-enabled="@(Model.CaptchaEnabled ? "true" : "false")"
+         data-captcha-provider="@Model.CaptchaProvider"
+         data-captcha-sitekey="@Model.CaptchaSiteKey">
+        <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="supportTitle">
+            <h3 id="supportTitle">Обращение в поддержку</h3>
+
+            <div class="row">
+                <div>
+                    <label for="supFullName">ФИО</label>
+                    <input id="supFullName" type="text" placeholder="Иванов Иван Иванович" />
+                </div>
+                <div>
+                    <label for="supLogin">Логин</label>
+                    <input id="supLogin" type="text" placeholder="логин (если есть)" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div>
+                    <label for="supEmail">Куда прислать ответ</label>
+                    <input id="supEmail" type="email" placeholder="you@example.com" />
+                </div>
+                <div>
+                    <label for="supSubject">Тема</label>
+                    <input id="supSubject" type="text" placeholder="Коротко о проблеме" />
+                </div>
+            </div>
+
+            <label for="supMessage">Текст обращения</label>
+            <textarea id="supMessage" placeholder="Опишите, что произошло, и что вы делали перед ошибкой"></textarea>
+
+            <div class="captcha-section">
+                <div id="captchaContainerV2" style="display:none"></div>
+
+                <div id="captchaContainerLocal" style="display:none; align-items:center; gap:10px;">
+                    <img id="captchaImage" alt="Капча" style="height:44px; border-radius:6px; border:1px solid #ddd;" />
+                    <button id="captchaRefresh" class="button-sliding" type="button" style="height:44px;">Обновить</button>
+                    <input id="captchaAnswer" type="text" placeholder="Ответ" style="width:140px; height:44px; box-sizing:border-box;" />
+                </div>
+            </div>
+
+            <div class="meta">
+                Тех.инфо приложим автоматически (код ошибки, URL, TraceId, User-Agent).
+            </div>
+
+            <div class="buttons">
+                <button id="supClose" class="button-sliding" type="button">Отмена</button>
+                <button id="supSend" class="button-sliding" type="button">Отправить</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/ui/support_modal.js" defer></script>
 </body>
 </html>

@@ -1,0 +1,226 @@
+﻿/* support_modalStyle.css — styles for error page actions + support modal */
+
+.error-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+    .error-actions .button-sliding {
+        width: 240px;
+        flex: 0 0 240px;
+        box-sizing: border-box;
+        white-space: nowrap;
+        text-align: center;
+    }
+
+    .error-actions button.button-sliding {
+        appearance: none;
+        -webkit-appearance: none;
+        font: inherit;
+        line-height: 1.1;
+    }
+
+    .error-actions a.button-sliding {
+        display: inline-flex;
+        text-decoration: none;
+    }
+
+.error-contact {
+    margin-top: 10px;
+    text-align: center;
+    opacity: .9;
+}
+
+/* --- modal --- */
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    display: none;
+    z-index: 9999;
+}
+
+.modal-content {
+    width: min(560px, 92vw);
+    background: #fff;
+    margin: 8vh auto;
+    padding: 20px 22px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+}
+
+.modal h3 {
+    margin: 0 0 8px;
+}
+
+.modal .row {
+    display: flex;
+    gap: 12px;
+}
+
+    .modal .row > * {
+        flex: 1;
+    }
+
+.modal label {
+    display: block;
+    font-weight: 600;
+    margin: 12px 0 6px;
+}
+
+.modal input[type="text"],
+.modal input[type="email"],
+.modal textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    outline: none;
+}
+
+.modal textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.modal .meta {
+    font-size: .88rem;
+    opacity: .7;
+    margin-top: 8px;
+}
+
+.modal .buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+    .modal .buttons .button-sliding {
+        min-width: 140px;
+    }
+
+/* optional base styles for the error card if page has no layout */
+.error-background {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle, #2e2e2e, #4b4b4b, #353535, #2a2a3a, #4f4848, #2e2e2e);
+    background-size: 400% 400%;
+    animation: gradientAnimation 60s ease infinite;
+    z-index: -1;
+}
+
+@keyframes gradientAnimation {
+    0% {
+        background-position: 0% 50%
+    }
+
+    50% {
+        background-position: 100% 50%
+    }
+
+    100% {
+        background-position: 0% 50%
+    }
+}
+
+.error-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+    background: rgba(255,255,255,.95);
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.4);
+    max-width: 520px;
+    width: 90%;
+    text-align: center;
+}
+
+.error-code {
+    font-size: 18px;
+    color: var(--primary-color,#5a9bd5);
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.error-message {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-dark,#333);
+    margin-bottom: 10px;
+}
+
+.error-description {
+    color: var(--text-light,#777);
+    margin-bottom: 18px;
+}
+
+/* generic button style (if not already provided by mainStyle.css) */
+.button-sliding {
+    --btn-color: #5a9bd5;
+    --btn-border: #5a9bd5;
+    min-width: 130px;
+    height: 44px;
+    padding: 5px 10px;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    background: transparent;
+    border: 2px solid var(--btn-border);
+    color: var(--btn-color);
+    border-radius: 5px;
+    transition: all .3s ease;
+    z-index: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+}
+
+    .button-sliding:after {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 0;
+        background: var(--btn-color);
+        z-index: -1;
+        transition: all .3s ease;
+    }
+
+    .button-sliding:hover {
+        color: #fff;
+    }
+
+        .button-sliding:hover:after {
+            width: 100%;
+        }
+
+    .button-sliding.danger {
+        --btn-color: #ff4444;
+        --btn-border: #ff4444;
+    }
+
+.captcha-section {
+    margin-top: 12px;
+    display: flex;
+    justify-content: center;
+}
+
+    .captcha-section img#captchaImage {
+        width: 220px;
+        height: 44px;
+        display: block;
+        object-fit: contain;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background: #fff;
+    }
