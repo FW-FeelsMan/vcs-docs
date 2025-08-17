@@ -1,9 +1,12 @@
 ﻿@page
 @model VCS_DOCs.Pages.Content.contact_pageModel
 @{
-    Layout = null; // Так как контент грузится динамически
+    Layout = null; 
 }
-<div class="contact-card">
-    <h2>Контакты</h2>
-    <p>warmenzim@mail.ru</p>
+<div class="contact-embed">
+    <iframe class="contact-iframe"
+            src="https://vcs-docs.support.local:7121/Support/Request?embed=1"
+            loading="eager"
+            referrerpolicy="no-referrer"
+            allow="clipboard-read; clipboard-write"></iframe>
 </div>

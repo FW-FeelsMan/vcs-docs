@@ -1,9 +1,13 @@
 ﻿@{
     Layout = null;
     var title = ViewData["Title"] as string ?? "Вход";
+
+    // Встраиваемый режим: если есть параметр ?embed (любое значение)
+    var embedParam = Context?.Request?.Query["embed"].ToString();
+    bool embedded = !string.IsNullOrEmpty(embedParam);
 }
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" class="@(embedded ? "embedded" : null)">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -15,7 +19,7 @@
     <!-- Стили страницы (после базы, чтобы переопределять) -->
     @RenderSection("Styles", required: false)
 </head>
-<body>
+<body class="@(embedded ? "embedded" : null)">
     @RenderBody()
 
     <!-- Скрипты по необходимости -->
