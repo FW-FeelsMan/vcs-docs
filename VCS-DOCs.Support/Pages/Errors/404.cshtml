@@ -1,0 +1,45 @@
+﻿@page
+@model VCS_DOCs.Support.Pages.Errors._404Model
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>@Model.PageTitle</title>
+
+    <link rel="stylesheet" href="/css/main_css/mainStyle.css" />
+    <link rel="stylesheet" href="/css/sub_css/support_modalStyle.css" />
+</head>
+<body>
+    <div class="error-background"></div>
+
+    <div class="error-container">
+        <div class="error-code">@Model.Code</div>
+        <div class="error-message">@Model.Title</div>
+
+        <div class="error-description">
+            @Model.Description
+            @if (!string.IsNullOrWhiteSpace(Model.OriginalPath))
+            {
+                <div style="margin-top:8px; opacity:.7; font-size:.9em;">
+                    Запрошенный адрес: <code>@Model.OriginalPath</code>
+                </div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.TraceId))
+            {
+                <div style="opacity:.7; font-size:.9em;">
+                    TraceId: <code>@Model.TraceId</code>
+                </div>
+            }
+        </div>
+
+        <div class="error-actions">
+            <a class="button-sliding" href="/">На главную</a>
+        </div>
+    </div>
+</body>
+</html>

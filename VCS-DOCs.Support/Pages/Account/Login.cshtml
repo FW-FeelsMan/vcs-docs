@@ -1,0 +1,46 @@
+﻿@page
+@model VCS_DOCs.Support.Pages.Account.LoginModel
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Вход";
+}
+
+@section Styles {
+<link rel="stylesheet" href="~/css/loginSupportStyle.css" asp-append-version="true" />
+}
+
+<div class="background"></div>
+
+<div class="container" id="container">
+    <div class="form-container sign-in-container">
+        <form method="post">
+            @Html.AntiForgeryToken()
+            <h1>Вход</h1>
+            <p>Введите ваши данные для входа</p>
+
+            <input asp-for="Input.Username" placeholder="Номер табеля" required />
+            <input asp-for="Input.Password" type="password" autocomplete="on" placeholder="Пароль" required />
+
+            <div class="error-message" style="@(string.IsNullOrEmpty(Model.ErrorMessage) ? " display:none" : "" )">
+                @Model.ErrorMessage
+            </div>
+
+            <button type="submit">Войти</button>
+
+            <div class="checkbox">
+                <input class="custom-checkbox" type="checkbox" asp-for="Input.ForceLogin" />
+                <label asp-for="Input.ForceLogin">Войти принудительно</label>
+            </div>
+
+            <input type="hidden" asp-for="Input.ReturnUrl" />
+            <input type="hidden" asp-for="Input.HardwareId" id="hardwareId" />
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    // простая инициализация hardwareId
+    document.getElementById('hardwareId').value = navigator.userAgent;
+</script>
+}

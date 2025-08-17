@@ -15,26 +15,23 @@ namespace VCS_DOCs.Data
         public DbSet<FileUploadSessionModel> FileUploadSessions { get; set; } = default!;
         public DbSet<ServerSettingModel> ServerSettings { get; set; } = default!;
 
-        // ⬇️ ДОБАВЛЕНО: реализуем свойство из IUploadDbContext
         public DbSet<SharedLink> SharedLinks { get; set; } = default!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Немного явной схемы для SharedLinks (SQLite)
             modelBuilder.Entity<SharedLink>(e =>
             {
                 e.ToTable("SharedLinks");
                 e.HasKey(x => x.Id);
                 e.HasIndex(x => new { x.FileGroupId, x.Version });
 
-                // Эти конверсии необязательны, но делают схему очевидной в SQLite
                 e.Property(x => x.FileGroupId).HasConversion(
                     v => v.ToString("D"),
                     v => Guid.Parse(v)
                 );
-                e.Property(x => x.RequireAuth).HasConversion<int>(); // bool -> INTEGER (0/1)
+                e.Property(x => x.RequireAuth).HasConversion<int>(); 
             });
         }
 

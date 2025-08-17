@@ -15,7 +15,7 @@ namespace VCS_DOCs.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.6");
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.8");
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
@@ -196,6 +196,45 @@ namespace VCS_DOCs.Migrations
                     b.HasKey("Key");
 
                     b.ToTable("ServerSettings");
+                });
+
+            modelBuilder.Entity("VCS_DOCs.Models.Entities.SharedLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Downloads")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("Exp")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("FileGroupId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("MaxDownloads")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RequireAuth")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FileGroupId", "Version");
+
+                    b.ToTable("SharedLinks", (string)null);
                 });
 
             modelBuilder.Entity("VCS_DOCs.Models.Entities.User", b =>

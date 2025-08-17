@@ -1,9 +1,6 @@
 ﻿// Pages/Login.cshtml.cs
 using System.Collections.Concurrent;
-using System.Security.Claims;
 using System.Text.RegularExpressions;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -17,7 +14,7 @@ using VCS_DOCs.Utilities;
 
 namespace VCS_DOCs.Pages
 {
-	public class LoginModel : PageModel
+    public class LoginModel : PageModel
 	{
 		private readonly ApplicationDbContext _context;
 		private readonly ILogger<LoginModel> _logger;
@@ -193,18 +190,14 @@ namespace VCS_DOCs.Pages
 				string userFolderName = $"u_{shortUserId}";
 				string userDataPath = Path.Combine(appDataPath, userFolderName);
 
-				string historyFileName = $"history_{shortUserId}.ini";
-				string historyFilePath = Path.Combine(userDataPath, historyFileName);
-
 				int fullFolderPathLength = Path.Combine(appDataPath, userFolderName).Length;
-				int fullHistoryPathLength = Path.Combine(userDataPath, historyFileName).Length;
 
-				if (fullFolderPathLength >= MaxPathLength || fullHistoryPathLength >= MaxPathLength)
+				if (fullFolderPathLength >= MaxPathLength)
 				{
 					_context.Users.Remove(newUser);
 					await _context.SaveChangesAsync();
 
-					RegistrationErrors.Add($"Не удалось создать пользователя: путь к папке или файлу слишком длинный ({fullHistoryPathLength} символов). Попробуйте использовать более короткий логин или другую базовую папку.");
+					RegistrationErrors.Add($"Не удалось создать пользователя: путь к папке слишком длинный. Попробуйте использовать более короткий логин.");
 					return new JsonResult(new { success = false, errors = RegistrationErrors });
 				}
 
@@ -213,14 +206,14 @@ namespace VCS_DOCs.Pages
 					Directory.CreateDirectory(userDataPath);
 				}
 
-				if (!System.IO.File.Exists(historyFilePath))
-				{
-					System.IO.File.WriteAllText(historyFilePath, "");
-				}
-
 				IsRegistrationSuccessful = true;
+                var created = await _userManager.FindByIdAsync(newUser.Id);
+                if (created != null)
+                {
+                    await _userManager.AddToRoleAsync(created, Roles.BaseUser);
+                }
 
-				return new JsonResult(new { success = true });
+                return new JsonResult(new { success = true });
 			}
 			catch (Exception ex)
 			{
@@ -251,32 +244,6 @@ namespace VCS_DOCs.Pages
 			RegistrationErrors ??= new List<string>();
 			LoginErrors ??= new List<string>();
 		}
-
-		public void RecordDocumentHistory(string username, string documentName, string documentVersion)
-		{
-			string userDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData", $"userData_{username}");
-			string historyFilePath = Path.Combine(userDataPath, $"history_{username}.ini");
-
-			if (System.IO.File.Exists(historyFilePath))
-			{
-				var lines = System.IO.File.ReadAllLines(historyFilePath).ToList();
-
-				var existingRecord = lines.FirstOrDefault(line => line.StartsWith(documentName));
-				if (existingRecord != null)
-				{
-					lines[lines.IndexOf(existingRecord)] = $"{documentName}={documentVersion}";
-				}
-				else
-				{
-					lines.Add($"{documentName}={documentVersion}");
-				}
-
-				System.IO.File.WriteAllLines(historyFilePath, lines);
-			}
-			else
-			{
-				System.IO.File.WriteAllText(historyFilePath, $"{documentName}={documentVersion}");
-			}
-		}
+		
 	}
 }
