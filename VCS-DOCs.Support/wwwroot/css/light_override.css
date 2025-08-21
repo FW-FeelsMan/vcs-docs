@@ -1,0 +1,43 @@
+
+:root {
+    --bg: #f6f8fc;
+    --panel: #ffffff;
+    --panel-2: #f8fafc;
+    --text: #111827;
+    --muted: #667085;
+    --border: #e5e7eb;
+    --accent: #126ae6;
+}
+body { color: var(--text); background: var(--bg); }
+
+.background { background: radial-gradient(circle, #ffffff, #f4f7fb, #eef2f7, #e9edf5) !important; animation: none !important; }
+
+.content-field, .login-form, .user-block, .grid-container, .container, .main {
+    background-color: var(--panel) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border);
+}
+
+.sidebar { background: #ffffff !important; border-right: 1px solid var(--border); }
+.sidebar-button { color: var(--text) !important; background: transparent !important; }
+.sidebar-button:hover { background: #f3f4f6 !important; }
+.button-number { background-color: #e5e7eb !important; color: #111827 !important; }
+
+.header-title { color: #1f2937 !important; text-shadow: none !important; }
+.menu_divider, .botom-text, .muted { color: var(--muted) !important; }
+
+.context-menu { background-color: #ffffff !important; border: 1px solid var(--border) !important; }
+.context-menu li { color: var(--text) !important; }
+.context-menu li:hover { background-color: #f3f4f6 !important; }
+
+.login-form input { background-color: #ffffff !important; color: var(--text) !important; border: 1px solid var(--border) !important; }
+.login-form button { background-color: var(--accent) !important; color: #fff !important; }
+.login-form button:hover { filter: brightness(0.95); }
+
+.sidebar::-webkit-scrollbar-thumb { background-color: #d1d5db !important; }
+.sidebar { scrollbar-color: #d1d5db transparent; }
+
+.grid-table th, .grid-table td, table th, table td { border-bottom: 1px solid var(--border) !important; }
+.grid-table thead th, thead th { background: #f8fafc !important; color: #111827 !important; }
+
+.button-icon { filter: none !important; }

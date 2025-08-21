@@ -1,0 +1,77 @@
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@using StackExchange.Profiling
+@using System.Security.Claims
+@{{
+    var tokens = Antiforgery.GetAndStoreTokens(Context);
+    var csrfToken = tokens.RequestToken;
+    var userIdFromClaims = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+}}
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - VCS-DOCs</title>
+    @await Html.PartialAsync("~/Pages/Shared/Styles/Styles_Layout.cshtml")
+</head>
+<body>
+    <div id="loader" class="loader hidden"></div>
+    <div class="background"></div>
+    <div class="header-container">
+        <div class="header-title">VCS-Service Desk</div>
+    </div>
+    <aside class="sidebar">
+
+
+        <div class="sidebar-button" data-content="open_tickets" id="btnOpen">
+            <img src="~/images/helpIcon.png" alt="Icon" class="button-icon">
+            <span class="button-text">Открытые заявки</span>
+            <span class="button-number">12</span>
+        </div>
+        <div class="sidebar-button" data-content="closed_tickets" id="btnClosed">
+            <img src="~/images/projectsIcon.png" alt="Icon" class="button-icon">
+            <span class="button-text">Закрытые заявки</span>
+            <span class="button-number">102</span>
+        </div>
+        <div class="sidebar-button" data-content="contact_page" id="btnContact">
+            <img src="~/images/personalIcon.png" alt="Icon" class="button-icon">
+            <span class="button-text">Учетные записи</span>
+            <span class="button-number">102</span>
+        </div>
+        <div class="sidebar-button" data-content="settings" id="btnSettings">
+            <img src="~/images/extra.png" alt="Icon" class="button-icon">
+            <span class="button-text">Настройки</span>
+        </div>
+    </aside>
+    <div class="user-block">
+        <img id="sidebarAvatar"
+             src="~/images/logoVCS.png"
+             alt="Avatar"
+             class="sidebar-avatar-img" />
+
+        <div class="user-info">
+            <div class="user-name">UserName</div>
+            <div class="user-status">Проверка статуса...</div>
+        </div>
+    </div>
+    <main id="content" class="content-field">
+        @RenderBody()
+    </main>
+
+    <div class="context-menu">
+        <ul>
+            <li>Открыть</li>
+            <li>Вырезать</li>
+            <li>Печать</li>
+            <li>Настройки</li>
+            <li>Выход</li>
+        </ul>
+    </div>
+
+    @await Html.PartialAsync("~/Pages/Shared/Scripts/Scripts_Libraries.cshtml")
+
+
+</body>
+</html>

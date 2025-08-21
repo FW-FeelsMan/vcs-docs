@@ -1,52 +1,67 @@
-﻿<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - VCS_DOCs.Support</title>
+﻿@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@using StackExchange.Profiling
+@using System.Security.Claims
+@{
+    var tokens = Antiforgery.GetAndStoreTokens(Context);
+    var csrfToken = tokens.RequestToken;
+    var userIdFromClaims = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+}
 
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/VCS_DOCs.Support.styles.css" asp-append-version="true" />
-    @RenderSection("Styles", required: false)
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - VCS-DOCs</title>
+
+    <!-- Базовые стили проекта -->
+    @await Html.PartialAsync("~/Pages/Shared/Styles/Styles_Layout.cshtml")
+
+    <!-- Дополнительные стили страницы -->
+    @await RenderSectionAsync("Styles", required: false)
+
+    <!-- Библиотеки -->
+    @await Html.PartialAsync("~/Pages/Shared/Scripts/Scripts_Libraries.cshtml")
+
+    <!-- CSRF Token -->
+    <meta name="csrf-token" content="@csrfToken" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">VCS_DOCs.Support</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+    <div style="display:none;">
+        @Html.AntiForgeryToken()
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - VCS_DOCs.Support - <a asp-area="" asp-page="/Privacy">Privacy</a>
-        </div>
-    </footer>
+    @if (isAuthenticated)
+    {
+        @await Html.PartialAsync("~/Pages/Content/chat_popup.cshtml")
+    }
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Основное содержимое -->
+    @RenderBody()
 
+    <!-- SignalR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
+
+    <!-- Глобальные переменные -->
+    <script>
+        var userIsAuthenticated = @(isAuthenticated.ToString().ToLower());
+        @if (isAuthenticated)
+        {
+            <text>
+                window.userStorageBasePath = "@((ViewData["UserStorageBasePath"] as string)?.Replace("\\", "\\\\") ?? "")";
+                window.userIdFromClaims = "@userIdFromClaims";
+            </text>
+        }
+    </script>
+    <!--<script src="/js/profile/taskManager/taskManager.js"></script>
+    <script src="/js/profile/taskManager/init-tasks.js"></script> -->
+    <!-- Скрипты страницы -->
     @await RenderSectionAsync("Scripts", required: false)
+    <mini-profiler />
+    @if (isAuthenticated)
+    {
+        <script src="~/js/chat/chat.js" defer></script>
+    }
 </body>
 </html>

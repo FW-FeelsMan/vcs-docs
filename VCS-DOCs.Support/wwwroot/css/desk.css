@@ -1,0 +1,75 @@
+:root{
+    --bg1:#0f1420;
+    --bg2:#151c2c;
+    --panel:#1f2533;
+    --panel-contrast:#2b3346;
+    --text:#e9edf5;
+    --muted:#9aa6bf;
+    --accent:#5aa9ff;
+    --accent-2:#71c5ff;
+    --shadow:0 30px 60px rgba(0,0,0,.25),0 6px 18px rgba(0,0,0,.18);
+    --radius:14px;
+}
+
+html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color:var(--text);background:transparent;overflow:hidden}
+
+.background{
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background: radial-gradient(1200px 800px at 10% 10%, #10223b, transparent),
+                radial-gradient(1000px 600px at 90% 90%, #0b2a46, transparent),
+                linear-gradient(160deg, var(--bg1), var(--bg2));
+    filter:saturate(1.1);
+    animation: bg-pan 60s ease infinite;
+    background-size: 400% 400%;
+}
+@keyframes bg-pan{0%{background-position:0% 0%}50%{background-position:100% 100%}100%{background-position:0% 0%}}
+
+.header-container{position:absolute;top:12px;left:16px;display:flex;align-items:center;gap:14px;z-index:2}
+.header-title{font-size:28px;font-weight:800;letter-spacing:.5px}
+.menu_divider{font-size:10px;color:var(--muted);line-height:1.1;margin:0}
+
+.sidebar{
+    position:absolute;top:64px;bottom:8px;left:8px;width:230px;padding:10px;
+    display:flex;flex-direction:column;gap:6px;overflow:auto;z-index:2;
+    background:rgba(255,255,255,.02);border-radius:10px
+}
+.sidebar-button{
+    display:flex;align-items:center;gap:8px;padding:10px;border-radius:10px;
+    color:var(--text);cursor:pointer;transition:background .2s ease;
+    background:transparent;
+}
+.sidebar-button:hover{background:rgba(255,255,255,.06)}
+.sidebar-button.selected{background:rgba(255,255,255,.12)}
+.button-icon{width:16px;height:16px;filter:invert(1) contrast(1.2)}
+.button-text{flex:1}
+.button-number{background:var(--panel-contrast);border-radius:6px;padding:0 6px;font-size:12px}
+
+.content-field{position:absolute;inset:8px 8px 8px 250px;background:#0c0f16;border-radius:10px;box-shadow:var(--shadow);z-index:1}
+
+.loader{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    width:52px;height:52px;border:6px solid rgba(255,255,255,.15);border-top-color:var(--text);border-radius:50%;
+    animation:spin 1s linear infinite;z-index:1000}
+.hidden{display:none}
+@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+/* Cards & tables */
+.card{background:var(--panel);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);max-width:900px;margin:16px}
+.card h2{margin:0 0 6px 0}
+.muted{color:var(--muted)}
+.bullets{margin:8px 0 0 16px}
+.table-wrap{overflow:auto;border-radius:10px;border:1px solid rgba(255,255,255,.05)}
+.grid-table{width:100%;border-collapse:collapse}
+.grid-table th,.grid-table td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,.06);text-align:left}
+.grid-table th{color:#cbd6f2;background:rgba(255,255,255,.03)}
+
+/* Contact iframe */
+.contact-embed{position:absolute;inset:0;padding:6px;box-sizing:border-box}
+.contact-iframe{width:100%;height:100%;border:0;border-radius:8px;background:transparent;display:block}
+
+/* Animation for page enter — zoom from bottom-right like Profile */
+.view-panel{position:relative;width:100%;height:100%}
+.view-enter{animation:view-zoom-in .5s cubic-bezier(.22,.61,.36,1) both;transform-origin:100% 100%;will-change:transform,opacity,filter}
+@keyframes view-zoom-in{
+    from{opacity:0;transform:translate(24px,24px) scale(.985);filter:blur(1.5px)}
+    to{opacity:1;transform:translate(0,0) scale(1);filter:blur(0)}
+}

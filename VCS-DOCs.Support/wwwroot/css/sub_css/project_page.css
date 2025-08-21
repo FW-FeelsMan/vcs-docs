@@ -1,0 +1,21 @@
+﻿.project_background {
+    background-color: rgba(32, 32, 32, 255);
+    border-radius: 12px;
+    padding: 20px;
+    color: white;
+    max-width: 400px;
+    margin: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+    .project_background h2 {
+        margin-top: 0;
+    }
+
+h1 {
+    color: white;
+}
+
+p {
+    color: white;
+}
