@@ -4,6 +4,10 @@ using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Data;
 using VCS_DOCs.Models.Entities;
 using VCS_DOCs.Infrastructure.Auth;
+using VCS_DOCs.Support.Hubs;
+using Microsoft.AspNetCore.Authentication;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,14 +30,48 @@ builder.Services
     .AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
-
+// === SignalR + Hubs ===
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = true;
+});
 // === Cookies / маршруты отказов ===
 builder.Services.ConfigureApplicationCookie(o =>
 {
-    o.Cookie.Name = ".VcsDocs.Auth";
-    o.LoginPath = "/Account/Login";
+    o.Cookie.Name = ".VcsDocs.Support.Auth";
+    o.LoginPath = "/Account/LoginSupport";
     o.AccessDeniedPath = "/Errors/403";
+
+    o.Events = new CookieAuthenticationEvents
+    {
+        OnValidatePrincipal = async ctx =>
+        {
+            var db = ctx.HttpContext.RequestServices.GetRequiredService<VCS_DOCs.Data.ApplicationDbContext>();
+            var userId = ctx.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var sid = ctx.Principal.FindFirst("support_sid")?.Value;
+
+            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(sid))
+            {
+                ctx.RejectPrincipal();
+                await ctx.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+                return;
+            }
+
+            // читаем текущую запись о сессии из БД
+            var row = await db.Set<VCS_DOCs.Models.Entities.SupportUserSession>()
+                              .AsNoTracking()
+                              .FirstOrDefaultAsync(x => x.UserId == userId);
+
+            var stillValid = row != null && row.IsOnline && string.Equals(row.JwtId, sid, StringComparison.Ordinal);
+            if (!stillValid)
+            {
+                ctx.RejectPrincipal();
+                await ctx.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+            }
+        }
+    };
 });
+
 
 // === Авторизация: саппорт-политика ===
 builder.Services.AddAuthorization(o =>
@@ -41,6 +79,7 @@ builder.Services.AddAuthorization(o =>
     o.AddPolicy("SupportOnly",
         p => p.RequireRole(Roles.SupportAgent, Roles.SupportAdmin));
 });
+//builder.Services.AddScoped<IPasswordHasher<User>, VCS_DOCs.Support.Infrastructure.Auth.BCryptPasswordHasher<User>>();
 
 // === Razor Pages ===
 builder.Services
@@ -48,8 +87,8 @@ builder.Services
     {
         // всё закрыто для посторонних...
         o.Conventions.AuthorizeFolder("/", "SupportOnly");
-        // ...кроме логина/ошибок/публичной формы обращения
-        o.Conventions.AllowAnonymousToPage("/Account/Login");
+        o.Conventions.AllowAnonymousToPage("/Account/LoginSupport");
+       
         o.Conventions.AllowAnonymousToPage("/Errors/404");
         o.Conventions.AllowAnonymousToPage("/Errors/500");
         o.Conventions.AllowAnonymousToPage("/Support/Request");
@@ -133,9 +172,32 @@ app.UseRouting();
 
 app.UseSession();          
 app.UseAuthentication();
+app.Use(async (ctx, next) =>
+{
+    if (ctx.User?.Identity?.IsAuthenticated == true)
+    {
+        var userId = ctx.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var sid = ctx.User.FindFirst("support_sid")?.Value;
+
+        if (!string.IsNullOrEmpty(userId) && !string.IsNullOrEmpty(sid))
+        {
+            var db = ctx.RequestServices.GetRequiredService<ApplicationDbContext>();
+            var row = await db.SupportUserSessions.AsNoTracking().FirstOrDefaultAsync(x => x.UserId == userId);
+            if (row != null && !string.Equals(row.JwtId, sid, StringComparison.Ordinal))
+            {
+                await ctx.SignOutAsync(IdentityConstants.ApplicationScheme);
+                ctx.Response.Redirect("/Account/LoginSupport?forced=1");
+                return;
+            }
+        }
+    }
+    await next();
+});
+
 app.UseAuthorization();
 
 app.MapRazorPages();
-app.MapControllers();     
+app.MapControllers();
+app.MapHub<UserStatusHub>("/hubs/userStatus");
 
 app.Run();

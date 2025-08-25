@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VCS_DOCs.Data;
 
@@ -10,9 +11,11 @@ using VCS_DOCs.Data;
 namespace VCS_DOCs.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250824153853_AddSupportPresence")]
+    partial class AddSupportPresence
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.8");
@@ -235,27 +238,6 @@ namespace VCS_DOCs.Migrations
                     b.HasIndex("FileGroupId", "Version");
 
                     b.ToTable("SharedLinks", (string)null);
-                });
-
-            modelBuilder.Entity("VCS_DOCs.Models.Entities.SupportUserConnection", b =>
-                {
-                    b.Property<string>("ConnectionId")
-                        .HasMaxLength(128)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("ConnectedAtUtc")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("ConnectionId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("SupportUserConnections", (string)null);
                 });
 
             modelBuilder.Entity("VCS_DOCs.Models.Entities.SupportUserSession", b =>

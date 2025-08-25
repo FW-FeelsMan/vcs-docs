@@ -1,11 +1,11 @@
 ﻿@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
-@using StackExchange.Profiling
 @using System.Security.Claims
+
 @{
     var tokens = Antiforgery.GetAndStoreTokens(Context);
     var csrfToken = tokens.RequestToken;
     var userIdFromClaims = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
-    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var isAuthenticated = User?.Identity?.IsAuthenticated == true;
 }
 
 <!DOCTYPE html>
@@ -13,55 +13,26 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - VCS-DOCs</title>
+    <title>@ViewData["Title"] - VCS-DOCs.Support</title>
 
-    <!-- Базовые стили проекта -->
     @await Html.PartialAsync("~/Pages/Shared/Styles/Styles_Layout.cshtml")
-
-    <!-- Дополнительные стили страницы -->
-    @await RenderSectionAsync("Styles", required: false)
-
-    <!-- Библиотеки -->
+    @RenderSection("Styles", required: false)
     @await Html.PartialAsync("~/Pages/Shared/Scripts/Scripts_Libraries.cshtml")
 
-    <!-- CSRF Token -->
     <meta name="csrf-token" content="@csrfToken" />
 </head>
 <body>
-    <div style="display:none;">
-        @Html.AntiForgeryToken()
-    </div>
+    <div style="display:none;">@Html.AntiForgeryToken()</div>
 
-    @if (isAuthenticated)
-    {
-        @await Html.PartialAsync("~/Pages/Content/chat_popup.cshtml")
-    }
-
-    <!-- Основное содержимое -->
     @RenderBody()
 
-    <!-- SignalR -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
-
-    <!-- Глобальные переменные -->
-    <script>
-        var userIsAuthenticated = @(isAuthenticated.ToString().ToLower());
-        @if (isAuthenticated)
-        {
-            <text>
-                window.userStorageBasePath = "@((ViewData["UserStorageBasePath"] as string)?.Replace("\\", "\\\\") ?? "")";
-                window.userIdFromClaims = "@userIdFromClaims";
-            </text>
-        }
-    </script>
-    <!--<script src="/js/profile/taskManager/taskManager.js"></script>
-    <script src="/js/profile/taskManager/init-tasks.js"></script> -->
-    <!-- Скрипты страницы -->
-    @await RenderSectionAsync("Scripts", required: false)
-    <mini-profiler />
     @if (isAuthenticated)
     {
-        <script src="~/js/chat/chat.js" defer></script>
+        <script src="~/lib/signalr/signalr.min.js" asp-append-version="true"></script>
+        <script src="~/js/support-presence.js" asp-append-version="true"></script>
     }
+
+
+    @RenderSection("Scripts", required: false)
 </body>
 </html>
