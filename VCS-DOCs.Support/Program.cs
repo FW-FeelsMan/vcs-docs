@@ -79,8 +79,9 @@ builder.Services.Configure<UserDataPathOptions>(
 // === Авторизация: саппорт-политика ===
 builder.Services.AddAuthorization(o =>
 {
-    o.AddPolicy("SupportOnly",
-        p => p.RequireRole(Roles.SupportAgent, Roles.SupportAdmin));
+    // Любой из этих ролей имеет доступ к порталу
+    o.AddPolicy("SupportPortal",
+        p => p.RequireRole(Roles.BaseUser, Roles.SupportAgent, Roles.SupportAdmin));
 });
 //builder.Services.AddScoped<IPasswordHasher<User>, VCS_DOCs.Support.Infrastructure.Auth.BCryptPasswordHasher<User>>();
 
@@ -88,10 +89,9 @@ builder.Services.AddAuthorization(o =>
 builder.Services
     .AddRazorPages(o =>
     {
-        // всё закрыто для посторонних...
-        o.Conventions.AuthorizeFolder("/", "SupportOnly");
+        // всё закрыто для посторонних, но пускаем baseUser/agent/admin
+        o.Conventions.AuthorizeFolder("/", "SupportPortal");
         o.Conventions.AllowAnonymousToPage("/Account/LoginSupport");
-       
         o.Conventions.AllowAnonymousToPage("/Errors/404");
         o.Conventions.AllowAnonymousToPage("/Errors/500");
         o.Conventions.AllowAnonymousToPage("/Support/Request");
@@ -150,7 +150,7 @@ using (var scope = app.Services.CreateScope())
     var roleMgr = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userMgr = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
 
-    foreach (var role in new[] { Roles.SupportAgent, Roles.SupportAdmin })
+    foreach (var role in new[] { Roles.BaseUser, Roles.SupportAgent, Roles.SupportAdmin })
         if (!await roleMgr.RoleExistsAsync(role))
             await roleMgr.CreateAsync(new IdentityRole(role));
 
@@ -159,10 +159,6 @@ using (var scope = app.Services.CreateScope())
     if (u != null && !await userMgr.IsInRoleAsync(u, Roles.SupportAgent))
         await userMgr.AddToRoleAsync(u, Roles.SupportAgent);
 }
-
-// === Ошибки/пайплайн ===
-//app.UseExceptionHandler("/Errors/500");
-//app.UseStatusCodePagesWithReExecute("/Errors/{0}");
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

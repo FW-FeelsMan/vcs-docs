@@ -83,11 +83,14 @@ namespace VCS_DOCs.Support.Pages.Account
                 return Page();
             }
 
-            var inSupport = await _userManager.IsInRoleAsync(user, Roles.SupportAgent)
-                         || await _userManager.IsInRoleAsync(user, Roles.SupportAdmin);
-            if (!inSupport)
+            var allowed =
+                           await _userManager.IsInRoleAsync(user, Roles.BaseUser)
+                        || await _userManager.IsInRoleAsync(user, Roles.SupportAgent)
+                        || await _userManager.IsInRoleAsync(user, Roles.SupportAdmin);
+
+            if (!allowed)
             {
-                ErrorMessage = "Доступ в систему поддержки запрещён.";
+                ErrorMessage = "Доступ в портал поддержки запрещён.";
                 return Page();
             }
 

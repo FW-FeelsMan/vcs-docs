@@ -1,12 +1,14 @@
 @page
-
+@using VCS_DOCs.Infrastructure.Auth
 @model VCS_DOCs.Support.Pages.IndexModel
 @{
     Layout = "_Layout";
     ViewData["Title"] = "Панель заявок";
 }
+
 @section Styles {
-    <link rel="stylesheet" href="~/css/main_css/mainStyle.css" asp-append-version="true" />
+    <!-- делаем этот css «постоянным» как в вебе -->
+    <link id="supportMain" data-persistent="true" rel="stylesheet" href="~/css/main_css/mainStyle.css" asp-append-version="true" />
 }
 
 <div id="loader" class="loader hidden"></div>
@@ -20,38 +22,77 @@
 
 <!-- Левое меню -->
 <div class="sidebar">
-    <div class="sidebar-button selected" id="btn-requests">
-        <img src="~/images/helpIcon.png" alt="Icon" class="button-icon" />
-        <span class="button-text">Открытые заявки</span>
-        <span class="button-number">1</span>
-    </div>
-    <div class="sidebar-button" id="btn-closed">
-        <img src="~/images/projectsIcon.png" alt="Icon" class="button-icon" />
-        <span class="button-text">Закрытые заявки</span>
-        <span class="button-number">2</span>
-    </div>
-    <div class="sidebar-button" id="btn-faq">
-        <img src="~/images/infographicIcon.png" alt="Icon" class="button-icon" />
-        <span class="button-text">FAQ по системе</span>
-        <span class="button-number">3</span>
-    </div>
+    @* === SupportAdmin === *@
+    @if (User.IsInRole(Roles.SupportAdmin))
+    {
+        <div class="sidebar-button selected" data-content="user_tickets" data-style="supportMain" id="btn-tickets">
+            <img src="~/images/helpIcon.png" alt="Icon" class="button-icon" />
+            <span class="button-text">Заявки пользователей</span>
+            <span class="button-number">1</span>
+        </div>
+        <div class="sidebar-button" data-content="closed_tickets" data-style="supportMain" id="btn-closed">
+            <img src="~/images/projectsIcon.png" alt="Icon" class="button-icon" />
+            <span class="button-text">Закрытые заявки</span>
+            <span class="button-number">2</span>
+        </div>
+        <div class="sidebar-button" data-content="accounts" data-style="supportMain" id="btn-accounts">
+            <img src="~/images/extra.png" alt="Icon" class="button-icon" />
+            <span class="button-text">Учетные записи</span>
+            <span class="button-number">3</span>
+        </div>
+        <div class="sidebar-button" data-content="workload" data-style="supportMain" id="btn-workload">
+            <img src="~/images/infographicIcon.png" alt="Icon" class="button-icon" />
+            <span class="button-text">Нагрузка</span>
+            <span class="button-number">4</span>
+        </div>
+    }
+    @* === SupportAgent === *@
+    else if (User.IsInRole(Roles.SupportAgent))
+    {
+        <div class="sidebar-button selected" data-content="user_tickets" data-style="supportMain" id="btn-tickets">
+            <img src="~/images/helpIcon.png" alt="Icon" class="button-icon" />
+            <span class="button-text">Заявки пользователей</span>
+            <span class="button-number">1</span>
+        </div>
+        <div class="sidebar-button" data-content="closed_tickets" data-style="supportMain" id="btn-closed">
+            <img src="~/images/projectsIcon.png" alt="Icon" class="button-icon" />
+            <span class="button-text">Закрытые заявки</span>
+            <span class="button-number">2</span>
+        </div>
+        <div class="sidebar-button" data-content="accounts" data-style="supportMain" id="btn-accounts">
+            <img src="~/images/extra.png" alt="Icon" class="button-icon" />
+            <span class="button-text">Учетные записи</span>
+            <span class="button-number">3</span>
+        </div>
+    }
+    @* === fallback (BaseUser / гость), если нужно оставить доступ === *@
+    else
+    {
+        <div class="sidebar-button selected" data-content="open_tickets" data-style="supportMain" id="btn-open">
+            <img src="~/images/helpIcon.png" alt="Icon" class="button-icon" />
+            <span class="button-text">Открытые заявки</span>
+            <span class="button-number">1</span>
+        </div>
+        <div class="sidebar-button" data-content="closed_tickets" data-style="supportMain" id="btn-closed">
+            <img src="~/images/projectsIcon.png" alt="Icon" class="button-icon" />
+            <span class="button-text">Закрытые заявки</span>
+            <span class="button-number">2</span>
+        </div>
+        <div class="sidebar-button" data-content="faq" data-style="supportMain" id="btn-faq">
+            <img src="~/images/infographicIcon.png" alt="Icon" class="button-icon" />
+            <span class="button-text">FAQ по системе</span>
+            <span class="button-number">3</span>
+        </div>
+    }
 
-    <!-- Блок пользователя (как в вебе) -->
     <div class="user-block">
-        <img id="sidebarAvatar"
-             src="@Model.AvatarUrl"
-             alt="Avatar"
-             class="sidebar-avatar-img" />
-
+        <img id="sidebarAvatar" src="@Model.AvatarUrl" alt="Avatar" class="sidebar-avatar-img" />
         <div class="user-info">
-            <div class="user-name">
-                @((Model.CurrentUser?.UserName ?? User?.Identity?.Name) ?? "Пользователь")
-            </div>
+            <div class="user-name">@((Model.CurrentUser?.UserName ?? User?.Identity?.Name) ?? "Пользователь")</div>
             <div class="user-status connecting">Подключение…</div>
         </div>
     </div>
 
-    <!-- Выход POST-ом -->
     <form method="post" asp-page-handler="Logout">
         @Html.AntiForgeryToken()
         <button type="submit" class="logout-button" title="Выйти">
@@ -62,12 +103,7 @@
 
 <!-- Контент -->
 <div id="content" class="content-field">
-    <div class="view-panel view-enter">
-        <div style="padding:16px; color:#ddd;">
-            <h2 style="margin-top:10px;">Панель заявок</h2>
-            <p>Здесь будет список обращений/тикетов и быстрые действия саппорта.</p>
-        </div>
-    </div>
+    <!-- JS сам подменит содержимое панелью с анимацией -->
 </div>
 
 <!-- контекстное меню (пока без JS) -->
@@ -80,15 +116,21 @@
         <li>Обновить</li>
     </ul>
 </div>
-
+@*<script>
+        (function () {
+            const roles = {
+                admin: @(User.IsInRole(Roles.SupportAdmin).ToString().ToLower()),
+                agent: @(User.IsInRole(Roles.SupportAgent).ToString().ToLower()),
+                base:  @(User.IsInRole(Roles.BaseUser).ToString().ToLower())
+            };
+            let role = roles.admin ? 'SupportAdmin'
+                     : roles.agent ? 'SupportAgent'
+                     : roles.base  ? 'BaseUser'
+                     : '(no role)';
+            window.supportRole = role;
+            console.log('[support] signed in role:', role, roles);
+        })();
+</script>*@
 @section Scripts {
-    <script>
-        // простая подсветка активного пункта (визуал)
-        document.querySelectorAll('.sidebar-button').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.sidebar-button').forEach(b => b.classList.remove('selected'));
-                btn.classList.add('selected');
-            });
-        });
-    </script>
+    <script src="~/js/support/support-sidebar.js" asp-append-version="true" defer></script>
 }
