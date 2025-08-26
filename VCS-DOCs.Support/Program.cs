@@ -8,6 +8,7 @@ using VCS_DOCs.Support.Hubs;
 using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using VCS_DOCs.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -71,6 +72,8 @@ builder.Services.ConfigureApplicationCookie(o =>
         }
     };
 });
+builder.Services.Configure<UserDataPathOptions>(
+    builder.Configuration.GetSection("UserDataPath"));
 
 
 // === Авторизация: саппорт-политика ===

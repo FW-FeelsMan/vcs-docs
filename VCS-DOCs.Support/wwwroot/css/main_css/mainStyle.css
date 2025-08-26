@@ -303,13 +303,13 @@ body, html {
 }
 
 .user-name {
-    font-size: 14px;
+    font-size: 15px;
     color: white;
     font-weight: bold;
 }
 
 .user-status {
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 500;
     transition: color 0.3s ease;
 }
@@ -453,6 +453,7 @@ body, html {
     height: 40px;
     border-radius: 50%;
     object-fit: cover;
+    margin: 0 7px 0 5px;
 }
 
 .contact-embed {

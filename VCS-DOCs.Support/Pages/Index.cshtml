@@ -1,5 +1,94 @@
 @page
+
 @model VCS_DOCs.Support.Pages.IndexModel
 @{
+    Layout = "_Layout";
     ViewData["Title"] = "Панель заявок";
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/main_css/mainStyle.css" asp-append-version="true" />
+}
+
+<div id="loader" class="loader hidden"></div>
+<div class="background"></div>
+
+<!-- Заголовок -->
+<div class="header-container">
+    <div class="header-title">VCS-DOCs</div>
+    <p class="menu_divider">SERVICE<br />DESK</p>
+</div>
+
+<!-- Левое меню -->
+<div class="sidebar">
+    <div class="sidebar-button selected" id="btn-requests">
+        <img src="~/images/helpIcon.png" alt="Icon" class="button-icon" />
+        <span class="button-text">Открытые заявки</span>
+        <span class="button-number">1</span>
+    </div>
+    <div class="sidebar-button" id="btn-closed">
+        <img src="~/images/projectsIcon.png" alt="Icon" class="button-icon" />
+        <span class="button-text">Закрытые заявки</span>
+        <span class="button-number">2</span>
+    </div>
+    <div class="sidebar-button" id="btn-faq">
+        <img src="~/images/infographicIcon.png" alt="Icon" class="button-icon" />
+        <span class="button-text">FAQ по системе</span>
+        <span class="button-number">3</span>
+    </div>
+
+    <!-- Блок пользователя (как в вебе) -->
+    <div class="user-block">
+        <img id="sidebarAvatar"
+             src="@Model.AvatarUrl"
+             alt="Avatar"
+             class="sidebar-avatar-img" />
+
+        <div class="user-info">
+            <div class="user-name">
+                @((Model.CurrentUser?.UserName ?? User?.Identity?.Name) ?? "Пользователь")
+            </div>
+            <div class="user-status connecting">Подключение…</div>
+        </div>
+    </div>
+
+    <!-- Выход POST-ом -->
+    <form method="post" asp-page-handler="Logout">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="logout-button" title="Выйти">
+            <img src="~/images/logout_icon.png" alt="Выход" class="logout-icon" />
+        </button>
+    </form>
+</div>
+
+<!-- Контент -->
+<div id="content" class="content-field">
+    <div class="view-panel view-enter">
+        <div style="padding:16px; color:#ddd;">
+            <h2 style="margin-top:10px;">Панель заявок</h2>
+            <p>Здесь будет список обращений/тикетов и быстрые действия саппорта.</p>
+        </div>
+    </div>
+</div>
+
+<!-- контекстное меню (пока без JS) -->
+<div class="context-menu" id="ctx-menu">
+    <ul>
+        <li>Открыть</li>
+        <li>Назначить</li>
+        <li>Закрыть</li>
+        <hr />
+        <li>Обновить</li>
+    </ul>
+</div>
+
+@section Scripts {
+    <script>
+        // простая подсветка активного пункта (визуал)
+        document.querySelectorAll('.sidebar-button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.sidebar-button').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+            });
+        });
+    </script>
 }
