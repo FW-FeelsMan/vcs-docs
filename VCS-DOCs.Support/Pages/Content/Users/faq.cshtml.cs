@@ -1,9 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace VCS_DOCs.Support.Pages.Content
+namespace VCS_DOCs.Support.Pages.Content.Users
 {
-    public class user_ticketsModel : PageModel
+    public class faqModel : PageModel
     {
         public void OnGet()
         {

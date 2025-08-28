@@ -5,6 +5,11 @@
     Layout = "_Layout";
     ViewData["Title"] = "Панель заявок";
 }
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Af
+@{
+    var tokens = Af.GetAndStoreTokens(HttpContext);
+}
+<meta name="csrf-token" content="@tokens.RequestToken" />
 
 @section Styles {
     <!-- делаем этот css «постоянным» как в вебе -->
@@ -117,20 +122,20 @@
     </ul>
 </div>
 @*<script>
-        (function () {
-            const roles = {
-                admin: @(User.IsInRole(Roles.SupportAdmin).ToString().ToLower()),
-                agent: @(User.IsInRole(Roles.SupportAgent).ToString().ToLower()),
-                base:  @(User.IsInRole(Roles.BaseUser).ToString().ToLower())
-            };
-            let role = roles.admin ? 'SupportAdmin'
-                     : roles.agent ? 'SupportAgent'
-                     : roles.base  ? 'BaseUser'
-                     : '(no role)';
-            window.supportRole = role;
-            console.log('[support] signed in role:', role, roles);
-        })();
-</script>*@
+            (function () {
+                const roles = {
+                    admin: @(User.IsInRole(Roles.SupportAdmin).ToString().ToLower()),
+                    agent: @(User.IsInRole(Roles.SupportAgent).ToString().ToLower()),
+                    base:  @(User.IsInRole(Roles.BaseUser).ToString().ToLower())
+                };
+                let role = roles.admin ? 'SupportAdmin'
+                         : roles.agent ? 'SupportAgent'
+                         : roles.base  ? 'BaseUser'
+                         : '(no role)';
+                window.supportRole = role;
+                console.log('[support] signed in role:', role, roles);
+            })();
+    </script>*@
 @section Scripts {
     <script src="~/js/support/support-sidebar.js" asp-append-version="true" defer></script>
 }

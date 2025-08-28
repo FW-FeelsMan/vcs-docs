@@ -8,7 +8,7 @@ using VCS_DOCs.Models.Entities;
 
 namespace VCS_DOCs.Support.Hubs
 {
-    [Authorize] // только авторизованные
+    [Authorize(Policy = "SupportDeskAccess")]
     public class UserStatusHub : Hub
     {
         private readonly ApplicationDbContext _db;

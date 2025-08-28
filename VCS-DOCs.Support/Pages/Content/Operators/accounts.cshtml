@@ -1,0 +1,47 @@
+﻿@page "/Content/Operators/accounts"
+@using VCS_DOCs.Infrastructure.Auth
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "SupportOnly")]
+@model VCS_DOCs.Support.Pages.Content.Operators.AccountsModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    Layout = null; // грузится внутрь Index через fetch
+}
+
+<link rel="stylesheet" href="~/css/sub_css/support_accountsStyle.css" asp-append-version="true" />
+<meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(HttpContext).RequestToken" />
+
+<div class="profile_background accounts-page">
+    <div class="button-container">
+        <h2>Учетные записи</h2>
+        <hr class="solid">
+        <div class="filters">
+            <select id="roleFilter" class="button-sliding small">
+                <option value="">Все роли</option>
+                <option value="@Roles.BaseUser">Пользователи</option>
+                <option value="@Roles.SupportAgent">Саппорт</option>
+                <option value="@Roles.SupportAdmin">Админы</option>
+            </select>
+
+            <input id="searchBox" type="text" placeholder="Поиск (логин/ФИО)" />
+        </div>
+    </div>
+
+    <div class="content-scrollable">
+        <table class="file-table" id="accountsTable">
+            <thead>
+                <tr>
+                    <th>Логин</th>
+                    <th>ФИО</th>
+                    <th>Роли</th>
+                    <th>Онлайн</th>
+                    <th>Доступ</th>
+                    <th>Последний вход</th>
+                    <th>Действия</th>
+                </tr>
+            </thead>
+            <tbody id="accountsBody">
+                <tr><td colspan="7">Загрузка…</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>

@@ -1,132 +1,144 @@
-﻿// support-sidebar.js
+﻿// wwwroot/js/support/support-sidebar.js
 
-// --- состояние ---
-const contentCache = new Map();
-let currentContentId = null;
-let clickLock = false;
-
-// --- init ---
-document.addEventListener('DOMContentLoaded', () => {
-    // обработчики клика по пунктам
-    document.querySelectorAll('.sidebar-button').forEach(button => {
-        button.addEventListener('click', () => window.selectSupportButton(button));
+// Загружаем внешний скрипт один раз (для ленивой подгрузки страниц)
+function loadScriptOnce(src, id) {
+    return new Promise((resolve, reject) => {
+        if (id && document.getElementById(id)) return resolve();
+        const s = document.createElement('script');
+        if (id) s.id = id;
+        s.src = src;
+        s.defer = true;
+        s.onload = resolve;
+        s.onerror = () => reject(new Error('failed to load ' + src));
+        document.body.appendChild(s);
     });
+}
 
-    // выбрать первый пункт по умолчанию
-    const firstButton = document.querySelector('.sidebar-button');
-    if (firstButton) window.selectSupportButton(firstButton);
-});
+// Подключаем специфичные скрипты под контент и инициализируем их
+async function ensureContentScripts(contentId, panelEl) {
+    if (contentId === 'accounts') {
+        await loadScriptOnce('/js/support/accountsRender.js', 'accounts-render-js');
+        if (typeof window.initAccountsPage === 'function') {
+            window.initAccountsPage(panelEl); // передаем корневой элемент вставленной панели
+        }
+    }
+    // сюда по мере надобности добавляем обработку других страниц
+}
 
-// --- выбор пункта сайдбара ---
-window.selectSupportButton = function (button) {
-    if (clickLock) return;
-    clickLock = true;
-    setTimeout(() => (clickLock = false), 300);
+(function () {
+    const $ = (sel, root = document) => root.querySelector(sel);
+    const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
-    const contentId = button.getAttribute('data-content');
-    const styleId = button.getAttribute('data-style');
+    // --- определяем роль (из window.supportRole или по наличию кнопок)
+    function detectRole() {
+        if (typeof window.supportRole === 'string' && window.supportRole) return window.supportRole;
+        const isAdmin = !!$('#btn-workload');                 // у админа есть "Нагрузка"
+        const isAgent = !!$('#btn-accounts') && !!$('#btn-tickets');
+        if (isAdmin) return 'SupportAdmin';
+        if (isAgent) return 'SupportAgent';
+        return 'BaseUser';
+    }
+    const ROLE = detectRole();
+    console.log('[support] role:', ROLE);
 
-    if (!contentId || currentContentId === contentId) return;
+    // --- маршруты для каждого contentId
+    const routes = {
+        SupportAdmin: {
+            user_tickets: '/Content/Operators/all_open_usertickets',
+            closed_tickets: '/Content/Operators/all_close_userticket',
+            accounts: '/Content/Operators/accounts',
+            workload: '/Content/Operators/workload',
+        },
+        SupportAgent: {
+            user_tickets: '/Content/Operators/all_open_usertickets',
+            closed_tickets: '/Content/Operators/all_close_userticket',
+            accounts: '/Content/Operators/accounts',
+        },
+        BaseUser: {
+            open_tickets: '/Content/Users/user_open_tickets',
+            closed_tickets: '/Content/Users/user_closed_tickets',
+            faq: '/Content/Users/faq',
+        }
+    };
 
-    // можно кешировать отдельные страницы, если нужно
-    // if (currentContentId === 'faq') { /* пример сохранения состояния */ }
-
-    loadStyles(styleId);
-    showLoader();
-
-    if (contentCache.has(contentId)) {
-        showCachedContent(contentId);
-    } else {
-        loadContent(contentId);
+    function mapContentToUrl(contentId) {
+        // тривиальная валидация ключа
+        if (!/^[a-z0-9_]+$/i.test(contentId)) return null;
+        const map = routes[ROLE] || routes.BaseUser;
+        if (!Object.prototype.hasOwnProperty.call(map, contentId)) return null;
+        return map[contentId];
     }
 
-    currentContentId = contentId;
-    updateButtonSelection(button);
-};
+    // --- лоадер
+    const showLoader = () => $('#loader')?.classList.remove('hidden');
+    const hideLoader = () => $('#loader')?.classList.add('hidden');
 
-// --- визуальный выбор активной кнопки ---
-function updateButtonSelection(button) {
-    document.querySelectorAll('.sidebar-button').forEach(btn => btn.classList.remove('selected'));
-    button.classList.add('selected');
-}
+    // защита от дребезга и повторной загрузки одного и того же контента
+    let clickLock = false;
+    let currentContentId = null;
 
-// --- загрузка html-фрагмента в центральную область ---
-async function loadContent(contentId) {
-    const contentContainer = document.getElementById('content');
-    if (!contentContainer) return;
+    // --- выбор пункта и загрузка
+    window.selectButton = function (button) {
+        if (!button || clickLock) return;
 
-    try {
-        // очищаем поле сразу
-        contentContainer.innerHTML = '';
+        const contentId = button.getAttribute('data-content');
+        if (!contentId) return;
+        if (currentContentId === contentId) {
+            // просто подсветим выбранный пункт
+            $$('.sidebar-button').forEach(b => b.classList.remove('selected'));
+            button.classList.add('selected');
+            return;
+        }
 
-        // Pages/Content/{contentId}.cshtml -> маршрут /Content/{contentId}
-        const url = `/Content/${contentId}`;
+        const url = mapContentToUrl(contentId);
+        const container = $('#content');
+        if (!container || !url) {
+            console.warn('[support] blocked/unknown content id:', contentId);
+            return;
+        }
 
-        const response = await fetch(url, { credentials: 'same-origin', cache: 'no-store' });
-        if (!response.ok) throw new Error(`HTTP error! ${response.status}`);
-        const html = await response.text();
+        // визуал выбранной кнопки
+        $$('.sidebar-button').forEach(b => b.classList.remove('selected'));
+        button.classList.add('selected');
 
-        // создаём панель в пред-анимационном состоянии
-        const panel = document.createElement('div');
-        panel.className = 'view-panel view-pre';
-        panel.innerHTML = html;
-        contentContainer.replaceChildren(panel);
+        clickLock = true;
+        setTimeout(() => (clickLock = false), 300);
 
-        // плавная анимация появления
-        panel.getBoundingClientRect(); // reflow
-        panel.classList.add('view-enter');
-        panel.addEventListener('animationend', () => {
-            panel.classList.remove('view-enter', 'view-pre');
-            hideLoader();
-        }, { once: true });
+        showLoader();
 
-        // при желании — закешировать
-        contentCache.set(contentId, { html });
+        fetch(url, { credentials: 'same-origin', cache: 'no-store' })
+            .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.text(); })
+            .then(html => {
+                const panel = document.createElement('div');
+                panel.className = 'view-panel view-pre';
+                panel.innerHTML = html;
+                container.replaceChildren(panel);
 
-    } catch (error) {
-        console.error('Ошибка загрузки:', error);
-        contentContainer.innerHTML = `<div class="error-message">Ошибка загрузки</div>`;
-        hideLoader();
-    }
-}
+                // лениво подгружаем и инициализируем спец-скрипты для контента
+                ensureContentScripts(contentId, panel).catch(console.error);
 
-// --- показ кеша с анимацией ---
-function showCachedContent(contentId) {
-    const data = contentCache.get(contentId);
-    const contentContainer = document.getElementById('content');
-    if (!data || !contentContainer) {
-        hideLoader();
-        return;
-    }
+                // аккуратная анимация появления
+                panel.getBoundingClientRect(); // reflow
+                panel.classList.add('view-enter');
+                panel.addEventListener('animationend', () => {
+                    panel.classList.remove('view-enter', 'view-pre');
+                    hideLoader();
+                }, { once: true });
 
-    const panel = document.createElement('div');
-    panel.className = 'view-panel view-pre';
-    panel.innerHTML = data.html;
-    contentContainer.replaceChildren(panel);
+                currentContentId = contentId;
+            })
+            .catch(err => {
+                console.error('[support] load error:', err);
+                container.innerHTML = `<div style="padding:16px;color:#ddd">Ошибка загрузки: ${contentId}</div>`;
+                hideLoader();
+            });
+    };
 
-    panel.getBoundingClientRect();
-    panel.classList.add('view-enter');
-    panel.addEventListener('animationend', () => {
-        panel.classList.remove('view-enter', 'view-pre');
-        hideLoader();
-    }, { once: true });
-}
-
-// --- подмена таблиц стилей (как в вебе) ---
-function loadStyles(styleId) {
-    if (!styleId) return;
-    document
-        .querySelectorAll('link[rel=stylesheet][id]')
-        .forEach(link => {
-            if (link.dataset.persistent === 'true') return; // не трогаем постоянные css
-            link.disabled = link.id !== styleId;
-        });
-}
-
-// --- лоадер ---
-function showLoader() {
-    document.getElementById('loader')?.classList.remove('hidden');
-}
-function hideLoader() {
-    document.getElementById('loader')?.classList.add('hidden');
-}
+    // --- инициализация
+    document.addEventListener('DOMContentLoaded', () => {
+        $$('.sidebar-button').forEach(btn => btn.addEventListener('click', () => window.selectButton(btn)));
+        // выбрать первый элемент сайдбара
+        const first = $('.sidebar .sidebar-button');
+        if (first) window.selectButton(first);
+    });
+})();

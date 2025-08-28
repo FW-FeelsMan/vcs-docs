@@ -1,14 +1,15 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿// Program.cs
+using System.Security.Claims;
+using System.Security.Cryptography.X509Certificates;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using VCS_DOCs.Data;
-using VCS_DOCs.Models.Entities;
-using VCS_DOCs.Infrastructure.Auth;
-using VCS_DOCs.Support.Hubs;
-using Microsoft.AspNetCore.Authentication;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using VCS_DOCs.Configuration;
+using VCS_DOCs.Data;
+using VCS_DOCs.Infrastructure.Auth;
+using VCS_DOCs.Models.Entities;
+using VCS_DOCs.Support.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,13 +18,14 @@ builder.Services.AddDbContext<ApplicationDbContext>(o =>
     o.UseSqlite(
         builder.Configuration.GetConnectionString("DefaultConnection"),
         x => x.MigrationsAssembly("VCS-DOCs.Web")
-    ));
+    )
+);
+
 builder.Services.AddControllers()
     .ConfigureApplicationPartManager(apm =>
     {
-        var dead = apm.ApplicationParts
-            .Where(p => p.Name == "VCS-DOCs.Web")
-            .ToList();
+        // вычищаем чужую сборку контроллеров, если вдруг подцепилась
+        var dead = apm.ApplicationParts.Where(p => p.Name == "VCS-DOCs.Web").ToList();
         foreach (var part in dead) apm.ApplicationParts.Remove(part);
     });
 
@@ -31,23 +33,25 @@ builder.Services
     .AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
-// === SignalR + Hubs ===
-builder.Services.AddSignalR(options =>
-{
-    options.EnableDetailedErrors = true;
-});
-// === Cookies / маршруты отказов ===
+
+// === SignalR ===
+builder.Services.AddSignalR(o => { o.EnableDetailedErrors = true; });
+
+// === Cookie-аутентификация ===
 builder.Services.ConfigureApplicationCookie(o =>
 {
     o.Cookie.Name = ".VcsDocs.Support.Auth";
     o.LoginPath = "/Account/LoginSupport";
     o.AccessDeniedPath = "/Errors/403";
+    o.Cookie.HttpOnly = true;
+    o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    o.Cookie.SameSite = SameSiteMode.Lax;
 
     o.Events = new CookieAuthenticationEvents
     {
         OnValidatePrincipal = async ctx =>
         {
-            var db = ctx.HttpContext.RequestServices.GetRequiredService<VCS_DOCs.Data.ApplicationDbContext>();
+            var db = ctx.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
             var userId = ctx.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var sid = ctx.Principal.FindFirst("support_sid")?.Value;
 
@@ -58,8 +62,7 @@ builder.Services.ConfigureApplicationCookie(o =>
                 return;
             }
 
-            // читаем текущую запись о сессии из БД
-            var row = await db.Set<VCS_DOCs.Models.Entities.SupportUserSession>()
+            var row = await db.Set<SupportUserSession>()
                               .AsNoTracking()
                               .FirstOrDefaultAsync(x => x.UserId == userId);
 
@@ -72,38 +75,36 @@ builder.Services.ConfigureApplicationCookie(o =>
         }
     };
 });
-builder.Services.Configure<UserDataPathOptions>(
-    builder.Configuration.GetSection("UserDataPath"));
 
+// === Опции путей пользователя (для аватаров и т.п.) ===
+builder.Services.Configure<UserDataPathOptions>(builder.Configuration.GetSection("UserDataPath"));
 
-// === Авторизация: саппорт-политика ===
+// === Авторизация / политики ===
 builder.Services.AddAuthorization(o =>
 {
-    // Любой из этих ролей имеет доступ к порталу
-    o.AddPolicy("SupportPortal",
-        p => p.RequireRole(Roles.BaseUser, Roles.SupportAgent, Roles.SupportAdmin));
+    o.AddPolicy("SupportOnly", p => p.RequireRole(Roles.SupportAdmin, Roles.SupportAgent));
+    o.AddPolicy("SupportDeskAccess", p => p.RequireRole(Roles.SupportAdmin, Roles.SupportAgent, Roles.BaseUser));
 });
-//builder.Services.AddScoped<IPasswordHasher<User>, VCS_DOCs.Support.Infrastructure.Auth.BCryptPasswordHasher<User>>();
 
 // === Razor Pages ===
-builder.Services
-    .AddRazorPages(o =>
-    {
-        // всё закрыто для посторонних, но пускаем baseUser/agent/admin
-        o.Conventions.AuthorizeFolder("/", "SupportPortal");
-        o.Conventions.AllowAnonymousToPage("/Account/LoginSupport");
-        o.Conventions.AllowAnonymousToPage("/Errors/404");
-        o.Conventions.AllowAnonymousToPage("/Errors/500");
-        o.Conventions.AllowAnonymousToPage("/Support/Request");
-    })
-    .AddRazorPagesOptions(o =>
-    {
-        o.Conventions.AddPageRoute("/Errors/404", "/Errors/{code:int}");
-    });
+builder.Services.AddRazorPages(o =>
+{
+    // доступ к самому «деску»
+    o.Conventions.AuthorizeFolder("/", "SupportDeskAccess");
 
-// === Контроллеры для /api/Support/... ===
-builder.Services.AddControllers();
+    // пользовательские панели
+    o.Conventions.AuthorizeFolder("/Content/Users", "SupportDeskAccess");
 
+    // операторские панели
+    o.Conventions.AuthorizeFolder("/Content/Operators", "SupportOnly");
+
+    // анонимный доступ
+    o.Conventions.AllowAnonymousToPage("/Account/LoginSupport");
+    o.Conventions.AllowAnonymousToPage("/Errors/404");
+    o.Conventions.AllowAnonymousToPage("/Errors/500");
+});
+
+// === кэш/сессии/HTTP client ===
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(o =>
 {
@@ -112,11 +113,9 @@ builder.Services.AddSession(o =>
     o.Cookie.IsEssential = true;
 });
 builder.Services.AddMemoryCache();
-
-// === ВАЖНО для reCAPTCHA: фабрика HttpClient ===
 builder.Services.AddHttpClient();
 
-// === Kestrel / Dev-certificate ===
+// === Kestrel / dev-cert ===
 builder.WebHost.ConfigureKestrel((ctx, opts) =>
 {
     opts.ConfigureHttpsDefaults(https =>
@@ -143,34 +142,39 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    await db.Database.MigrateAsync();
-
-    await VCS_DOCs.Support.Infrastructure.Auth.AuthSeed.RunAsync(scope.ServiceProvider);
-
     var roleMgr = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userMgr = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+
+    await db.Database.MigrateAsync();
+    await VCS_DOCs.Support.Infrastructure.Auth.AuthSeed.RunAsync(scope.ServiceProvider);
 
     foreach (var role in new[] { Roles.BaseUser, Roles.SupportAgent, Roles.SupportAdmin })
         if (!await roleMgr.RoleExistsAsync(role))
             await roleMgr.CreateAsync(new IdentityRole(role));
 
+    // пример: гарантируем роль агенту
     var sampleUserId = "6bbbcc2b-bcc8-4c20-b7ea-7993664339d2";
     var u = await userMgr.FindByIdAsync(sampleUserId);
     if (u != null && !await userMgr.IsInRoleAsync(u, Roles.SupportAgent))
         await userMgr.AddToRoleAsync(u, Roles.SupportAgent);
 }
 
+// === пайплайн ===
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
 app.UseWhen(ctx => !ctx.Request.Path.StartsWithSegments("/api"), branch =>
 {
     branch.UseExceptionHandler("/Errors/500");
     branch.UseStatusCodePagesWithReExecute("/Errors/{0}");
 });
+
 app.UseRouting();
 
-app.UseSession();          
+app.UseSession();
 app.UseAuthentication();
+
+// «Single-login»: если sid в куке != JwtId в БД — разлогиниваем
 app.Use(async (ctx, next) =>
 {
     if (ctx.User?.Identity?.IsAuthenticated == true)
