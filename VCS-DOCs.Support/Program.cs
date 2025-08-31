@@ -1,4 +1,5 @@
 ﻿// Program.cs
+using System.Net.Security;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication;
@@ -7,9 +8,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Configuration;
 using VCS_DOCs.Data;
+using VCS_DOCs.Data.Hubs;
 using VCS_DOCs.Infrastructure.Auth;
 using VCS_DOCs.Models.Entities;
-using VCS_DOCs.Support.Hubs;
+using VCS_DOCs.Support.Infrastructure.Auth;
+using VCS_DOCs.Support.Integration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -113,7 +116,39 @@ builder.Services.AddSession(o =>
     o.Cookie.IsEssential = true;
 });
 builder.Services.AddMemoryCache();
-builder.Services.AddHttpClient();
+
+builder.Services.AddHttpClient("VDocsBridge", (sp, c) =>
+{
+    var cfg = sp.GetRequiredService<IConfiguration>();
+    var baseUrl = cfg["VDocs:BaseUrl"];
+    if (string.IsNullOrWhiteSpace(baseUrl))
+        throw new InvalidOperationException("VDocs:BaseUrl is missing in Support/appsettings*.json");
+
+    c.BaseAddress = new Uri(baseUrl, UriKind.Absolute);
+
+    var apiKey = cfg["VDocs:SupportApiKey"];
+    if (!string.IsNullOrWhiteSpace(apiKey))
+        c.DefaultRequestHeaders.Add("X-Support-ApiKey", apiKey);
+})
+.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+{
+    ServerCertificateCustomValidationCallback = (req, cert, chain, errors) =>
+    {
+        if (errors == SslPolicyErrors.None) return true;
+        var tp = (cert as X509Certificate2)?.Thumbprint?.Replace(" ", "");
+        if (tp is null) return false;
+        return tp.Equals("1F1F09F62B5C4C450CA76CA1FDF2264276DFBF57", StringComparison.OrdinalIgnoreCase)
+            || tp.Equals("1179E6B4C27C5247ADB525DE245D65D7E3D73C8C", StringComparison.OrdinalIgnoreCase);
+    }
+});
+
+builder.Services.AddScoped<PresenceOrchestrator>();
+builder.Services.AddScoped<IUserService, SupportUserService>();
+builder.Services.AddSingleton<IExternalProjectAdapter>(sp =>
+    new SqliteVDocsAdapter(
+        builder.Configuration.GetConnectionString("VDocsDb")
+        ?? builder.Configuration.GetConnectionString("DefaultConnection") // fallback
+    ));
 
 // === Kestrel / dev-cert ===
 builder.WebHost.ConfigureKestrel((ctx, opts) =>

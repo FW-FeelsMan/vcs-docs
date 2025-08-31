@@ -26,6 +26,8 @@ using VCS_DOCs.Infrastructure;
 using VCS_DOCs.Infrastructure.Services;
 using VCS_DOCs.Upload.Core.Services.Antivirus;
 using ClamAV.Net.Client;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,7 +49,50 @@ builder.Services
     });
 
 // === User Data Path ===
-builder.Services.AddHttpClient();
+//builder.Services.AddHttpClient();
+builder.Services.AddHttpClient("VDocsBridge", client =>
+{
+    var baseUrl = builder.Configuration["VDocs:BaseUrl"] ?? "https://vcs-docs.support.local:7120/";
+    client.BaseAddress = new Uri(baseUrl);
+    var apiKey = builder.Configuration["VDocs:SupportApiKey"];
+    if (!string.IsNullOrEmpty(apiKey))
+        client.DefaultRequestHeaders.Add("X-Support-ApiKey", apiKey);
+})
+.ConfigurePrimaryHttpMessageHandler(sp =>
+{
+    var h = new HttpClientHandler();
+
+    // Разрешаем только НАШИ dev-серты по отпечатку (RemoteCertificateNameMismatch нам тогда не страшен).
+    h.ServerCertificateCustomValidationCallback = (req, cert, chain, errors) =>
+    {
+        if (errors == SslPolicyErrors.None) return true;
+
+        var tp = (cert as X509Certificate2)?.Thumbprint?.Replace(" ", "");
+        if (tp is null) return false;
+
+        return tp.Equals("1F1F09F62B5C4C450CA76CA1FDF2264276DFBF57", StringComparison.OrdinalIgnoreCase)
+            || tp.Equals("1179E6B4C27C5247ADB525DE245D65D7E3D73C8C", StringComparison.OrdinalIgnoreCase);
+    };
+    return h;
+});
+builder.WebHost.ConfigureKestrel((ctx, opts) =>
+{
+    opts.ConfigureHttpsDefaults(https =>
+    {
+        var preferredThumb = ctx.Configuration["Tls:PreferredThumbprint"];
+
+        using var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+        store.Open(OpenFlags.ReadOnly);
+
+        var cert = store.Certificates
+            .OfType<X509Certificate2>()
+            .FirstOrDefault(c => c.HasPrivateKey &&
+                                 c.Thumbprint.Equals(preferredThumb, StringComparison.OrdinalIgnoreCase))
+            ?? throw new InvalidOperationException($"Dev cert with thumbprint {preferredThumb} not found.");
+
+        https.ServerCertificate = cert;
+    });
+});
 builder.Services.Configure<UserDataPathOptions>(builder.Configuration.GetSection("UserDataPathOptions"));
 var configPath = builder.Configuration.GetSection("UserDataPathOptions")["BasePath"];
 var absoluteUserDataPath = Path.GetFullPath(configPath ?? throw new InvalidOperationException("UserData path not found"));

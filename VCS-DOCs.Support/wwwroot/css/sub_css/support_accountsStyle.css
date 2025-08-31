@@ -1,9 +1,4 @@
-﻿/* =========================================================
-   Support / Accounts — tidy stylesheet
-   (namespaced under .accounts-page)
-   ========================================================= */
-
-:root {
+﻿:root {
     --primary-color: #5a9bd5;
     --primary-hover: #3d7bbf;
     --text-dark: #333;
@@ -12,10 +7,9 @@
     --shadow-soft: 0 8px 24px rgba(0,0,0,.08);
     --menu-shadow: 0 8px 24px rgba(16,24,40,.12);
     --split-h-compact: 32px;
-    --filter-h: 32px; /* высота фильтров и компакт-кнопок */
+    --filter-h: 32px;
 }
 
-/* ---------- Карточка страницы ---------- */
 .accounts-page {
     background: #fff;
     border: 1px solid var(--card-border);
@@ -26,7 +20,6 @@
     margin: 6px;
 }
 
-    /* ---------- Шапка + фильтры ---------- */
     .accounts-page .button-container {
         margin: 24px;
     }
@@ -36,7 +29,6 @@
             font-size: 24px;
         }
 
-    /* Фильтры: одинаковая высота + выравнивание */
     .accounts-page .filters {
         display: flex;
         align-items: center;
@@ -50,8 +42,8 @@
             font-size: 14px;
         }
 
-    /* Select (как поле ввода, без кнопочного вида) */
-    .accounts-page #roleFilter.button-sliding.small {
+    .accounts-page #roleFilter.button-sliding.small,
+    .accounts-page #orgFilter.button-sliding.small {
         min-width: 180px;
         padding: 0 12px;
         border: 1px solid #d4d7dc !important;
@@ -65,7 +57,6 @@
         appearance: auto;
     }
 
-    /* Поле поиска под ту же высоту/радиус */
     .accounts-page #searchBox {
         flex: 0 1 260px;
         padding: 0 12px;
@@ -78,19 +69,18 @@
     }
 
         .accounts-page #roleFilter:focus,
+        .accounts-page #orgFilter:focus,
         .accounts-page #searchBox:focus {
             border-color: var(--primary-color) !important;
             box-shadow: 0 0 0 3px rgba(90,155,213,.15);
         }
 
-    /* ---------- Контентная область ---------- */
     .accounts-page .content-scrollable {
         margin: 24px;
         padding-right: 6px;
         overflow: auto;
     }
 
-    /* ---------- Таблица ---------- */
     .accounts-page .file-table {
         width: 100%;
         border-collapse: separate;
@@ -134,7 +124,6 @@
             white-space: nowrap;
         }
 
-/* ---------- Пилюли статусов ---------- */
 .user-status {
     display: inline-block;
     border-radius: 999px;
@@ -157,7 +146,6 @@
         border-color: #e2e6eb;
     }
 
-/* Бейджи доступа */
 .accounts-page .badge {
     display: inline-block;
     padding: 2px 8px;
@@ -179,7 +167,6 @@
     border-color: #ffdada;
 }
 
-/* ---------- Мультикнопка «Действия» (как в веб-хранилище) ---------- */
 .accounts-page .multi-button.action-multibutton.compact {
     height: var(--split-h-compact);
     position: relative;
@@ -191,13 +178,12 @@
     overflow: visible;
 }
 
-    /* Левая (primary) часть */
     .accounts-page .multi-button.action-multibutton.compact .button-sliding.compact {
         --btn-color: var(--primary-color);
         --btn-border: transparent;
         min-width: 140px;
         height: 100%;
-        border: 0; /* без двойной рамки */
+        border: 0;
         border-radius: 6px 0 0 6px;
         font-weight: 600;
         padding: 0 14px;
@@ -211,7 +197,6 @@
             color: var(--primary-hover);
         }
 
-/* Стрелка справа */
 .accounts-page .dropdown-arrow.compact {
     display: flex;
     align-items: center;
@@ -234,7 +219,6 @@
         background: var(--primary-hover);
     }
 
-/* Выпадающее меню действий */
 .accounts-page .action-dropdown-menu.compact {
     position: absolute;
     top: calc(100% + 4px);
@@ -269,14 +253,12 @@
             background: #eef2f7;
         }
 
-/* ---------- Мелочи ---------- */
 hr.solid {
     border: 0;
     border-top: 3px solid #bbb;
     margin: 0 24px 16px;
 }
 
-/* Узкие окна */
 @media (max-width: 1100px) {
     .accounts-page .file-table td,
     .accounts-page .file-table th {
@@ -287,3 +269,41 @@ hr.solid {
             min-width: 180px;
         }
 }
+
+#accounts-action-floating-menu {
+    position: fixed;
+    z-index: 2147483647;
+    display: none;
+    min-width: 180px;
+    border: 1px solid #d9e2ef;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: var(--menu-shadow, 0 8px 24px rgba(16,24,40,.12));
+    overflow: hidden;
+    font-size: 13px;
+    color: var(--text-dark, #333);
+    box-sizing: border-box;
+}
+
+    #accounts-action-floating-menu .dropdown-item {
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: background .16s, color .16s;
+        white-space: nowrap;
+        background: #fff;
+        color: var(--text-dark, #333);
+    }
+
+        #accounts-action-floating-menu .dropdown-item:hover,
+        #accounts-action-floating-menu .dropdown-item:focus {
+            background: var(--primary-color, #5a9bd5);
+            color: #fff;
+            outline: none;
+        }
+
+        #accounts-action-floating-menu .dropdown-item.sep {
+            padding: 0;
+            height: 1px;
+            background: #eef2f7;
+            pointer-events: none;
+        }

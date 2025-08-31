@@ -4,44 +4,74 @@
 @model VCS_DOCs.Support.Pages.Content.Operators.AccountsModel
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{
-    Layout = null; // грузится внутрь Index через fetch
+    Layout = null;
 }
-
 <link rel="stylesheet" href="~/css/sub_css/support_accountsStyle.css" asp-append-version="true" />
 <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(HttpContext).RequestToken" />
 
 <div class="profile_background accounts-page">
     <div class="button-container">
         <h2>Учетные записи</h2>
-        <hr class="solid">
-        <div class="filters">
-            <select id="roleFilter" class="button-sliding small">
-                <option value="">Все роли</option>
-                <option value="@Roles.BaseUser">Пользователи</option>
-                <option value="@Roles.SupportAgent">Саппорт</option>
-                <option value="@Roles.SupportAdmin">Админы</option>
-            </select>
+        <div style="display:flex; gap:12px; align-items:center;">
+            <div class="filters">
+                <select id="roleFilter" class="button-sliding small">
+                    <option value="">Все роли</option>
+                    <option value="@Roles.BaseUser">Пользователи</option>
+                    <option value="@Roles.SupportAgent">Саппорт</option>
+                    <option value="@Roles.SupportAdmin">Админы</option>
+                </select>
+                <select id="orgFilter" class="button-sliding small">
+                    <option value="">Все организации</option>
+                </select>
+                <input id="searchBox" type="text" placeholder="Поиск (логин/ФИО)" />
+            </div>
 
-            <input id="searchBox" type="text" placeholder="Поиск (логин/ФИО)" />
+            <button id="btn-add-project" class="button-sliding primary small" style="margin-left:auto;">
+                Добавить проект
+            </button>
         </div>
     </div>
 
+    <hr class="solid" />
+
     <div class="content-scrollable">
         <table class="file-table" id="accountsTable">
-            <thead>
-                <tr>
-                    <th>Логин</th>
-                    <th>ФИО</th>
-                    <th>Роли</th>
-                    <th>Онлайн</th>
-                    <th>Доступ</th>
-                    <th>Последний вход</th>
-                    <th>Действия</th>
-                </tr>
-            </thead>
+            <thead id="accountsHead"></thead>
             <tbody id="accountsBody">
-                <tr><td colspan="7">Загрузка…</td></tr>
+                <tr><td>Загрузка…</td></tr>
             </tbody>
         </table>
     </div>
 </div>
+
+<div id="add-project-modal" class="modal" style="display:none;">
+    <div class="modal-content" style="max-width:520px;">
+        <h3>Добавить проект</h3>
+        <div style="display:grid; grid-template-columns: 140px 1fr; gap:10px; text-align:left;">
+            <label>Код</label><input id="ap-code" type="text" placeholder="Напр. VDocsExt" />
+            <label>Имя</label><input id="ap-name" type="text" placeholder="Отображаемое имя" />
+            <label>Тип</label>
+            <select id="ap-type">
+                <option value="External">External</option>
+                <option value="InternalVSupport">InternalVSupport</option>
+                <option value="SignalR">SignalR</option>
+                <option value="Http">HTTP</option>
+                <option value="Sql">SQL</option>
+            </select>
+            <label>BaseUrl/HubUrl</label><input id="ap-url" type="text" placeholder="https://host/..." />
+            <label>Включен</label><input id="ap-enabled" type="checkbox" checked />
+            <label>Возможности</label>
+            <div>
+                <label class="checkbox"><input type="checkbox" id="cap-presence" checked /> Presence</label>
+                <label class="checkbox" style="margin-left:12px;"><input type="checkbox" id="cap-kick" checked /> Kick</label>
+                <label class="checkbox" style="margin-left:12px;"><input type="checkbox" id="cap-tasks" /> Tasks</label>
+            </div>
+        </div>
+        <div class="modal-buttons" style="margin-top:16px;">
+            <button id="ap-save" class="button-sliding primary">Сохранить</button>
+            <button id="ap-cancel" class="button-sliding">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/support/accountsRender.js" asp-append-version="true"></script>

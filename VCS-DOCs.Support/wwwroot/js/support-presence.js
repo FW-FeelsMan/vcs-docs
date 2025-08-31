@@ -8,7 +8,7 @@
         return;
     }
 
-    const statusEl = document.querySelector('.sidebar .user-status');
+    const statusEl = document.querySelector('.sidebar .main-user-status');
     const setStatus = (cls, text) => {
         if (!statusEl) return;
         statusEl.classList.remove('online', 'offline', 'connecting', 'error');
@@ -23,7 +23,7 @@
 
     conn.on("ForceLogout", () => {
         try { conn.stop(); } catch { }
-        alert("Вы были выlogинены: выполнен принудительный вход с другого устройства.");
+        alert("Вы были отключены: выполнен принудительный вход с другого устройства.");
         window.location.href = "/Account/LoginSupport?forced=1";
     });
 

@@ -308,29 +308,29 @@ body, html {
     font-weight: bold;
 }
 
-.user-status {
+.main-user-status {
     font-size: 14px;
     font-weight: 500;
     transition: color 0.3s ease;
 }
 
     /* «еленый Ч подключен */
-    .user-status.online {
+    .main-user-status.online {
         color: #3bcd41;
     }
 
     /* —ерый Ч оффлайн */
-    .user-status.offline {
+    .main-user-status.offline {
         color: #9e9e9e;
     }
 
     /* ∆елтый Ч переподключение */
-    .user-status.connecting {
+    .main-user-status.connecting {
         color: #ff9800;
     }
 
     /*  расный Ч ошибка */
-    .user-status.error {
+    .main-user-status.error {
         color: #f44336;
     }
 
@@ -476,7 +476,7 @@ body, html {
 .view-panel {
     position: relative;
     width: 100%;
-    height: 100%;
+    height: 98%;
     transform-origin: 100% 100%; /* правый-нижний угол */
 }
 

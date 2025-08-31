@@ -503,8 +503,11 @@ $RECYCLE.BIN/
 # Ignore build output
 VCS-DOCs.Web/bin/
 VCS-DOCs.Web/obj/
+VCS-DOCs.Support/bin/
+VCS-DOCs.Support/obj/
 
 # Ignore user data
 VCS-DOCs.Web/Data/userData/
 # Protect secrets – ignore local appsettings in Web project
 VCS-DOCs.Web/appsettings.json
+VCS-DOCs.Support/appsettings.json

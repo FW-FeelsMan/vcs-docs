@@ -5,9 +5,7 @@ namespace VCS_DOCs.Utilities
 {
 	public class CustomUserIdProvider : IUserIdProvider
 	{
-		public string GetUserId(HubConnectionContext connection)
-		{
-			return connection.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-		}
-	}
+        public string? GetUserId(HubConnectionContext connection)
+        => connection.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+    }
 }

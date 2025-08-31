@@ -1,67 +1,85 @@
-﻿// Hubs/UserStatusHub.cs
+﻿using System;
+using System.Collections.Concurrent;
 using System.Security.Claims;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
-using VCS_DOCs.Data;
-using VCS_DOCs.Models.Entities;
+using VCS_DOCs.Infrastructure.Auth;
 
 namespace VCS_DOCs.Support.Hubs
 {
-    [Authorize(Policy = "SupportDeskAccess")]
+    /// <summary>
+    /// Хаб, который:
+    /// 1) трекает подключения пользователей (в памяти),
+    /// 2) обновляет флаг онлайна в БД через IUserService,
+    /// 3) умеет принудительно разлогинить пользователя (шлёт клиенту событие "ForceLogout").
+    /// </summary>
+    [Authorize]
     public class UserStatusHub : Hub
     {
-        private readonly ApplicationDbContext _db;
-        public UserStatusHub(ApplicationDbContext db)
+        private readonly IUserService _userService;
+
+        // userId -> set(connectionId)
+        private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, byte>> _connections =
+            new ConcurrentDictionary<string, ConcurrentDictionary<string, byte>>(StringComparer.Ordinal);
+
+        public UserStatusHub(IUserService userService)
         {
-            _db = db;
+            _userService = userService;
         }
 
         public override async Task OnConnectedAsync()
         {
-            var userId = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!string.IsNullOrEmpty(userId))
             {
-                _db.SupportUserConnections.Add(new SupportUserConnection
-                {
-                    ConnectionId = Context.ConnectionId,
-                    UserId = userId,
-                    ConnectedAtUtc = DateTime.UtcNow
-                });
-                await _db.SaveChangesAsync();
+                var conns = _connections.GetOrAdd(userId, _ => new ConcurrentDictionary<string, byte>(StringComparer.Ordinal));
+                conns[Context.ConnectionId] = 0;
 
-                await _db.Database.ExecuteSqlInterpolatedAsync($@"
-INSERT INTO SupportUserSessions(UserId, JwtId, IsOnline, LastSeenUtc)
-VALUES ({userId}, NULL, 1, {DateTime.UtcNow})
-ON CONFLICT(UserId) DO UPDATE SET IsOnline = 1, LastSeenUtc = {DateTime.UtcNow};");
+                // Первый коннект пользователя — считаем, что он стал "онлайн"
+                if (conns.Count == 1)
+                {
+                    await _userService.UpdateUserStatusAsync(userId, true);
+                }
             }
+
             await base.OnConnectedAsync();
         }
 
-        public override async Task OnDisconnectedAsync(Exception? ex)
+        public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            var conn = await _db.SupportUserConnections.FindAsync(Context.ConnectionId);
-            if (conn != null)
+            var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrEmpty(userId) && _connections.TryGetValue(userId, out var conns))
             {
-                var userId = conn.UserId;
-                _db.SupportUserConnections.Remove(conn);
-                await _db.SaveChangesAsync();
+                conns.TryRemove(Context.ConnectionId, out _);
 
-                var hasAny = await _db.SupportUserConnections
-                    .AsNoTracking()
-                    .AnyAsync(c => c.UserId == userId);
-
-                if (!hasAny)
+                // Последний коннект ушёл — помечаем оффлайн и инвалидируем sid/JwtId в БД
+                if (conns.IsEmpty)
                 {
-                    await _db.Database.ExecuteSqlInterpolatedAsync($@"
-UPDATE SupportUserSessions SET IsOnline = 0, LastSeenUtc = {DateTime.UtcNow}
-WHERE UserId = {userId};");
+                    _connections.TryRemove(userId, out _);
+                    await _userService.UpdateUserStatusAsync(userId, false);
+                    await _userService.ClearUserJwtIdAsync(userId);
                 }
             }
-            await base.OnDisconnectedAsync(ex);
+
+            await base.OnDisconnectedAsync(exception);
         }
 
-        public Task ForceLogout() // клиент закроет соединение сам
-            => Clients.Caller.SendAsync("ForceLogout");
+        /// <summary>Быстрая проверка онлайна по in-memory состоянию.</summary>
+        public static bool IsOnlineUser(string? userId)
+        {
+            if (string.IsNullOrWhiteSpace(userId)) return false;
+            return _connections.TryGetValue(userId, out var conns) && !conns.IsEmpty;
+        }
+
+        /// <summary>
+        /// Принудительный выход конкретного пользователя.
+        /// Клиентский фронт должен слушать событие "ForceLogout" и выполнять логаут.
+        /// </summary>
+        public async Task ForceLogoutUser(string userId)
+        {
+            await Clients.User(userId).SendAsync("ForceLogout");
+            await _userService.ClearUserJwtIdAsync(userId);
+        }
     }
 }
