@@ -56,7 +56,7 @@ namespace VCS_DOCs.Support.Controllers
                       }.ToList();
 
                 var usersRaw = await _db.Users.AsNoTracking()
-                    .Select(u => new { u.Id, u.UserName, u.FullName, u.Organization, u.Access, u.LastEntry })
+                    .Select(u => new { u.Id, u.UserName, u.FullName, u.Organization, u.Access, u.LastEntry, u.CreatedAt })
                     .ToListAsync();
 
                 var organizations = usersRaw
@@ -152,6 +152,8 @@ namespace VCS_DOCs.Support.Controllers
                         ["VDocs"] = vdocs
                     };
 
+                    var createdAtMs = new DateTimeOffset(u.CreatedAt).ToUnixTimeMilliseconds();
+
                     return new
                     {
                         id = u.Id,
@@ -161,6 +163,7 @@ namespace VCS_DOCs.Support.Controllers
                         access = u.Access,
                         roles = rs ?? new List<string>(),
                         lastEntry = (u.LastEntry as DateTime?)?.ToString("yyyy-MM-dd HH:mm:ss"),
+                        createdAtMs,
                         presence
                     };
                 });
@@ -171,6 +174,136 @@ namespace VCS_DOCs.Support.Controllers
             {
                 _log.LogError(ex, "GET /api/support/accounts failed");
                 return Problem("Failed to load accounts.");
+            }
+        }
+
+        [HttpGet("delta")]
+        public async Task<IActionResult> Delta([FromQuery] long sinceMs, [FromQuery] string? role, [FromQuery] string? q, [FromQuery] string? org)
+        {
+            try
+            {
+                var sinceUtc = DateTimeOffset.FromUnixTimeMilliseconds(Math.Max(sinceMs, 0)).UtcDateTime;
+
+                var usersRaw = await _db.Users.AsNoTracking()
+                    .Where(u => u.CreatedAt > sinceUtc)
+                    .Select(u => new { u.Id, u.UserName, u.FullName, u.Organization, u.Access, u.LastEntry, u.CreatedAt })
+                    .ToListAsync();
+
+                if (!usersRaw.Any())
+                    return Ok(new { users = Array.Empty<object>() });
+
+                var rolesRaw = await (from ur in _db.UserRoles
+                                      join r in _db.Roles on ur.RoleId equals r.Id
+                                      select new
+                                      {
+                                          ur.UserId,
+                                          r.Name
+                                      })
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                var roleMap = rolesRaw
+                    .GroupBy(x => x.UserId)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.Select(x => x.Name ?? string.Empty)
+                              .Where(n => !string.IsNullOrWhiteSpace(n))
+                              .Distinct(StringComparer.Ordinal)
+                              .ToList(),
+                        StringComparer.Ordinal);
+
+                var users = usersRaw;
+
+                if (!string.IsNullOrWhiteSpace(q))
+                {
+                    var term = q.Trim();
+                    users = users.Where(u =>
+                        (u.UserName != null && u.UserName.Contains(term, StringComparison.OrdinalIgnoreCase)) ||
+                        (u.FullName != null && u.FullName.Contains(term, StringComparison.OrdinalIgnoreCase))
+                    ).ToList();
+                }
+
+                if (!string.IsNullOrWhiteSpace(role))
+                {
+                    var allowed = roleMap.Where(k => k.Value.Contains(role))
+                                         .Select(k => k.Key)
+                                         .ToHashSet();
+                    users = users.Where(u => allowed.Contains(u.Id)).ToList();
+                }
+
+                if (!string.IsNullOrWhiteSpace(org))
+                {
+                    users = users.Where(u => string.Equals(u.Organization ?? string.Empty, org, StringComparison.OrdinalIgnoreCase)).ToList();
+                }
+
+                if (!users.Any())
+                    return Ok(new { users = Array.Empty<object>() });
+
+                var supportSessions = await _db.SupportUserSessions.AsNoTracking()
+                    .Where(s => users.Select(u => u.Id).Contains(s.UserId))
+                    .Select(s => new { s.UserId, s.IsOnline, LastSeenUtc = (DateTime?)s.LastSeenUtc })
+                    .ToDictionaryAsync(s => s.UserId, s => s);
+
+                var userIds = users.Select(u => u.Id).Distinct().ToArray();
+                var vdocsPresence = await GetVDocsPresenceAsync(userIds);
+
+                var usersDto = users.Select(u =>
+                {
+                    roleMap.TryGetValue(u.Id, out var rs);
+
+                    var sup = supportSessions.TryGetValue(u.Id, out var ss)
+                        ? new
+                        {
+                            online = ss.IsOnline,
+                            lastSeen = ss.LastSeenUtc?.ToString("yyyy-MM-dd HH:mm:ss")
+                        }
+                        : new
+                        {
+                            online = false,
+                            lastSeen = (string?)null
+                        };
+
+                    vdocsPresence.TryGetValue(u.Id, out var vd);
+                    var vdocs = vd.userId != null
+                        ? new
+                        {
+                            online = vd.online,
+                            lastSeen = vd.lastSeen
+                        }
+                        : new
+                        {
+                            online = false,
+                            lastSeen = (string?)null
+                        };
+
+                    var presence = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                    {
+                        ["VSupport"] = sup,
+                        ["VDocs"] = vdocs
+                    };
+
+                    var createdAtMs = new DateTimeOffset(u.CreatedAt).ToUnixTimeMilliseconds();
+
+                    return new
+                    {
+                        id = u.Id,
+                        userName = u.UserName,
+                        fullName = u.FullName,
+                        organization = u.Organization,
+                        access = u.Access,
+                        roles = rs ?? new List<string>(),
+                        lastEntry = (u.LastEntry as DateTime?)?.ToString("yyyy-MM-dd HH:mm:ss"),
+                        createdAtMs,
+                        presence
+                    };
+                });
+
+                return Ok(new { users = usersDto });
+            }
+            catch (Exception ex)
+            {
+                _log.LogError(ex, "GET /api/support/accounts/delta failed");
+                return Problem("Failed to load delta.");
             }
         }
 
@@ -350,6 +483,109 @@ WHERE UserId = {userId};");
                 return (false, $"HTTP {(int)res.StatusCode}");
             }
             return (true, null);
+        }
+        // внутри SupportAccountsController
+
+        public sealed class PulseDto
+        {
+            public List<string>? Ids
+            {
+                get; set;
+            }
+        }
+
+        [HttpPost("pulse")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Pulse([FromBody] PulseDto dto)
+        {
+            var ids = dto?.Ids?.Where(s => !string.IsNullOrWhiteSpace(s))
+                               .Distinct(StringComparer.Ordinal)
+                               .ToArray() ?? Array.Empty<string>();
+            if (ids.Length == 0)
+                return Ok(new { users = Array.Empty<object>() });
+
+            var usersRaw = await _db.Users.AsNoTracking()
+                .Where(u => ids.Contains(u.Id))
+                .Select(u => new { u.Id, u.Access, u.LastEntry })
+                .ToListAsync();
+
+            if (!usersRaw.Any())
+                return Ok(new { users = Array.Empty<object>() });
+
+            var rolesRaw = await (from ur in _db.UserRoles
+                                  join r in _db.Roles on ur.RoleId equals r.Id
+                                  where ids.Contains(ur.UserId)
+                                  select new
+                                  {
+                                      ur.UserId,
+                                      r.Name
+                                  })
+                                 .AsNoTracking()
+                                 .ToListAsync();
+
+            var roleMap = rolesRaw
+                .GroupBy(x => x.UserId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(x => x.Name ?? string.Empty)
+                          .Where(n => !string.IsNullOrWhiteSpace(n))
+                          .Distinct(StringComparer.Ordinal)
+                          .ToList(),
+                    StringComparer.Ordinal);
+
+            var supportSessions = await _db.SupportUserSessions.AsNoTracking()
+                .Where(s => ids.Contains(s.UserId))
+                .Select(s => new { s.UserId, s.IsOnline, LastSeenUtc = (DateTime?)s.LastSeenUtc })
+                .ToDictionaryAsync(s => s.UserId, s => s);
+
+            var vdocsPresence = await GetVDocsPresenceAsync(ids);
+
+            var usersDto = usersRaw.Select(u =>
+            {
+                roleMap.TryGetValue(u.Id, out var rs);
+
+                var sup = supportSessions.TryGetValue(u.Id, out var ss)
+                    ? new
+                    {
+                        online = ss.IsOnline,
+                        lastSeen = ss.LastSeenUtc?.ToString("yyyy-MM-dd HH:mm:ss")
+                    }
+                    : new
+                    {
+                        online = false,
+                        lastSeen = (string?)null
+                    };
+
+                vdocsPresence.TryGetValue(u.Id, out var vd);
+                var vdocs = vd.userId != null
+                    ? new
+                    {
+                        online = vd.online,
+                        lastSeen = vd.lastSeen
+                    }
+                    : new
+                    {
+                        online = false,
+                        lastSeen = (string?)null
+                    };
+
+                var presence = new Dictionary<string, object>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ["VSupport"] = sup,
+                    ["VDocs"] = vdocs
+                };
+
+                return new
+                {
+                    id = u.Id,
+                    access = u.Access,
+                    roles = rs ?? new List<string>(),
+                    lastEntry = (u.LastEntry as DateTime?)?.ToString("yyyy-MM-dd HH:mm:ss"),
+                    presence
+                };
+            });
+
+            return Ok(new { users = usersDto });
         }
 
         private async Task<Dictionary<string, (string userId, bool online, string? lastSeen)>> GetVDocsPresenceAsync(IEnumerable<string> ids, CancellationToken ct = default)

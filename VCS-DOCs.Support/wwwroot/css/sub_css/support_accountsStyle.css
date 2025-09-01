@@ -307,3 +307,34 @@ hr.solid {
             background: #eef2f7;
             pointer-events: none;
         }
+.accounts-page .content-scrollable {
+    max-height: calc(100vh - 180px);
+    overflow: auto;
+}
+
+.accounts-page .file-table {
+    width: 100%;
+}
+/* отключаем горизонтальный скролл у области с таблицей */
+.accounts-page .content-scrollable {
+    overflow-x: hidden;
+}
+
+/* слегка сужаем таблицу и учитываем рамки/скролл */
+.accounts-page .file-table {
+    width: calc(100% - 12px);
+    margin-right: 12px;
+    box-sizing: border-box;
+}
+
+    /* немного уменьшаем «Действия», чтобы не выталкивала в горизонтальный скролл */
+    .accounts-page .file-table td:last-child {
+        min-width: 208px; /* было 220px */
+    }
+
+/* узкие окна: аналогично уменьшаем */
+@media (max-width: 1100px) {
+    .accounts-page .file-table td:last-child {
+        min-width: 168px; /* было 180px */
+    }
+}

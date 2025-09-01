@@ -20,17 +20,22 @@
     async function waitForAll(selectors, root, timeout = 2000) {
         await Promise.all(selectors.map((s) => waitForElm(s, timeout, root)));
     }
+
     let initOnce = new WeakSet();
+
     async function init(root) {
         const panel = root || document;
         if (initOnce.has(panel)) return;
         initOnce.add(panel);
+
         const $ = (s, r = panel) => r.querySelector(s);
         const $$ = (s, r = panel) => Array.from(r.querySelectorAll(s));
         const isAdmin = !!document.getElementById("btn-workload");
+
         try {
             await waitForAll(["#accountsHead", "#accountsBody", "#searchBox", "#roleFilter", "#orgFilter"], panel, 2500);
         } catch { }
+
         function getCsrfToken() {
             const meta = document.querySelector('meta[name="csrf-token"]')?.content;
             if (meta) return meta;
@@ -38,15 +43,16 @@
             if (input) return input;
             return "";
         }
+
         const token = getCsrfToken();
+        const thead = $("#accountsHead");
         const tbody = $("#accountsBody");
         const searchEl = $("#searchBox");
         const roleSel = $("#roleFilter");
         const orgSel = $("#orgFilter");
-        if (!tbody || !searchEl || !roleSel || !orgSel) {
-            console.warn("[accounts] init: контейнеры не найдены");
-            return;
-        }
+
+        if (!thead || !tbody || !searchEl || !roleSel || !orgSel) return;
+
         async function getJson(url) {
             const res = await fetch(url, { credentials: "same-origin", cache: "no-store" });
             if (!res.ok) throw new Error("HTTP " + res.status);
@@ -66,12 +72,9 @@
                 const t = await res.text().catch(() => "");
                 throw new Error(`HTTP ${res.status} ${t}`);
             }
-            try {
-                return await res.json();
-            } catch {
-                return {};
-            }
+            try { return await res.json(); } catch { return {}; }
         }
+
         function normalizeAccountsResponse(raw) {
             const defaults = [
                 { code: "VSupport", name: "V-Support" },
@@ -81,30 +84,21 @@
                 const users = raw.map((u) => ({
                     ...u,
                     presence: {
-                        VSupport: {
-                            online: !!(u.isOnlineVSupport ?? u.isOnline),
-                            lastSeen: u.lastSeenVSupport ?? u.lastSeen ?? null
-                        },
-                        VDocs: {
-                            online: !!u.isOnlineVDocs,
-                            lastSeen: u.lastSeenVDocs ?? null
-                        }
-                    }
+                        VSupport: { online: !!(u.isOnlineVSupport ?? u.isOnline), lastSeen: u.lastSeenVSupport ?? u.lastSeen ?? null },
+                        VDocs: { online: !!u.isOnlineVDocs, lastSeen: u.lastSeenVDocs ?? null }
+                    },
+                    createdAtMs: Date.now()
                 }));
                 return { projects: defaults, users, organizations: [] };
             }
             const projects = Array.isArray(raw?.projects) && raw.projects.length ? raw.projects : defaults;
             const users = Array.isArray(raw?.users) ? raw.users : [];
             const organizations = Array.isArray(raw?.organizations) ? raw.organizations : [];
-            const usersSafe = users.map((u) => ({
-                ...u,
-                presence: u.presence ?? {}
-            }));
+            const usersSafe = users.map((u) => ({ ...u, presence: u.presence ?? {}, createdAtMs: Number(u.createdAtMs || 0) }));
             return { projects, users: usersSafe, organizations };
         }
+
         function buildHead() {
-            const thead = $("#accountsHead");
-            if (!thead) return;
             thead.innerHTML = `
         <tr>
           <th>Логин</th>
@@ -118,6 +112,7 @@
           <th>Действия</th>
         </tr>`;
         }
+
         function populateOrgFilter(list) {
             const current = orgSel.value || "";
             let html = `<option value="">Все организации</option>`;
@@ -127,32 +122,10 @@
             orgSel.innerHTML = html;
             if (current && uniq.includes(current)) orgSel.value = current;
         }
-        let projects = [];
-        async function loadAccounts() {
-            const role = roleSel.value;
-            const org = orgSel.value;
-            const query = searchEl.value?.trim() ?? "";
-            const url = new URL("/api/support/accounts", location.origin);
-            if (role) url.searchParams.set("role", role);
-            if (org) url.searchParams.set("org", org);
-            if (query) url.searchParams.set("q", query);
-            tbody.innerHTML = `<tr><td>Загрузка…</td></tr>`;
-            try {
-                const raw = await getJson(url.toString());
-                const { projects: projs, users, organizations } = normalizeAccountsResponse(raw);
-                projects = projs;
-                buildHead();
-                populateOrgFilter(organizations);
-                renderRows(users);
-            } catch (e) {
-                console.error("[accounts] load error", e);
-                tbody.innerHTML = `<tr><td style="color:#c33;">Ошибка загрузки</td></tr>`;
-            }
-        }
-        const badge = (text) =>
-            `<span class="badge" style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:.85rem;font-weight:700;border:1px solid transparent;background:#eef3f9;color:#2563eb;margin:0 4px 4px 0;">${text}</span>`;
-        const statusPill = (on) =>
-            on ? '<span class="user-status online">В сети</span>' : '<span class="user-status offline">Оффлайн</span>';
+
+        const badge = (text) => `<span class="badge" style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:.85rem;font-weight:700;border:1px solid transparent;background:#eef3f9;color:#2563eb;margin:0 4px 4px 0;">${text}</span>`;
+        const statusPill = (on) => on ? '<span class="user-status online">В сети</span>' : '<span class="user-status offline">Оффлайн</span>';
+
         function renderActionsMultibutton(u) {
             const accessOn = (u.access ?? 0) > 0;
             const banOrActLbl = accessOn ? "Деактивировать" : "Активировать";
@@ -185,20 +158,16 @@
           </div>
         </div>`;
         }
-        function renderRows(list) {
-            if (!Array.isArray(list) || list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9">Ничего не найдено</td></tr>`;
-                return;
-            }
-            const rows = list.map((u) => {
-                const roles = (u.roles || []).map((r) => badge(r)).join(" ") || "-";
-                const accessOn = (u.access ?? 0) > 0;
-                const access = accessOn
-                    ? '<span class="badge badge--ok">Активирована</span>'
-                    : '<span class="badge badge--blocked">Деактивирована</span>';
-                const vsup = !!(u.presence?.VSupport?.online);
-                const vdoc = !!(u.presence?.VDocs?.online);
-                return `
+
+        const rowsById = new Map();
+
+        function rowHtml(u) {
+            const roles = (u.roles || []).map((r) => badge(r)).join(" ") || "-";
+            const accessOn = (u.access ?? 0) > 0;
+            const access = accessOn ? '<span class="badge badge--ok">Активирована</span>' : '<span class="badge badge--blocked">Деактивирована</span>';
+            const vsup = !!(u.presence?.VSupport?.online);
+            const vdoc = !!(u.presence?.VDocs?.online);
+            return `
                   <tr data-id="${u.id}">
                     <td>${u.userName ?? ""}</td>
                     <td>${u.fullName ?? ""}</td>
@@ -210,12 +179,40 @@
                     <td>${u.lastEntry || ""}</td>
                     <td>${renderActionsMultibutton(u)}</td>
                   </tr>`;
-            });
+        }
+
+        function upsertRow(u, toTop = false) {
+            if (rowsById.has(u.id)) return;
+            const tmp = document.createElement("tbody");
+            tmp.innerHTML = rowHtml(u);
+            const tr = tmp.firstElementChild;
+            if (toTop && tbody.firstElementChild) {
+                tbody.insertBefore(tr, tbody.firstElementChild);
+            } else {
+                tbody.appendChild(tr);
+            }
+            rowsById.set(u.id, tr);
+            setupActionDropdownsFor(tr);
+        }
+
+        function renderRows(list) {
+            rowsById.clear();
+            if (!Array.isArray(list) || list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9">Ничего не найдено</td></tr>`;
+                return;
+            }
+            const rows = list.map((u) => rowHtml(u));
             tbody.innerHTML = rows.join("");
+            $$("#accountsTable tbody tr").forEach(tr => {
+                const id = tr.getAttribute("data-id");
+                if (id) rowsById.set(id, tr);
+            });
             setupActionDropdowns();
         }
+
         let floatingMenu = null;
         let floatingCtx = null;
+
         function ensureFloatingMenu() {
             if (floatingMenu) return floatingMenu;
             floatingMenu = document.createElement("div");
@@ -272,9 +269,7 @@
                 });
             });
             floatingCtx = { dropdown };
-            const onDocClick = (e) => {
-                if (!floatingMenu.contains(e.target) && !dropdown.contains(e.target)) cleanup();
-            };
+            const onDocClick = (e) => { if (!floatingMenu.contains(e.target) && !dropdown.contains(e.target)) cleanup(); };
             const onAnyScroll = () => cleanup();
             const onResize = () => cleanup();
             function cleanup() {
@@ -292,10 +287,7 @@
                 const btn = box.querySelector(".action-button");
                 const arrow = box.querySelector(".dropdown-arrow");
                 if (!btn || !arrow) return;
-                arrow.onclick = (e) => {
-                    e.stopPropagation();
-                    openFloatingMenuFrom(box);
-                };
+                arrow.onclick = (e) => { e.stopPropagation(); openFloatingMenuFrom(box); };
                 btn.onclick = async () => {
                     const act = btn.dataset.act || "kick-vsupport";
                     const role = btn.dataset.role || "";
@@ -303,6 +295,20 @@
                 };
             });
         }
+        function setupActionDropdownsFor(tr) {
+            const box = tr.querySelector(".action-multibutton");
+            if (!box) return;
+            const btn = box.querySelector(".action-button");
+            const arrow = box.querySelector(".dropdown-arrow");
+            if (!btn || !arrow) return;
+            arrow.onclick = (e) => { e.stopPropagation(); openFloatingMenuFrom(box); };
+            btn.onclick = async () => {
+                const act = btn.dataset.act || "kick-vsupport";
+                const role = btn.dataset.role || "";
+                await runAction(act, box.dataset.id, role, box);
+            };
+        }
+
         async function runAction(act, id, role, _box) {
             try {
                 if (act === "kick-vsupport") {
@@ -324,6 +330,113 @@
                 alert("Ошибка: " + e.message);
             }
         }
+
+        function buildHeadAndFilters(orgs) {
+            buildHead();
+            populateOrgFilter(orgs);
+        }
+
+        let projects = [];
+        let createdCursorMs = 0;
+        let pollTimer = null;
+        let pulseTimer = null;
+
+        async function loadAccounts() {
+            const role = roleSel.value;
+            const org = orgSel.value;
+            const query = searchEl.value?.trim() ?? "";
+            const url = new URL("/api/support/accounts", location.origin);
+            if (role) url.searchParams.set("role", role);
+            if (org) url.searchParams.set("org", org);
+            if (query) url.searchParams.set("q", query);
+            tbody.innerHTML = `<tr><td>Загрузка…</td></tr>`;
+            try {
+                const raw = await getJson(url.toString());
+                const { projects: projs, users, organizations } = normalizeAccountsResponse(raw);
+                projects = projs;
+                buildHeadAndFilters(organizations);
+                renderRows(users);
+                const maxCreated = users.reduce((m, u) => Math.max(m, Number(u.createdAtMs || 0)), 0);
+                if (maxCreated > createdCursorMs) createdCursorMs = maxCreated;
+                restartPolling();
+            } catch (e) {
+                console.error("[accounts] load error", e);
+                tbody.innerHTML = `<tr><td style="color:#c33;">Ошибка загрузки</td></tr>`;
+            }
+        }
+
+        async function pollDelta() {
+            try {
+                const role = roleSel.value;
+                const org = orgSel.value;
+                const query = searchEl.value?.trim() ?? "";
+                const url = new URL("/api/support/accounts/delta", location.origin);
+                url.searchParams.set("sinceMs", String(createdCursorMs || 0));
+                if (role) url.searchParams.set("role", role);
+                if (org) url.searchParams.set("org", org);
+                if (query) url.searchParams.set("q", query);
+                const res = await getJson(url.toString());
+                const list = Array.isArray(res?.users) ? res.users : [];
+                if (list.length > 0) {
+                    list.sort((a, b) => Number(a.createdAtMs || 0) - Number(b.createdAtMs || 0));
+                    for (const u of list) upsertRow(u, true);
+                    const maxCreated = list.reduce((m, u) => Math.max(m, Number(u.createdAtMs || 0)), createdCursorMs);
+                    createdCursorMs = Math.max(createdCursorMs, maxCreated);
+                }
+            } catch (e) {
+                console.debug("[accounts] delta poll error", e);
+            }
+        }
+
+        function collectVisibleIds() {
+            return Array.from(rowsById.keys());
+        }
+
+        function updateRow(u) {
+            const tr = rowsById.get(u.id);
+            if (!tr) return;
+            const tds = tr.querySelectorAll("td");
+            if (tds.length < 9) return;
+            const rolesHtml = (u.roles || []).map(r => `<span class="badge" style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:.85rem;font-weight:700;border:1px solid transparent;background:#eef3f9;color:#2563eb;margin:0 4px 4px 0;">${r}</span>`).join(" ") || "-";
+            const vdocOn = !!(u.presence?.VDocs?.online);
+            const vsupOn = !!(u.presence?.VSupport?.online);
+            const accessOn = (u.access ?? 0) > 0;
+            tds[3].innerHTML = rolesHtml;
+            tds[4].innerHTML = vdocOn ? '<span class="user-status online">В сети</span>' : '<span class="user-status offline">Оффлайн</span>';
+            tds[5].innerHTML = vsupOn ? '<span class="user-status online">В сети</span>' : '<span class="user-status offline">Оффлайн</span>';
+            tds[6].innerHTML = accessOn ? '<span class="badge badge--ok">Активирована</span>' : '<span class="badge badge--blocked">Деактивирована</span>';
+            tds[7].textContent = u.lastEntry || "";
+        }
+
+        async function pollPulse() {
+            try {
+                const ids = collectVisibleIds();
+                if (ids.length === 0) return;
+                const res = await fetch("/api/support/accounts/pulse", {
+                    method: "POST",
+                    credentials: "same-origin",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "RequestVerificationToken": token
+                    },
+                    body: JSON.stringify({ ids })
+                });
+                if (!res.ok) return;
+                const json = await res.json().catch(() => ({}));
+                const list = Array.isArray(json?.users) ? json.users : [];
+                for (const u of list) updateRow(u);
+            } catch (e) {
+                console.debug("[accounts] pulse error", e);
+            }
+        }
+
+        function restartPolling() {
+            if (pollTimer) clearInterval(pollTimer);
+            if (pulseTimer) clearInterval(pulseTimer);
+            pollTimer = setInterval(pollDelta, 8000);
+            pulseTimer = setInterval(pollPulse, 6000);
+        }
+
         roleSel.addEventListener("change", loadAccounts);
         orgSel.addEventListener("change", loadAccounts);
         let searchTimer = null;
@@ -331,7 +444,9 @@
             clearTimeout(searchTimer);
             searchTimer = setTimeout(loadAccounts, 250);
         });
+
         await loadAccounts();
     }
+
     window.initAccountsPage = init;
 })();
