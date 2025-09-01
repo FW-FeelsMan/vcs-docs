@@ -17,6 +17,7 @@
             }, timeout);
         });
     }
+
     async function waitForAll(selectors, root, timeout = 2000) {
         await Promise.all(selectors.map((s) => waitForElm(s, timeout, root)));
     }
@@ -58,6 +59,7 @@
             if (!res.ok) throw new Error("HTTP " + res.status);
             return res.json();
         }
+
         async function post(url, body) {
             const res = await fetch(url, {
                 method: "POST",
@@ -137,8 +139,7 @@
           <div class="dropdown-item" data-act="role" data-role="SupportAdmin" data-id="${u.id}">Переключить роль: SupportAdmin</div>
           <div class="dropdown-item sep"></div>
           <div class="dropdown-item" data-act="${accessOn ? "ban" : "activate"}" data-id="${u.id}">${banOrActLbl}</div>
-        `
-                : "";
+        ` : "";
             const kickItems = `
         <div class="dropdown-item" data-act="kick-vsupport" data-id="${u.id}">Отключить от V-Support</div>
         <div class="dropdown-item" data-act="kick-vdocs"    data-id="${u.id}">Отключить от V-DOCs</div>
@@ -181,8 +182,16 @@
                   </tr>`;
         }
 
+        function removePlaceholderRowIfAny() {
+            const onlyRow = tbody.children.length === 1 ? tbody.firstElementChild : null;
+            if (onlyRow && !onlyRow.getAttribute("data-id")) {
+                tbody.removeChild(onlyRow);
+            }
+        }
+
         function upsertRow(u, toTop = false) {
             if (rowsById.has(u.id)) return;
+            removePlaceholderRowIfAny();
             const tmp = document.createElement("tbody");
             tmp.innerHTML = rowHtml(u);
             const tr = tmp.firstElementChild;
@@ -210,6 +219,25 @@
             setupActionDropdowns();
         }
 
+        function setIfChanged(el, html) {
+            if (el && el.innerHTML !== html) el.innerHTML = html;
+        }
+
+        function patchRowCells(tr, patch) {
+            const tds = tr ? tr.children : null;
+            if (!tds || tds.length < 9) return;
+            const rolesHtml = (Array.isArray(patch.roles) && patch.roles.length > 0) ? patch.roles.map(badge).join(" ") : "-";
+            const vdocsHtml = statusPill(!!(patch.presence && patch.presence.VDocs && patch.presence.VDocs.online));
+            const vsupHtml = statusPill(!!(patch.presence && patch.presence.VSupport && patch.presence.VSupport.online));
+            const accessHtml = (patch.access ?? 0) > 0 ? '<span class="badge badge--ok">Активирована</span>' : '<span class="badge badge--blocked">Деактивирована</span>';
+            const lastEntry = patch.lastEntry || "";
+            setIfChanged(tds[3], rolesHtml);
+            setIfChanged(tds[4], vdocsHtml);
+            setIfChanged(tds[5], vsupHtml);
+            setIfChanged(tds[6], accessHtml);
+            setIfChanged(tds[7], lastEntry);
+        }
+
         let floatingMenu = null;
         let floatingCtx = null;
 
@@ -223,12 +251,14 @@
             document.body.appendChild(floatingMenu);
             return floatingMenu;
         }
+
         function closeFloatingMenu() {
             if (!floatingMenu) return;
             floatingMenu.style.display = "none";
             floatingMenu.innerHTML = "";
             floatingCtx = null;
         }
+
         function openFloatingMenuFrom(dropdown) {
             const btn = dropdown.querySelector(".action-button");
             const arrow = dropdown.querySelector(".dropdown-arrow");
@@ -282,6 +312,7 @@
             window.addEventListener("scroll", onAnyScroll, true);
             window.addEventListener("resize", onResize, true);
         }
+
         function setupActionDropdowns() {
             $$("#accountsTable .action-multibutton").forEach((box) => {
                 const btn = box.querySelector(".action-button");
@@ -295,6 +326,7 @@
                 };
             });
         }
+
         function setupActionDropdownsFor(tr) {
             const box = tr.querySelector(".action-multibutton");
             if (!box) return;
@@ -357,8 +389,9 @@
                 buildHeadAndFilters(organizations);
                 renderRows(users);
                 const maxCreated = users.reduce((m, u) => Math.max(m, Number(u.createdAtMs || 0)), 0);
-                if (maxCreated > createdCursorMs) createdCursorMs = maxCreated;
+                if (maxCreated > 0) createdCursorMs = Math.max(createdCursorMs, maxCreated + 1);
                 restartPolling();
+                await pulseTick();
             } catch (e) {
                 console.error("[accounts] load error", e);
                 tbody.innerHTML = `<tr><td style="color:#c33;">Ошибка загрузки</td></tr>`;
@@ -381,50 +414,24 @@
                     list.sort((a, b) => Number(a.createdAtMs || 0) - Number(b.createdAtMs || 0));
                     for (const u of list) upsertRow(u, true);
                     const maxCreated = list.reduce((m, u) => Math.max(m, Number(u.createdAtMs || 0)), createdCursorMs);
-                    createdCursorMs = Math.max(createdCursorMs, maxCreated);
+                    if (maxCreated > 0) createdCursorMs = Math.max(createdCursorMs, maxCreated + 1);
+                    await pulseTick();
                 }
             } catch (e) {
                 console.debug("[accounts] delta poll error", e);
             }
         }
 
-        function collectVisibleIds() {
-            return Array.from(rowsById.keys());
-        }
-
-        function updateRow(u) {
-            const tr = rowsById.get(u.id);
-            if (!tr) return;
-            const tds = tr.querySelectorAll("td");
-            if (tds.length < 9) return;
-            const rolesHtml = (u.roles || []).map(r => `<span class="badge" style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:.85rem;font-weight:700;border:1px solid transparent;background:#eef3f9;color:#2563eb;margin:0 4px 4px 0;">${r}</span>`).join(" ") || "-";
-            const vdocOn = !!(u.presence?.VDocs?.online);
-            const vsupOn = !!(u.presence?.VSupport?.online);
-            const accessOn = (u.access ?? 0) > 0;
-            tds[3].innerHTML = rolesHtml;
-            tds[4].innerHTML = vdocOn ? '<span class="user-status online">В сети</span>' : '<span class="user-status offline">Оффлайн</span>';
-            tds[5].innerHTML = vsupOn ? '<span class="user-status online">В сети</span>' : '<span class="user-status offline">Оффлайн</span>';
-            tds[6].innerHTML = accessOn ? '<span class="badge badge--ok">Активирована</span>' : '<span class="badge badge--blocked">Деактивирована</span>';
-            tds[7].textContent = u.lastEntry || "";
-        }
-
-        async function pollPulse() {
+        async function pulseTick() {
             try {
-                const ids = collectVisibleIds();
+                const ids = Array.from(rowsById.keys());
                 if (ids.length === 0) return;
-                const res = await fetch("/api/support/accounts/pulse", {
-                    method: "POST",
-                    credentials: "same-origin",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "RequestVerificationToken": token
-                    },
-                    body: JSON.stringify({ ids })
-                });
-                if (!res.ok) return;
-                const json = await res.json().catch(() => ({}));
-                const list = Array.isArray(json?.users) ? json.users : [];
-                for (const u of list) updateRow(u);
+                const res = await post("/api/support/accounts/pulse", { ids });
+                const list = Array.isArray(res?.users) ? res.users : [];
+                for (const u of list) {
+                    const tr = rowsById.get(u.id);
+                    if (tr) patchRowCells(tr, u);
+                }
             } catch (e) {
                 console.debug("[accounts] pulse error", e);
             }
@@ -433,8 +440,8 @@
         function restartPolling() {
             if (pollTimer) clearInterval(pollTimer);
             if (pulseTimer) clearInterval(pulseTimer);
-            pollTimer = setInterval(pollDelta, 8000);
-            pulseTimer = setInterval(pollPulse, 6000);
+            pollTimer = setInterval(pollDelta, 2000);
+            pulseTimer = setInterval(pulseTick, 3000);
         }
 
         roleSel.addEventListener("change", loadAccounts);

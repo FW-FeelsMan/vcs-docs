@@ -185,7 +185,8 @@ namespace VCS_DOCs.Support.Controllers
                 var sinceUtc = DateTimeOffset.FromUnixTimeMilliseconds(Math.Max(sinceMs, 0)).UtcDateTime;
 
                 var usersRaw = await _db.Users.AsNoTracking()
-                    .Where(u => u.CreatedAt > sinceUtc)
+                   // .Where(u => u.CreatedAt > sinceUtc)
+                   .Where(u => u.CreatedAt >= sinceUtc)
                     .Select(u => new { u.Id, u.UserName, u.FullName, u.Organization, u.Access, u.LastEntry, u.CreatedAt })
                     .ToListAsync();
 
