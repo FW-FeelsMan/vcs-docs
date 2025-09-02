@@ -4,6 +4,10 @@
     Layout = "_AuthLayout";
     ViewData["Title"] = "Обращение в поддержку";
 }
+@attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+
+
+@inject Microsoft.Extensions.Configuration.IConfiguration Cfg
 
 @section Styles {
     <link rel="stylesheet" href="~/css/support-request.css" asp-append-version="true" />

@@ -1,11 +1,9 @@
-﻿// wwwroot/js/support-request.js
-(() => {
+﻿(() => {
     if (window.self !== window.top) {
         document.documentElement.classList.add('embedded');
-        document.addEventListener('DOMContentLoaded', () => {
-            document.body.classList.add('embedded');
-        });
+        document.addEventListener('DOMContentLoaded', () => document.body.classList.add('embedded'));
     }
+
     const box = document.getElementById('captchaContainerLocal');
     const img = document.getElementById('captchaImage');
     const btn = document.getElementById('captchaRefresh');
@@ -16,9 +14,9 @@
 
     async function loadCaptcha() {
         try {
-            const r = await fetch('/support/api/Support/captcha/new', {
+            const r = await fetch('/api/Support/captcha/new', {
                 cache: 'no-store',
-                credentials: 'same-origin',
+                credentials: 'same-origin'
             });
             if (!r.ok) {
                 const t = await r.text().catch(() => '');
@@ -26,7 +24,7 @@
             }
             const data = await r.json();
             captchaId = data.id;
-            if (img) img.src = `/support/api/Support/captcha/image/${captchaId}?t=${Date.now()}`;
+            if (img) img.src = `/api/Support/captcha/image/${encodeURIComponent(captchaId)}?t=${Date.now()}`;
             if (ans) ans.value = '';
         } catch (e) {
             console.error('captcha/new failed:', e);
@@ -35,31 +33,26 @@
     }
 
     btn?.addEventListener('click', () => loadCaptcha());
-    document.addEventListener('DOMContentLoaded', () => {
-        if (box) { box.style.display = 'flex'; }
-        loadCaptcha();
-    });
+    document.addEventListener('DOMContentLoaded', () => { if (box) box.style.display = 'flex'; loadCaptcha(); });
 
     form?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const f = e.target;
-
         const payload = {
             fullName: f.fullName?.value || null,
             login: f.login?.value || null,
             replyTo: f.replyTo?.value || '',
             subject: f.subject?.value || '',
             message: f.message?.value || '',
-            code: null,
-            originalPath: null,
-            traceId: null,
+            code: null, originalPath: null, traceId: null,
             userAgent: navigator.userAgent,
             captchaId,
             captchaAnswer: ans?.value?.trim() || null
         };
 
         try {
-            const res = await fetch('/support/api/Support/ticket', {
+            // Если тикет у тебя тоже на WEB — добавь ниже прокси-экшен (см. шаг 3) и оставь относительный путь:
+            const res = await fetch('/api/Support/ticket', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'same-origin',
