@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Data;
 using VCS_DOCs.Data.Hubs;
 using VCS_DOCs.Infrastructure.Auth;
+using System.Security.Claims;
 
 namespace VCS_DOCs.Support.Controllers
 {
@@ -19,6 +20,7 @@ namespace VCS_DOCs.Support.Controllers
         private readonly ILogger<SupportAccountsController> _log;
         private readonly HttpClient _vdocs;
         private readonly IConfiguration _cfg;
+        private string? CurrentUserId => User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         private string? VDocsBaseUrl => _cfg["VDocs:BaseUrl"];
 
@@ -359,8 +361,8 @@ namespace VCS_DOCs.Support.Controllers
             var toRemove = _db.SupportUserConnections.Where(c => c.UserId == userId);
             _db.SupportUserConnections.RemoveRange(toRemove);
             await _db.Database.ExecuteSqlInterpolatedAsync($@"
-UPDATE SupportUserSessions SET IsOnline = 0, LastSeenUtc = {DateTime.UtcNow}
-WHERE UserId = {userId};");
+            UPDATE SupportUserSessions SET IsOnline = 0, LastSeenUtc = {DateTime.UtcNow}
+            WHERE UserId = {userId};");
             await _db.SaveChangesAsync();
         }
 
@@ -369,7 +371,11 @@ WHERE UserId = {userId};");
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleRole([FromRoute] string id, [FromBody] ToggleRoleDto dto)
         {
-            if (!IsValidRole(dto.Role)) return BadRequest("Unknown role.");
+            if (!IsValidRole(dto.Role)) return BadRequest(new { ok = false, error = "Unknown role." });
+
+            // запрет самодемота/самопереключения — чтобы случайно не вышибить себя
+            if (!string.IsNullOrEmpty(CurrentUserId) && string.Equals(CurrentUserId, id, StringComparison.Ordinal))
+                return BadRequest(new { ok = false, error = "Нельзя менять собственную роль во время сессии." });
 
             var hasRole = await (from ur in _db.UserRoles
                                  join r in _db.Roles on ur.RoleId equals r.Id
@@ -391,6 +397,11 @@ WHERE UserId = {userId};");
             }
 
             await _db.SaveChangesAsync();
+
+            // сразу принудительно разлогиниваем пользователя, чтобы роли применились единообразно
+            await KickInternalVSupport(id);
+            await KickVDocsAsync(id);
+
             return Ok(new { ok = true });
         }
 
@@ -399,7 +410,10 @@ WHERE UserId = {userId};");
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SetRole([FromRoute] string id, [FromBody] ToggleRoleDto dto)
         {
-            if (!IsValidRole(dto.Role)) return BadRequest("Unknown role.");
+            if (!IsValidRole(dto.Role)) return BadRequest(new { ok = false, error = "Unknown role." });
+
+            if (!string.IsNullOrEmpty(CurrentUserId) && string.Equals(CurrentUserId, id, StringComparison.Ordinal))
+                return BadRequest(new { ok = false, error = "Нельзя менять собственную роль во время сессии." });
 
             var allowed = new[] { Roles.BaseUser, Roles.SupportAgent, Roles.SupportAdmin };
 
@@ -411,7 +425,7 @@ WHERE UserId = {userId};");
                                      ur,
                                      r.Name
                                  })
-                                 .ToListAsync();
+                                .ToListAsync();
 
             var toRemove = current.Where(x => x.Name != dto.Role).Select(x => x.ur).ToList();
             if (toRemove.Count > 0) _db.UserRoles.RemoveRange(toRemove);
@@ -424,6 +438,11 @@ WHERE UserId = {userId};");
             }
 
             await _db.SaveChangesAsync();
+
+            // кик целевого пользователя из всех систем
+            await KickInternalVSupport(id);
+            await KickVDocsAsync(id);
+
             return Ok(new { ok = true });
         }
 

@@ -17,7 +17,8 @@ namespace VCS_DOCs.Data
         public DbSet<ServerSettingModel> ServerSettings { get; set; } = default!;
         public DbSet<SharedLink> SharedLinks { get; set; } = default!;
 
-        // NEW: подключаемые проекты саппорта/интеграций
+        public DbSet<SupportTicket> SupportTickets => Set<SupportTicket>();
+        public DbSet<SupportTicketMessage> SupportTicketMessages => Set<SupportTicketMessage>();
         public DbSet<SupportProject> SupportProjects => Set<SupportProject>();
 
         protected override void OnModelCreating(ModelBuilder b)
@@ -51,7 +52,29 @@ namespace VCS_DOCs.Data
                 e.Property(x => x.RequireAuth).HasConversion<int>();
             });
 
-            // NEW: конфигурация SupportProject
+            b.Entity<SupportTicket>(e =>
+            {
+                e.ToTable("SupportTickets");
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Id).HasMaxLength(32);
+                e.Property(x => x.Status).HasMaxLength(16).HasDefaultValue("open");
+                e.HasIndex(x => x.Status);
+                e.HasIndex(x => new { x.OwnerUserId, x.OwnerLogin });
+            });
+
+            b.Entity<SupportTicketMessage>(e =>
+            {
+                e.ToTable("SupportTicketMessages");
+                e.HasKey(x => x.Id);
+                e.Property(x => x.TicketId).HasMaxLength(32).IsRequired();
+                e.Property(x => x.AuthorRole).HasMaxLength(16);
+                e.HasIndex(x => x.TicketId);
+                e.HasOne(x => x.Ticket)
+                 .WithMany(t => t.Messages)
+                 .HasForeignKey(x => x.TicketId)
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
             b.Entity<SupportProject>(e =>
             {
                 e.ToTable("SupportProjects");

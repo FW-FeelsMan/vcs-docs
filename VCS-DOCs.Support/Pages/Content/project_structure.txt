@@ -1,0 +1,44 @@
+📁 Структура проекта: D:\Unity\VCS-DOCs\VCS-DOCs.Support\Pages\Content
+
+└──[Content]
+    └──project_structure.txt
+    ├──[Operators]
+    │   ├──accounts.cshtml
+    │   ├──accounts.cshtml.cs
+    │   ├──all_close_userticket.cshtml
+    │   ├──all_close_userticket.cshtml.cs
+    │   ├──all_open_usertickets.cshtml
+    │   ├──all_open_usertickets.cshtml.cs
+    │   ├──workload.cshtml
+    │   └──workload.cshtml.cs
+    └──[Users]
+        ├──faq.cshtml
+        ├──faq.cshtml.cs
+        ├──user_closed_tickets.cshtml
+        ├──user_closed_tickets.cshtml.cs
+        ├──user_open_tickets.cshtml
+        └──user_open_tickets.cshtml.cs
+
+🔍 Методы в .js и .cs файлах:
+
+accounts.cshtml.cs методы:
+ - OnGet
+
+all_close_userticket.cshtml.cs методы:
+ - OnGet
+
+all_open_usertickets.cshtml.cs методы:
+ - OnGet
+
+workload.cshtml.cs методы:
+ - OnGet
+
+faq.cshtml.cs методы:
+ - OnGet
+
+user_closed_tickets.cshtml.cs методы:
+ - OnGet
+
+user_open_tickets.cshtml.cs методы:
+ - OnGet
+

@@ -11,6 +11,7 @@ using VCS_DOCs.Data;
 using VCS_DOCs.Data.Hubs;
 using VCS_DOCs.Infrastructure.Auth;
 using VCS_DOCs.Models.Entities;
+using VCS_DOCs.Support.Hubs;
 using VCS_DOCs.Support.Infrastructure.Auth;
 using VCS_DOCs.Support.Infrastructure.Email;
 using VCS_DOCs.Support.Infrastructure.Provision;
@@ -247,7 +248,8 @@ internal class Program
 
         app.MapRazorPages();
         app.MapControllers();
-        app.MapHub<UserStatusHub>("/hubs/userStatus");
+        app.MapHub<VCS_DOCs.Support.Hubs.UserStatusHub>("/hubs/userStatus");
+        app.MapHub<TicketHub>("/hubs/tickets");
 
         app.Run();
     }

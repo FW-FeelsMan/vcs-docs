@@ -56,7 +56,28 @@
 
         async function getJson(url) {
             const res = await fetch(url, { credentials: "same-origin", cache: "no-store" });
-            if (!res.ok) throw new Error("HTTP " + res.status);
+            const ct = res.headers.get("content-type") || "";
+            if (!res.ok) {
+                // если пришла HTML-страница логина/ошибка — мягко уходим на неё
+                if (ct.includes("text/html")) {
+                    const html = await res.text().catch(() => "");
+                    console.warn("[accounts] non-json error, probably redirect to login");
+                    // принудительно перезагрузим — пользователь попадёт туда, куда надо
+                    location.href = res.url || "/Account/LoginSupport";
+                    throw new Error("Non-JSON response");
+                }
+                const txt = await res.text().catch(() => "");
+                throw new Error("HTTP " + res.status + (txt ? " " + txt : ""));
+            }
+            if (!ct.includes("application/json")) {
+                // получили HTML, но статус 200 (например статус-страница) — тоже уходим
+                const t = await res.text().catch(() => "");
+                console.warn("[accounts] expected JSON, got:", ct);
+                if (ct.includes("text/html")) {
+                    location.href = res.url || "/Account/LoginSupport";
+                }
+                throw new Error("Unexpected content-type: " + ct);
+            }
             return res.json();
         }
 

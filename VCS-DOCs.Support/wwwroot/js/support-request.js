@@ -61,9 +61,17 @@
 
             if (!res.ok) {
                 const txt = await res.text().catch(() => '');
+                try {
+                    const j = JSON.parse(txt);
+                    if (j && j.errors && Array.isArray(j.errors) && j.errors.length) {
+                        alert('Проверьте поля:\n- ' + j.errors.join('\n- '));
+                        return;
+                    }
+                } catch { }
                 alert('Не удалось отправить обращение. Код: ' + res.status + (txt ? '\n' + txt : ''));
                 return;
             }
+
             const data = await res.json().catch(() => ({}));
             alert('Спасибо! Ваше обращение принято' + (data.ticketId ? ' (#' + data.ticketId + ')' : '') + '.');
             f.reset();

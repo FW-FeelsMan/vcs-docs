@@ -1,8 +1,9 @@
 ﻿// VCS-DOCs.Support/Controllers/SupportTicketController.cs
+using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using System.Net.Http.Json; // <= ВАЖНО: для PostAsJsonAsync
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -82,12 +83,43 @@ namespace VCS_DOCs.Support.Controllers
             }
         }
 
+        // === simple validators ===
+        private static readonly Regex LoginRegex = new(@"^[a-zA-Z0-9]{1,20}$", RegexOptions.Compiled);
+        private static bool IsValidEmail(string? s) =>
+            !string.IsNullOrWhiteSpace(s) && Regex.IsMatch(s, @"^[^\s@]+@[^\s@]+\.[^\s@]+$");
+
+        private static IList<string> ValidateTicket(TicketDto dto)
+        {
+            var errors = new List<string>();
+
+            // email обязателен и валиден
+            if (string.IsNullOrWhiteSpace(dto.replyTo) || !IsValidEmail(dto.replyTo))
+                errors.Add("Укажите корректную почту для ответа (например, user@example.com).");
+
+            // login опционален, но если указан — только латиница/цифры и ≤20
+            if (!string.IsNullOrWhiteSpace(dto.login) && !LoginRegex.IsMatch(dto.login))
+                errors.Add("Логин может содержать только латинские буквы и цифры, до 20 символов.");
+
+            // subject/message — легкая проверка (можно усилить при желании)
+            if (string.IsNullOrWhiteSpace(dto.subject) || dto.subject.Length < 3)
+                errors.Add("Тема обращения слишком короткая.");
+            if (string.IsNullOrWhiteSpace(dto.message) || dto.message.Length < 10)
+                errors.Add("Текст обращения слишком короткий.");
+
+            return errors;
+        }
+
         [HttpPost("ticket")]
         [AllowAnonymous]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
         public async Task<IActionResult> Ticket([FromBody] TicketDto dto, CancellationToken ct)
         {
-            // 1) создаём тикет в WEB (здесь же пройдет капча)
+            // 0) серверная валидация
+            var errors = ValidateTicket(dto);
+            if (errors.Count > 0)
+                return BadRequest(new { success = false, errors });
+
+            // 1) создаём тикет в WEB (там же проходит капча)
             var webRes = await _vdocs.PostAsJsonAsync("/api/Support/ticket", dto, ct);
             var webBody = await webRes.Content.ReadAsStringAsync(ct);
             if (!webRes.IsSuccessStatusCode)
@@ -103,50 +135,61 @@ namespace VCS_DOCs.Support.Controllers
                 if (doc.RootElement.TryGetProperty("ticketId", out var t) && t.ValueKind == JsonValueKind.String)
                     ticketId = t.GetString();
             }
-            catch { /* не критично */ }
+            catch { /* ok */ }
 
-            // 2) автосоздание пользователя (если login передан)
+            // 2) автопровижининг пользователя (если передан login)
             var createdUser = await EnsureUserAndSetPasswordAsync(dto.login, dto.replyTo, dto.fullName, ct);
 
-            // 3) письмо пользователю (если есть почта и учётка только что создана)
-            if (!string.IsNullOrWhiteSpace(createdUser.email) &&
-                createdUser.justCreated &&
-                !string.IsNullOrEmpty(createdUser.plainPassword))
+            // 3) письмо:
+            //    - если учётка только что создана — письмо с логином/паролем
+            //    - если учётка уже была — квитанция без пароля (+ опционально ссылка на сброс)
+            var ticketUrl = BuildTicketUrl(ticketId);
+
+            if (!string.IsNullOrWhiteSpace(createdUser.email))
             {
-                var urlTpl = _cfg["TicketUrlTemplate"];
-                var link = !string.IsNullOrWhiteSpace(urlTpl) && !string.IsNullOrEmpty(ticketId)
-                    ? urlTpl.Replace("{id}", ticketId!)
-                    : null;
+                string subject, html;
 
-                var sb = new StringBuilder();
-                sb.Append("<p>Ваше обращение принято");
-                if (!string.IsNullOrEmpty(ticketId)) sb.Append($" (№ <b>{ticketId}</b>)");
-                sb.Append(".</p>");
-
-                if (!string.IsNullOrEmpty(link))
-                    sb.Append($"<p>Ссылка на вашу заявку: <a href=\"{link}\">{link}</a></p>");
-
-                sb.Append("<hr>");
-                sb.Append("<p>Для доступа создан аккаунт:</p>");
-                sb.Append($"<p>Логин: <b>{System.Net.WebUtility.HtmlEncode(createdUser.login)}</b><br/>");
-                sb.Append($"Пароль: <b>{System.Net.WebUtility.HtmlEncode(createdUser.plainPassword!)}</b></p>");
-                sb.Append("<p>Рекомендуем сменить пароль после первого входа.</p>");
+                if (createdUser.justCreated && !string.IsNullOrEmpty(createdUser.plainPassword))
+                {
+                    subject = "VCS-DOCs: ваш аккаунт и заявка";
+                    var sb = new StringBuilder();
+                    sb.Append("<p>Ваше обращение принято");
+                    if (!string.IsNullOrEmpty(ticketId)) sb.Append($" (№ <b>{ticketId}</b>)");
+                    sb.Append(".</p>");
+                    if (!string.IsNullOrEmpty(ticketUrl))
+                        sb.Append($@"<p>Ссылка на вашу заявку: <a href=""{ticketUrl}"">{ticketUrl}</a></p>");
+                    sb.Append("<hr><p>Для доступа создан аккаунт:</p>");
+                    sb.Append($"<p>Логин: <b>{System.Net.WebUtility.HtmlEncode(createdUser.login)}</b><br/>");
+                    sb.Append($"Пароль: <b>{System.Net.WebUtility.HtmlEncode(createdUser.plainPassword!)}</b></p>");
+                    sb.Append("<p>Рекомендуем сменить пароль после первого входа.</p>");
+                    html = sb.ToString();
+                }
+                else
+                {
+                    subject = "VCS-DOCs: обращение принято";
+                    var resetUrl = await TryBuildResetUrlAsync(createdUser.userId);
+                    var sb = new StringBuilder();
+                    sb.Append("<p>Ваше обращение принято");
+                    if (!string.IsNullOrEmpty(ticketId)) sb.Append($" (№ <b>{ticketId}</b>)");
+                    sb.Append(".</p>");
+                    if (!string.IsNullOrEmpty(ticketUrl))
+                        sb.Append($@"<p>Ссылка на вашу заявку: <a href=""{ticketUrl}"">{ticketUrl}</a></p>");
+                    sb.Append($"<p>Аккаунт с логином <b>{System.Net.WebUtility.HtmlEncode(createdUser.login)}</b> уже существует.</p>");
+                    if (!string.IsNullOrEmpty(resetUrl))
+                        sb.Append($@"<p>Забыли пароль? <a href=""{resetUrl}"">Сбросить пароль</a>.</p>");
+                    else
+                        sb.Append("<p>Забыли пароль? Воспользуйтесь ссылкой «Забыли пароль?» на странице входа.</p>");
+                    html = sb.ToString();
+                }
 
                 try
                 {
-                    _log.LogInformation(
-                    "MAIL try: email={Email}, login={Login}, justCreated={Created}, pwdSet={PwdSet}",
-                    createdUser.email, createdUser.login, createdUser.justCreated, !string.IsNullOrEmpty(createdUser.plainPassword));
-
-                    await _mail.SendAsync(createdUser.email!, "VCS-DOCs: ваш аккаунт и заявка", sb.ToString(), ct);
-
+                    await _mail.SendAsync(createdUser.email!, subject, html, ct);
                     _log.LogInformation("MAIL ok: sent to {Email}", createdUser.email);
-
                 }
                 catch (Exception ex)
                 {
-                    _log.LogWarning(ex, "Failed to send account email to {Email}", createdUser.email);
-                    // не падаем: тикет уже создан, учетка тоже
+                    _log.LogWarning(ex, "Failed to send mail to {Email}", createdUser.email);
                 }
             }
 
@@ -160,6 +203,30 @@ namespace VCS_DOCs.Support.Controllers
                 login = createdUser.login,
                 email = createdUser.email
             });
+        }
+
+        private string? BuildTicketUrl(string? ticketId)
+        {
+            if (string.IsNullOrEmpty(ticketId)) return null;
+            var tpl = _cfg["TicketUrlTemplate"];
+            return string.IsNullOrWhiteSpace(tpl) ? null : tpl.Replace("{id}", ticketId);
+        }
+
+        private async Task<string?> TryBuildResetUrlAsync(string? userId)
+        {
+            if (string.IsNullOrEmpty(userId)) return null;
+            var user = await _userMgr.FindByIdAsync(userId);
+            if (user == null) return null;
+
+            var baseUrl = (_cfg["WebBaseUrl"] ?? _cfg["VDocs:BaseUrl"])?.TrimEnd('/');
+            if (string.IsNullOrEmpty(baseUrl)) return null;
+
+            try
+            {
+                var token = await _userMgr.GeneratePasswordResetTokenAsync(user);
+                return $"{baseUrl}/Account/ResetPassword?userId={Uri.EscapeDataString(user.Id)}&token={Uri.EscapeDataString(token)}";
+            }
+            catch { return null; }
         }
 
         private static string GenerateStrongPassword(int length = 16)
@@ -189,7 +256,7 @@ namespace VCS_DOCs.Support.Controllers
             var user = new User
             {
                 UserName = login,
-                Email = string.IsNullOrEmpty(email) ? null : email,
+                Email = IsValidEmail(email) ? email : null, // не сохраняем мусор
                 FullName = string.IsNullOrWhiteSpace(fullName) ? null : fullName,
                 CreatedAt = DateTime.UtcNow,
                 Access = 1,
@@ -212,7 +279,7 @@ namespace VCS_DOCs.Support.Controllers
             {
                 _log.LogWarning("AddPassword failed for {Login}: {Errors}",
                     login, string.Join("; ", addPwd.Errors.Select(e => e.Description)));
-                pwd = null; // учетка без пароля (не критично для тикета)
+                pwd = null;
             }
 
             // базовая роль
@@ -222,7 +289,8 @@ namespace VCS_DOCs.Support.Controllers
             await _db.SaveChangesAsync(ct);
             return (true, user.Id, user.UserName, user.Email, pwd);
         }
-        // только для диагностики, потом удалить
+
+        // диагностика SMTP
         [HttpGet("debug/send-mail")]
         [AllowAnonymous]
         public async Task<IActionResult> SendTest([FromServices] IMailSender mail)
@@ -230,6 +298,5 @@ namespace VCS_DOCs.Support.Controllers
             await mail.SendAsync("test@local", "Test email", "<b>It works!</b>");
             return Ok(new { ok = true });
         }
-
     }
 }

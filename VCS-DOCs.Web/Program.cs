@@ -28,6 +28,8 @@ using VCS_DOCs.Upload.Core.Services.Antivirus;
 using ClamAV.Net.Client;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.AspNetCore.Authentication;
+using System.Security.Claims;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,7 +39,6 @@ builder.Services
     {
         options.Conventions.ConfigureFilter(new AutoValidateAntiforgeryTokenAttribute());
     })
-    // Один файл Pages/Errors/404.cshtml обслуживает все коды: /Errors/{code}
     .AddRazorPagesOptions(o =>
     {
         o.Conventions.AddPageRoute("/Errors/404", "/Errors/{code:int}");
@@ -48,8 +49,7 @@ builder.Services
         jsonOptions.JsonSerializerOptions.PropertyNamingPolicy = null;
     });
 
-// === User Data Path ===
-//builder.Services.AddHttpClient();
+// === HTTP client (если нужен мост) ===
 builder.Services.AddHttpClient("VDocsBridge", client =>
 {
     var baseUrl = builder.Configuration["VDocs:BaseUrl"] ?? "https://vcs-docs.support.local:7120/";
@@ -61,51 +61,40 @@ builder.Services.AddHttpClient("VDocsBridge", client =>
 .ConfigurePrimaryHttpMessageHandler(sp =>
 {
     var h = new HttpClientHandler();
-
-    // Разрешаем только НАШИ dev-серты по отпечатку (RemoteCertificateNameMismatch нам тогда не страшен).
     h.ServerCertificateCustomValidationCallback = (req, cert, chain, errors) =>
     {
         if (errors == SslPolicyErrors.None) return true;
-
         var tp = (cert as X509Certificate2)?.Thumbprint?.Replace(" ", "");
         if (tp is null) return false;
-
         return tp.Equals("1F1F09F62B5C4C450CA76CA1FDF2264276DFBF57", StringComparison.OrdinalIgnoreCase)
             || tp.Equals("1179E6B4C27C5247ADB525DE245D65D7E3D73C8C", StringComparison.OrdinalIgnoreCase);
     };
     return h;
 });
+
 builder.WebHost.ConfigureKestrel((ctx, opts) =>
 {
     opts.ConfigureHttpsDefaults(https =>
     {
         var preferredThumb = ctx.Configuration["Tls:PreferredThumbprint"];
-
         using var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
         store.Open(OpenFlags.ReadOnly);
-
         var cert = store.Certificates
             .OfType<X509Certificate2>()
             .FirstOrDefault(c => c.HasPrivateKey &&
                                  c.Thumbprint.Equals(preferredThumb, StringComparison.OrdinalIgnoreCase))
             ?? throw new InvalidOperationException($"Dev cert with thumbprint {preferredThumb} not found.");
-
         https.ServerCertificate = cert;
     });
 });
+
 builder.Services.Configure<UserDataPathOptions>(builder.Configuration.GetSection("UserDataPathOptions"));
 var configPath = builder.Configuration.GetSection("UserDataPathOptions")["BasePath"];
 var absoluteUserDataPath = Path.GetFullPath(configPath ?? throw new InvalidOperationException("UserData path not found"));
-builder.Services.Configure<UserDataPathOptions>(options =>
-{
-    options.BasePath = absoluteUserDataPath;
-});
+builder.Services.Configure<UserDataPathOptions>(options => { options.BasePath = absoluteUserDataPath; });
 
 // === File Upload Limits ===
-builder.Services.Configure<FormOptions>(options =>
-{
-    options.MultipartBodyLengthLimit = long.MaxValue;
-});
+builder.Services.Configure<FormOptions>(options => { options.MultipartBodyLengthLimit = long.MaxValue; });
 
 builder.WebHost.ConfigureKestrel(options =>
 {
@@ -117,14 +106,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
-builder.Services.AddAuthentication().AddCookie(); // ensure cookie auth present
+builder.Services.AddAuthentication().AddCookie();
 builder.Services.AddAuthorization();
 
 // === SignalR + Hubs ===
-builder.Services.AddSignalR(options =>
-{
-    options.EnableDetailedErrors = true;
-});
+builder.Services.AddSignalR(o => o.EnableDetailedErrors = true);
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 
 builder.Services.AddSingleton<IAntivirusScanner>(sp =>
@@ -149,20 +135,17 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 // === Session + Middleware ===
-builder.Services.AddSession(options =>
+builder.Services.AddSession(o =>
 {
-    options.IdleTimeout = TimeSpan.FromMinutes(30);
-    options.Cookie.HttpOnly = true;
-    options.Cookie.IsEssential = true;
+    o.IdleTimeout = TimeSpan.FromMinutes(30);
+    o.Cookie.HttpOnly = true;
+    o.Cookie.IsEssential = true;
 });
-builder.Services.AddAntiforgery(options => options.HeaderName = "X-CSRF-TOKEN");
+builder.Services.AddAntiforgery(o => o.HeaderName = "X-CSRF-TOKEN");
 
-builder.Services.AddCors(options =>
+builder.Services.AddCors(o =>
 {
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
-    });
+    o.AddPolicy("AllowAll", p => p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 });
 
 // === Custom Services ===
@@ -191,8 +174,8 @@ builder.Services.Configure<IpRateLimitOptions>(options =>
 {
     options.GeneralRules =
     [
-        new RateLimitRule { Endpoint = "*", Limit = 50, Period = "10s" },
-        new RateLimitRule { Endpoint = "/hub/*", Limit = 0, Period = "1s" }
+        new RateLimitRule { Endpoint = "*",      Limit = 50, Period = "10s" },
+        new RateLimitRule { Endpoint = "/hub/*", Limit = 0,  Period = "1s" }
     ];
 });
 
@@ -230,12 +213,11 @@ if (!Directory.Exists(absoluteUserDataPath))
 // === Status code pages (pretty) ===
 app.UseHttpsRedirection();
 
-// Для всех НЕ-API отдаём красивую Razor-страницу /Errors/{code}
 app.UseWhen(ctx => !ctx.Request.Path.StartsWithSegments("/api"), branch =>
 {
     branch.UseStatusCodePagesWithReExecute("/Errors/{0}");
 });
-// Для браузерной навигации на публичные API-ссылки тоже хотим Razor-страницу
+
 app.UseWhen(ctx =>
 {
     if (!ctx.Request.Path.StartsWithSegments("/api/Upload/public", out _)) return false;
@@ -267,7 +249,95 @@ app.UseMiniProfiler();
 app.UseSession();
 app.UseRouting();
 app.UseCors("AllowAll");
+
+// ВАЖНО: один раз
 app.UseAuthentication();
+
+// 1) На /Login — чистим куки и запрещаем кэш
+app.Use(async (ctx, next) =>
+{
+    if (ctx.Request.Path.Equals("/Login", StringComparison.OrdinalIgnoreCase))
+    {
+        if (ctx.User?.Identity?.IsAuthenticated == true)
+        {
+            await ctx.SignOutAsync();                         // погасили cookie
+            ctx.User = new ClaimsPrincipal(new ClaimsIdentity()); // очистили principal
+        }
+        ctx.Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate";
+        ctx.Response.Headers["Pragma"] = "no-cache";
+        ctx.Response.Headers["Expires"] = "0";
+    }
+
+    // Любой HTML — no-cache
+    ctx.Response.OnStarting(() =>
+    {
+        if (ctx.Response.ContentType?.Contains("text/html", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            ctx.Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate";
+            ctx.Response.Headers["Pragma"] = "no-cache";
+            ctx.Response.Headers["Expires"] = "0";
+        }
+        return Task.CompletedTask;
+    });
+
+    await next();
+});
+
+// 2) Проверка «живости» только на обычных страницах (не API, не статика, не /Login)
+app.Use(async (ctx, next) =>
+{
+    var path = ctx.Request.Path;
+    bool isLogin = path.Equals("/Login", StringComparison.OrdinalIgnoreCase);
+    bool isApi = path.StartsWithSegments("/api", StringComparison.OrdinalIgnoreCase);
+    bool isStatic =
+        path.StartsWithSegments("/css", StringComparison.OrdinalIgnoreCase) ||
+        path.StartsWithSegments("/js", StringComparison.OrdinalIgnoreCase) ||
+        path.StartsWithSegments("/images", StringComparison.OrdinalIgnoreCase) ||
+        path.StartsWithSegments("/lib", StringComparison.OrdinalIgnoreCase) ||
+        path.StartsWithSegments("/fonts", StringComparison.OrdinalIgnoreCase) ||
+        path.StartsWithSegments("/userdata", StringComparison.OrdinalIgnoreCase) ||
+        path.StartsWithSegments("/_framework", StringComparison.OrdinalIgnoreCase) ||
+        path.StartsWithSegments("/profiler", StringComparison.OrdinalIgnoreCase) ||
+        path.Equals("/favicon.ico", StringComparison.OrdinalIgnoreCase);
+
+    if (!isLogin && !isApi && !isStatic && ctx.User?.Identity?.IsAuthenticated == true)
+    {
+        var userId = ctx.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var sid = ctx.User.FindFirst("web_sid")?.Value;
+
+        var db = ctx.RequestServices.GetRequiredService<ApplicationDbContext>();
+        var u = !string.IsNullOrEmpty(userId)
+            ? await db.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Id == userId)
+            : null;
+
+        bool hasSidClaim = !string.IsNullOrEmpty(sid);
+        bool sidMismatch = hasSidClaim && !string.IsNullOrEmpty(u?.JwtId) && !string.Equals(u!.JwtId, sid, StringComparison.Ordinal);
+
+        // «мягкая» невалидность — гоняем на /Login без сообщения
+        bool softInvalid =
+            u == null ||
+            u.IsDeleted ||
+            u.Access == 0 ||
+            u.StatusOnline != 1 ||
+            (!hasSidClaim && !string.IsNullOrEmpty(u?.JwtId)); // старый cookie без web_sid
+
+        if (sidMismatch)
+        {
+            await ctx.SignOutAsync();
+            ctx.Response.Redirect("/Login?message=session_terminated");
+            return;
+        }
+        if (softInvalid)
+        {
+            await ctx.SignOutAsync();
+            ctx.Response.Redirect("/Login");
+            return;
+        }
+    }
+
+    await next();
+});
+
 app.UseAuthorization();
 
 // === Routes ===

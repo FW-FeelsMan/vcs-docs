@@ -11,6 +11,8 @@ using VCS_DOCs.Data.Hubs;
 using VCS_DOCs.Infrastructure.Auth;
 using VCS_DOCs.Models.Entities;
 using VCS_DOCs.Utilities;
+using System.Security.Claims;
+
 
 namespace VCS_DOCs.Pages
 {
@@ -111,9 +113,12 @@ namespace VCS_DOCs.Pages
 			user.StatusOnline = 1;
 			await _userManager.UpdateAsync(user);
 
-			await _signInManager.SignInAsync(user, isPersistent: true);
+            //await _signInManager.SignInAsync(user, isPersistent: true);
 
-			FailedLogins.TryRemove(ip, out _);
+            var extraClaims = new List<Claim> { new Claim("web_sid", user.JwtId ?? string.Empty) };
+            await _signInManager.SignInWithClaimsAsync(user, isPersistent: true, extraClaims);
+
+            FailedLogins.TryRemove(ip, out _);
 			_logger.LogInformation($"Пользователь {user.UserName} вошел в систему.");
 
 			return new JsonResult(new { success = true });
