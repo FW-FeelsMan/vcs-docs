@@ -15,7 +15,7 @@ namespace VCS_DOCs.Support.Hubs
     /// 3) умеет принудительно разлогинить пользователя (шлёт клиенту событие "ForceLogout").
     /// </summary>
     [Authorize]
-    public class UserStatusHub : Hub
+    public class SupportPresenceHub : Hub
     {
         private readonly IUserService _userService;
 
@@ -23,7 +23,7 @@ namespace VCS_DOCs.Support.Hubs
         private static readonly ConcurrentDictionary<string, ConcurrentDictionary<string, byte>> _connections =
             new ConcurrentDictionary<string, ConcurrentDictionary<string, byte>>(StringComparer.Ordinal);
 
-        public UserStatusHub(IUserService userService)
+        public SupportPresenceHub(IUserService userService)
         {
             _userService = userService;
         }

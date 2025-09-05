@@ -33,8 +33,7 @@ html, body {
 .support-wrap {
     min-height: 100svh;
     display: grid;
-    place-items: center;
-    padding: 24px;
+    place-items: center;   
     box-sizing: border-box;
     position: relative;
     z-index: 1; /* выше фона */

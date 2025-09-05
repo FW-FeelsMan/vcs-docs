@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Data;
 using VCS_DOCs.Infrastructure.Auth;
 using VCS_DOCs.Models.Entities;
@@ -136,6 +137,13 @@ namespace VCS_DOCs.Support.Controllers
                     ticketId = t.GetString();
             }
             catch { /* ok */ }
+            
+            if (!string.IsNullOrEmpty(ticketId))
+            {
+                try { await UpsertTicketFromWebAsync(ticketId!, dto, ct); }
+                catch (Exception ex) { _log.LogWarning(ex, "Upsert ticket failed for {TicketId}", ticketId); }
+            }
+
 
             // 2) автопровижининг пользователя (если передан login)
             var createdUser = await EnsureUserAndSetPasswordAsync(dto.login, dto.replyTo, dto.fullName, ct);
@@ -203,6 +211,58 @@ namespace VCS_DOCs.Support.Controllers
                 login = createdUser.login,
                 email = createdUser.email
             });
+        }
+        private async Task UpsertTicketFromWebAsync(string ticketId, TicketDto dto, CancellationToken ct)
+        {
+            if (string.IsNullOrWhiteSpace(ticketId)) return;
+
+            var login = (dto.login ?? "").Trim();
+            var email = (dto.replyTo ?? "").Trim();
+            var subject = (dto.subject ?? "").Trim();
+            var body = (dto.message ?? "").Trim();
+
+            var t = await _db.SupportTickets.Include(x => x.Messages)
+                .FirstOrDefaultAsync(x => x.Id == ticketId, ct);
+
+            if (t == null)
+            {
+                string? ownerId = null;
+                if (!string.IsNullOrEmpty(login))
+                {
+                    var u = await _userMgr.FindByNameAsync(login);
+                    if (u != null) ownerId = u.Id;
+                }
+
+                t = new SupportTicket
+                {
+                    Id = ticketId,
+                    Subject = string.IsNullOrEmpty(subject) ? "Без темы" : subject,
+                    Status = "open",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    OwnerUserId = ownerId,
+                    OwnerLogin = string.IsNullOrEmpty(ownerId) ? (string.IsNullOrEmpty(login) ? null : login) : null,
+                    ReplyToEmail = string.IsNullOrEmpty(email) ? null : email
+                };
+
+                _db.SupportTickets.Add(t);
+            }
+
+            if (!string.IsNullOrWhiteSpace(body) && !(t.Messages?.Any() ?? false))
+            {
+                var first = new SupportTicketMessage
+                {
+                    TicketId = t.Id,
+                    AuthorUserId = t.OwnerUserId,
+                    AuthorRole = "user",
+                    Body = body,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _db.SupportTicketMessages.Add(first);
+                t.UpdatedAt = DateTime.UtcNow;
+            }
+
+            await _db.SaveChangesAsync(ct);
         }
 
         private string? BuildTicketUrl(string? ticketId)

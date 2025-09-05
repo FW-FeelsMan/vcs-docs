@@ -17,13 +17,13 @@ namespace VCS_DOCs.Support.Pages.Account
         private readonly SignInManager<User> _signInManager;
         private readonly UserManager<User> _userManager;
         private readonly ApplicationDbContext _db;
-        private readonly IHubContext<UserStatusHub> _hub;
+        private readonly IHubContext<SupportPresenceHub> _hub;
 
         public LoginSupportModel(
             SignInManager<User> signInManager,
             UserManager<User> userManager,
             ApplicationDbContext db,
-            IHubContext<UserStatusHub> hub)
+            IHubContext<SupportPresenceHub> hub)
         {
             _signInManager = signInManager;
             _userManager = userManager;

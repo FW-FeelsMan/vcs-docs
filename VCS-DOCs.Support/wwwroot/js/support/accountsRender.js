@@ -1,4 +1,11 @@
-﻿(function () {
+﻿// wwwroot/js/support/accountsRender.js
+(function () {
+    // пометки для выгрузки (чтобы гасить таймеры и не редиректить)
+    let __accounts_disposed = false;
+    window.addEventListener("beforeunload", () => { __accounts_disposed = true; stopPolling(); });
+    window.addEventListener("pagehide", () => { __accounts_disposed = true; stopPolling(); });
+
+    // ---- helpers ----
     function waitForElm(selector, timeout = 2000, root = document) {
         return new Promise((resolve, reject) => {
             const initial = root.querySelector(selector);
@@ -17,12 +24,11 @@
             }, timeout);
         });
     }
-
     async function waitForAll(selectors, root, timeout = 2000) {
         await Promise.all(selectors.map((s) => waitForElm(s, timeout, root)));
     }
 
-    let initOnce = new WeakSet();
+    const initOnce = new WeakSet();
 
     async function init(root) {
         const panel = root || document;
@@ -35,7 +41,7 @@
 
         try {
             await waitForAll(["#accountsHead", "#accountsBody", "#searchBox", "#roleFilter", "#orgFilter"], panel, 2500);
-        } catch { }
+        } catch { /* best-effort */ }
 
         function getCsrfToken() {
             const meta = document.querySelector('meta[name="csrf-token"]')?.content;
@@ -57,24 +63,22 @@
         async function getJson(url) {
             const res = await fetch(url, { credentials: "same-origin", cache: "no-store" });
             const ct = res.headers.get("content-type") || "";
+
             if (!res.ok) {
-                // если пришла HTML-страница логина/ошибка — мягко уходим на неё
+                // Не редиректим на логин, если уже уходим/перезагружаемся
                 if (ct.includes("text/html")) {
-                    const html = await res.text().catch(() => "");
-                    console.warn("[accounts] non-json error, probably redirect to login");
-                    // принудительно перезагрузим — пользователь попадёт туда, куда надо
-                    location.href = res.url || "/Account/LoginSupport";
+                    if (!__accounts_disposed) {
+                        console.warn("[accounts] non-json (HTML) on non-OK; suppressed redirect");
+                    }
                     throw new Error("Non-JSON response");
                 }
                 const txt = await res.text().catch(() => "");
                 throw new Error("HTTP " + res.status + (txt ? " " + txt : ""));
             }
+
             if (!ct.includes("application/json")) {
-                // получили HTML, но статус 200 (например статус-страница) — тоже уходим
-                const t = await res.text().catch(() => "");
-                console.warn("[accounts] expected JSON, got:", ct);
-                if (ct.includes("text/html")) {
-                    location.href = res.url || "/Account/LoginSupport";
+                if (!__accounts_disposed && ct.includes("text/html")) {
+                    console.warn("[accounts] OK but HTML; suppressed redirect");
                 }
                 throw new Error("Unexpected content-type: " + ct);
             }
@@ -123,17 +127,17 @@
 
         function buildHead() {
             thead.innerHTML = `
-        <tr>
-          <th>Логин</th>
-          <th>ФИО</th>
-          <th>Организация</th>
-          <th>Роли</th>
-          <th>VCS-DOCs</th>
-          <th>VCS-SD</th>
-          <th>Доступ</th>
-          <th>Входил</th>
-          <th>Действия</th>
-        </tr>`;
+            <tr>
+              <th>Логин</th>
+              <th>ФИО</th>
+              <th>Организация</th>
+              <th>Роли</th>
+              <th>VCS-DOCs</th>
+              <th>VCS-SD</th>
+              <th>Доступ</th>
+              <th>Входил</th>
+              <th>Действия</th>
+            </tr>`;
         }
 
         function populateOrgFilter(list) {
@@ -152,33 +156,32 @@
         function renderActionsMultibutton(u) {
             const accessOn = (u.access ?? 0) > 0;
             const banOrActLbl = accessOn ? "Деактивировать" : "Активировать";
-            const adminItems = isAdmin
-                ? `
-          <div class="dropdown-item sep"></div>
-          <div class="dropdown-item" data-act="role" data-role="BaseUser"     data-id="${u.id}">Переключить роль: BaseUser</div>
-          <div class="dropdown-item" data-act="role" data-role="SupportAgent" data-id="${u.id}">Переключить роль: SupportAgent</div>
-          <div class="dropdown-item" data-act="role" data-role="SupportAdmin" data-id="${u.id}">Переключить роль: SupportAdmin</div>
-          <div class="dropdown-item sep"></div>
-          <div class="dropdown-item" data-act="${accessOn ? "ban" : "activate"}" data-id="${u.id}">${banOrActLbl}</div>
-        ` : "";
             const kickItems = `
-        <div class="dropdown-item" data-act="kick-vsupport" data-id="${u.id}">Отключить от V-Support</div>
-        <div class="dropdown-item" data-act="kick-vdocs"    data-id="${u.id}">Отключить от V-DOCs</div>
-        <div class="dropdown-item" data-act="kick-all"      data-id="${u.id}">Отключить везде</div>
-      `;
+                <div class="dropdown-item" data-act="kick-vsupport" data-id="${u.id}">Отключить от V-Support</div>
+                <div class="dropdown-item" data-act="kick-vdocs"    data-id="${u.id}">Отключить от V-DOCs</div>
+                <div class="dropdown-item" data-act="kick-all"      data-id="${u.id}">Отключить везде</div>
+            `;
+            const adminItems = isAdmin ? `
+                <div class="dropdown-item sep"></div>
+                <div class="dropdown-item" data-act="role" data-role="BaseUser"     data-id="${u.id}">Переключить роль: BaseUser</div>
+                <div class="dropdown-item" data-act="role" data-role="SupportAgent" data-id="${u.id}">Переключить роль: SupportAgent</div>
+                <div class="dropdown-item" data-act="role" data-role="SupportAdmin" data-id="${u.id}">Переключить роль: SupportAdmin</div>
+                <div class="dropdown-item sep"></div>
+                <div class="dropdown-item" data-act="${accessOn ? "ban" : "activate"}" data-id="${u.id}">${banOrActLbl}</div>
+            ` : "";
             return `
-        <div class="multi-button compact action-multibutton" style="position:relative;"
-             data-id="${u.id}" data-access="${u.access ?? 0}">
-          <button class="button-sliding primary compact action-button"
-                  data-act="kick-vsupport" data-id="${u.id}">
-            Отключить от V-Support
-          </button>
-          <div class="dropdown-arrow compact" tabindex="0">▾</div>
-          <div class="action-dropdown-menu compact" style="display:none; position:absolute; min-width:200px;">
-            ${kickItems}
-            ${adminItems}
-          </div>
-        </div>`;
+            <div class="multi-button compact action-multibutton" style="position:relative;"
+                 data-id="${u.id}" data-access="${u.access ?? 0}">
+              <button class="button-sliding primary compact action-button"
+                      data-act="kick-vsupport" data-id="${u.id}">
+                Отключить от V-Support
+              </button>
+              <div class="dropdown-arrow compact" tabindex="0">▾</div>
+              <div class="action-dropdown-menu compact" style="display:none; position:absolute; min-width:200px;">
+                ${kickItems}
+                ${adminItems}
+              </div>
+            </div>`;
         }
 
         const rowsById = new Map();
@@ -190,17 +193,17 @@
             const vsup = !!(u.presence?.VSupport?.online);
             const vdoc = !!(u.presence?.VDocs?.online);
             return `
-                  <tr data-id="${u.id}">
-                    <td>${u.userName ?? ""}</td>
-                    <td>${u.fullName ?? ""}</td>
-                    <td>${u.organization ?? ""}</td>
-                    <td>${roles}</td>
-                    <td>${statusPill(vdoc)}</td>
-                    <td>${statusPill(vsup)}</td>
-                    <td>${access}</td>
-                    <td>${u.lastEntry || ""}</td>
-                    <td>${renderActionsMultibutton(u)}</td>
-                  </tr>`;
+              <tr data-id="${u.id}">
+                <td>${u.userName ?? ""}</td>
+                <td>${u.fullName ?? ""}</td>
+                <td>${u.organization ?? ""}</td>
+                <td>${roles}</td>
+                <td>${statusPill(vdoc)}</td>
+                <td>${statusPill(vsup)}</td>
+                <td>${access}</td>
+                <td>${u.lastEntry || ""}</td>
+                <td>${renderActionsMultibutton(u)}</td>
+              </tr>`;
         }
 
         function removePlaceholderRowIfAny() {
@@ -240,9 +243,7 @@
             setupActionDropdowns();
         }
 
-        function setIfChanged(el, html) {
-            if (el && el.innerHTML !== html) el.innerHTML = html;
-        }
+        function setIfChanged(el, html) { if (el && el.innerHTML !== html) el.innerHTML = html; }
 
         function patchRowCells(tr, patch) {
             const tds = tr ? tr.children : null;
@@ -259,6 +260,7 @@
             setIfChanged(tds[7], lastEntry);
         }
 
+        // dropdown (плавающее меню)
         let floatingMenu = null;
         let floatingCtx = null;
 
@@ -272,14 +274,12 @@
             document.body.appendChild(floatingMenu);
             return floatingMenu;
         }
-
         function closeFloatingMenu() {
             if (!floatingMenu) return;
             floatingMenu.style.display = "none";
             floatingMenu.innerHTML = "";
             floatingCtx = null;
         }
-
         function openFloatingMenuFrom(dropdown) {
             const btn = dropdown.querySelector(".action-button");
             const arrow = dropdown.querySelector(".dropdown-arrow");
@@ -313,8 +313,7 @@
                     const btnEl = btn;
                     btnEl.textContent = item.textContent.trim();
                     btnEl.dataset.act = act;
-                    if (role) btnEl.dataset.role = role;
-                    else btnEl.removeAttribute("data-role");
+                    if (role) btnEl.dataset.role = role; else btnEl.removeAttribute("data-role");
                     closeFloatingMenu();
                     await runAction(act, id, role, dropdown);
                 });
@@ -347,7 +346,6 @@
                 };
             });
         }
-
         function setupActionDropdownsFor(tr) {
             const box = tr.querySelector(".action-multibutton");
             if (!box) return;
@@ -394,6 +392,16 @@
         let pollTimer = null;
         let pulseTimer = null;
 
+        function stopPolling() {
+            if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+            if (pulseTimer) { clearInterval(pulseTimer); pulseTimer = null; }
+        }
+        function restartPolling() {
+            stopPolling();
+            pollTimer = setInterval(pollDelta, 2000);
+            pulseTimer = setInterval(pulseTick, 3000);
+        }
+
         async function loadAccounts() {
             const role = roleSel.value;
             const org = orgSel.value;
@@ -429,6 +437,7 @@
                 if (role) url.searchParams.set("role", role);
                 if (org) url.searchParams.set("org", org);
                 if (query) url.searchParams.set("q", query);
+
                 const res = await getJson(url.toString());
                 const list = Array.isArray(res?.users) ? res.users : [];
                 if (list.length > 0) {
@@ -439,7 +448,8 @@
                     await pulseTick();
                 }
             } catch (e) {
-                console.debug("[accounts] delta poll error", e);
+                // молчим — периодический опрос, возможны гонки при навигации
+                // console.debug("[accounts] delta poll error", e);
             }
         }
 
@@ -454,15 +464,8 @@
                     if (tr) patchRowCells(tr, u);
                 }
             } catch (e) {
-                console.debug("[accounts] pulse error", e);
+                // console.debug("[accounts] pulse error", e);
             }
-        }
-
-        function restartPolling() {
-            if (pollTimer) clearInterval(pollTimer);
-            if (pulseTimer) clearInterval(pulseTimer);
-            pollTimer = setInterval(pollDelta, 2000);
-            pulseTimer = setInterval(pulseTick, 3000);
         }
 
         roleSel.addEventListener("change", loadAccounts);

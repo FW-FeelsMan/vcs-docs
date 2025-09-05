@@ -20,7 +20,7 @@ namespace VCS_DOCs.Support.Pages
         private readonly ILogger<IndexModel> _log;
         private readonly UserManager<User> _userMgr;
         private readonly IOptions<UserDataPathOptions>? _userData;
-        private readonly IHubContext<UserStatusHub> _hub;
+        private readonly IHubContext<SupportPresenceHub> _hub;
 
         public User? CurrentUser
         {
@@ -33,7 +33,7 @@ namespace VCS_DOCs.Support.Pages
             ILogger<IndexModel> log,
             UserManager<User> userMgr,
             IOptions<UserDataPathOptions>? userData = null,
-            IHubContext<UserStatusHub>? hub = null)
+            IHubContext<SupportPresenceHub>? hub = null)
         {
             _db = db;
             _log = log;

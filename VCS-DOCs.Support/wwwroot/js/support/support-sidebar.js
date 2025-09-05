@@ -1,4 +1,4 @@
-﻿// wwwroot/js/support/support-sidebar.js
+﻿// wwwroot/js/support/support-sidebar.js  (stable + abort on unload)
 
 // ---- утилиты ----
 function loadScriptOnce(src, id) {
@@ -49,15 +49,13 @@ function waitForElm(selector, timeout = 5000, root = document) {
 
 // ---- ленивые скрипты под конкретные панели ----
 async function ensureContentScripts(contentId, panelEl) {
+    if (!panelEl?.isConnected) return;
+
     if (contentId === "accounts") {
-        // подгружаем отрисовщик
         await loadScriptOnce("/js/support/accountsRender.js", "accounts-render-js");
-        // ждём контейнер таблицы, чтобы не ловить «контейнеры не найдены»
-        try {
-            await waitForElm("#accountsTable", 3000, panelEl);
-        } catch { /* не критично, init сам перепроверит */ }
+        try { await waitForElm("#accountsTable", 3000, panelEl); } catch { /* best-effort */ }
+        if (!panelEl.isConnected) return;
         if (typeof window.initAccountsPage === "function") {
-            // init возвращает Promise — дождёмся, чтобы не рвать гонку
             await window.initAccountsPage(panelEl);
         }
     }
@@ -111,9 +109,17 @@ async function ensureContentScripts(contentId, panelEl) {
     const showLoader = () => $("#loader")?.classList.remove("hidden");
     const hideLoader = () => $("#loader")?.classList.add("hidden");
 
-    // защита от дребезга и повторной загрузки одного и того же контента
+    // состояние
     let clickLock = false;
     let currentContentId = null;
+
+    // abort при новой навигации/перезагрузке
+    let inflightController = null;
+    let navigatingAway = false;
+    window.addEventListener("beforeunload", () => {
+        navigatingAway = true;
+        try { inflightController?.abort(); } catch { }
+    });
 
     // ---- выбор пункта и загрузка ----
     window.selectButton = async function (button) {
@@ -121,6 +127,7 @@ async function ensureContentScripts(contentId, panelEl) {
 
         const contentId = button.getAttribute("data-content");
         if (!contentId) return;
+
         if (currentContentId === contentId) {
             $$(".sidebar-button").forEach((b) => b.classList.remove("selected"));
             button.classList.add("selected");
@@ -140,27 +147,41 @@ async function ensureContentScripts(contentId, panelEl) {
         clickLock = true;
         setTimeout(() => (clickLock = false), 300);
 
-        showLoader();
+        // отменяем предыдущую загрузку
+        try { inflightController?.abort(); } catch { }
+        inflightController = new AbortController();
 
+        showLoader();
         try {
-            const r = await fetch(url, { credentials: "same-origin", cache: "no-store" });
+            const r = await fetch(url, {
+                credentials: "same-origin",
+                cache: "no-store",
+                signal: inflightController.signal
+            });
+            if (inflightController.signal.aborted || navigatingAway) return;
             if (!r.ok) throw new Error(`HTTP ${r.status}`);
+
             const html = await r.text();
+            if (inflightController.signal.aborted || navigatingAway) return;
 
             const panel = document.createElement("div");
             panel.className = "view-panel view-pre";
             panel.innerHTML = html;
+
             container.replaceChildren(panel);
 
             // даём браузеру дорисовать DOM и только потом инициализировать спец-скрипты
             panel.getBoundingClientRect(); // reflow
+
             await ensureContentScripts(contentId, panel);
+            if (!panel.isConnected || inflightController.signal.aborted || navigatingAway) return;
 
             // анимация появления
             panel.classList.add("view-enter");
             panel.addEventListener(
                 "animationend",
                 () => {
+                    if (!panel?.isConnected) return;
                     panel.classList.remove("view-enter", "view-pre");
                     hideLoader();
                 },
@@ -170,8 +191,11 @@ async function ensureContentScripts(contentId, panelEl) {
             currentContentId = contentId;
             document.dispatchEvent(new CustomEvent("SupportContentChanged", { detail: { contentId } }));
         } catch (err) {
+            if (navigatingAway || err?.name === "AbortError") return; // уходим молча
             console.error("[support] load error:", err);
-            container.innerHTML = `<div style="padding:16px;color:#ddd">Ошибка загрузки: ${contentId}</div>`;
+            if (container && !navigatingAway) {
+                container.innerHTML = `<div style="padding:16px;color:#ddd">Ошибка загрузки: ${contentId}</div>`;
+            }
             hideLoader();
         }
     };

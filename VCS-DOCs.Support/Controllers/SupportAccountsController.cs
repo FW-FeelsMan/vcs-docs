@@ -4,9 +4,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Data;
-using VCS_DOCs.Data.Hubs;
+//using VCS_DOCs.Data.Hubs;
 using VCS_DOCs.Infrastructure.Auth;
 using System.Security.Claims;
+using VCS_DOCs.Support.Hubs;
 
 namespace VCS_DOCs.Support.Controllers
 {
@@ -16,7 +17,7 @@ namespace VCS_DOCs.Support.Controllers
     public class SupportAccountsController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
-        private readonly IHubContext<UserStatusHub> _hub;
+        private readonly IHubContext<SupportPresenceHub> _hub;
         private readonly ILogger<SupportAccountsController> _log;
         private readonly HttpClient _vdocs;
         private readonly IConfiguration _cfg;
@@ -26,7 +27,7 @@ namespace VCS_DOCs.Support.Controllers
 
         public SupportAccountsController(
             ApplicationDbContext db,
-            IHubContext<UserStatusHub> hub,
+            IHubContext<SupportPresenceHub> hub,
             ILogger<SupportAccountsController> log,
             IHttpClientFactory http,
             IConfiguration cfg)

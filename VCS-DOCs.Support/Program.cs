@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Configuration;
 using VCS_DOCs.Data;
-using VCS_DOCs.Data.Hubs;
 using VCS_DOCs.Infrastructure.Auth;
 using VCS_DOCs.Models.Entities;
 using VCS_DOCs.Support.Hubs;
@@ -59,29 +58,27 @@ internal class Program
 
             o.Events = new CookieAuthenticationEvents
             {
-                OnValidatePrincipal = async ctx =>
+                OnValidatePrincipal = async ctx => { /* оставляем как есть */ },
+
+                OnRedirectToLogin = ctx =>
                 {
-                    var db = ctx.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
-                    var userId = ctx.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    var sid = ctx.Principal.FindFirst("support_sid")?.Value;
-
-                    if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(sid))
+                    if (ctx.Request.Path.StartsWithSegments("/api"))
                     {
-                        ctx.RejectPrincipal();
-                        await ctx.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
-                        return;
+                        ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        return Task.CompletedTask;
                     }
-
-                    var row = await db.Set<SupportUserSession>()
-                                      .AsNoTracking()
-                                      .FirstOrDefaultAsync(x => x.UserId == userId);
-
-                    var stillValid = row != null && row.IsOnline && string.Equals(row.JwtId, sid, StringComparison.Ordinal);
-                    if (!stillValid)
+                    ctx.Response.Redirect(ctx.RedirectUri);
+                    return Task.CompletedTask;
+                },
+                OnRedirectToAccessDenied = ctx =>
+                {
+                    if (ctx.Request.Path.StartsWithSegments("/api"))
                     {
-                        ctx.RejectPrincipal();
-                        await ctx.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+                        ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        return Task.CompletedTask;
                     }
+                    ctx.Response.Redirect(ctx.RedirectUri);
+                    return Task.CompletedTask;
                 }
             };
         });
@@ -248,8 +245,8 @@ internal class Program
 
         app.MapRazorPages();
         app.MapControllers();
-        app.MapHub<VCS_DOCs.Support.Hubs.UserStatusHub>("/hubs/userStatus");
-        app.MapHub<TicketHub>("/hubs/tickets");
+        app.MapHub<SupportPresenceHub>("/hubs/userStatus"); //лежит в саппорте. Контроль пользователе саппорта
+        app.MapHub<TicketHub>("/hubs/tickets");//лежит в саппорте
 
         app.Run();
     }
