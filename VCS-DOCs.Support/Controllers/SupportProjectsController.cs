@@ -5,9 +5,11 @@ using VCS_DOCs.Data;
 using VCS_DOCs.Infrastructure.Auth;
 using VCS_DOCs.Models.Entities;
 using System;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace VCS_DOCs.Support.Controllers;
 
+[EnableRateLimiting("api-burst")]
 [ApiController]
 [Route("api/support/projects")]
 [Authorize(Roles = Roles.SupportAdmin)]

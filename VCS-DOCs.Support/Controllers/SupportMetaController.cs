@@ -1,9 +1,11 @@
 ﻿// VCS_DOCs.Support.Controllers/SupportMetaController.cs
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace VCS_DOCs.Support.Controllers
 {
+    [EnableRateLimiting("api-burst")]
     [ApiController]
     [Route("api/support")]
     public sealed class SupportMetaController : ControllerBase

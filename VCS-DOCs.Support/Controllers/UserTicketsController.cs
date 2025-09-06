@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Data;
@@ -10,6 +11,7 @@ using VCS_DOCs.Support.Hubs;
 
 namespace VCS_DOCs.Support.Controllers
 {
+    [EnableRateLimiting("api-burst")]
     /// <summary>
     /// Пользовательский API для заявок (список моих заявок, сообщения внутри заявки).
     /// </summary>

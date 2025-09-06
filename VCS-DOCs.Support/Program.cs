@@ -2,9 +2,11 @@
 using System.Net.Security;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting; // для AddRateLimiter
 using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Configuration;
 using VCS_DOCs.Data;
@@ -87,7 +89,6 @@ internal class Program
             };
         });
 
-
         // === Опции путей пользователя (для аватаров и т.п.) ===
         builder.Services.Configure<UserDataPathOptions>(builder.Configuration.GetSection("UserDataPath"));
 
@@ -98,7 +99,30 @@ internal class Program
             o.AddPolicy("SupportDeskAccess", p => p.RequireRole(Roles.SupportAdmin, Roles.SupportAgent, Roles.BaseUser));
         });
 
-        // === Razor Pages ===
+        // === Rate Limiter (для API) ===
+        builder.Services.AddRateLimiter(options =>
+        {
+            // Политика на API: 10 запросов за 2 сек на пользователя (или IP)
+            options.AddPolicy("api-burst", http =>
+            {
+                string partitionKey =
+                    http.User?.Identity?.IsAuthenticated == true
+                        ? http.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "anon"
+                        : http.Connection.RemoteIpAddress?.ToString() ?? "anon";
+
+                return RateLimitPartition.GetTokenBucketLimiter(partitionKey, _ => new TokenBucketRateLimiterOptions
+                {
+                    TokenLimit = 10,
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 100,
+                    ReplenishmentPeriod = TimeSpan.FromSeconds(2),
+                    TokensPerPeriod = 10,
+                    AutoReplenishment = true
+                });
+            });
+        });
+
+        // === Razor Pages (ВОТ ЭТОГО НЕ ХВАТАЛО) ===
         builder.Services.AddRazorPages(o =>
         {
             // доступ к самому «деску»
@@ -117,7 +141,7 @@ internal class Program
         });
 
         // === кэш/сессии/HTTP client ===
-        builder.Services.AddDistributedMemoryCache();
+        builder.Services.AddDistributedMemoryCache(); // для идемпотентности
         builder.Services.AddSession(o =>
         {
             o.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -220,9 +244,14 @@ internal class Program
 
         app.UseRouting();
 
+        app.UseRateLimiter();     // включаем политики лимитирования
         app.UseSession();
         app.UseAuthentication();
 
+        // идемпотентность после аутентификации (видим UserId)
+        app.UseMiddleware<IdempotencyMiddleware>();
+
+        // «single-login» проверка
         app.Use(async (ctx, next) =>
         {
             if (ctx.User?.Identity?.IsAuthenticated == true)
@@ -251,10 +280,10 @@ internal class Program
 
         app.UseAuthorization();
 
-        app.MapRazorPages();
+        app.MapRazorPages();          
         app.MapControllers();
-        app.MapHub<SupportPresenceHub>("/hubs/userStatus"); //лежит в саппорте. Контроль пользователе саппорта
-        app.MapHub<TicketHub>("/hubs/tickets");//лежит в саппорте
+        app.MapHub<SupportPresenceHub>("/hubs/userStatus");
+        app.MapHub<TicketHub>("/hubs/tickets");
 
         app.Run();
     }

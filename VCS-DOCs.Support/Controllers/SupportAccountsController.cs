@@ -8,9 +8,11 @@ using VCS_DOCs.Data;
 using VCS_DOCs.Infrastructure.Auth;
 using System.Security.Claims;
 using VCS_DOCs.Support.Hubs;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace VCS_DOCs.Support.Controllers
 {
+    [EnableRateLimiting("api-burst")]
     [ApiController]
     [Route("api/support/accounts")]
     [Authorize(Policy = "SupportOnly")]

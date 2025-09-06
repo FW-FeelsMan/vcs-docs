@@ -178,7 +178,7 @@
             <div class="multi-button compact action-multibutton" style="position:relative;"
                  data-id="${u.id}" data-access="${u.access ?? 0}">
               <button class="button-sliding primary compact action-button"
-                      data-act="kick-vsupport" data-id="${u.id}">
+                      data-act="kick-vsupport"  data-click="throttle:800" data-id="${u.id}">
                 Отключить от V-Support
               </button>
               <div class="dropdown-arrow compact" tabindex="0">▾</div>

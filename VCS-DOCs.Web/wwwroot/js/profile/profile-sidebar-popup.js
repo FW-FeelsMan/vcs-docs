@@ -37,7 +37,7 @@ function addFileToPopup(fileName, fileSize, customFileId = null) {
                 <div class="upload-progress-fill" style="width: 0%"></div>
             </div>
         </div>
-        <button class="upload-item-cancel" title="Отменить загрузку">✕</button>
+        <button class="upload-item-cancel" title="Отменить загрузку" data-click="throttle:800" >✕</button>
     `;
 
     fileElement.querySelector('.upload-item-cancel').addEventListener('click', (e) => {

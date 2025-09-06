@@ -1,11 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Net.Mime;
-using System.Text.Json;
-using System.Text;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace VCS_DOCs.Support.Controllers
 {
+    [EnableRateLimiting("api-burst")]
     [ApiController]
     [Route("api/Support/captcha")]
     public class CaptchaProxyController : ControllerBase

@@ -500,3 +500,7 @@ body, html {
         filter: blur(0);
     }
 }
+.is-busy {
+    pointer-events: none;
+    opacity: .7;
+}

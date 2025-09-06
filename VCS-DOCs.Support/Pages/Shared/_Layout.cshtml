@@ -22,6 +22,7 @@
     <meta name="csrf-token" content="@csrfToken" />
 </head>
 <body>
+
     <div style="display:none;">@Html.AntiForgeryToken()</div>
 
     @RenderBody()
@@ -34,5 +35,6 @@
 
 
     @RenderSection("Scripts", required: false)
+    <script src="~/js/utils/support-click-shield.js" asp-append-version="true" defer></script>
 </body>
 </html>

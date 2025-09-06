@@ -117,7 +117,7 @@
         <div class="multi-button compact version-multibutton"
              data-current-version="${file.LatestVersion}">
           <button class="button-sliding primary compact version-button"
-                  data-version="${file.LatestVersion}">
+                  data-version="${file.LatestVersion}" data-click="throttle:800" >
             v${file.LatestVersion}
           </button>
           <div class="dropdown-arrow compact">&#9662;</div>
@@ -127,7 +127,7 @@
         function renderActions() {
             return `
         <div class="multi-button compact action-multibutton" style="position: relative;">
-          <button class="button-sliding primary compact action-button" data-action="download">
+          <button class="button-sliding primary compact action-button" data-action="download" data-click="throttle:800" >
             Скачать
           </button>
           <div class="dropdown-arrow compact">&#9662;</div>

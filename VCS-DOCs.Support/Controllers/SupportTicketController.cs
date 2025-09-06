@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Data;
 using VCS_DOCs.Infrastructure.Auth;
@@ -15,6 +16,7 @@ using VCS_DOCs.Support.Infrastructure.Email;
 
 namespace VCS_DOCs.Support.Controllers
 {
+    [EnableRateLimiting("api-burst")]
     [ApiController]
     [Route("api/Support")]
     public class SupportTicketController : ControllerBase
