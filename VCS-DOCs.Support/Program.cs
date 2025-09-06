@@ -58,30 +58,35 @@ internal class Program
 
             o.Events = new CookieAuthenticationEvents
             {
-                OnValidatePrincipal = async ctx => { /* оставляем как есть */ },
+                OnValidatePrincipal = async ctx =>
+                {
+                    var userId = ctx.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    var sid = ctx.Principal.FindFirst("support_sid")?.Value;
 
-                OnRedirectToLogin = ctx =>
-                {
-                    if (ctx.Request.Path.StartsWithSegments("/api"))
+                    if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(sid))
                     {
-                        ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
-                        return Task.CompletedTask;
+                        ctx.RejectPrincipal();
+                        await ctx.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+                        return;
                     }
-                    ctx.Response.Redirect(ctx.RedirectUri);
-                    return Task.CompletedTask;
-                },
-                OnRedirectToAccessDenied = ctx =>
-                {
-                    if (ctx.Request.Path.StartsWithSegments("/api"))
+
+                    var db = ctx.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
+                    var row = await db.SupportUserSessions.AsNoTracking()
+                                  .FirstOrDefaultAsync(x => x.UserId == userId);
+
+                    var mismatch = row != null
+                                   && !string.IsNullOrEmpty(row.JwtId)
+                                   && !string.Equals(row.JwtId, sid, StringComparison.Ordinal);
+
+                    if (mismatch)
                     {
-                        ctx.Response.StatusCode = StatusCodes.Status403Forbidden;
-                        return Task.CompletedTask;
+                        ctx.RejectPrincipal();
+                        await ctx.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
                     }
-                    ctx.Response.Redirect(ctx.RedirectUri);
-                    return Task.CompletedTask;
                 }
             };
         });
+
 
         // === Опции путей пользователя (для аватаров и т.п.) ===
         builder.Services.Configure<UserDataPathOptions>(builder.Configuration.GetSection("UserDataPath"));
@@ -218,7 +223,6 @@ internal class Program
         app.UseSession();
         app.UseAuthentication();
 
-        // «Single-login»: если sid в куке != JwtId в БД — разлогиниваем
         app.Use(async (ctx, next) =>
         {
             if (ctx.User?.Identity?.IsAuthenticated == true)
@@ -229,8 +233,12 @@ internal class Program
                 if (!string.IsNullOrEmpty(userId) && !string.IsNullOrEmpty(sid))
                 {
                     var db = ctx.RequestServices.GetRequiredService<ApplicationDbContext>();
-                    var row = await db.SupportUserSessions.AsNoTracking().FirstOrDefaultAsync(x => x.UserId == userId);
-                    if (row != null && !string.Equals(row.JwtId, sid, StringComparison.Ordinal))
+                    var row = await db.SupportUserSessions.AsNoTracking()
+                                  .FirstOrDefaultAsync(x => x.UserId == userId);
+
+                    // разлогиниваем только если в БД ЕСТЬ JwtId и он НЕ равен sid
+                    if (row != null && !string.IsNullOrEmpty(row.JwtId)
+                        && !string.Equals(row.JwtId, sid, StringComparison.Ordinal))
                     {
                         await ctx.SignOutAsync(IdentityConstants.ApplicationScheme);
                         ctx.Response.Redirect("/Account/LoginSupport?forced=1");

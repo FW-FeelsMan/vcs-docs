@@ -359,11 +359,15 @@ namespace VCS_DOCs.Support.Controllers
         private async Task KickInternalVSupport(string userId)
         {
             await _hub.Clients.User(userId).SendAsync("ForceLogout");
+
             var toRemove = _db.SupportUserConnections.Where(c => c.UserId == userId);
             _db.SupportUserConnections.RemoveRange(toRemove);
+
             await _db.Database.ExecuteSqlInterpolatedAsync($@"
-            UPDATE SupportUserSessions SET IsOnline = 0, LastSeenUtc = {DateTime.UtcNow}
+            UPDATE SupportUserSessions
+            SET IsOnline = 0, LastSeenUtc = {DateTime.UtcNow}, JwtId = NULL
             WHERE UserId = {userId};");
+
             await _db.SaveChangesAsync();
         }
 

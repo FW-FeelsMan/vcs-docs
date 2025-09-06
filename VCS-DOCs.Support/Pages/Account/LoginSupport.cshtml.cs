@@ -19,6 +19,8 @@ namespace VCS_DOCs.Support.Pages.Account
         private readonly ApplicationDbContext _db;
         private readonly IHubContext<SupportPresenceHub> _hub;
 
+        private const int ACTIVE_TTL_SECONDS = 30; // окно "онлайна" дл€ блокировки второго входа
+
         public LoginSupportModel(
             SignInManager<User> signInManager,
             UserManager<User> userManager,
@@ -57,11 +59,16 @@ namespace VCS_DOCs.Support.Pages.Account
             }
         }
 
-        public void OnGet(string? returnUrl = null)
+        public void OnGet(string? returnUrl = null, string? message = null, bool forced = false)
         {
             if (string.IsNullOrEmpty(returnUrl) || !Url.IsLocalUrl(returnUrl) || returnUrl.StartsWith("/Errors", StringComparison.OrdinalIgnoreCase))
                 returnUrl = Url.Content("~/");
             Input.ReturnUrl = returnUrl;
+
+            if (forced || string.Equals(message, "session_terminated", StringComparison.OrdinalIgnoreCase))
+            {
+                ErrorMessage = "¬ы отключены от сервера: выполнен принудительный вход с другого устройства";
+            }
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -84,9 +91,9 @@ namespace VCS_DOCs.Support.Pages.Account
             }
 
             var allowed =
-                           await _userManager.IsInRoleAsync(user, Roles.BaseUser)
-                        || await _userManager.IsInRoleAsync(user, Roles.SupportAgent)
-                        || await _userManager.IsInRoleAsync(user, Roles.SupportAdmin);
+                   await _userManager.IsInRoleAsync(user, Roles.BaseUser)
+                || await _userManager.IsInRoleAsync(user, Roles.SupportAgent)
+                || await _userManager.IsInRoleAsync(user, Roles.SupportAdmin);
 
             if (!allowed)
             {
@@ -100,22 +107,14 @@ namespace VCS_DOCs.Support.Pages.Account
                 return Page();
             }
 
-            var hasConnections = await _db.SupportUserConnections
-                .AsNoTracking()
-                .AnyAsync(c => c.UserId == user.Id);
+            // ---- ≈ƒ»Ќ—“¬≈ЌЌјя проверка "уже онлайн" Ч по SupportUserSessions с TTL
+            var sess = await _db.SupportUserSessions.AsNoTracking()
+                          .FirstOrDefaultAsync(s => s.UserId == user.Id);
+            var lastSeenUtc = sess?.LastSeenUtc ?? DateTime.MinValue; 
+            var isFresh = (DateTime.UtcNow - lastSeenUtc).TotalSeconds <= ACTIVE_TTL_SECONDS;
 
-            var isMarkedOnline = await _db.SupportUserSessions
-                .AsNoTracking()
-                .AnyAsync(s => s.UserId == user.Id && s.IsOnline);
+            bool alreadyOnline = sess?.IsOnline == true && isFresh;
 
-            if (!hasConnections && isMarkedOnline)
-            {
-                await _db.Database.ExecuteSqlInterpolatedAsync($@"
-UPDATE SupportUserSessions SET IsOnline = 0 WHERE UserId = {user.Id};");
-                isMarkedOnline = false;
-            }
-
-            var alreadyOnline = hasConnections || isMarkedOnline;
 
             if (alreadyOnline && !Input.ForceLogin)
             {
@@ -125,29 +124,25 @@ UPDATE SupportUserSessions SET IsOnline = 0 WHERE UserId = {user.Id};");
 
             if (alreadyOnline && Input.ForceLogin)
             {
-                var activeConnIds = await _db.SupportUserConnections
-                    .AsNoTracking()
-                    .Where(c => c.UserId == user.Id)
-                    .Select(c => c.ConnectionId)
-                    .ToListAsync();
+                // ћ€гко кикнем все активные вкладки пользовател€ и инвалидируем старый JwtId
+                try { await _hub.Clients.User(user.Id).SendAsync("ForceLogout"); } catch { /* best-effort */ }
 
-                if (activeConnIds.Count > 0)
-                {
-                    await _hub.Clients.Clients(activeConnIds).SendAsync("ForceLogout");
-                    _db.SupportUserConnections.RemoveRange(_db.SupportUserConnections.Where(c => c.UserId == user.Id));
-                    await _db.SaveChangesAsync();
-                }
-
+                var nowKick = DateTime.UtcNow;
                 await _db.Database.ExecuteSqlInterpolatedAsync($@"
-UPDATE SupportUserSessions SET IsOnline = 0, LastSeenUtc = {DateTime.UtcNow} WHERE UserId = {user.Id};");
+UPDATE SupportUserSessions
+SET IsOnline = 0, LastSeenUtc = {nowKick}, JwtId = NULL
+WHERE UserId = {user.Id};");
             }
 
+            // ---- ”спешный вход
             var now = DateTime.UtcNow;
             var jwt = Guid.NewGuid().ToString("N");
 
             var extraClaims = new List<Claim> { new("support_sid", jwt) };
+            // isPersistent: на твой выбор; оставл€ю как было
             await _signInManager.SignInWithClaimsAsync(user, isPersistent: true, extraClaims);
 
+            // јпсерт состо€ни€ сессии
             var updated = await _db.Database.ExecuteSqlInterpolatedAsync($@"
 UPDATE SupportUserSessions
 SET IsOnline = 1, LastSeenUtc = {now}, JwtId = {jwt}

@@ -1,9 +1,17 @@
 ﻿// wwwroot/js/support/accountsRender.js
 (function () {
-    // пометки для выгрузки (чтобы гасить таймеры и не редиректить)
+    // --- dispose-флаги и глобальный стоппер опросов ---
     let __accounts_disposed = false;
-    window.addEventListener("beforeunload", () => { __accounts_disposed = true; stopPolling(); });
-    window.addEventListener("pagehide", () => { __accounts_disposed = true; stopPolling(); });
+    window.__accountsStopPolling = null;
+
+    window.addEventListener("beforeunload", () => {
+        __accounts_disposed = true;
+        try { window.__accountsStopPolling?.(); } catch { }
+    });
+    window.addEventListener("pagehide", () => {
+        __accounts_disposed = true;
+        try { window.__accountsStopPolling?.(); } catch { }
+    });
 
     // ---- helpers ----
     function waitForElm(selector, timeout = 2000, root = document) {
@@ -18,10 +26,7 @@
                 }
             });
             obs.observe(root, { childList: true, subtree: true });
-            setTimeout(() => {
-                obs.disconnect();
-                reject(new Error("timeout: " + selector));
-            }, timeout);
+            setTimeout(() => { obs.disconnect(); reject(new Error("timeout: " + selector)); }, timeout);
         });
     }
     async function waitForAll(selectors, root, timeout = 2000) {
@@ -65,7 +70,7 @@
             const ct = res.headers.get("content-type") || "";
 
             if (!res.ok) {
-                // Не редиректим на логин, если уже уходим/перезагружаемся
+                // если во время ухода пришёл HTML (логин/ошибка) — не редиректим из JS
                 if (ct.includes("text/html")) {
                     if (!__accounts_disposed) {
                         console.warn("[accounts] non-json (HTML) on non-OK; suppressed redirect");
@@ -401,8 +406,10 @@
             pollTimer = setInterval(pollDelta, 2000);
             pulseTimer = setInterval(pulseTick, 3000);
         }
+        window.__accountsStopPolling = stopPolling;
 
         async function loadAccounts() {
+            if (__accounts_disposed) return;
             const role = roleSel.value;
             const org = orgSel.value;
             const query = searchEl.value?.trim() ?? "";
@@ -413,6 +420,7 @@
             tbody.innerHTML = `<tr><td>Загрузка…</td></tr>`;
             try {
                 const raw = await getJson(url.toString());
+                if (__accounts_disposed) return;
                 const { projects: projs, users, organizations } = normalizeAccountsResponse(raw);
                 projects = projs;
                 buildHeadAndFilters(organizations);
@@ -422,12 +430,14 @@
                 restartPolling();
                 await pulseTick();
             } catch (e) {
+                if (__accounts_disposed) return;
                 console.error("[accounts] load error", e);
                 tbody.innerHTML = `<tr><td style="color:#c33;">Ошибка загрузки</td></tr>`;
             }
         }
 
         async function pollDelta() {
+            if (__accounts_disposed) return;
             try {
                 const role = roleSel.value;
                 const org = orgSel.value;
@@ -439,6 +449,7 @@
                 if (query) url.searchParams.set("q", query);
 
                 const res = await getJson(url.toString());
+                if (__accounts_disposed) return;
                 const list = Array.isArray(res?.users) ? res.users : [];
                 if (list.length > 0) {
                     list.sort((a, b) => Number(a.createdAtMs || 0) - Number(b.createdAtMs || 0));
@@ -448,23 +459,24 @@
                     await pulseTick();
                 }
             } catch (e) {
-                // молчим — периодический опрос, возможны гонки при навигации
-                // console.debug("[accounts] delta poll error", e);
+                // тихо — периодический опрос может пересекаться с навигацией
             }
         }
 
         async function pulseTick() {
+            if (__accounts_disposed) return;
             try {
                 const ids = Array.from(rowsById.keys());
                 if (ids.length === 0) return;
                 const res = await post("/api/support/accounts/pulse", { ids });
+                if (__accounts_disposed) return;
                 const list = Array.isArray(res?.users) ? res.users : [];
                 for (const u of list) {
                     const tr = rowsById.get(u.id);
                     if (tr) patchRowCells(tr, u);
                 }
             } catch (e) {
-                // console.debug("[accounts] pulse error", e);
+                // тихо
             }
         }
 

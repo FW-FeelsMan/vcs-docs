@@ -12,6 +12,11 @@
 <div class="background"></div>
 
 <div class="container" id="container">
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-warning" role="alert">@Model.ErrorMessage</div>
+    }
+
     <div class="form-container sign-in-container">
         <form method="post">
             @Html.AntiForgeryToken()

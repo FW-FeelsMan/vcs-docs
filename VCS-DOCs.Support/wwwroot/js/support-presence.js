@@ -27,15 +27,12 @@
     if (!presence.connection) {
         presence.connection = new signalR.HubConnectionBuilder()
             .withUrl(hubUrl, {
-                // Позволяем откатываться на LongPolling, если WebSocket занят/недоступен
                 transport:
                     signalR.HttpTransportType.WebSockets |
                     signalR.HttpTransportType.ServerSentEvents |
                     signalR.HttpTransportType.LongPolling,
-                // negotiation включён (по умолчанию), не форсим skipNegotiation
             })
             .withAutomaticReconnect({
-                // мягкая лесенка ретраев
                 nextRetryDelayInMilliseconds: (ctx) => {
                     const steps = [0, 2000, 5000, 10000, 15000, 30000];
                     return steps[Math.min(ctx.previousRetryCount + 1, steps.length - 1)];
@@ -44,7 +41,16 @@
             .configureLogging(signalR.LogLevel.Information)
             .build();
 
-        // UI-индикаторы
+        // === обработчики SignalR ===
+
+        // Принудительный выход (админ/вход в другой вкладке)
+        presence.connection.on("ForceLogout", () => {
+            try { sessionStorage.setItem("support_logout_reason", "forced"); } catch { }
+            alert("Сеанс завершён: выполнен вход в другом месте или администратор отключил вас.");
+            const to = "/Account/LoginSupport?forced=1";
+            window.location.replace(to);
+        });
+
         presence.connection.onreconnecting((err) => {
             console.warn("[presence] reconnecting:", err?.message || err);
             setStatus("connecting", "Переподключение…");
@@ -58,8 +64,6 @@
         presence.connection.onclose((err) => {
             console.warn("[presence] closed:", err?.message || err);
             setStatus("offline", "Оффлайн");
-            // Автопереподключение из withAutomaticReconnect само попробует,
-            // но если оно сдастся, попробуем мягко перезапустить через паузу.
             if (!presence._manualStop) {
                 setTimeout(startSafe, 5000);
             }
@@ -84,7 +88,6 @@
                 } catch (e) {
                     attempt++;
                     console.warn("[presence] start failed:", e?.message || e);
-                    // экспонента с верхней границей
                     const delay = Math.min(15000, 800 * Math.pow(2, attempt));
                     setStatus("connecting", "Подключение…");
                     await new Promise((r) => setTimeout(r, delay));
@@ -97,12 +100,12 @@
         });
     }
 
-    // не даём множественным навигациям сломать состояние:
-    // не останавливаем соединение на SPA-переключениях, только на реальном unload
+    // останавливаем только на реальном выгрузе страницы
     window.addEventListener("beforeunload", () => {
         try {
             presence._manualStop = true;
-            if (presence.connection?.state !== "Disconnected") {
+            const HubState = signalR.HubConnectionState || {};
+            if (presence.connection && presence.connection.state !== HubState.Disconnected) {
                 presence.connection.stop();
             }
         } catch { /* noop */ }
