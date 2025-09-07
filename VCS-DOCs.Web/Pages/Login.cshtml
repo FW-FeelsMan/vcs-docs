@@ -22,7 +22,7 @@
             <input type="hidden" name="hardwareId" id="hardwareId" />
             <h1>Вход</h1>
             <p>Введите Ваши данные для входа в систему</p>
-            <input type="text" name="Username" placeholder="Номер табеля" value="@Model.Username" required />
+            <input type="text" name="Username" placeholder="Ваш логин" value="@Model.Username" required />
             <input type="password" name="Password" autocomplete="on" placeholder="Пароль" required />
 
             <div class="error-message" style="display:none;"></div>
@@ -45,7 +45,7 @@
             <input type="hidden" name="action" value="Register" />
             <input type="hidden" name="hardwareId" id="hardwareIdRegister" />
             <h1>Регистрация</h1>
-            <input type="text" name="Username" placeholder="Номер табеля" required />
+            <input type="text" name="Username" placeholder="Ваш логин" required />
             <select name="speciality" required>
                 <option value="" disabled selected>Выберите должность</option>
                 @foreach (var speciality in Model.Specialities)

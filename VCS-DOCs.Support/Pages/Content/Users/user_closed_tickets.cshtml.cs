@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace VCS_DOCs.Support.Pages.Content.Users
 {
-    public class closed_ticketsModel : PageModel
+    public class UserClosedTicketsModel : PageModel
     {
         public void OnGet()
         {

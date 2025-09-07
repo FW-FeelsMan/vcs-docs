@@ -1,9 +1,373 @@
-﻿@page
+﻿@page "/Content/Users/user_closed_tickets"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "SupportDeskAccess")]
+@model VCS_DOCs.Support.Pages.Content.Users.UserClosedTicketsModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{
     Layout = null;
     ViewData["Title"] = "Закрытые заявки";
 }
-<div style="padding:16px; color:#ddd;">
-    <h2 style="margin:10px 0 8px;">Закрытые заявки</h2>
-    <p>История обработанных обращений текущего пользователя.</p>
+<link rel="stylesheet" href="~/css/sub_css/support_accountsStyle.css" asp-append-version="true" />
+<!-- Можно переиспользовать стили открытых заявок -->
+<link rel="stylesheet" href="~/css/sub_css/user_opentickets_css/user_opentickets.css" asp-append-version="true" />
+<meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(HttpContext).RequestToken" />
+
+<style>
+    .status-badge.closed {
+        border-color: #9aa0a6;
+    }
+</style>
+
+<div id="user-closed-tickets" class="profile_background accounts-page tickets-page">
+    <div class="button-container">
+        <h2>Закрытые заявки</h2>
+
+        <div class="inline-controls">
+            <input id="user_searchBox" class="user_searchBox" type="text" placeholder="Поиск (№ или тема)" />
+            <button id="btn-search" class="button-sliding small">Найти</button>
+        </div>
+    </div>
+
+    <hr class="solid" />
+
+    <div class="content-scrollable">
+        <table class="file-table" id="ticketsTable">
+            <colgroup>
+                <col style="width:80px" />
+                <col style="width:200px" />
+                <col style="width:200px" />
+                <col style="width:140px" />
+                <col style="width:130px" />
+                <col style="width:170px" />
+                <col style="width:150px" />
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>Тема</th>
+                    <th>Статус</th>
+                    <th>Создано</th>
+                    <th>Обновлено</th>
+                    <th>E-mail уведомления</th>
+                    <th>Действие</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Примерные строки; позже заменятся данными с API -->
+                <tr data-id="11ecd001">
+                    <td>11ecd001</td>
+                    <td>Сброс пароля</td>
+                    <td><span class="status-badge closed">Закрыто</span></td>
+                    <td>2025-08-29 09:12</td>
+                    <td>2025-08-29 10:03</td>
+                    <td>
+                        <label class="checkbox notify-wrapper">
+                            <input class="custom-checkbox notify-toggle" type="checkbox" disabled />
+                            <span class="notify-state">недоступно</span>
+                        </label>
+                    </td>
+                    <td><button class="button-sliding primary small btn-view" data-click="throttle:800">Просмотр</button></td>
+                </tr>
+                <tr data-id="11ecd0aa">
+                    <td>11ecd0aa</td>
+                    <td>Ошибка при загрузке файла</td>
+                    <td><span class="status-badge closed">Закрыто</span></td>
+                    <td>2025-08-25 14:21</td>
+                    <td>2025-08-25 16:47</td>
+                    <td>
+                        <label class="checkbox notify-wrapper">
+                            <input class="custom-checkbox notify-toggle" type="checkbox" disabled />
+                            <span class="notify-state">недоступно</span>
+                        </label>
+                    </td>
+                    <td><button class="button-sliding primary small btn-view">Просмотр</button></td>
+                </tr>
+                <tr data-id="11ecd10f">
+                    <td>11ecd10f</td>
+                    <td>Доступ к разделу «Отчёты»</td>
+                    <td><span class="status-badge closed">Закрыто</span></td>
+                    <td>2025-08-20 11:03</td>
+                    <td>2025-08-20 12:18</td>
+                    <td>
+                        <label class="checkbox notify-wrapper">
+                            <input class="custom-checkbox notify-toggle" type="checkbox" disabled />
+                            <span class="notify-state">недоступно</span>
+                        </label>
+                    </td>
+                    <td><button class="button-sliding primary small btn-view">Просмотр</button></td>
+                </tr>
+                <tr data-id="11ecd10f">
+                    <td>11ecd10f</td>
+                    <td>Доступ к разделу «Отчёты»</td>
+                    <td><span class="status-badge closed">Закрыто</span></td>
+                    <td>2025-08-20 11:03</td>
+                    <td>2025-08-20 12:18</td>
+                    <td>
+                        <label class="checkbox notify-wrapper">
+                            <input class="custom-checkbox notify-toggle" type="checkbox" disabled />
+                            <span class="notify-state">недоступно</span>
+                        </label>
+                    </td>
+                    <td><button class="button-sliding primary small btn-view">Просмотр</button></td>
+                </tr>
+                <tr data-id="11ecd10f">
+                    <td>11ecd10f</td>
+                    <td>Доступ к разделу «Отчёты»</td>
+                    <td><span class="status-badge closed">Закрыто</span></td>
+                    <td>2025-08-20 11:03</td>
+                    <td>2025-08-20 12:18</td>
+                    <td>
+                        <label class="checkbox notify-wrapper">
+                            <input class="custom-checkbox notify-toggle" type="checkbox" disabled />
+                            <span class="notify-state">недоступно</span>
+                        </label>
+                    </td>
+                    <td><button class="button-sliding primary small btn-view">Просмотр</button></td>
+                </tr>
+                <tr data-id="11ecd10f">
+                    <td>11ecd10f</td>
+                    <td>Доступ к разделу «Отчёты»</td>
+                    <td><span class="status-badge closed">Закрыто</span></td>
+                    <td>2025-08-20 11:03</td>
+                    <td>2025-08-20 12:18</td>
+                    <td>
+                        <label class="checkbox notify-wrapper">
+                            <input class="custom-checkbox notify-toggle" type="checkbox" disabled />
+                            <span class="notify-state">недоступно</span>
+                        </label>
+                    </td>
+                    <td><button class="button-sliding primary small btn-view">Просмотр</button></td>
+                </tr>
+                <tr data-id="11ecd10f">
+                    <td>11ecd10f</td>
+                    <td>Доступ к разделу «Отчёты»</td>
+                    <td><span class="status-badge closed">Закрыто</span></td>
+                    <td>2025-08-20 11:03</td>
+                    <td>2025-08-20 12:18</td>
+                    <td>
+                        <label class="checkbox notify-wrapper">
+                            <input class="custom-checkbox notify-toggle" type="checkbox" disabled />
+                            <span class="notify-state">недоступно</span>
+                        </label>
+                    </td>
+                    <td><button class="button-sliding primary small btn-view">Просмотр</button></td>
+                </tr>
+                <tr data-id="11ecd10f">
+                    <td>11ecd10f</td>
+                    <td>Доступ к разделу «Отчёты»</td>
+                    <td><span class="status-badge closed">Закрыто</span></td>
+                    <td>2025-08-20 11:03</td>
+                    <td>2025-08-20 12:18</td>
+                    <td>
+                        <label class="checkbox notify-wrapper">
+                            <input class="custom-checkbox notify-toggle" type="checkbox" disabled />
+                            <span class="notify-state">недоступно</span>
+                        </label>
+                    </td>
+                    <td><button class="button-sliding primary small btn-view">Просмотр</button></td>
+                </tr>
+                <tr data-id="11ecd10f">
+                    <td>11ecd10f</td>
+                    <td>Доступ к разделу «Отчёты»</td>
+                    <td><span class="status-badge closed">Закрыто</span></td>
+                    <td>2025-08-20 11:03</td>
+                    <td>2025-08-20 12:18</td>
+                    <td>
+                        <label class="checkbox notify-wrapper">
+                            <input class="custom-checkbox notify-toggle" type="checkbox" disabled />
+                            <span class="notify-state">недоступно</span>
+                        </label>
+                    </td>
+                    <td><button class="button-sliding primary small btn-view">Просмотр</button></td>
+                </tr>
+                <tr data-id="11ecd10f">
+                    <td>11ecd10f</td>
+                    <td>Доступ к разделу «Отчёты»</td>
+                    <td><span class="status-badge closed">Закрыто</span></td>
+                    <td>2025-08-20 11:03</td>
+                    <td>2025-08-20 12:18</td>
+                    <td>
+                        <label class="checkbox notify-wrapper">
+                            <input class="custom-checkbox notify-toggle" type="checkbox" disabled />
+                            <span class="notify-state">недоступно</span>
+                        </label>
+                    </td>
+                    <td><button class="button-sliding primary small btn-view">Просмотр</button></td>
+                </tr>
+                <tr data-id="11ecd10f">
+                    <td>11ecd10f</td>
+                    <td>Доступ к разделу «Отчёты»</td>
+                    <td><span class="status-badge closed">Закрыто</span></td>
+                    <td>2025-08-20 11:03</td>
+                    <td>2025-08-20 12:18</td>
+                    <td>
+                        <label class="checkbox notify-wrapper">
+                            <input class="custom-checkbox notify-toggle" type="checkbox" disabled />
+                            <span class="notify-state">недоступно</span>
+                        </label>
+                    </td>
+                    <td><button class="button-sliding primary small btn-view">Просмотр</button></td>
+                </tr>
+                <tr data-id="11ecd10f">
+                    <td>11ecd10f</td>
+                    <td>Доступ к разделу «Отчёты»</td>
+                    <td><span class="status-badge closed">Закрыто</span></td>
+                    <td>2025-08-20 11:03</td>
+                    <td>2025-08-20 12:18</td>
+                    <td>
+                        <label class="checkbox notify-wrapper">
+                            <input class="custom-checkbox notify-toggle" type="checkbox" disabled />
+                            <span class="notify-state">недоступно</span>
+                        </label>
+                    </td>
+                    <td><button class="button-sliding primary small btn-view">Просмотр</button></td>
+                </tr>
+                <tr data-id="11ecd10f">
+                    <td>11ecd10f</td>
+                    <td>Доступ к разделу «Отчёты»</td>
+                    <td><span class="status-badge closed">Закрыто</span></td>
+                    <td>2025-08-20 11:03</td>
+                    <td>2025-08-20 12:18</td>
+                    <td>
+                        <label class="checkbox notify-wrapper">
+                            <input class="custom-checkbox notify-toggle" type="checkbox" disabled />
+                            <span class="notify-state">недоступно</span>
+                        </label>
+                    </td>
+                    <td><button class="button-sliding primary small btn-view">Просмотр</button></td>
+                </tr>
+                <tr data-id="11ecd10f">
+                    <td>11ecd10f</td>
+                    <td>Доступ к разделу «Отчёты»</td>
+                    <td><span class="status-badge closed">Закрыто</span></td>
+                    <td>2025-08-20 11:03</td>
+                    <td>2025-08-20 12:18</td>
+                    <td>
+                        <label class="checkbox notify-wrapper">
+                            <input class="custom-checkbox notify-toggle" type="checkbox" disabled />
+                            <span class="notify-state">недоступно</span>
+                        </label>
+                    </td>
+                    <td><button class="button-sliding primary small btn-view">Просмотр</button></td>
+                </tr>
+                <tr data-id="11ecd10f">
+                    <td>11ecd10f</td>
+                    <td>Доступ к разделу «Отчёты»</td>
+                    <td><span class="status-badge closed">Закрыто</span></td>
+                    <td>2025-08-20 11:03</td>
+                    <td>2025-08-20 12:18</td>
+                    <td>
+                        <label class="checkbox notify-wrapper">
+                            <input class="custom-checkbox notify-toggle" type="checkbox" disabled />
+                            <span class="notify-state">недоступно</span>
+                        </label>
+                    </td>
+                    <td><button class="button-sliding primary small btn-view">Просмотр</button></td>
+                </tr>
+                <tr data-id="11ecd10f">
+                    <td>11ecd10f</td>
+                    <td>Доступ к разделу «Отчёты»</td>
+                    <td><span class="status-badge closed">Закрыто</span></td>
+                    <td>2025-08-20 11:03</td>
+                    <td>2025-08-20 12:18</td>
+                    <td>
+                        <label class="checkbox notify-wrapper">
+                            <input class="custom-checkbox notify-toggle" type="checkbox" disabled />
+                            <span class="notify-state">недоступно</span>
+                        </label>
+                    </td>
+                    <td><button class="button-sliding primary small btn-view">Просмотр</button></td>
+                </tr>
+                <tr data-id="11ecd10f">
+                    <td>11ecd10f</td>
+                    <td>Доступ к разделу «Отчёты»</td>
+                    <td><span class="status-badge closed">Закрыто</span></td>
+                    <td>2025-08-20 11:03</td>
+                    <td>2025-08-20 12:18</td>
+                    <td>
+                        <label class="checkbox notify-wrapper">
+                            <input class="custom-checkbox notify-toggle" type="checkbox" disabled />
+                            <span class="notify-state">недоступно</span>
+                        </label>
+                    </td>
+                    <td><button class="button-sliding primary small btn-view">Просмотр</button></td>
+                </tr>
+                <tr data-id="11ecd10f">
+                    <td>11ecd10f</td>
+                    <td>Доступ к разделу «Отчёты»</td>
+                    <td><span class="status-badge closed">Закрыто</span></td>
+                    <td>2025-08-20 11:03</td>
+                    <td>2025-08-20 12:18</td>
+                    <td>
+                        <label class="checkbox notify-wrapper">
+                            <input class="custom-checkbox notify-toggle" type="checkbox" disabled />
+                            <span class="notify-state">недоступно</span>
+                        </label>
+                    </td>
+                    <td><button class="button-sliding primary small btn-view">Просмотр</button></td>
+                </tr>
+                <tr data-id="11ecd10f">
+                    <td>11ecd10f</td>
+                    <td>Доступ к разделу «Отчёты»</td>
+                    <td><span class="status-badge closed">Закрыто</span></td>
+                    <td>2025-08-20 11:03</td>
+                    <td>2025-08-20 12:18</td>
+                    <td>
+                        <label class="checkbox notify-wrapper">
+                            <input class="custom-checkbox notify-toggle" type="checkbox" disabled />
+                            <span class="notify-state">недоступно</span>
+                        </label>
+                    </td>
+                    <td><button class="button-sliding primary small btn-view">Просмотр</button></td>
+                </tr>
+                <tr data-id="11ecd10f">
+                    <td>11ecd10f</td>
+                    <td>Доступ к разделу «Отчёты»</td>
+                    <td><span class="status-badge closed">Закрыто</span></td>
+                    <td>2025-08-20 11:03</td>
+                    <td>2025-08-20 12:18</td>
+                    <td>
+                        <label class="checkbox notify-wrapper">
+                            <input class="custom-checkbox notify-toggle" type="checkbox" disabled />
+                            <span class="notify-state">недоступно</span>
+                        </label>
+                    </td>
+                    <td><button class="button-sliding primary small btn-view">Просмотр</button></td>
+                </tr>
+                <tr data-id="11ecd10f">
+                    <td>11ecd10f</td>
+                    <td>Доступ к разделу «Отчёты»</td>
+                    <td><span class="status-badge closed">Закрыто</span></td>
+                    <td>2025-08-20 11:03</td>
+                    <td>2025-08-20 12:18</td>
+                    <td>
+                        <label class="checkbox notify-wrapper">
+                            <input class="custom-checkbox notify-toggle" type="checkbox" disabled />
+                            <span class="notify-state">недоступно</span>
+                        </label>
+                    </td>
+                    <td><button class="button-sliding primary small btn-view">Просмотр</button></td>
+                </tr>
+                <tr data-id="11ecd10f">
+                    <td>11ecd10f</td>
+                    <td>Доступ к разделу «Отчёты»</td>
+                    <td><span class="status-badge closed">Закрыто</span></td>
+                    <td>2025-08-20 11:03</td>
+                    <td>2025-08-20 12:18</td>
+                    <td>
+                        <label class="checkbox notify-wrapper">
+                            <input class="custom-checkbox notify-toggle" type="checkbox" disabled />
+                            <span class="notify-state">недоступно</span>
+                        </label>
+                    </td>
+                    <td><button class="button-sliding primary small btn-view">Просмотр</button></td>
+                </tr>
+            </tbody>
+
+            <tfoot class="table-spacer">
+                <tr><td colspan="7"></td></tr>
+            </tfoot>
+        </table>
+    </div>
 </div>
+
+<script src="~/js/user/user_closed_tickets.js" asp-append-version="true" defer></script>

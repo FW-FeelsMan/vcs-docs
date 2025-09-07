@@ -71,9 +71,6 @@
 	  <ProjectReference Include="..\\VCS-DOCs.Configuration\\VCS-DOCs.Configuration.csproj" />
 	  <ProjectReference Include="..\\VCS-DOCs.Notifications\\VCS-DOCs.Notifications.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Modules\" />
-  </ItemGroup>
   <PropertyGroup>
     <NoWarn>CS8812</NoWarn>
     <NoWarn>CS7072</NoWarn>

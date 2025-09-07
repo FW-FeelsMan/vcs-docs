@@ -16,7 +16,7 @@
     border-radius: 12px;
     box-shadow: var(--shadow-soft);
     color: var(--text-dark);
-    height: 100%;
+    height: 98%;
     margin: 6px;
 }
 
@@ -76,7 +76,7 @@
         }
 
     .accounts-page .content-scrollable {
-        margin: 24px;
+        margin: 18px;
         padding-right: 6px;
         overflow: auto;
     }
@@ -338,3 +338,27 @@ hr.solid {
         min-width: 168px; /* было 180px */
     }
 }
+/* Жёсткая сетка: ширины колонок не «прыгают» */
+.accounts-page .file-table {
+    table-layout: fixed; /* важно */
+    width: calc(100% - 12px);
+    margin-right: 12px;
+    box-sizing: border-box;
+}
+
+/* Любой длинный текст — в одну строку с троеточием */
+#ticketsTable th, 
+#ticketsTable td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Жёсткие ширины по колонкам (общие для open/closed) */
+#ticketsTable th:nth-child(1), #ticketsTable td:nth-child(1) { width:120px;  max-width:120px;  }
+#ticketsTable th:nth-child(2), #ticketsTable td:nth-child(2) { width:200px;  max-width:200px;  } /* Тема */
+#ticketsTable th:nth-child(3), #ticketsTable td:nth-child(3) { width:160px;  max-width:160px;  } /* Статус */
+#ticketsTable th:nth-child(4), #ticketsTable td:nth-child(4) { width:160px;  max-width:160px;  } /* Создано */
+#ticketsTable th:nth-child(5), #ticketsTable td:nth-child(5) { width:160px;  max-width:160px;  } /* Обновлено */
+#ticketsTable th:nth-child(6), #ticketsTable td:nth-child(6) { width:220px;  max-width:220px;  } /* E-mail */
+#ticketsTable th:nth-child(7), #ticketsTable td:nth-child(7) { width:150px;  max-width:150px;  } /* Действие */

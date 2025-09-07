@@ -25,7 +25,7 @@
               data-captcha-enabled="@(Model.CaptchaEnabled ? "true" : "false")"
               data-captcha-provider="@Model.CaptchaProvider"
               data-captcha-sitekey="@Model.CaptchaSiteKey">
-
+            @Html.AntiForgeryToken()
             <div class="grid">
                 <div>
                     <label for="supFullName">ФИО</label>
@@ -57,13 +57,13 @@
 
                 <div id="captchaContainerLocal" style="display:none; align-items:center; gap:10px;">
                     <img id="captchaImage" alt="Капча" />
-                    <button id="captchaRefresh" class="btn secondary" type="button">Обновить</button>
+                    <button id="captchaRefresh" class="btn secondary" data-click="throttle:800" type="button">Обновить</button>
                     <input id="captchaAnswer" name="captchaAnswer" type="text" placeholder="Ответ" />
                 </div>
             </div>
 
             <div class="actions">
-                <a class="btn primary home-link" href="https://vcs-docs.local:7120/" target="_top" rel="noopener">
+                <a class="btn primary home-link" href="https://vcs-docs.local:7120/" data-click="throttle:800" target="_top" rel="noopener">
                     На главную
                 </a>
                 <button class="btn primary" type="submit" data-click="throttle:800">Отправить</button>

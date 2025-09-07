@@ -229,3 +229,98 @@ textarea {
 .embedded .home-link {
     display: none !important;
 }
+/* --- карта Ч позвол€ем перекрывать оверле€ми --- */
+.support-card {
+    position: relative;
+    overflow: hidden; /* чтобы анимации не вылезали за кра€ */
+}
+
+/* --- светлый оверлей со спиннером --- */
+.sr-loader {
+    position: absolute;
+    inset: 0;
+    display: none; /* .is-on включит показ */
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,.78);
+    backdrop-filter: blur(2px);
+    z-index: 10;
+}
+
+    .sr-loader.is-on {
+        display: flex;
+    }
+
+.sr-spinner {
+    width: 56px;
+    height: 56px;
+    border: 4px solid #e5e7eb;
+    border-top-color: #2563eb; /* основной */
+    border-radius: 50%;
+    animation: sr-spin .9s linear infinite;
+}
+
+@keyframes sr-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* --- слайд-панель результата (слева направо) --- */
+.sr-result {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 28px;
+    background: #1e3a8a; /* насыщЄнный синий (можешь заменить на ваш токен) */
+    color: #fff;
+    transform: translateX(-100%);
+    transition: transform .4s ease;
+    z-index: 11;
+}
+
+    .sr-result.show {
+        transform: translateX(0);
+    }
+
+    .sr-result h3 {
+        margin: 0 0 6px 0;
+        font-size: 22px;
+    }
+
+    .sr-result p {
+        margin: 0;
+        opacity: .9;
+    }
+
+/* кнопки внутри панели */
+.sr-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.sr-btn {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+    .sr-btn.primary {
+        background: #fff;
+        color: #1e3a8a;
+    }
+
+    .sr-btn.secondary {
+        background: rgba(255,255,255,.16);
+        color: #fff;
+    }
+
+    .sr-btn:disabled {
+        opacity: .6;
+        cursor: not-allowed;
+    }
