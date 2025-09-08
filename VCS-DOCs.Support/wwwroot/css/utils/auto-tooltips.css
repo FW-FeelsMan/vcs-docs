@@ -1,0 +1,26 @@
+﻿/* Пузырёк подсказки */
+#auto-tooltip {
+    position: fixed;
+    z-index: 2147483647;
+    max-width: min(60vw, 800px);
+    background: rgba(17, 17, 17, .95);
+    color: #fff;
+    padding: 6px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    line-height: 1.25;
+    box-shadow: 0 6px 24px rgba(0,0,0,.25);
+    pointer-events: none;
+    display: none;
+    opacity: 0;
+    transform: scale(.98);
+    transition: opacity .12s ease, transform .12s ease;
+    white-space: normal; 
+    word-break: break-word;
+}
+
+    #auto-tooltip.on {
+        display: block;
+        opacity: 1;
+        transform: scale(1);
+    }

@@ -220,3 +220,16 @@
     height: 24px;
     background: transparent;
 }
+#accountsTable {
+    table-layout: fixed;
+    width: calc(100% - 12px);
+    margin-right: 12px;
+    box-sizing: border-box;
+}
+
+    #accountsTable th,
+    #accountsTable td {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }

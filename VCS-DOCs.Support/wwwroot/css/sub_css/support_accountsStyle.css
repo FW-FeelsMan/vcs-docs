@@ -362,3 +362,18 @@ hr.solid {
 #ticketsTable th:nth-child(5), #ticketsTable td:nth-child(5) { width:160px;  max-width:160px;  } /* Обновлено */
 #ticketsTable th:nth-child(6), #ticketsTable td:nth-child(6) { width:220px;  max-width:220px;  } /* E-mail */
 #ticketsTable th:nth-child(7), #ticketsTable td:nth-child(7) { width:150px;  max-width:150px;  } /* Действие */
+
+
+#accountsTable {
+    table-layout: fixed;
+    width: calc(100% - 12px); 
+    margin-right: 12px;
+    box-sizing: border-box;
+}
+
+    #accountsTable th,
+    #accountsTable td {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
