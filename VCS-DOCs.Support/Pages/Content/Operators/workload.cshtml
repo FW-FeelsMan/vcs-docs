@@ -1,12 +1,170 @@
-﻿@page
-@using Microsoft.AspNetCore.Authorization
-@using VCS_DOCs.Infrastructure.Auth
-@attribute [Authorize(Roles = Roles.SupportAdmin)]
+﻿@page "/Content/Operators/workload"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "SupportOnly")]
+@model VCS_DOCs.Support.Pages.Content.Operators.workloadModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{
     Layout = null;
-    ViewData["Title"] = "Нагрузка";
 }
-<div style="padding:16px; color:#ddd;">
-    <h2 style="margin:10px 0 8px;">Нагрузка</h2>
-    <p>Дашборд распределения обращений по агентам/очередям, процессы пользователей,кик/бан и пр</p>
+<link rel="stylesheet" href="~/css/sub_css/support_accountsStyle.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/sub_css/operator_dashboard_css/workload.css" asp-append-version="true" />
+<meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(HttpContext).RequestToken" />
+
+<div id="op-workload" class="profile_background dashboard-page">
+    <!-- шапка -->
+    <div class="dash-header">
+        <div class="dash-title">
+            <h2>Нагрузка и состояние</h2>
+            <div class="muted">Мониторинг узла поддержки и сервисов VCS-DOCs</div>
+        </div>
+        <div class="dash-actions">
+            <select id="wl-range" class="button-sliding small">
+                <option value="15m">15 мин</option>
+                <option value="1h" selected>1 час</option>
+                <option value="24h">24 часа</option>
+            </select>
+            <button id="wl-refresh" class="button-sliding small" data-state="auto">Авто-обновление</button>
+        </div>
+    </div>
+
+    <!-- основное содержимое (скролл тут) -->
+    <div class="content-scrollable">
+
+        <!-- KPI карточки -->
+        <section class="kpi-grid">
+            <div class="kpi-card">
+                <div class="ring" data-val="cpu"><span class="ring-val" id="kpiCpuVal">–</span></div>
+                <div class="kpi-text">
+                    <div class="kpi-title">CPU, загрузка</div>
+                    <div class="kpi-sub" id="kpiCpuInfo">—</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="ring" data-val="ram"><span class="ring-val" id="kpiRamVal">–</span></div>
+                <div class="kpi-text">
+                    <div class="kpi-title">Память, занято</div>
+                    <div class="kpi-sub" id="kpiRamInfo">—</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="ring" data-val="disk"><span class="ring-val" id="kpiDiskVal">–</span></div>
+                <div class="kpi-text">
+                    <div class="kpi-title">Диск, I/O</div>
+                    <div class="kpi-sub" id="kpiDiskInfo">—</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="ring" data-val="net"><span class="ring-val" id="kpiNetVal">–</span></div>
+                <div class="kpi-text">
+                    <div class="kpi-title">Сеть, трафик</div>
+                    <div class="kpi-sub" id="kpiNetInfo">—</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="ring" data-val="rps"><span class="ring-val" id="kpiRpsVal">–</span></div>
+                <div class="kpi-text">
+                    <div class="kpi-title">RPS (запрос/с)</div>
+                    <div class="kpi-sub" id="kpiRpsInfo">—</div>
+                </div>
+            </div>
+
+            <div class="kpi-card">
+                <div class="ring" data-val="err"><span class="ring-val" id="kpiErrVal">–</span></div>
+                <div class="kpi-text">
+                    <div class="kpi-title">Ошибки, %</div>
+                    <div class="kpi-sub" id="kpiErrInfo">—</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- крупные графики -->
+        <section class="grid-2">
+            <div class="panel">
+                <div class="panel-h">
+                    <h3>CPU & RAM</h3>
+                    <div class="panel-sub">минутная метрика</div>
+                </div>
+                <canvas id="chartCpuRam" height="140"></canvas>
+            </div>
+
+            <div class="panel">
+                <div class="panel-h">
+                    <h3>RPS & Ошибки</h3>
+                    <div class="panel-sub">запросы/с и доля 4xx/5xx</div>
+                </div>
+                <canvas id="chartRpsErr" height="140"></canvas>
+            </div>
+        </section>
+
+        <!-- сетка 3 колонки -->
+        <section class="grid-3">
+            <div class="panel">
+                <div class="panel-h">
+                    <h3>Трафик сети</h3>
+                    <div class="panel-sub">входящий/исходящий</div>
+                </div>
+                <canvas id="chartNet" height="130"></canvas>
+            </div>
+
+            <div class="panel list">
+                <div class="panel-h">
+                    <h3>Сервисы</h3>
+                    <div class="panel-sub">состояние интеграций</div>
+                </div>
+                <ul id="svcList" class="svc">
+                    <!-- наполняется из JS -->
+                </ul>
+            </div>
+
+            <div class="panel list">
+                <div class="panel-h">
+                    <h3>Очереди</h3>
+                    <div class="panel-sub">в фоне</div>
+                </div>
+                <ul id="queueList" class="svc">
+                    <!-- наполняется из JS -->
+                </ul>
+            </div>
+        </section>
+
+        <!-- таблица -->
+        <section class="panel">
+            <div class="panel-h">
+                <h3>Топ эндпоинтов</h3>
+                <div class="panel-sub">по среднему времени ответа</div>
+            </div>
+            <div class="table-wrap">
+                <table class="file-table table-endpoints" id="tblEndpoints">
+                    <colgroup>
+                        <col style="width:46%" />
+                        <col style="width:14%" />
+                        <col style="width:14%" />
+                        <col style="width:12%" />
+                        <col style="width:14%" />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Маршрут</th>
+                            <th>Среднее, мс</th>
+                            <th>P95, мс</th>
+                            <th>RPS</th>
+                            <th>Ошибки, %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- заполняется из JS -->
+                    </tbody>
+                    <tfoot class="table-spacer"><tr><td colspan="5"></td></tr></tfoot>
+                </table>
+            </div>
+        </section>
+
+    </div>
 </div>
+
+<!-- Chart.js (можешь потом положить локально) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+<script src="~/js/operator/workload.js" asp-append-version="true" defer></script>

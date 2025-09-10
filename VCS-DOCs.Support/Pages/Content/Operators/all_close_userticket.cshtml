@@ -1,9 +1,95 @@
-﻿@page
+﻿@page "/Content/Operators/all_close_userticket"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "SupportOnly")]
+@model VCS_DOCs.Support.Pages.Content.Operators.AllCloseUserTicketsModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{
     Layout = null;
-    ViewData["Title"] = "Все закрытые заявки пользователей";
 }
-<div style="padding:16px; color:#ddd;">
-    <h2 style="margin:10px 0 8px;">Закрытые заявки всех пользователей</h2>
-    <p>Все закрытые заявки пользователей</p>
+
+<meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(HttpContext).RequestToken" />
+
+<link rel="stylesheet" href="~/css/sub_css/support_accountsStyle.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/sub_css/operator_tickets_css/op_close_tickets.css" asp-append-version="true" />
+
+<div id="op-close-tickets" class="profile_background accounts-page tickets-page">
+    <div class="button-container">
+        <h2>Закрытые заявки (все пользователи)</h2>
+
+        <div class="filters-row">
+            <div class="filters-left">
+                <div id="scopeTabsClose" class="segmented" role="tablist" aria-label="Фильтр по назначению">
+                    <button class="seg-btn is-active" role="tab" aria-selected="true" data-scope="all">Все</button>
+                    <button class="seg-btn" role="tab" aria-selected="false" data-scope="mine">Только мои</button>
+                    <button class="seg-btn" role="tab" aria-selected="false" data-scope="unassigned">Неназначенные</button>
+                </div>
+
+                <select id="op_close_orgFilter" class="button-sliding small">
+                    <option value="">Все организации</option>
+                </select>
+            </div>
+
+            <div class="inline-controls">
+                <input id="op_close_searchBox" class="user_searchBox" type="text" placeholder="Поиск (№, тема, пользователь, орг.)" />
+                <button id="btn-op-close-search" class="button-sliding small">Найти</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="tickets-legend">
+        <span class="legend-item"><i class="legend-dot closed"></i> Закрыто</span>
+    </div>
+
+    <hr class="solid" />
+
+    <div class="content-scrollable">
+        <table class="file-table" id="opCloseTicketsTable">
+            <colgroup>
+                <col style="width:100px" />   <!-- № -->
+                <col style="width:240px" />   <!-- Тема -->
+                <col style="width:150px" />   <!-- Пользователь -->
+                <col style="width:160px" />   <!-- Организация -->
+                <col style="width:140px" />   <!-- Статус -->
+                <col style="width:140px" />   <!-- Обслуживает -->
+                <col style="width:220px" />   <!-- Действие -->
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>Тема</th>
+                    <th>Пользователь</th>
+                    <th>Организация</th>
+                    <th>Статус</th>
+                    <th>Обслуживает</th>
+                    <th>Действие</th>
+                </tr>
+            </thead>
+
+            <tbody id="opCloseTicketsBody">
+                @for (var i = 1; i <= 120; i++)
+                {
+                    var id = $"22{i:0000}zx";
+                    var assigned = i % 3 == 0;
+                    var operatorLogin = assigned ? "2825" : "—";
+                    var userLogin = $"user{i:000}";
+                    var org = $"ООО «Орг {(i % 7) + 1}»";
+                    var title = $"Демо: закрытая заявка №{i}";
+                    <tr data-id="@id" data-operator="@(assigned ? "2825" : "")">
+                        <td>@id</td>
+                        <td class="tt-auto" title="@title">@title</td>
+                        <td>@userLogin</td>
+                        <td>@org</td>
+                        <td><span class="status-badge closed">Закрыто</span></td>
+                        <td>@operatorLogin</td>
+                        <td><button class="button-sliding small btn-open">Открыть</button></td>
+                    </tr>
+                }
+            </tbody>
+
+            <tfoot class="table-spacer">
+                <tr><td colspan="7"></td></tr>
+            </tfoot>
+        </table>
+    </div>
 </div>
+
+<script src="~/js/operator/all_close_usertickets.js" asp-append-version="true" defer></script>

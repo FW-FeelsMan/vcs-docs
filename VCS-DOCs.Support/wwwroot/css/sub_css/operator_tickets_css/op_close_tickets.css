@@ -1,6 +1,7 @@
 ﻿:root {
     --tickets-blue: #5a9bd5;
     --tickets-green: #4CAF50;
+    --tickets-gray: #9aa3af; /* закрыто */
     --row-tint-alpha: .08;
 }
 
@@ -37,7 +38,7 @@
     font-weight: 600;
     font-size: 13px;
     color: #445;
-    transition: background .15s, color .15s;
+    transition: background .15s,color .15s;
 }
 
     .seg-btn:hover {
@@ -50,7 +51,7 @@
     }
 
 /* поиск */
-#op_searchBox {
+#op_close_searchBox {
     flex: 0 1 360px;
     padding: 0 12px;
     border: 1px solid #d4d7dc;
@@ -58,11 +59,11 @@
     background: #fff;
     color: #333;
     outline: none;
-    transition: box-shadow .15s, border-color .15s;
+    transition: box-shadow .15s,border-color .15s;
     height: 42px;
 }
 
-    #op_searchBox:focus {
+    #op_close_searchBox:focus {
         border-color: var(--tickets-blue) !important;
         box-shadow: 0 0 0 3px rgba(90,155,213,.15);
     }
@@ -93,54 +94,48 @@
     width: 10px;
     height: 10px;
     border-radius: 999px;
-    box-shadow: 0 0 0 3px rgba(0,0,0,0.04) inset;
+    box-shadow: 0 0 0 3px rgba(0,0,0,.04) inset;
     display: inline-block;
 }
 
-    .legend-dot.op {
-        background: var(--tickets-blue);
-    }
-
-    .legend-dot.usr {
-        background: var(--tickets-green);
+    .legend-dot.closed {
+        background: var(--tickets-gray);
     }
 
 /* ====== СКРОЛЛ-ОБЛАСТЬ ====== */
-/* «воздух» внизу обязателен, чтобы таблица не прилипала */
-#op-open-tickets .content-scrollable {
+#op-close-tickets .content-scrollable {
     margin: 24px 24px 8px;
-    padding: 0 6px 24px 0; /* правый + нижний отступ */
+    padding: 0 6px 24px 0; /* важный нижний отступ */
     overflow: auto;
     overflow-x: hidden;
     max-height: calc(100vh - 180px);
 }
-    /* дополнительный хвост, даже если таблица упёрлась точно по высоте */
-    #op-open-tickets .content-scrollable::after {
+    /* дополнительный «воздух», даже если таблица пик-в-пик */
+    #op-close-tickets .content-scrollable::after {
         content: "";
         display: block;
         height: 24px;
     }
 
 /* ====== ТАБЛИЦА ====== */
-#opTicketsTable {
+#opCloseTicketsTable {
     table-layout: fixed;
     width: calc(100% - 12px);
-    margin-right: 12px; /* компенсация вертикального скролла */
+    margin-right: 12px;
     box-sizing: border-box;
 }
 
-    #opTicketsTable th, #opTicketsTable td {
+    #opCloseTicketsTable th, #opCloseTicketsTable td {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
-    /* зебра + hover */
-    #opTicketsTable tbody tr:nth-child(even) td {
+    #opCloseTicketsTable tbody tr:nth-child(even) td {
         background: #fafbfc;
     }
 
-    #opTicketsTable tbody tr:hover > td {
+    #opCloseTicketsTable tbody tr:hover > td {
         filter: brightness(.99);
     }
 
@@ -157,35 +152,32 @@
     background: #fff;
 }
 
-    .status-badge.wait-operator {
-        border-color: var(--tickets-blue);
-    }
-
-    .status-badge.wait-user {
-        border-color: var(--tickets-green);
+    .status-badge.closed {
+        border-color: var(--tickets-gray);
+        color: #444;
     }
 
 /* действия поуже */
-#op-open-tickets .file-table td:last-child {
+#op-close-tickets .file-table td:last-child {
     min-width: 150px;
 }
 
-/* (опционально) хвост внутри tbody — можно оставить, но основной «воздух» даёт контейнер */
-#opTicketsTable tbody::after {
+/* доп. хвост у tbody (не обязателен, но приятно) */
+#opCloseTicketsTable tbody::after {
     content: "";
     display: block;
     height: 16px;
 }
 
 /* spacer в tfoot */
-#opTicketsTable tfoot.table-spacer td {
+#opCloseTicketsTable tfoot.table-spacer td {
     padding: 0;
     border: 0;
     height: 24px;
     background: transparent;
 }
 
-/* ====== ХОСТ-КОНТЕЙНЕРЫ (если страница вставляется в общий layout) ====== */
+/* хост-контейнеры */
 #content.content-field {
     overflow: visible !important;
 }
@@ -198,26 +190,22 @@
     overflow: visible !important;
 }
 
-#op-open-tickets.tickets-page {
+#op-close-tickets.tickets-page {
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
     min-height: 0;
 }
-/* если хочешь скролл именно здесь, без max-height: раскомментируй блок ниже */
-/*
-#op-open-tickets.accounts-page .content-scrollable {
-    max-height: none;
-    height: auto;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: auto;
-    padding-right: 6px;
+
+/* если понадобится растягивать по высоте контейнера — как альтернатива max-height */
+/* 
+#op-close-tickets.accounts-page .content-scrollable{
+    max-height:none;height:auto;flex:1 1 auto;min-height:0;overflow:auto;padding-right:6px;
 }
 */
 
 @media (max-width:1100px) {
-    #op-open-tickets .file-table td:last-child {
+    #op-close-tickets .file-table td:last-child {
         min-width: 130px;
     }
 }
