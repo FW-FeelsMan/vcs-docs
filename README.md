@@ -3,9 +3,9 @@
 Веб-платформа для хранения, контроля версий и отслеживания изменений в конструкторской документации (чертежи, 3D-модели, сканы, текстовые файлы) с поддержкой **AR/VR**, **PLM-модуля** и **таск-менеджера**. Подходит как для частных лиц, так и для компаний (организации, сотрудники, роли). Платформу можно развернуть **во внутренней сети** компании; лицензирование — через центральный сервер. Конструкторам и технологам не нужно ставить тяжёлое ПО: достаточно мощного сервера и браузера.
 
 <p align="center">
-  <img src="docs/img/login.png" width="420" alt="Экран входа">
+  <img src="docs/img/login.png"  width="900"  alt="Экран входа">
   &nbsp;&nbsp;
-  <img src="docs/img/personalPage.png" width="420" alt="Персональная страница пользователя">
+  <img src="docs/img/personalPage.png"  width="900"  alt="Персональная страница пользователя">
 </p>
 
 ---
@@ -25,9 +25,9 @@
 ## 🖼️ Скриншоты
 
 <p align="center">
-  <img src="docs/img/supportPage.png" width="420" alt="Страница поддержки (заявки)">
+  <img src="docs/img/supportPage.png"  width="900"  alt="Страница поддержки (заявки)">
   &nbsp;&nbsp;
-  <img src="docs/img/integrationSupportPage.png" width="420" alt="Интеграция: страница поддержки">
+  <img src="docs/img/integrationSupportPage.png"  width="900"  alt="Интеграция: страница поддержки">
 </p>
 
 <p align="center">
