@@ -58,23 +58,36 @@ namespace VCS_DOCs.Support.Pages.Account
                 get; set;
             }
         }
-
         public void OnGet(string? returnUrl = null, string? message = null, bool forced = false)
         {
-            if (string.IsNullOrEmpty(returnUrl) || !Url.IsLocalUrl(returnUrl) || returnUrl.StartsWith("/Errors", StringComparison.OrdinalIgnoreCase))
-                returnUrl = Url.Content("~/");
-            Input.ReturnUrl = returnUrl;
+            if (forced)
+            {
+                Input.ReturnUrl = Url.Content("~/"); // после принудительного входа всегда на главную
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(returnUrl)
+                    || !Url.IsLocalUrl(returnUrl)
+                    || returnUrl.StartsWith("/Errors", StringComparison.OrdinalIgnoreCase)
+                    || returnUrl.StartsWith("/Account/LoginSupport", StringComparison.OrdinalIgnoreCase))
+                    returnUrl = Url.Content("~/");
+                Input.ReturnUrl = returnUrl;
+            }
 
             if (forced || string.Equals(message, "session_terminated", StringComparison.OrdinalIgnoreCase))
-            {
                 ErrorMessage = "¬ы отключены от сервера: выполнен принудительный вход с другого устройства";
-            }
         }
 
         public async Task<IActionResult> OnPostAsync()
         {
-            if (string.IsNullOrEmpty(Input.ReturnUrl) || !Url.IsLocalUrl(Input.ReturnUrl) || Input.ReturnUrl.StartsWith("/Errors", StringComparison.OrdinalIgnoreCase))
+            // 1) —анитаци€ ReturnUrl (не даЄм возвращатьс€ на /Account/LoginSupport и ошибки)
+            if (string.IsNullOrEmpty(Input.ReturnUrl)
+                || !Url.IsLocalUrl(Input.ReturnUrl)
+                || Input.ReturnUrl.StartsWith("/Errors", StringComparison.OrdinalIgnoreCase)
+                || Input.ReturnUrl.StartsWith("/Account/LoginSupport", StringComparison.OrdinalIgnoreCase))
+            {
                 Input.ReturnUrl = Url.Content("~/");
+            }
 
             if (!ModelState.IsValid)
             {
@@ -107,14 +120,15 @@ namespace VCS_DOCs.Support.Pages.Account
                 return Page();
             }
 
-            // ---- ≈ƒ»Ќ—“¬≈ЌЌјя проверка "уже онлайн" Ч по SupportUserSessions с TTL
-            var sess = await _db.SupportUserSessions.AsNoTracking()
-                          .FirstOrDefaultAsync(s => s.UserId == user.Id);
-            var lastSeenUtc = sess?.LastSeenUtc ?? DateTime.MinValue; 
+            // 2) ѕроверка Ђуже онлайнї
+            var sess = await _db.SupportUserSessions.AsNoTracking().FirstOrDefaultAsync(s => s.UserId == user.Id);
+            var lastSeenUtc = sess?.LastSeenUtc ?? DateTime.MinValue;
             var isFresh = (DateTime.UtcNow - lastSeenUtc).TotalSeconds <= ACTIVE_TTL_SECONDS;
 
-            bool alreadyOnline = sess?.IsOnline == true && isFresh;
-
+            // активной считаем запись, у которой есть JwtId » (IsOnline==true или пульс свежий)
+            var alreadyOnline = sess != null
+                                && !string.IsNullOrEmpty(sess.JwtId)
+                                && (sess.IsOnline || isFresh);
 
             if (alreadyOnline && !Input.ForceLogin)
             {
@@ -122,40 +136,39 @@ namespace VCS_DOCs.Support.Pages.Account
                 return Page();
             }
 
-            if (alreadyOnline && Input.ForceLogin)
-            {
-                // ћ€гко кикнем все активные вкладки пользовател€ и инвалидируем старый JwtId
-                try { await _hub.Clients.User(user.Id).SendAsync("ForceLogout"); } catch { /* best-effort */ }
-
-                var nowKick = DateTime.UtcNow;
-                await _db.Database.ExecuteSqlInterpolatedAsync($@"
-UPDATE SupportUserSessions
-SET IsOnline = 0, LastSeenUtc = {nowKick}, JwtId = NULL
-WHERE UserId = {user.Id};");
-            }
-
-            // ---- ”спешный вход
+            // 3) √отовим новый sid и, если надо, м€гко кикаем старые вкладки
             var now = DateTime.UtcNow;
             var jwt = Guid.NewGuid().ToString("N");
 
-            var extraClaims = new List<Claim> { new("support_sid", jwt) };
-            // isPersistent: на твой выбор; оставл€ю как было
-            await _signInManager.SignInWithClaimsAsync(user, isPersistent: true, extraClaims);
-
-            // јпсерт состо€ни€ сессии
-            var updated = await _db.Database.ExecuteSqlInterpolatedAsync($@"
-UPDATE SupportUserSessions
-SET IsOnline = 1, LastSeenUtc = {now}, JwtId = {jwt}
-WHERE UserId = {user.Id};");
-
-            if (updated == 0)
+            if (alreadyOnline && Input.ForceLogin)
             {
+                try
+                {
+                    // важное: передаЄм Ќќ¬џ… sid Ч нова€ вкладка проигнорирует этот ForceLogout
+                    await _hub.Clients.User(user.Id).SendAsync("ForceLogout", jwt);
+                }
+                catch { /* best-effort */ }
+
+                // не чистим JwtId здесь Ч просто сбрасываем флаг онлайна;
+                // middleware дожмЄт старые вкладки, если не отреагировали на SignalR.
                 await _db.Database.ExecuteSqlInterpolatedAsync($@"
-INSERT INTO SupportUserSessions(UserId, JwtId, IsOnline, LastSeenUtc)
-VALUES ({user.Id}, {jwt}, 1, {now})
-ON CONFLICT(UserId) DO UPDATE SET IsOnline = 1, LastSeenUtc = {now}, JwtId = {jwt};");
+                UPDATE SupportUserSessions
+                SET IsOnline = 0, LastSeenUtc = {now}
+                WHERE UserId = {user.Id};");
             }
 
+            // 4) Ћогин с Ќќ¬џћ sid в куку
+            var extraClaims = new List<Claim> { new("support_sid", jwt) };
+            await _signInManager.SignInWithClaimsAsync(user, isPersistent: true, extraClaims);
+
+            // 5) јпсертим ту же сессию в Ѕƒ
+            await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            INSERT INTO SupportUserSessions(UserId, JwtId, IsOnline, LastSeenUtc)
+            VALUES ({user.Id}, {jwt}, 1, {now})
+            ON CONFLICT(UserId) DO UPDATE
+            SET JwtId = {jwt}, IsOnline = 1, LastSeenUtc = {now};");
+
+            // 6) √отово
             return LocalRedirect(Input.ReturnUrl ?? "/");
         }
     }

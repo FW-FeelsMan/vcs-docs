@@ -64,11 +64,17 @@ namespace VCS_DOCs.Support.Hubs
             }
             await base.OnDisconnectedAsync(exception);
         }
+        public Task Pulse()
+        {
+            var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId)) return Task.CompletedTask;
+            return _userService.UpdateUserStatusAsync(userId, true);
+        }
 
         public async Task ForceLogoutUser(string userId)
         {
             await Clients.User(userId).SendAsync("ForceLogout");
-            await _userService.ClearUserJwtIdAsync(userId); // явная инвалидация — оставляем
+            await _userService.ClearUserJwtIdAsync(userId); 
         }
     }
 }

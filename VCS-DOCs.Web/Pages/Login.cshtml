@@ -47,7 +47,7 @@
             <h1>Регистрация</h1>
             <input type="text" name="Username" placeholder="Ваш логин" required />
             <select name="speciality" required>
-                <option value="" disabled selected>Выберите должность</option>
+                <option value="" disabled selected>Выберите тип учетной записи</option>
                 @foreach (var speciality in Model.Specialities)
                 {
                     <option value="@speciality">@speciality</option>

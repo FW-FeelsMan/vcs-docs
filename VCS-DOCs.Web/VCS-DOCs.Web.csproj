@@ -71,6 +71,11 @@
 	  <ProjectReference Include="..\\VCS-DOCs.Configuration\\VCS-DOCs.Configuration.csproj" />
 	  <ProjectReference Include="..\\VCS-DOCs.Notifications\\VCS-DOCs.Notifications.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <None Update="Utilities\Config.ini">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
   <PropertyGroup>
     <NoWarn>CS8812</NoWarn>
     <NoWarn>CS7072</NoWarn>

@@ -70,7 +70,6 @@
             const ct = res.headers.get("content-type") || "";
 
             if (!res.ok) {
-                // если во время ухода пришёл HTML (логин/ошибка) — не редиректим из JS
                 if (ct.includes("text/html")) {
                     if (!__accounts_disposed) {
                         console.warn("[accounts] non-json (HTML) on non-OK; suppressed redirect");
@@ -140,7 +139,6 @@
               <th>VCS-DOCs</th>
               <th>VCS-SD</th>
               <th>Доступ</th>
-              <th>Входил</th>
               <th>Действия</th>
             </tr>`;
         }
@@ -206,7 +204,6 @@
                 <td>${statusPill(vdoc)}</td>
                 <td>${statusPill(vsup)}</td>
                 <td>${access}</td>
-                <td>${u.lastEntry || ""}</td>
                 <td>${renderActionsMultibutton(u)}</td>
               </tr>`;
         }
@@ -236,7 +233,7 @@
         function renderRows(list) {
             rowsById.clear();
             if (!Array.isArray(list) || list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9">Ничего не найдено</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8">Ничего не найдено</td></tr>`;
                 return;
             }
             const rows = list.map((u) => rowHtml(u));
@@ -252,17 +249,18 @@
 
         function patchRowCells(tr, patch) {
             const tds = tr ? tr.children : null;
-            if (!tds || tds.length < 9) return;
+            if (!tds || tds.length < 8) return; // теперь 8 колонок
             const rolesHtml = (Array.isArray(patch.roles) && patch.roles.length > 0) ? patch.roles.map(badge).join(" ") : "-";
             const vdocsHtml = statusPill(!!(patch.presence && patch.presence.VDocs && patch.presence.VDocs.online));
             const vsupHtml = statusPill(!!(patch.presence && patch.presence.VSupport && patch.presence.VSupport.online));
             const accessHtml = (patch.access ?? 0) > 0 ? '<span class="badge badge--ok">Активирована</span>' : '<span class="badge badge--blocked">Деактивирована</span>';
-            const lastEntry = patch.lastEntry || "";
+
+            // индексы после удаления "Входил":
+            // 0:Логин 1:ФИО 2:Орг 3:Роли 4:VCS-DOCs 5:VCS-SD 6:Доступ 7:Действия
             setIfChanged(tds[3], rolesHtml);
             setIfChanged(tds[4], vdocsHtml);
             setIfChanged(tds[5], vsupHtml);
             setIfChanged(tds[6], accessHtml);
-            setIfChanged(tds[7], lastEntry);
         }
 
         // dropdown (плавающее меню)

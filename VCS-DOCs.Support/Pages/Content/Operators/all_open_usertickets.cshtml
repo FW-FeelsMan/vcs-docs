@@ -1,9 +1,373 @@
-﻿@page
+﻿@page "/Content/Operators/all_open_usertickets"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "SupportOnly")]
+@model VCS_DOCs.Support.Pages.Content.Operators.AllOpenUserTicketsModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{
     Layout = null;
-    ViewData["Title"] = "Все открытые заявки пользователей";
 }
-<div style="padding:16px; color:#ddd;">
-    <h2 style="margin:10px 0 8px;">Заявки пользователей</h2>
-    <p>Все открытые заявки пользователей</p>
+<link rel="stylesheet" href="~/css/sub_css/support_accountsStyle.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/sub_css/operator_tickets_css/op_open_tickets.css" asp-append-version="true" />
+<meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(HttpContext).RequestToken" />
+
+<div id="op-open-tickets" class="profile_background accounts-page tickets-page">
+    <div class="button-container">
+        <h2>Открытые заявки (все пользователи)</h2>
+
+        <div class="filters-row">
+            <div class="filters-left">
+                <div id="scopeTabs" class="segmented" role="tablist" aria-label="Фильтр по назначению">
+                    <button class="seg-btn is-active" role="tab" aria-selected="true" data-scope="all">Все</button>
+                    <button class="seg-btn" role="tab" aria-selected="false" data-scope="mine">Только мои</button>
+                    <button class="seg-btn" role="tab" aria-selected="false" data-scope="unassigned">Неназначенные</button>
+                </div>
+
+                <select id="op_orgFilter" class="button-sliding small">
+                    <option value="">Все организации</option>
+                </select>
+            </div>
+
+            <div class="inline-controls">
+                <input id="op_searchBox" class="user_searchBox" type="text" placeholder="Поиск (№, тема, пользователь, орг.)" />
+                <button id="btn-op-search" class="button-sliding small">Найти</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="tickets-legend">
+        <span class="legend-item"><i class="legend-dot op"></i> Ждём ответа оператора</span>
+        <span class="legend-item"><i class="legend-dot usr"></i> Ждём ответа пользователя</span>
+    </div>
+
+    <hr class="solid" />
+
+    <div class="content-scrollable">
+        <table class="file-table" id="opTicketsTable">
+            <colgroup>
+                <col style="width:100px" />    <!-- № -->
+                <col style="width:220px" />   <!-- Тема -->
+                <col style="width:150px" />   <!-- Пользователь -->
+                <col style="width:150px" />   <!-- Организация -->
+                <col style="width:210px" />   <!-- Статус -->
+                <col style="width:140px" />   <!-- Обслуживает -->
+
+                <col style="width:250px" />   <!-- Действие -->
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>Тема</th>
+                    <th>Пользователь</th>
+                    <th>Организация</th>
+                    <th>Статус</th>
+                    <th>Обслуживает</th>
+
+                    <th>Действие</th>
+                </tr>
+            </thead>
+            <tbody id="opTicketsBody">
+                <!-- демо-строки, потом заменим на API -->
+                <tr data-id="12ab34cd" data-wait="operator" data-operator="2825">
+                    <td>12ab34cd</td>
+                    <td class="tt-auto" title="Не удаётся прикрепить файл к карточке">Не удаётся прикрепить файл к карточке</td>
+                    <td>ivanov.p</td>
+                    <td>ООО «Альфа»</td>
+                    <td><span class="status-badge wait-operator">Оператор ответил</span></td>
+                    <td>2825</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+                <tr data-id="12ef90aa" data-wait="user" data-operator="">
+                    <td>12ef90aa</td>
+                    <td>Ошибка входа в систему</td>
+                    <td>petrova.o</td>
+                    <td>ПАО «Бета»</td>
+                    <td><span class="status-badge wait-user">Пользователь ответил</span></td>
+                    <td>—</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+            </tbody>
+            <tbody id="opTicketsBody">
+                <!-- демо-строки, потом заменим на API -->
+                <tr data-id="12ab34cd" data-wait="operator" data-operator="2825">
+                    <td>12ab34cd</td>
+                    <td class="tt-auto" title="Не удаётся прикрепить файл к карточке">Не удаётся прикрепить файл к карточке</td>
+                    <td>ivanov.p</td>
+                    <td>ООО «Альфа»</td>
+                    <td><span class="status-badge wait-operator">Оператор ответил</span></td>
+                    <td>2825</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+                <tr data-id="12ef90aa" data-wait="user" data-operator="">
+                    <td>12ef90aa</td>
+                    <td>Ошибка входа в систему</td>
+                    <td>petrova.o</td>
+                    <td>ПАО «Бета»</td>
+                    <td><span class="status-badge wait-user">Пользователь ответил</span></td>
+                    <td>—</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+            </tbody>
+            <tbody id="opTicketsBody">
+                <!-- демо-строки, потом заменим на API -->
+                <tr data-id="12ab34cd" data-wait="operator" data-operator="2825">
+                    <td>12ab34cd</td>
+                    <td class="tt-auto" title="Не удаётся прикрепить файл к карточке">Не удаётся прикрепить файл к карточке</td>
+                    <td>ivanov.p</td>
+                    <td>ООО «Альфа»</td>
+                    <td><span class="status-badge wait-operator">Оператор ответил</span></td>
+                    <td>2825</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+                <tr data-id="12ef90aa" data-wait="user" data-operator="">
+                    <td>12ef90aa</td>
+                    <td>Ошибка входа в систему</td>
+                    <td>petrova.o</td>
+                    <td>ПАО «Бета»</td>
+                    <td><span class="status-badge wait-user">Пользователь ответил</span></td>
+                    <td>—</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+            </tbody>
+            <tbody id="opTicketsBody">
+                <!-- демо-строки, потом заменим на API -->
+                <tr data-id="12ab34cd" data-wait="operator" data-operator="2825">
+                    <td>12ab34cd</td>
+                    <td class="tt-auto" title="Не удаётся прикрепить файл к карточке">Не удаётся прикрепить файл к карточке</td>
+                    <td>ivanov.p</td>
+                    <td>ООО «Альфа»</td>
+                    <td><span class="status-badge wait-operator">Оператор ответил</span></td>
+                    <td>2825</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+                <tr data-id="12ef90aa" data-wait="user" data-operator="">
+                    <td>12ef90aa</td>
+                    <td>Ошибка входа в систему</td>
+                    <td>petrova.o</td>
+                    <td>ПАО «Бета»</td>
+                    <td><span class="status-badge wait-user">Пользователь ответил</span></td>
+                    <td>—</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+            </tbody>
+            <tbody id="opTicketsBody">
+                <!-- демо-строки, потом заменим на API -->
+                <tr data-id="12ab34cd" data-wait="operator" data-operator="2825">
+                    <td>12ab34cd</td>
+                    <td class="tt-auto" title="Не удаётся прикрепить файл к карточке">Не удаётся прикрепить файл к карточке</td>
+                    <td>ivanov.p</td>
+                    <td>ООО «Альфа»</td>
+                    <td><span class="status-badge wait-operator">Оператор ответил</span></td>
+                    <td>2825</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+                <tr data-id="12ef90aa" data-wait="user" data-operator="">
+                    <td>12ef90aa</td>
+                    <td>Ошибка входа в систему</td>
+                    <td>petrova.o</td>
+                    <td>ПАО «Бета»</td>
+                    <td><span class="status-badge wait-user">Пользователь ответил</span></td>
+                    <td>—</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+            </tbody>
+            <tbody id="opTicketsBody">
+                <!-- демо-строки, потом заменим на API -->
+                <tr data-id="12ab34cd" data-wait="operator" data-operator="2825">
+                    <td>12ab34cd</td>
+                    <td class="tt-auto" title="Не удаётся прикрепить файл к карточке">Не удаётся прикрепить файл к карточке</td>
+                    <td>ivanov.p</td>
+                    <td>ООО «Альфа»</td>
+                    <td><span class="status-badge wait-operator">Оператор ответил</span></td>
+                    <td>2825</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+                <tr data-id="12ef90aa" data-wait="user" data-operator="">
+                    <td>12ef90aa</td>
+                    <td>Ошибка входа в систему</td>
+                    <td>petrova.o</td>
+                    <td>ПАО «Бета»</td>
+                    <td><span class="status-badge wait-user">Пользователь ответил</span></td>
+                    <td>—</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+            </tbody>
+            <tbody id="opTicketsBody">
+                <!-- демо-строки, потом заменим на API -->
+                <tr data-id="12ab34cd" data-wait="operator" data-operator="2825">
+                    <td>12ab34cd</td>
+                    <td class="tt-auto" title="Не удаётся прикрепить файл к карточке">Не удаётся прикрепить файл к карточке</td>
+                    <td>ivanov.p</td>
+                    <td>ООО «Альфа»</td>
+                    <td><span class="status-badge wait-operator">Оператор ответил</span></td>
+                    <td>2825</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+                <tr data-id="12ef90aa" data-wait="user" data-operator="">
+                    <td>12ef90aa</td>
+                    <td>Ошибка входа в систему</td>
+                    <td>petrova.o</td>
+                    <td>ПАО «Бета»</td>
+                    <td><span class="status-badge wait-user">Пользователь ответил</span></td>
+                    <td>—</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+            </tbody>
+            <tbody id="opTicketsBody">
+                <!-- демо-строки, потом заменим на API -->
+                <tr data-id="12ab34cd" data-wait="operator" data-operator="2825">
+                    <td>12ab34cd</td>
+                    <td class="tt-auto" title="Не удаётся прикрепить файл к карточке">Не удаётся прикрепить файл к карточке</td>
+                    <td>ivanov.p</td>
+                    <td>ООО «Альфа»</td>
+                    <td><span class="status-badge wait-operator">Оператор ответил</span></td>
+                    <td>2825</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+                <tr data-id="12ef90aa" data-wait="user" data-operator="">
+                    <td>12ef90aa</td>
+                    <td>Ошибка входа в систему</td>
+                    <td>petrova.o</td>
+                    <td>ПАО «Бета»</td>
+                    <td><span class="status-badge wait-user">Пользователь ответил</span></td>
+                    <td>—</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+            </tbody>
+            <tbody id="opTicketsBody">
+                <!-- демо-строки, потом заменим на API -->
+                <tr data-id="12ab34cd" data-wait="operator" data-operator="2825">
+                    <td>12ab34cd</td>
+                    <td class="tt-auto" title="Не удаётся прикрепить файл к карточке">Не удаётся прикрепить файл к карточке</td>
+                    <td>ivanov.p</td>
+                    <td>ООО «Альфа»</td>
+                    <td><span class="status-badge wait-operator">Оператор ответил</span></td>
+                    <td>2825</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+                <tr data-id="12ef90aa" data-wait="user" data-operator="">
+                    <td>12ef90aa</td>
+                    <td>Ошибка входа в систему</td>
+                    <td>petrova.o</td>
+                    <td>ПАО «Бета»</td>
+                    <td><span class="status-badge wait-user">Пользователь ответил</span></td>
+                    <td>—</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+            </tbody>
+            <tbody id="opTicketsBody">
+                <!-- демо-строки, потом заменим на API -->
+                <tr data-id="12ab34cd" data-wait="operator" data-operator="2825">
+                    <td>12ab34cd</td>
+                    <td class="tt-auto" title="Не удаётся прикрепить файл к карточке">Не удаётся прикрепить файл к карточке</td>
+                    <td>ivanov.p</td>
+                    <td>ООО «Альфа»</td>
+                    <td><span class="status-badge wait-operator">Оператор ответил</span></td>
+                    <td>2825</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+                <tr data-id="12ef90aa" data-wait="user" data-operator="">
+                    <td>12ef90aa</td>
+                    <td>Ошибка входа в систему</td>
+                    <td>petrova.o</td>
+                    <td>ПАО «Бета»</td>
+                    <td><span class="status-badge wait-user">Пользователь ответил</span></td>
+                    <td>—</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+            </tbody>
+            <tbody id="opTicketsBody">
+                <!-- демо-строки, потом заменим на API -->
+                <tr data-id="12ab34cd" data-wait="operator" data-operator="2825">
+                    <td>12ab34cd</td>
+                    <td class="tt-auto" title="Не удаётся прикрепить файл к карточке">Не удаётся прикрепить файл к карточке</td>
+                    <td>ivanov.p</td>
+                    <td>ООО «Альфа»</td>
+                    <td><span class="status-badge wait-operator">Оператор ответил</span></td>
+                    <td>2825</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+                <tr data-id="12ef90aa" data-wait="user" data-operator="">
+                    <td>12ef90aa</td>
+                    <td>Ошибка входа в систему</td>
+                    <td>petrova.o</td>
+                    <td>ПАО «Бета»</td>
+                    <td><span class="status-badge wait-user">Пользователь ответил</span></td>
+                    <td>—</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+            </tbody>
+            <tbody id="opTicketsBody">
+                <!-- демо-строки, потом заменим на API -->
+                <tr data-id="12ab34cd" data-wait="operator" data-operator="2825">
+                    <td>12ab34cd</td>
+                    <td class="tt-auto" title="Не удаётся прикрепить файл к карточке">Не удаётся прикрепить файл к карточке</td>
+                    <td>ivanov.p</td>
+                    <td>ООО «Альфа»</td>
+                    <td><span class="status-badge wait-operator">Оператор ответил</span></td>
+                    <td>2825</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+                <tr data-id="12ef90aa" data-wait="user" data-operator="">
+                    <td>12ef90aa</td>
+                    <td>Ошибка входа в систему</td>
+                    <td>petrova.o</td>
+                    <td>ПАО «Бета»</td>
+                    <td><span class="status-badge wait-user">Пользователь ответил</span></td>
+                    <td>—</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+            </tbody>
+            <tbody id="opTicketsBody">
+                <!-- демо-строки, потом заменим на API -->
+                <tr data-id="12ab34cd" data-wait="operator" data-operator="2825">
+                    <td>12ab34cd</td>
+                    <td class="tt-auto" title="Не удаётся прикрепить файл к карточке">Не удаётся прикрепить файл к карточке</td>
+                    <td>ivanov.p</td>
+                    <td>ООО «Альфа»</td>
+                    <td><span class="status-badge wait-operator">Оператор ответил</span></td>
+                    <td>2825</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+                <tr data-id="12ef90aa" data-wait="user" data-operator="">
+                    <td>12ef90aa</td>
+                    <td>Ошибка входа в систему</td>
+                    <td>petrova.o</td>
+                    <td>ПАО «Бета»</td>
+                    <td><span class="status-badge wait-user">Пользователь ответил</span></td>
+                    <td>—</td>
+
+                    <td><button class="button-sliding primary small btn-open">Открыть</button></td>
+                </tr>
+            </tbody>
+            <tfoot class="table-spacer">
+                <tr><td colspan="7"></td></tr>
+            </tfoot>
+        </table>
+    </div>
 </div>
+
+<script src="~/js/operator/all_open_usertickets.js" asp-append-version="true" defer></script>

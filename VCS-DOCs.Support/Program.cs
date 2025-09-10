@@ -58,6 +58,35 @@ internal class Program
             o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             o.Cookie.SameSite = SameSiteMode.Lax;
 
+            //o.Events = new CookieAuthenticationEvents
+            //{
+            //    OnValidatePrincipal = async ctx =>
+            //    {
+            //        var userId = ctx.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            //        var sid = ctx.Principal.FindFirst("support_sid")?.Value;
+
+            //        if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(sid))
+            //        {
+            //            ctx.RejectPrincipal();
+            //            await ctx.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+            //            return;
+            //        }
+
+            //        var db = ctx.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
+            //        var row = await db.SupportUserSessions.AsNoTracking()
+            //                      .FirstOrDefaultAsync(x => x.UserId == userId);
+
+            //        var mismatch = row != null
+            //                       && !string.IsNullOrEmpty(row.JwtId)
+            //                       && !string.Equals(row.JwtId, sid, StringComparison.Ordinal);
+
+            //        if (mismatch)
+            //        {
+            //            ctx.RejectPrincipal();
+            //            await ctx.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+            //        }
+            //    }
+            //};
             o.Events = new CookieAuthenticationEvents
             {
                 OnValidatePrincipal = async ctx =>
@@ -71,22 +100,9 @@ internal class Program
                         await ctx.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
                         return;
                     }
-
-                    var db = ctx.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
-                    var row = await db.SupportUserSessions.AsNoTracking()
-                                  .FirstOrDefaultAsync(x => x.UserId == userId);
-
-                    var mismatch = row != null
-                                   && !string.IsNullOrEmpty(row.JwtId)
-                                   && !string.Equals(row.JwtId, sid, StringComparison.Ordinal);
-
-                    if (mismatch)
-                    {
-                        ctx.RejectPrincipal();
-                        await ctx.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
-                    }
                 }
             };
+
         });
 
         // === Опции путей пользователя (для аватаров и т.п.) ===
@@ -254,6 +270,13 @@ internal class Program
         // «single-login» проверка
         app.Use(async (ctx, next) =>
         {
+            // не вмешиваемся в сам логин/ошибки, чтобы не зациклиться
+            if (ctx.Request.Path.StartsWithSegments("/Account/LoginSupport", StringComparison.OrdinalIgnoreCase))
+            {
+                await next();
+                return;
+            }
+
             if (ctx.User?.Identity?.IsAuthenticated == true)
             {
                 var userId = ctx.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -263,18 +286,22 @@ internal class Program
                 {
                     var db = ctx.RequestServices.GetRequiredService<ApplicationDbContext>();
                     var row = await db.SupportUserSessions.AsNoTracking()
-                                  .FirstOrDefaultAsync(x => x.UserId == userId);
+                                    .FirstOrDefaultAsync(x => x.UserId == userId);
 
-                    // разлогиниваем только если в БД ЕСТЬ JwtId и он НЕ равен sid
-                    if (row != null && !string.IsNullOrEmpty(row.JwtId)
-                        && !string.Equals(row.JwtId, sid, StringComparison.Ordinal))
+                    var mismatch = row != null && !string.IsNullOrEmpty(row.JwtId)
+                                   && !string.Equals(row.JwtId, sid, StringComparison.Ordinal);
+
+                    if (mismatch)
                     {
                         await ctx.SignOutAsync(IdentityConstants.ApplicationScheme);
-                        ctx.Response.Redirect("/Account/LoginSupport?forced=1");
+
+                        var returnUrl = Uri.EscapeDataString(ctx.Request.Path + ctx.Request.QueryString);
+                        ctx.Response.Redirect($"/Account/LoginSupport?forced=1&ReturnUrl={returnUrl}");
                         return;
                     }
                 }
             }
+
             await next();
         });
 
