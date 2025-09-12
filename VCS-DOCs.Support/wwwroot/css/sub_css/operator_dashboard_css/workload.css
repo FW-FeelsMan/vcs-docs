@@ -1,69 +1,127 @@
-﻿:root {
-    --wl-primary: #5a9bd5;
-    --wl-accent: #7c4dff;
-    --wl-ok: #22c55e;
-    --wl-warn: #f59e0b;
-    --wl-bad: #ef4444;
-    --wl-bg: #0f1220; /* общий фон твоего приложения */
-    --wl-panel: #111427; /* карты */
-    --wl-line: #1c2038;
-    --wl-text: #e8ecf6;
-    --wl-muted: #9aa3b2;
+﻿#op-workload {
+    --wl-bg: #f6f7fb;
+    --wl-panel: #ffffff;
+    --wl-line: #e6e9f2;
+    --wl-text: #1f2430;
+    --wl-muted: #6d7588;
+    --wl-primary: #5741ff;
+    --wl-accent: #00b894;
+    --wl-ok: #1aa765;
+    --wl-warn: #e5a100;
+    --wl-bad: #d14141;
+    --thead-bg: #f3f5fb;
+    --row-alt-bg: #fafbff;
+    --shadow: 0 10px 30px rgba(0,0,0,.06);
+    --chart-cpu: #5741ff;
+    --chart-ram: #00c2a8;
+    --chart-rps: #2f9e44;
+    --chart-err: #d14141;
+    --chart-net-in: #2080ff;
+    --chart-net-out: #ff7e47;
 }
 
-/* контейнер страницы */
-#op-workload.dashboard-page {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-}
+    #op-workload.is-dark {
+        --wl-primary: #5a9bd5;
+        --wl-accent: #7c4dff;
+        --wl-ok: #22c55e;
+        --wl-warn: #f59e0b;
+        --wl-bad: #ef4444;
+        --wl-bg: #0f1220;
+        --wl-panel: #111427;
+        --wl-line: #1c2038;
+        --wl-text: #e8ecf6;
+        --wl-muted: #9aa3b2;
+        --thead-bg: #0c1022;
+        --row-alt-bg: #0f142b;
+        --shadow: 0 10px 30px rgba(0,0,0,.25);
+        --chart-cpu: #7cbcff;
+        --chart-ram: #60d5c8;
+        --chart-rps: #34d399;
+        --chart-err: #ef4444;
+        --chart-net-in: #60a5fa;
+        --chart-net-out: #f59e0b;
+    }
 
-/* шапка */
+    #op-workload.dashboard-page {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+
 .dash-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
     gap: 16px;
-    padding: 18px 24px 8px 24px;
+    padding: 14px 16px;
+    margin: 6px 6px 3px 6px;
+    background: var(--wl-panel);
+    border: 1px solid var(--wl-line);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
 }
 
 .dash-title h2 {
     margin: 0;
     font-size: 22px;
-    color: var(--wl-text)
+    color: var(--wl-text);
 }
 
 .dash-title .muted {
     color: var(--wl-muted);
     font-size: 13px;
-    margin-top: 4px
+    margin-top: 4px;
 }
 
 .dash-actions {
     display: flex;
     gap: 10px;
-    align-items: center
+    align-items: center;
 }
 
-/* скролл-зона + «хвост» снизу */
 #op-workload .content-scrollable {
-    margin: 8px 24px 8px 24px;
-    padding-right: 6px;
+    margin: 0 6px 6px 6px;
+    padding: 6px 8px 6px 8px;
     overflow: auto;
     overflow-x: hidden;
-    max-height: calc(100vh - 140px);
+    max-height: calc(100vh - 114px);
+    background: var(--wl-bg);
+    border-radius: 12px;
 }
 
-    #op-workload .content-scrollable::after {
-        content: "";
-        display: block;
-        height: 24px;
+#op-workload .content-scrollable,
+#op-workload .table-wrap {
+    scrollbar-width: thin;
+    scrollbar-color: #b8c0d6 transparent;
+}
+
+    #op-workload .content-scrollable::-webkit-scrollbar,
+    #op-workload .table-wrap::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
     }
 
-/* KPI grid */
+    #op-workload .content-scrollable::-webkit-scrollbar-track,
+    #op-workload .table-wrap::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    #op-workload .content-scrollable::-webkit-scrollbar-thumb,
+    #op-workload .table-wrap::-webkit-scrollbar-thumb {
+        background: #c8cee2;
+        border: 3px solid transparent;
+        border-radius: 999px;
+        background-clip: content-box;
+    }
+
+        #op-workload .content-scrollable::-webkit-scrollbar-thumb:hover,
+        #op-workload .table-wrap::-webkit-scrollbar-thumb:hover {
+            background: #b6bdd6;
+        }
+
 .kpi-grid {
     display: grid;
-    grid-template-columns: repeat(6, minmax(180px,1fr));
+    grid-template-columns: repeat(6, minmax(180px, 1fr));
     gap: 14px;
     margin-bottom: 14px;
 }
@@ -76,22 +134,21 @@
     display: flex;
     align-items: center;
     gap: 14px;
-    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    box-shadow: var(--shadow);
 }
 
 .kpi-title {
     font-weight: 700;
     color: var(--wl-text);
-    font-size: 14px
+    font-size: 14px;
 }
 
 .kpi-sub {
     font-size: 12px;
     color: var(--wl-muted);
-    margin-top: 2px
+    margin-top: 2px;
 }
 
-/* круговые индикаторы */
 .ring {
     width: 58px;
     height: 58px;
@@ -106,42 +163,41 @@
 }
 
     .ring .ring-val {
-        font-size: 13px
+        font-size: 13px;
     }
 
     .ring[data-val="err"] {
-        --wl-primary: var(--wl-bad)
+        --wl-primary: var(--wl-bad);
     }
 
     .ring[data-val="ram"] {
-        --wl-primary: #60a5fa
+        --wl-primary: #4f86ff;
     }
 
     .ring[data-val="disk"] {
-        --wl-primary: #a78bfa
+        --wl-primary: #a78bfa;
     }
 
     .ring[data-val="net"] {
-        --wl-primary: #34d399
+        --wl-primary: #34d399;
     }
 
     .ring[data-val="rps"] {
-        --wl-primary: #f59e0b
+        --wl-primary: #f59e0b;
     }
 
-/* панели */
 .grid-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 14px;
-    margin-bottom: 14px
+    margin-bottom: 14px;
 }
 
 .grid-3 {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
     gap: 14px;
-    margin-bottom: 14px
+    margin-bottom: 14px;
 }
 
 .panel {
@@ -149,32 +205,32 @@
     border: 1px solid var(--wl-line);
     border-radius: 14px;
     padding: 12px 14px;
-    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    box-shadow: var(--shadow);
+    overflow: hidden;
 }
 
 .panel-h {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px
+    margin-bottom: 8px;
 }
 
     .panel-h h3 {
         margin: 0;
         font-size: 15px;
-        color: var(--wl-text)
+        color: var(--wl-text);
     }
 
     .panel-h .panel-sub {
         color: var(--wl-muted);
-        font-size: 12px
+        font-size: 12px;
     }
 
-/* списки (сервисы/очереди) */
 .panel.list ul {
     list-style: none;
     padding: 0;
-    margin: 2px 0 0
+    margin: 2px 0 0;
 }
 
 .panel.list li {
@@ -182,92 +238,137 @@
     justify-content: space-between;
     align-items: center;
     padding: 8px 6px;
-    border-bottom: 1px dashed rgba(255,255,255,.05);
+    border-bottom: 1px dashed color-mix(in oklab, var(--wl-muted) 18%, transparent);
     font-size: 13px;
-    color: var(--wl-text)
+    color: var(--wl-text);
 }
 
-.badge {
-    display: inline-block;
-    font-size: 11px;
-    padding: 3px 8px;
-    border-radius: 999px;
-    background: #1b2140;
-    color: #cbd5e1;
-    border: 1px solid #2a335c;
-}
-
-    .badge.ok {
-        background: rgba(34,197,94,.12);
-        color: #86efac;
-        border-color: rgba(34,197,94,.35)
-    }
-
-    .badge.warn {
-        background: rgba(245,158,11,.12);
-        color: #fde68a;
-        border-color: rgba(245,158,11,.35)
-    }
-
-    .badge.bad {
-        background: rgba(239,68,68,.12);
-        color: #fecaca;
-        border-color: rgba(239,68,68,.35)
-    }
-
-/* таблица */
 .table-wrap {
-    overflow: auto
+    overflow: auto;
 }
 
 .table-endpoints {
     width: 100%;
-    table-layout: fixed
+    table-layout: fixed;
 }
 
-    .table-endpoints th, .table-endpoints td {
+    .table-endpoints th,
+    .table-endpoints td {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
     .table-endpoints thead th {
-        background: #0c1022;
-        color: #aab3c5;
+        background: var(--thead-bg);
+        color: var(--wl-muted);
         font-weight: 700;
         font-size: 12px;
         border-bottom: 1px solid var(--wl-line);
     }
 
     .table-endpoints tbody td {
-        border-top: 1px solid rgba(255,255,255,.04)
+        border-top: 1px solid color-mix(in oklab, var(--wl-line) 70%, transparent);
     }
 
     .table-endpoints tbody tr:nth-child(even) td {
-        background: #0f142b
+        background: var(--row-alt-bg);
     }
 
     .table-endpoints tbody tr:hover td {
-        filter: brightness(.98)
+        filter: brightness(.98);
     }
 
-/* адаптив */
-@media (max-width:1400px) {
+#op-workload .panel canvas {
+    display: block;
+    width: 100% !important;
+    height: 240px !important;
+    max-height: 240px !important;
+}
+
+#op-workload .grid-3 .panel canvas {
+    height: 200px !important;
+    max-height: 200px !important;
+}
+
+@media (max-width: 1400px) {
     .kpi-grid {
-        grid-template-columns: repeat(3, 1fr)
+        grid-template-columns: repeat(3, 1fr);
     }
 
     .grid-3 {
-        grid-template-columns: 1fr 1fr
+        grid-template-columns: 1fr 1fr;
     }
 }
 
-@media (max-width:900px) {
+@media (max-width: 900px) {
     .kpi-grid {
-        grid-template-columns: repeat(2, 1fr)
+        grid-template-columns: repeat(2, 1fr);
     }
 
-    .grid-2, .grid-3 {
-        grid-template-columns: 1fr
+    .grid-2,
+    .grid-3 {
+        grid-template-columns: 1fr;
     }
+}
+/* три выровненных колонки в списках "Сервисы" и "Очереди" */
+.panel.list .svc {
+    --col-gap: 12px;
+    --col-mid: 88px; /* ширина средней колонки (OK/WARN/число) */
+    --col-tail: 100px; /* ширина правой колонки (22 ms, SMTP, 2/s) */
+}
+
+    .panel.list .svc li {
+        display: grid;
+        grid-template-columns: 12px 1fr var(--col-mid) var(--col-tail);
+        align-items: center;
+        column-gap: var(--col-gap);
+        padding: 8px 10px;
+    }
+
+        /* левая точка-статус */
+        .panel.list .svc li .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            justify-self: center;
+            background: color-mix(in oklab, var(--wl-muted) 40%, transparent);
+        }
+
+.svc-row.ok .dot {
+    background: var(--wl-ok);
+}
+
+.svc-row.warn .dot {
+    background: var(--wl-warn);
+}
+
+.svc-row.err .dot {
+    background: var(--wl-bad);
+}
+
+/* левая текстовая колонка (название сервиса/очереди) */
+.panel.list .svc li span:nth-of-type(2) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--wl-text);
+}
+
+/* средняя колонка (OK/WARN/число) — строго по центру, табличные цифры */
+.panel.list .svc li i {
+    text-align: center;
+    color: var(--wl-muted);
+    font-style: italic;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+}
+
+/* правая колонка (22 ms, SMTP, 2/s) — вправо, табличные цифры */
+.panel.list .svc li em {
+    text-align: right;
+    color: var(--wl-muted);
+    font-style: normal;
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
 }

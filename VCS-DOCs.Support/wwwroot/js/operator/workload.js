@@ -1,194 +1,317 @@
-﻿// demo-оживление дашборда: случайные данные + плавное обновление
-(() => {
-    // безопасный селектор
-    const $ = (s, r = document) => r.querySelector(s);
+﻿// wwwroot/js/operator/workload.js
+(function () {
+    // ---- utils / formatting ----
+    function rand(n, base = 0) { return Math.round(base + Math.random() * n); }
+    function fmtPct(v) { return (v).toFixed(0) + "%"; }
+    function fmtMb(v) { return (v).toFixed(0) + " МБ"; }
+    function fmtRps(v) { return (v).toFixed(1); }
 
-    // ---- KPI кольца ---------------------------------------------------------
-    function setRing(el, percent, label) {
-        const deg = Math.max(0, Math.min(100, percent)) * 3.6;
-        el.style.background =
-            `conic-gradient(var(--wl-primary) ${deg}deg, transparent ${deg}deg 360deg),
-       radial-gradient(circle 26px at 50% 50%, var(--wl-panel) 98%, transparent 100%)`;
-        const span = el.querySelector('.ring-val');
-        if (span) span.textContent = label ?? `${Math.round(percent)}%`;
+    // css variables -> palette
+    function cssVar(name, root) {
+        return getComputedStyle(root).getPropertyValue(name).trim();
     }
-
-    // маленький помощник для сглаженного рандома
-    const makeDrift = (start = 50, min = 0, max = 100, step = 6) => {
-        let v = start;
-        return () => {
-            v += (Math.random() * 2 - 1) * step;
-            v = Math.max(min, Math.min(max, v));
-            return v;
+    function chartPalette(root = document.getElementById("op-workload")) {
+        return {
+            grid: cssVar('--wl-line', root) || '#e6e9f2',
+            tick: cssVar('--wl-muted', root) || '#6d7588',
+            cpu: cssVar('--chart-cpu', root) || '#5741ff',
+            ram: cssVar('--chart-ram', root) || '#00c2a8',
+            rps: cssVar('--chart-rps', root) || '#2f9e44',
+            err: cssVar('--chart-err', root) || '#d14141',
+            netIn: cssVar('--chart-net-in', root) || '#2080ff',
+            netOut: cssVar('--chart-net-out', root) || '#ff7e47',
         };
-    };
-
-    // создаём генераторы метрик
-    const gCpu = makeDrift(42, 8, 96, 5);
-    const gRam = makeDrift(61, 10, 98, 3.2);
-    const gDisk = makeDrift(28, 2, 92, 8);
-    const gNet = makeDrift(35, 0, 100, 6);
-    const gRps = makeDrift(120, 20, 350, 18);
-    const gErr = makeDrift(1.8, 0, 9, 0.8);
-
-    // ---- списки (сервисы/очереди) ------------------------------------------
-    const services = [
-        { name: 'Auth/Identity', state: 'ok' },
-        { name: 'SQL (SQLite)', state: 'ok' },
-        { name: 'Mail (SMTP)', state: 'ok' },
-        { name: 'VDocs Bridge', state: 'warn' },
-        { name: 'SignalR Hubs', state: 'ok' },
-    ];
-    const queues = [
-        { name: 'MailQueue', size: 2 },
-        { name: 'Reports', size: 0 },
-        { name: 'Indexing', size: 4 },
-        { name: 'Exports', size: 1 },
-    ];
-
-    function renderLists() {
-        const svcUl = $('#svcList'); const qUl = $('#queueList');
-        if (svcUl) {
-            svcUl.innerHTML = services.map(s =>
-                `<li><span>${s.name}</span><span class="badge ${s.state}">${s.state === 'ok' ? 'OK' : s.state}</span></li>`
-            ).join('');
-        }
-        if (qUl) {
-            qUl.innerHTML = queues.map(q =>
-                `<li><span>${q.name}</span><span class="badge ${q.size > 5 ? 'bad' : q.size > 0 ? 'warn' : 'ok'}">${q.size}</span></li>`
-            ).join('');
-        }
     }
 
-    // ---- таблица эндпоинтов -------------------------------------------------
-    const demoEndpoints = [
-        { path: '/api/support/accounts', avg: 42, p95: 85, rps: 18, err: 0.1 },
-        { path: '/api/support/tickets', avg: 65, p95: 120, rps: 12, err: 0.5 },
-        { path: '/hubs/userStatus', avg: 15, p95: 28, rps: 30, err: 0.0 },
-        { path: '/api/files/search', avg: 120, p95: 260, rps: 6, err: 1.4 },
-        { path: '/api/vdocs/preview', avg: 90, p95: 190, rps: 8, err: 0.8 },
-    ];
-    function renderEndpoints() {
-        const tb = $('#tblEndpoints tbody');
-        if (!tb) return;
-        tb.innerHTML = demoEndpoints.map(e => {
-            const cls = e.err > 2 ? 'bad' : e.err > 0.7 ? 'warn' : 'ok';
-            return `<tr>
-          <td title="${e.path}">${e.path}</td>
-          <td>${e.avg.toFixed(0)}</td>
-          <td>${e.p95.toFixed(0)}</td>
-          <td>${e.rps.toFixed(0)}</td>
-          <td><span class="badge ${cls}">${e.err.toFixed(1)}</span></td>
-        </tr>`;
-        }).join('');
+    // labels & dummy series
+    function makeLabels(range) {
+        const now = new Date();
+        const pts = range === "24h" ? 24 : range === "1h" ? 12 : 15; // 60m / 5m / 1m
+        const stepMin = range === "24h" ? 60 : range === "1h" ? 5 : 1;
+        const res = [];
+        for (let i = pts - 1; i >= 0; i--) {
+            const d = new Date(now.getTime() - i * stepMin * 60000);
+            res.push(d.toTimeString().slice(0, 5));
+        }
+        return res;
     }
 
-    // ---- Chart.js графики ---------------------------------------------------
-    const charts = {};
+    function makeSeries(len, { base = 50, spread = 30, floor = 0, ceil = 100 } = {}) {
+        return new Array(len).fill(0).map(() => {
+            const v = base + (Math.random() - 0.5) * spread * 2;
+            return Math.max(floor, Math.min(ceil, v));
+        });
+    }
 
-    function makeLine(ctx, labels, datasets) {
+    // kpis / lists / table
+    function fillKpis(panel, model) {
+        panel.querySelector("#kpiCpuVal").textContent = fmtPct(model.cpu.avg);
+        panel.querySelector("#kpiCpuInfo").textContent = `P95 ${fmtPct(model.cpu.p95)}`;
+
+        panel.querySelector("#kpiRamVal").textContent = fmtPct(model.ram.usedPct);
+        panel.querySelector("#kpiRamInfo").textContent = `${fmtMb(model.ram.usedMb)} из ${fmtMb(model.ram.totalMb)}`;
+
+        panel.querySelector("#kpiDiskVal").textContent = `${model.disk.iops} IOPS`;
+        panel.querySelector("#kpiDiskInfo").textContent = `${model.disk.readMb}/с чтение · ${model.disk.writeMb}/с запись`;
+
+        panel.querySelector("#kpiNetVal").textContent = `${model.net.inMb}/${model.net.outMb} МБ/с`;
+        panel.querySelector("#kpiNetInfo").textContent = `вх/исх`;
+
+        panel.querySelector("#kpiRpsVal").textContent = fmtRps(model.rps.avg);
+        panel.querySelector("#kpiRpsInfo").textContent = `пик ${fmtRps(model.rps.peak)}`;
+
+        panel.querySelector("#kpiErrVal").textContent = fmtPct(model.err.rate);
+        panel.querySelector("#kpiErrInfo").textContent = `${model.err.count4xx + model.err.count5xx} ошибок`;
+    }
+
+    function fakeModel() {
+        return {
+            cpu: { avg: rand(70, 20), p95: rand(90, 10) },
+            ram: { totalMb: 32768, usedMb: rand(22000, 6000), get usedPct() { return (this.usedMb / this.totalMb) * 100; } },
+            disk: { iops: rand(400, 50), readMb: rand(100, 10), writeMb: rand(80, 10) },
+            net: { inMb: rand(60, 5), outMb: rand(40, 5) },
+            rps: { avg: Math.random() * 30 + 5, peak: Math.random() * 60 + 30 },
+            err: { rate: Math.random() * 6, count4xx: rand(60), count5xx: rand(20) }
+        };
+    }
+
+    // chart helpers
+    function makeChart(canvas, cfg, pal) {
+        const ctx = canvas.getContext("2d");
+        // normalize datasets: add colors & line style
+        const datasets = cfg.data.datasets.map(ds => ({
+            ...ds,
+            borderColor: ds.borderColor || ds.color,
+            backgroundColor: ds.backgroundColor || ds.color,
+            pointRadius: 0,
+            borderWidth: 2,
+            tension: ds.tension ?? 0.25
+        }));
+
+        const baseOpts = {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            interaction: { intersect: false, mode: "nearest" },
+            plugins: {
+                legend: { display: true, position: "bottom", labels: { color: pal.tick } }
+            },
+            scales: {
+                x: { grid: { display: false }, ticks: { color: pal.tick } },
+                y: { beginAtZero: true, grid: { color: pal.grid, drawBorder: false }, ticks: { color: pal.tick } }
+            }
+        };
+
+        // deep merge minimal (only for scales/plugins we touch)
+        const options = cfg.options ? mergeOptions(baseOpts, cfg.options) : baseOpts;
+
         return new Chart(ctx, {
-            type: 'line',
-            data: { labels, datasets },
-            options: {
-                animation: { duration: 300 },
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { labels: { color: '#cbd5e1' } } },
-                scales: {
-                    x: { ticks: { color: '#9aa3b2' }, grid: { color: 'rgba(255,255,255,.04)' } },
-                    y: { ticks: { color: '#9aa3b2' }, grid: { color: 'rgba(255,255,255,.06)' } }
+            type: "line",
+            data: { labels: cfg.data.labels, datasets },
+            options
+        });
+    }
+
+    function mergeOptions(base, extra) {
+        const out = structuredClone ? structuredClone(base) : JSON.parse(JSON.stringify(base));
+        function rec(dst, src) {
+            for (const k in src) {
+                const sv = src[k], dv = dst[k];
+                if (sv && typeof sv === 'object' && !Array.isArray(sv)) {
+                    dst[k] = rec(dv ? { ...dv } : {}, sv);
+                } else {
+                    dst[k] = sv;
                 }
             }
+            return dst;
+        }
+        return rec(out, extra);
+    }
+
+    function recolorChart(chart, pal, mapping) {
+        // mapping = ['cpu','ram'] etc to pick colors from palette in order
+        chart.options.plugins.legend.labels.color = pal.tick;
+        if (chart.options.scales?.x?.ticks) chart.options.scales.x.ticks.color = pal.tick;
+        if (chart.options.scales?.y?.ticks) chart.options.scales.y.ticks.color = pal.tick;
+        if (chart.options.scales?.y1?.ticks) chart.options.scales.y1.ticks.color = pal.tick;
+        if (chart.options.scales?.y?.grid) chart.options.scales.y.grid.color = pal.grid;
+
+        chart.data.datasets.forEach((ds, i) => {
+            const key = mapping[i];
+            const color = pal[key] || ds.borderColor;
+            ds.borderColor = color;
+            ds.backgroundColor = color;
         });
+        chart.update('none');
     }
 
-    function initCharts() {
-        const labels = Array.from({ length: 30 }, (_, i) => `${i}`);
-        const cpu = labels.map(() => gCpu()); const ram = labels.map(() => gRam());
-        const rps = labels.map(() => gRps()); const err = labels.map(() => gErr());
-        const inb = labels.map(() => gNet()); const out = labels.map(() => gNet());
+    // ---- public init ----
+    window.initWorkload = async function (panel) {
+        if (panel.__wl_inited) return;
+        panel.__wl_inited = true;
 
-        charts.cpuRam = makeLine($('#chartCpuRam'), labels, [
-            { label: 'CPU %', data: cpu, borderColor: '#60a5fa', backgroundColor: 'rgba(96,165,250,.15)', tension: .3, fill: true },
-            { label: 'RAM %', data: ram, borderColor: '#a78bfa', backgroundColor: 'rgba(167,139,250,.12)', tension: .3, fill: true },
-        ]);
+        const root = document.getElementById("op-workload") || panel;
+        let pal = chartPalette(root);
 
-        charts.rpsErr = makeLine($('#chartRpsErr'), labels, [
-            { label: 'RPS', data: rps, borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,.12)', tension: .3, fill: true, yAxisID: 'y' },
-            { label: 'Errors %', data: err, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,.12)', tension: .3, fill: true, yAxisID: 'y1' },
-        ]);
-        charts.rpsErr.options.scales.y1 = { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#fca5a5' } };
+        const rangeSel = panel.querySelector("#wl-range");
+        const autoBtn = panel.querySelector("#wl-refresh");
 
-        charts.net = makeLine($('#chartNet'), labels, [
-            { label: 'In', data: inb, borderColor: '#34d399', backgroundColor: 'rgba(52,211,153,.12)', tension: .3, fill: true },
-            { label: 'Out', data: out, borderColor: '#5eead4', backgroundColor: 'rgba(94,234,212,.10)', tension: .3, fill: true },
-        ]);
-    }
+        let range = rangeSel?.value || "1h";
+        let labels = makeLabels(range);
 
-    // ---- периодическое обновление ------------------------------------------
-    function tick() {
-        // KPI
-        const cpu = gCpu(), ram = gRam(), disk = gDisk(), net = gNet(), rps = gRps(), err = gErr();
-        setRing(document.querySelector('.ring[data-val="cpu"]'), cpu);
-        setRing(document.querySelector('.ring[data-val="ram"]'), ram);
-        setRing(document.querySelector('.ring[data-val="disk"]'), disk);
-        setRing(document.querySelector('.ring[data-val="net"]'), net);
-        setRing(document.querySelector('.ring[data-val="rps"]'), Math.min(100, rps / 4), String(Math.round(rps)));
-        setRing(document.querySelector('.ring[data-val="err"]'), err * 10, `${err.toFixed(1)}%`);
-        $('#kpiCpuInfo').textContent = `сред. ${cpu.toFixed(0)}%`;
-        $('#kpiRamInfo').textContent = `${ram.toFixed(0)}% занято`;
-        $('#kpiDiskInfo').textContent = `${(disk / 1.2).toFixed(0)} MB/s`;
-        $('#kpiNetInfo').textContent = `${(net * 1.3).toFixed(0)} Mbit/s`;
-        $('#kpiRpsInfo').textContent = `${rps.toFixed(0)} req/s`;
-        $('#kpiErrInfo').textContent = `${err.toFixed(1)}% 4xx/5xx`;
+        const cpuRam = makeChart(panel.querySelector("#chartCpuRam"), {
+            data: {
+                labels,
+                datasets: [
+                    { label: "CPU %", data: makeSeries(labels.length, { base: 55, spread: 20 }), color: pal.cpu },
+                    { label: "RAM %", data: makeSeries(labels.length, { base: 60, spread: 10 }), color: pal.ram }
+                ]
+            }
+        }, pal);
 
-        // графики – сдвигаем окно и добавляем точку
-        const push = (chart, v1, v2) => {
-            chart.data.labels.push(String(Date.now() % 60000));
-            chart.data.labels.shift();
-            chart.data.datasets[0].data.push(v1);
-            chart.data.datasets[0].data.shift();
-            if (v2 != null) { chart.data.datasets[1].data.push(v2); chart.data.datasets[1].data.shift(); }
-            chart.update('none');
+        const rpsErr = makeChart(panel.querySelector("#chartRpsErr"), {
+            data: {
+                labels,
+                datasets: [
+                    { label: "RPS", data: makeSeries(labels.length, { base: 12, spread: 8, floor: 0, ceil: 80 }), color: pal.rps, yAxisID: 'y' },
+                    { label: "Ошибки %", data: makeSeries(labels.length, { base: 2, spread: 2, floor: 0, ceil: 10 }), color: pal.err, yAxisID: 'y1' }
+                ]
+            },
+            options: {
+                scales: {
+                    y: { beginAtZero: true },
+                    y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false } }
+                }
+            }
+        }, pal);
+
+        const net = makeChart(panel.querySelector("#chartNet"), {
+            data: {
+                labels,
+                datasets: [
+                    { label: "Входящий МБ/с", data: makeSeries(labels.length, { base: 20, spread: 10, floor: 0, ceil: 100 }), color: pal.netIn },
+                    { label: "Исходящий МБ/с", data: makeSeries(labels.length, { base: 12, spread: 8, floor: 0, ceil: 80 }), color: pal.netOut }
+                ]
+            }
+        }, pal);
+
+        // lists & table & kpis
+        function fillLists(panel) {
+            const svc = panel.querySelector("#svcList");
+            const q = panel.querySelector("#queueList");
+            if (svc) {
+                svc.innerHTML = [
+                    { name: "Auth", state: "OK", note: "22 ms" },
+                    { name: "Mail", state: "OK", note: "SMTP" },
+                    { name: "VDocsBridge", state: "OK", note: "120 ms" },
+                    { name: "Db", state: "WARN", note: "P95 480 ms" }
+                ].map(s =>
+                    `<li class="svc-row ${s.state.toLowerCase()}">
+            <span class="dot"></span><span>${s.name}</span><i>${s.state}</i><em>${s.note}</em>
+          </li>`
+                ).join("");
+            }
+            if (q) {
+                q.innerHTML = [
+                    { name: "EmailQueue", depth: 3, rate: "2/s" },
+                    { name: "Jobs", depth: 0, rate: "—" },
+                    { name: "Export3D", depth: 1, rate: "0.2/s" }
+                ].map(x =>
+                    `<li class="svc-row">
+            <span class="dot"></span><span>${x.name}</span><i>${x.depth}</i><em>${x.rate}</em>
+          </li>`
+                ).join("");
+            }
+        }
+        function fillEndpoints(panel) {
+            const tbody = panel.querySelector("#tblEndpoints tbody");
+            if (!tbody) return;
+            const rows = [
+                ["/api/Support/ticket", 42, 120, 3.2, 0.8],
+                ["/Content/Operators/all_open_usertickets", 55, 180, 2.1, 0.2],
+                ["/api/Users/search", 28, 90, 4.5, 0.0],
+                ["/hubs/userStatus", 12, 35, 6.0, 0.0],
+                ["/api/VDocs/files", 88, 310, 1.4, 1.2]
+            ];
+            tbody.innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td></tr>`).join("");
+        }
+
+        fillLists(panel);
+        fillEndpoints(panel);
+        fillKpis(panel, fakeModel());
+
+        // data refresh
+        let timer = null;
+
+        function step() {
+            const m = fakeModel();
+            fillKpis(panel, m);
+
+            function regen(chart, gen) {
+                chart.data.labels = labels;
+                chart.data.datasets.forEach((ds, i) => ds.data = gen(i));
+                chart.update();
+            }
+
+            regen(cpuRam, (i) => i === 0
+                ? makeSeries(labels.length, { base: 55, spread: 20 })
+                : makeSeries(labels.length, { base: 60, spread: 10 }));
+
+            regen(rpsErr, (i) => i === 0
+                ? makeSeries(labels.length, { base: 12, spread: 8, floor: 0, ceil: 80 })
+                : makeSeries(labels.length, { base: 2, spread: 2, floor: 0, ceil: 10 }));
+
+            regen(net, (i) => i === 0
+                ? makeSeries(labels.length, { base: 20, spread: 10, floor: 0, ceil: 100 })
+                : makeSeries(labels.length, { base: 12, spread: 8, floor: 0, ceil: 80 }));
+        }
+
+        function setAuto(on) {
+            if (on) {
+                if (!timer) timer = setInterval(step, 5000);
+                autoBtn.dataset.state = "auto";
+                autoBtn.textContent = "Авто-обновление";
+            } else {
+                if (timer) { clearInterval(timer); timer = null; }
+                autoBtn.dataset.state = "manual";
+                autoBtn.textContent = "Обновить";
+            }
+        }
+
+        autoBtn?.addEventListener("click", () => {
+            setAuto(autoBtn.dataset.state !== "auto");
+        });
+
+        rangeSel?.addEventListener("change", () => {
+            range = rangeSel.value;
+            labels = makeLabels(range);
+            step();
+        });
+
+        // optional theme toggle (button id="wl-theme", if present)
+        const themeBtn = panel.querySelector("#wl-theme");
+        if (themeBtn) {
+            themeBtn.addEventListener("click", () => {
+                const root = document.getElementById("op-workload");
+                root.classList.toggle("is-dark");
+                pal = chartPalette(root);
+                recolorChart(cpuRam, pal, ['cpu', 'ram']);
+                recolorChart(rpsErr, pal, ['rps', 'err']);
+                recolorChart(net, pal, ['netIn', 'netOut']);
+                themeBtn.textContent = root.classList.contains("is-dark") ? "Тёмная" : "Светлая";
+            });
+        }
+
+        // start
+        setAuto(true);
+        step();
+
+        // dispose
+        panel.__dispose = function () {
+            try { if (timer) clearInterval(timer); } catch { }
+            try { cpuRam?.destroy(); } catch { }
+            try { rpsErr?.destroy(); } catch { }
+            try { net?.destroy(); } catch { }
         };
-        push(charts.cpuRam, cpu, ram);
-        push(charts.rpsErr, rps, err);
-        push(charts.net, gNet(), gNet());
-
-        // «живые» числа в таблице
-        demoEndpoints.forEach(e => {
-            e.avg = Math.max(10, e.avg + (Math.random() * 2 - 1) * 6);
-            e.p95 = Math.max(e.avg, e.p95 + (Math.random() * 2 - 1) * 10);
-            e.rps = Math.max(1, e.rps + (Math.random() * 2 - 1) * 3);
-            e.err = Math.max(0, e.err + (Math.random() * 2 - 1) * 0.2);
-        });
-        renderEndpoints();
-    }
-
-    // --- автопереключение интервала ----------------------------------------
-    let timer = null;
-    function startAuto() { stopAuto(); timer = setInterval(tick, 2000); }
-    function stopAuto() { if (timer) { clearInterval(timer); timer = null; } }
-
-    // init
-    document.addEventListener('DOMContentLoaded', () => {
-        renderLists();
-        renderEndpoints();
-        initCharts();
-        startAuto();
-
-        const btn = $('#wl-refresh');
-        btn?.addEventListener('click', () => {
-            const on = btn.dataset.state !== 'off';
-            if (on) { stopAuto(); btn.dataset.state = 'off'; btn.textContent = 'Ручной режим'; }
-            else { startAuto(); btn.dataset.state = 'auto'; btn.textContent = 'Авто-обновление'; }
-        });
-
-        $('#wl-range')?.addEventListener('change', e => {
-            // тут можно переключать сглаживание/кол-во точек/диапазон при подключении к реальному API
-            // сейчас просто перерисуем без изменений
-            Object.values(charts).forEach(ch => ch.update());
-        });
-    });
+    };
 })();

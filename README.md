@@ -33,7 +33,9 @@
 <p align="center">
   <img src="docs/img/adminPanel.png" width="900" alt="Админ-панель / панель оператора">
 </p>
-
+<p align="center">
+  <img src="docs/img/workdash.png" width="900" alt="Админ-панель / панель нагрузки">
+</p>
 ---
 
 ## 🧑‍💻 Целевая аудитория

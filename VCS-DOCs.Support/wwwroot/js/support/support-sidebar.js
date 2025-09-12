@@ -35,18 +35,63 @@ function waitForElm(selector, timeout = 5000, root = document) {
 }
 
 // ---- per-panel loader ----
+// wwwroot/js/support/support-sidebar.js
 async function ensureContentScripts(contentId, panelEl) {
     if (contentId === "accounts") {
-        console.log("[sidebar] ensureContentScripts(accounts) start");
         await loadScriptOnce("/js/support/accountsRender.js", "accounts-render-js");
         try { await waitForElm("#accountsTable", 3000, panelEl); } catch { }
-        if (!panelEl.isConnected) { console.log("[sidebar] accounts panel detached — abort init"); return; }
-        if (typeof window.initAccountsPage === "function") {
-            console.log("[sidebar] initAccountsPage()");
-            await window.initAccountsPage(panelEl);
+        if (!panelEl.isConnected) return;
+        if (typeof window.initAccountsPage === "function") await window.initAccountsPage(panelEl);
+        return;
+    }
+
+    if (contentId === "workload") {
+        await loadScriptOnce("https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js", "chartjs-4");
+        await loadScriptOnce("/js/operator/workload.js", "workload-js");
+        try { await waitForElm("#op-workload", 3000, panelEl); } catch { }
+        if (!panelEl.isConnected) return;
+        if (typeof window.initWorkload === "function") await window.initWorkload(panelEl);
+        return;
+    }
+
+    if (contentId === "user_tickets") {
+        await loadScriptOnce("/js/operator/all_open_userticket.js", "open-ticket-js");
+        try { await waitForElm("#op-open-tickets", 3000, panelEl); } catch { }
+        if (!panelEl.isConnected) return;
+        if (typeof window.initAllOpenUserTickets === "function") {
+            await window.initAllOpenUserTickets(panelEl);
         } else {
-            console.warn("[sidebar] initAccountsPage not found");
+            console.warn("[sidebar] initAllOpenUserTickets not found");
         }
+        return;
+    }
+
+    if (contentId === "closed_tickets") {
+        await loadScriptOnce("/js/operator/all_close_usertickets.js", "closed-tickets-js");
+        try { await waitForElm("#op-close-tickets", 3000, panelEl); } catch { }
+        if (!panelEl.isConnected) return;
+        if (typeof window.initAllCloseUserTickets === "function") {
+            await window.initAllCloseUserTickets(panelEl);
+        } else {
+            console.warn("[sidebar] initAllCloseUserTickets not found");
+        }
+        return;
+    }
+
+    if (contentId === "open_tickets") {
+        await loadScriptOnce("/js/user/user_open_tickets.js", "user-open-tickets-js");
+        try { await waitForElm("#user-open-tickets", 3000, panelEl); } catch { }
+        if (!panelEl.isConnected) return;
+        if (typeof window.initUserOpenTickets === "function") await window.initUserOpenTickets(panelEl);
+        return;
+    }
+
+    if (contentId === "faq") {
+        await loadScriptOnce("/js/user/faq.js", "user-faq-js");
+        try { await waitForElm("#user-faq", 3000, panelEl); } catch { }
+        if (!panelEl.isConnected) return;
+        if (typeof window.initUserFaq === "function") await window.initUserFaq(panelEl);
+        return;
     }
 }
 
@@ -97,6 +142,7 @@ async function ensureContentScripts(contentId, panelEl) {
 
     let clickLock = false;
     let currentContentId = null;
+    let currentDispose = null;
 
     // --- small auth guard ---
     function looksLikeLogin(html) {
@@ -171,13 +217,18 @@ async function ensureContentScripts(contentId, panelEl) {
             const panel = document.createElement("div");
             panel.className = "view-panel view-pre";
             panel.innerHTML = html;
+            try { currentDispose?.(); } catch { }
             container.replaceChildren(panel);
 
             // дать браузеру дорисовать
             panel.getBoundingClientRect();
 
             await ensureContentScripts(contentId, panel);
-
+            if (typeof panel.__dispose === "function") {
+                currentDispose = panel.__dispose;
+            } else {
+                currentDispose = null;
+            }
             panel.classList.add("view-enter");
             panel.addEventListener("animationend", () => {
                 panel.classList.remove("view-enter", "view-pre");
