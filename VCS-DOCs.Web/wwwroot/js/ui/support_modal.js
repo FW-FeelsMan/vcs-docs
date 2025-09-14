@@ -1,4 +1,5 @@
-﻿(function () {
+﻿//"D:\Unity\VCS-DOCs\VCS-DOCs.Web\wwwroot\js\ui\support_modal.js"
+(function () {
     "use strict";
 
     const modal = document.getElementById('supportModal');

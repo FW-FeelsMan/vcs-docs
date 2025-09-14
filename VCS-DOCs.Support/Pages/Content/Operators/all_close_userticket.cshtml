@@ -65,24 +65,7 @@
             </thead>
 
             <tbody id="opCloseTicketsBody">
-                @for (var i = 1; i <= 120; i++)
-                {
-                    var id = $"22{i:0000}zx";
-                    var assigned = i % 3 == 0;
-                    var operatorLogin = assigned ? "2825" : "—";
-                    var userLogin = $"user{i:000}";
-                    var org = $"ООО «Орг {(i % 7) + 1}»";
-                    var title = $"Демо: закрытая заявка №{i}";
-                    <tr data-id="@id" data-operator="@(assigned ? "2825" : "")">
-                        <td>@id</td>
-                        <td class="tt-auto" title="@title">@title</td>
-                        <td>@userLogin</td>
-                        <td>@org</td>
-                        <td><span class="status-badge closed">Закрыто</span></td>
-                        <td>@operatorLogin</td>
-                        <td><button class="button-sliding small btn-open">Открыть</button></td>
-                    </tr>
-                }
+               
             </tbody>
 
             <tfoot class="table-spacer">

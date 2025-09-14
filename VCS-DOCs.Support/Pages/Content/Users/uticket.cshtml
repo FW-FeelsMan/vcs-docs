@@ -1,0 +1,47 @@
+﻿@page "/Content/Users/uticket/{id}"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "SupportDeskAccess")]
+@model VCS_DOCs.Support.Pages.Content.Users.UserTicketThreadModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    Layout = null;
+}
+<meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(HttpContext).RequestToken" />
+<link rel="stylesheet" href="~/css/sub_css/support_accountsStyle.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/sub_css/operator_tickets_css/ticket_thread.css" asp-append-version="true" />
+
+<div id="ticket-thread"
+     class="profile_background accounts-page tickets-page"
+     data-ticket-id="@Model.Id"
+     data-subject="@Request?.Query["subject"]"
+     data-from="@(Request?.Query["from"].ToString() ?? "open_tickets")">
+    <!-- from: open_tickets | closed_tickets -->
+
+    <div class="button-container tt-header">
+        <button id="tt_back" class="button-sliding small">← Вернуться</button>
+        <h2 id="tt_title">
+            Заявка <span id="tt_id">@Model.Id</span>
+            <span class="tt-subject muted">Тема: <span id="tt_subject">—</span></span>
+        </h2>
+
+    </div>
+    <hr class="solid" />
+    <!-- скролл только здесь -->
+    <div class="content-scrollable tt-wrap">
+        <div class="tt-meta">
+            <div><b>№:</b> <span id="tt_id_dup">@Model.Id</span></div>
+            <div><b>Статус:</b> <span id="tt_status">Открыта</span></div>
+            <div><b>Создано:</b> <span id="tt_created">—</span></div>
+            <div><b>Обновлено:</b> <span id="tt_updated">—</span></div>
+        </div>
+
+        <div id="tt_messages" class="tt-messages"></div>
+    </div>
+
+    <!-- вне скролла — всегда на виду -->
+    <div class="tt-input">
+        <textarea id="tt_text" rows="3" placeholder="Напишите ответ… (Ctrl+Enter — отправить)"></textarea>
+        <button id="tt_send" class="button-sliding primary">Отправить</button>
+    </div>
+</div>
+
+<script src="~/js/user/user_ticket_thread.js" asp-append-version="true" defer></script>

@@ -63,33 +63,9 @@
                     <th>Обслуживает</th>
                     <th>Действие</th>
                 </tr>
-            </thead>
-
-            <!-- ОДИН tbody -->
+            </thead>            
             <tbody id="opTicketsBody">
-                @for (var i = 1; i <= 120; i++)
-                {
-                    var id = $"12{i:0000}ab";
-                    var waitOperator = i % 2 == 1;
-                    var assigned = i % 3 == 0;
-                    var operatorLogin = assigned ? "2825" : "—";
-                    var userLogin = $"user{i:000}";
-                    var org = $"ООО «Орг {(i % 7) + 1}»";
-                    var title = $"Демо: проблема с файлом №{i}";
-                    <tr data-id="@id" data-wait="@(waitOperator ? "operator" : "user")" data-operator="@(assigned ? "2825" : "")">
-                        <td>@id</td>
-                        <td class="tt-auto" title="@title">@title</td>
-                        <td>@userLogin</td>
-                        <td>@org</td>
-                        <td>
-                            <span class="status-badge @(waitOperator ? "wait-operator" : "wait-user")">
-                                @(waitOperator ? "Оператор ответил" : "Пользователь ответил")
-                            </span>
-                        </td>
-                        <td>@operatorLogin</td>
-                        <td><button class="button-sliding primary small btn-open">Открыть</button></td>
-                    </tr>
-                }
+                <!-- динамичное заполнение заявками -->
             </tbody>
 
             <tfoot class="table-spacer">

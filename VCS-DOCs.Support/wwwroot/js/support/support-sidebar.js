@@ -1,4 +1,4 @@
-﻿// wwwroot/js/support/support-sidebar.js  (simple + auth-guard + verbose logs)
+// wwwroot/js/support/support-sidebar.js  (simple + auth-guard + verbose logs)
 
 // ---- utils ----
 function loadScriptOnce(src, id) {
@@ -35,7 +35,6 @@ function waitForElm(selector, timeout = 5000, root = document) {
 }
 
 // ---- per-panel loader ----
-// wwwroot/js/support/support-sidebar.js
 async function ensureContentScripts(contentId, panelEl) {
     if (contentId === "accounts") {
         await loadScriptOnce("/js/support/accountsRender.js", "accounts-render-js");
@@ -65,8 +64,28 @@ async function ensureContentScripts(contentId, panelEl) {
         }
         return;
     }
+    if (contentId === "uticket") {
+        await loadScriptOnce("/js/user/user_ticket_thread.js", "user-ticket-thread-js");
+        try { await waitForElm("#ticket-thread", 3000, panelEl); } catch { }
+        if (!panelEl.isConnected) return;
+        if (typeof window.initUTicketThread === "function") {
+            await window.initUTicketThread(panelEl);
+        }
+        return;
+    }
 
     if (contentId === "closed_tickets") {
+        // Поддержка двух вариантов страницы: операторская и пользовательская
+        if (panelEl.querySelector("#user-closed-tickets")) {
+            await loadScriptOnce("/js/user/user_closed_tickets.js", "user-closed-tickets-js");
+            try { await waitForElm("#user-closed-tickets", 3000, panelEl); } catch { }
+            if (!panelEl.isConnected) return;
+            if (typeof window.initUserClosedTickets === "function") {
+                await window.initUserClosedTickets(panelEl);
+            }
+            return;
+        }
+        // операторская
         await loadScriptOnce("/js/operator/all_close_usertickets.js", "closed-tickets-js");
         try { await waitForElm("#op-close-tickets", 3000, panelEl); } catch { }
         if (!panelEl.isConnected) return;
@@ -83,6 +102,16 @@ async function ensureContentScripts(contentId, panelEl) {
         try { await waitForElm("#user-open-tickets", 3000, panelEl); } catch { }
         if (!panelEl.isConnected) return;
         if (typeof window.initUserOpenTickets === "function") await window.initUserOpenTickets(panelEl);
+        return;
+    }
+
+    if (contentId === "ticket") {
+        await loadScriptOnce("/js/operator/ticket_thread.js", "ticket-thread-js");
+        try { await waitForElm("#ticket-thread", 3000, panelEl); } catch { }
+        if (!panelEl.isConnected) return;
+        if (typeof window.initTicketThread === "function") {
+            await window.initTicketThread(panelEl);
+        }
         return;
     }
 
@@ -144,14 +173,22 @@ async function ensureContentScripts(contentId, panelEl) {
     let currentContentId = null;
     let currentDispose = null;
 
+    document.addEventListener("SupportContentChanged", (e) => {
+        const id = e && e.detail && e.detail.contentId;
+        if (id) {
+            currentContentId = id;
+            // чтобы "Назад" всегда знал, куда идти по умолчанию
+            if (id !== "ticket") window.__support_backTarget = id;
+        }
+    });
     // --- small auth guard ---
     function looksLikeLogin(html) {
         if (!html || typeof html !== "string") return false;
         const t = html.toLowerCase();
         return t.includes("/account/loginsupport")
             || t.includes("name=\"password\"")
-            || t.includes("войти</button>")     // русская кнопка
-            || t.includes("<h3>вход</h3>")      // твой шаблон
+            || t.includes("войти</button>")
+            || t.includes("<h3>вход</h3>")
             || t.includes(">вход<");
     }
 
@@ -167,9 +204,7 @@ async function ensureContentScripts(contentId, panelEl) {
         const txt = await res.text();
         console.log("[sidebar] fetch resp:", { status: res.status, redirected: res.redirected, url: res.url, ct });
 
-        // если сервер кинул редирект/401/403 или прислал логин-форму — уходим полноэкранно
         if (res.redirected || res.status === 401 || res.status === 403 || looksLikeLogin(txt)) {
-            //const to = res.url && /\/account\/loginsupport/i.test(res.url) ? res.url : "/Account/LoginSupport";
             let to = res.url && /\/account\/loginsupport/i.test(res.url) ? res.url : "/Account/LoginSupport";
             if (!/[?&]forced=1\b/i.test(to)) {
                 to += (to.includes("?") ? "&" : "?") + "forced=1";
@@ -194,7 +229,8 @@ async function ensureContentScripts(contentId, panelEl) {
         if (currentContentId === contentId) {
             $$(".sidebar-button").forEach((b) => b.classList.remove("selected"));
             button.classList.add("selected");
-            return;
+            const onTicket = !!document.querySelector("#ticket-thread");
+            if (!onTicket) return;
         }
 
         const url = mapContentToUrl(contentId);
@@ -236,6 +272,7 @@ async function ensureContentScripts(contentId, panelEl) {
             }, { once: true });
 
             currentContentId = contentId;
+            window.__support_backTarget = contentId;
             document.dispatchEvent(new CustomEvent("SupportContentChanged", { detail: { contentId } }));
             console.log("[sidebar] content loaded:", contentId);
         } catch (err) {
@@ -257,3 +294,146 @@ async function ensureContentScripts(contentId, panelEl) {
         if (first) window.selectButton(first);
     });
 })();
+
+
+// Удобный хелпер: вернуться к нужному списку (откуда пришли)
+window.selectSidebarByContentId = function (contentId) {
+    const btn = document.querySelector(`.sidebar .sidebar-button[data-content="${contentId}"]`);
+    if (btn && typeof window.selectButton === "function") {
+        window.selectButton(btn);
+    }
+};
+// Делегирование клика по "Вернуться" — работает всегда
+document.addEventListener('click', (e) => {
+    const btn = e.target && e.target.closest && e.target.closest('#tt_back');
+    if (!btn) return;
+
+    // читаем источник из разметки
+    const root = document.querySelector('#ticket-thread');
+    const fromAttr = root && root.dataset ? (root.dataset.from || '') : '';
+
+    // бэкап из последнего открытого списка
+    const backup = (typeof window.__support_backTarget === 'string' && window.__support_backTarget) ? window.__support_backTarget : '';
+
+    const target = fromAttr || backup || 'user_tickets';
+    console.log('[sidebar] back via delegate →', target);
+
+    if (typeof window.selectSidebarByContentId === 'function') {
+        window.selectSidebarByContentId(target);
+    } else {
+        history.back();
+    }
+});
+
+// ---- open ticket helper (динамическая загрузка карточки заявки) ----
+window.openTicket = async function (arg) {
+    const $ = (s, r = document) => r.querySelector(s);
+    const container = $("#content");
+    if (!container) return;
+
+    const id = (typeof arg === "string") ? arg : (arg && arg.id) || "";
+    if (!id) return;
+
+    const subject = (typeof arg === "object" && arg) ? (arg.subject || "") : "";
+    const fromId = (typeof arg === "object" && arg) ? (arg.fromId || "") : "";
+    window.__support_backTarget = fromId || 'user_tickets';
+    const url = `/Content/Operators/ticket/${encodeURIComponent(id)}`
+        + (subject || fromId ? `?${subject ? `subject=${encodeURIComponent(subject)}` : ""}${subject && fromId ? "&" : ""}${fromId ? `from=${encodeURIComponent(fromId)}` : ""}` : "");
+
+    const showLoader = () => $("#loader")?.classList.remove("hidden");
+    const hideLoader = () => $("#loader")?.classList.add("hidden");
+
+    async function fetchHtml(u) {
+        const res = await fetch(u, {
+            credentials: "same-origin",
+            cache: "no-store",
+            headers: { "X-Requested-With": "fetch" },
+            redirect: "follow"
+        });
+        const txt = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return txt;
+    }
+
+    showLoader();
+    try {
+        const html = await fetchHtml(url);
+
+        const panel = document.createElement("div");
+        panel.className = "view-panel view-pre";
+        panel.innerHTML = html;
+
+        try { window.__currentDispose?.(); } catch { }
+        container.replaceChildren(panel);
+
+        // дать браузеру дорисовать
+        panel.getBoundingClientRect();
+
+        await ensureContentScripts("ticket", panel);
+
+        panel.classList.add("view-enter");
+        panel.addEventListener("animationend", () => {
+            panel.classList.remove("view-enter", "view-pre");
+            hideLoader();
+        }, { once: true });
+
+        window.__currentDispose = typeof panel.__dispose === "function" ? panel.__dispose : null;
+        document.dispatchEvent(new CustomEvent("SupportContentChanged", { detail: { contentId: "ticket", ticketId: id } }));
+        console.log("[sidebar] ticket loaded:", id);
+    } catch (err) {
+        console.error("[sidebar] openTicket error:", err);
+        container.innerHTML = `<div style="padding:16px;color:#ddd">Ошибка загрузки заявки #${id}</div>`;
+        hideLoader();
+    }
+};
+window.openUTicket = async function (arg) {
+    const $ = (s, r = document) => r.querySelector(s);
+    const container = $("#content"); if (!container) return;
+
+    const id = (typeof arg === "string") ? arg : (arg && arg.id) || "";
+    if (!id) return;
+    const subject = (typeof arg === "object" && arg) ? (arg.subject || "") : "";
+    const fromId = (typeof arg === "object" && arg) ? (arg.fromId || "") : "";
+    window.__support_backTarget = fromId || 'open_tickets';
+
+    const url = `/Content/Users/uticket/${encodeURIComponent(id)}`
+        + (subject || fromId ? `?${subject ? `subject=${encodeURIComponent(subject)}` : ""}${subject && fromId ? "&" : ""}${fromId ? `from=${encodeURIComponent(fromId)}` : ""}` : "");
+
+    const showLoader = () => $("#loader")?.classList.remove("hidden");
+    const hideLoader = () => $("#loader")?.classList.add("hidden");
+
+    async function fetchHtml(u) {
+        const res = await fetch(u, { credentials: "same-origin", cache: "no-store", headers: { "X-Requested-With": "fetch" }, redirect: "follow" });
+        const txt = await res.text();
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return txt;
+    }
+
+    showLoader();
+    try {
+        const html = await fetchHtml(url);
+        const panel = document.createElement("div");
+        panel.className = "view-panel view-pre";
+        panel.innerHTML = html;
+        try { window.__currentDispose?.(); } catch { }
+
+        container.replaceChildren(panel);
+        panel.getBoundingClientRect();
+
+        await ensureContentScripts("uticket", panel);
+
+        panel.classList.add("view-enter");
+        panel.addEventListener("animationend", () => {
+            panel.classList.remove("view-enter", "view-pre");
+            hideLoader();
+        }, { once: true });
+
+        window.__currentDispose = typeof panel.__dispose === "function" ? panel.__dispose : null;
+        document.dispatchEvent(new CustomEvent("SupportContentChanged", { detail: { contentId: "uticket", ticketId: id } }));
+        console.log("[sidebar] user ticket loaded:", id);
+    } catch (err) {
+        console.error("[sidebar] openUTicket error:", err);
+        container.innerHTML = `<div style="padding:16px;color:#ddd">Ошибка загрузки заявки #${id}</div>`;
+        hideLoader();
+    }
+};

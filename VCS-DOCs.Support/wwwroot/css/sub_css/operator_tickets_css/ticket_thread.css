@@ -1,0 +1,245 @@
+﻿/* ===== Карточка заявки ===== */
+#ticket-thread {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+    #ticket-thread .tt-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 12px;
+        margin-bottom: 6px;
+    }
+
+        #ticket-thread .tt-header h2 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        #ticket-thread .tt-header .tt-subject {
+            margin-left: 10px;
+            font-size: 13px;
+        }
+
+    /* Зона переписки */
+    #ticket-thread .tt-wrap {
+        flex: 1 1 auto;
+        overflow: auto;
+        overflow-x: hidden;
+        margin: 0 6px 8px 6px;
+        padding: 10px;
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0,0,0,.04);
+    }
+
+    /* Метаданные над перепиской */
+    #ticket-thread .tt-meta {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(140px, 1fr));
+        gap: 6px 12px;
+        margin: 4px 0 10px;
+        padding: 0;
+        background: transparent;
+        border: 0;
+        font-size: 13px;
+        opacity: .85;
+    }
+
+    /* Сообщения */
+    #ticket-thread .tt-messages {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 6px 8px 10px;
+    }
+
+.tt-msg {
+    display: flex;
+    align-items: flex-start;
+    padding: 0 2px;
+}
+
+    .tt-msg.op {
+        justify-content: flex-start;
+    }
+
+    .tt-msg.usr {
+        justify-content: flex-end;
+    }
+
+/* Пузырь */
+.tt-bubble {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: fit-content;
+    max-width: min(32ch, 42%);
+    font-size: 13px;
+    line-height: 1.24;
+    padding: 6px 8px;
+    border-radius: 10px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    box-shadow: 0 1px 2px rgba(0,0,0,.10), 0 6px 14px rgba(0,0,0,.06);
+}
+
+    .tt-bubble * {
+        margin: 0 !important;
+    }
+
+.tt-msg.op .tt-bubble {
+    color: #fff;
+    background: rgba(90,155,213,.92);
+    border-top-left-radius: 6px;
+    margin-left: 6px;
+    box-shadow: 0 1px 3px rgba(27,40,58,.18), 0 8px 16px rgba(27,40,58,.10);
+}
+
+    .tt-msg.op .tt-bubble::after {
+        content: "";
+        position: absolute;
+        bottom: 6px;
+        left: -6px;
+        width: 0;
+        height: 0;
+        border: 6px solid transparent;
+        border-right-color: rgba(90,155,213,.92);
+        filter: drop-shadow(0 1px 1px rgba(0,0,0,.12));
+    }
+
+.tt-msg.usr .tt-bubble {
+    color: #1e293b;
+    background: #fff;
+    border: 1px solid #e6ebf5;
+    border-top-right-radius: 6px;
+    margin-right: 6px;
+    box-shadow: 0 1px 2px rgba(13,18,30,.06), 0 8px 20px rgba(13,18,30,.08);
+}
+
+    .tt-msg.usr .tt-bubble::before,
+    .tt-msg.usr .tt-bubble::after {
+        content: "";
+        position: absolute;
+        bottom: 6px;
+        right: -7px;
+        width: 0;
+        height: 0;
+        border: 7px solid transparent;
+    }
+
+    .tt-msg.usr .tt-bubble::before {
+        border-left-color: #e6ebf5;
+    }
+
+    .tt-msg.usr .tt-bubble::after {
+        right: -6px;
+        border: 6px solid transparent;
+        border-left-color: #fff;
+    }
+
+.tt-bubble .tt-msg-text {
+    margin: 0;
+}
+
+.tt-bubble .tt-msg-meta {
+    font-size: 10.5px;
+    opacity: .85;
+    display: flex;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+/* Слипание подряд идущих сообщений */
+.tt-msg.op + .tt-msg.op .tt-bubble {
+    margin-top: 2px;
+}
+
+.tt-msg.usr + .tt-msg.usr .tt-bubble {
+    margin-top: 2px;
+}
+
+/* Блок ввода */
+#ticket-thread .tt-input {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-top: 6px;
+    background: #fff;
+    border: 1px solid #e6e9f2;
+    border-radius: 12px;
+    padding: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.06);
+}
+
+    #ticket-thread .tt-input textarea {
+        flex: 1 1 auto;
+        resize: vertical;
+        min-height: 52px;
+        max-height: 40vh;
+    }
+
+    #ticket-thread .tt-input .button-sliding {
+        flex: 0 0 auto;
+    }
+
+.tt-input.disabled {
+    opacity: .6;
+    pointer-events: none;
+}
+
+    .tt-input.disabled textarea::placeholder {
+        opacity: .95;
+    }
+
+/* Статус */
+.tt-status-closed {
+    color: #d9534f;
+    font-weight: 600;
+}
+
+/* Тёмная тема */
+.profile_background.is-dark #ticket-thread .tt-wrap {
+    background: #0f1324;
+    border-color: #1c2038;
+    box-shadow: 0 8px 24px rgba(0,0,0,.25);
+}
+
+.profile_background.is-dark #ticket-thread .tt-input {
+    background: #111427;
+    border-color: #1c2038;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+
+.profile_background.is-dark .tt-msg.usr .tt-bubble {
+    background: #0f1324;
+    color: #e7ecff;
+    border: 1px solid #222845;
+    box-shadow: 0 2px 6px rgba(0,0,0,.35), 0 16px 28px rgba(0,0,0,.25);
+}
+
+    .profile_background.is-dark .tt-msg.usr .tt-bubble::before {
+        border-left-color: #222845;
+    }
+
+    .profile_background.is-dark .tt-msg.usr .tt-bubble::after {
+        border-left-color: #0f1324;
+    }
+
+/* Адаптив */
+@media (min-width:1400px) {
+    .tt-bubble {
+        max-width: min(30ch,40%);
+    }
+}
+
+@media (max-width:700px) {
+    .tt-bubble {
+        max-width: min(40ch,70%);
+    }
+}
