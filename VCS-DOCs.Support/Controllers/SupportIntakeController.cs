@@ -1,4 +1,4 @@
-﻿// VCS-DOCs.Support/Controllers/SupportTicketController.cs
+﻿// VCS-DOCs.Support/Controllers/SupportIntakeController.cs
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
@@ -16,27 +16,33 @@ using VCS_DOCs.Support.Infrastructure.Email;
 
 namespace VCS_DOCs.Support.Controllers
 {
+    /// <summary>
+    /// Принимает обращения с публичной формы /Support/Request:
+    /// - Создаёт тикет (через web-сервис и локальный upsert на всякий случай)
+    /// - При необходимости создаёт аккаунт пользователю и отправляет письмо
+    /// - Возвращает номер тикета и краткую квитанцию
+    /// </summary>
     [EnableRateLimiting("api-burst")]
     [ApiController]
-    [Route("api/Support")]
-    public class SupportTicketController : ControllerBase
+    [Route("api/Support")] // сохраняем текущий маршрут, чтобы ничего не ломалось
+    public class SupportIntakeController : ControllerBase
     {
         private readonly HttpClient _vdocs;
         private readonly ApplicationDbContext _db;
         private readonly UserManager<User> _userMgr;
         private readonly RoleManager<IdentityRole> _roleMgr;
-        private readonly ILogger<SupportTicketController> _log;
+        private readonly ILogger<SupportIntakeController> _log;
         private readonly IMailSender _mail;
         private readonly IConfiguration _cfg;
 
-        public SupportTicketController(
+        public SupportIntakeController(
             IHttpClientFactory http,
             ApplicationDbContext db,
             UserManager<User> userMgr,
             RoleManager<IdentityRole> roleMgr,
             IMailSender mail,
             IConfiguration cfg,
-            ILogger<SupportTicketController> log)
+            ILogger<SupportIntakeController> log)
         {
             _vdocs = http.CreateClient("VDocsBridge");
             _db = db;
@@ -47,6 +53,9 @@ namespace VCS_DOCs.Support.Controllers
             _log = log;
         }
 
+        /// <summary>
+        /// Входящая модель обращения с формы.
+        /// </summary>
         public sealed class TicketDto
         {
             public string? fullName
@@ -94,30 +103,25 @@ namespace VCS_DOCs.Support.Controllers
         private static IList<string> ValidateTicket(TicketDto dto)
         {
             var errors = new List<string>();
-
-            // email обязателен и валиден
             if (string.IsNullOrWhiteSpace(dto.replyTo) || !IsValidEmail(dto.replyTo))
                 errors.Add("Укажите корректную почту для ответа (например, user@example.com).");
-
-            // login опционален, но если указан — только латиница/цифры и ≤20
             if (!string.IsNullOrWhiteSpace(dto.login) && !LoginRegex.IsMatch(dto.login))
                 errors.Add("Логин может содержать только латинские буквы и цифры, до 20 символов.");
-
-            // subject/message — легкая проверка (можно усилить при желании)
             if (string.IsNullOrWhiteSpace(dto.subject) || dto.subject.Length < 3)
                 errors.Add("Тема обращения слишком короткая.");
             if (string.IsNullOrWhiteSpace(dto.message) || dto.message.Length < 10)
                 errors.Add("Текст обращения слишком короткий.");
-
             return errors;
         }
 
+        /// <summary>
+        /// Создать тикет из публичной формы. Опционально — создать аккаунт и отправить письмо.
+        /// </summary>
         [HttpPost("ticket")]
         [AllowAnonymous]
         [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
         public async Task<IActionResult> Ticket([FromBody] TicketDto dto, CancellationToken ct)
         {
-            // 0) серверная валидация
             var errors = ValidateTicket(dto);
             if (errors.Count > 0)
                 return BadRequest(new { success = false, errors });
@@ -139,22 +143,18 @@ namespace VCS_DOCs.Support.Controllers
                     ticketId = t.GetString();
             }
             catch { /* ok */ }
-            
+
             if (!string.IsNullOrEmpty(ticketId))
             {
                 try { await UpsertTicketFromWebAsync(ticketId!, dto, ct); }
                 catch (Exception ex) { _log.LogWarning(ex, "Upsert ticket failed for {TicketId}", ticketId); }
             }
 
-
             // 2) автопровижининг пользователя (если передан login)
             var createdUser = await EnsureUserAndSetPasswordAsync(dto.login, dto.replyTo, dto.fullName, ct);
 
-            // 3) письмо:
-            //    - если учётка только что создана — письмо с логином/паролем
-            //    - если учётка уже была — квитанция без пароля (+ опционально ссылка на сброс)
+            // 3) письмо пользователю
             var ticketUrl = BuildTicketUrl(ticketId);
-
             if (!string.IsNullOrWhiteSpace(createdUser.email))
             {
                 string subject, html;
@@ -214,6 +214,10 @@ namespace VCS_DOCs.Support.Controllers
                 email = createdUser.email
             });
         }
+
+        /// <summary>
+        /// Защитный upsert тикета по номеру, если web-сервис отдал ticketId.
+        /// </summary>
         private async Task UpsertTicketFromWebAsync(string ticketId, TicketDto dto, CancellationToken ct)
         {
             if (string.IsNullOrWhiteSpace(ticketId)) return;
@@ -267,6 +271,7 @@ namespace VCS_DOCs.Support.Controllers
             await _db.SaveChangesAsync(ct);
         }
 
+        /// <summary>Собрать ссылку на карточку тикета (если задан шаблон в конфиге).</summary>
         private string? BuildTicketUrl(string? ticketId)
         {
             if (string.IsNullOrEmpty(ticketId)) return null;
@@ -274,6 +279,7 @@ namespace VCS_DOCs.Support.Controllers
             return string.IsNullOrWhiteSpace(tpl) ? null : tpl.Replace("{id}", ticketId);
         }
 
+        /// <summary>Попытаться построить ссылку на сброс пароля.</summary>
         private async Task<string?> TryBuildResetUrlAsync(string? userId)
         {
             if (string.IsNullOrEmpty(userId)) return null;
@@ -291,6 +297,7 @@ namespace VCS_DOCs.Support.Controllers
             catch { return null; }
         }
 
+        /// <summary>Сгенерировать сильный временный пароль.</summary>
         private static string GenerateStrongPassword(int length = 16)
         {
             const string alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%^&*";
@@ -302,6 +309,9 @@ namespace VCS_DOCs.Support.Controllers
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Убедиться, что пользователь существует; при необходимости — создать и задать пароль.
+        /// </summary>
         private async Task<(bool justCreated, string? userId, string? login, string? email, string? plainPassword)>
             EnsureUserAndSetPasswordAsync(string? login, string? email, string? fullName, CancellationToken ct)
         {
@@ -318,7 +328,7 @@ namespace VCS_DOCs.Support.Controllers
             var user = new User
             {
                 UserName = login,
-                Email = IsValidEmail(email) ? email : null, // не сохраняем мусор
+                Email = IsValidEmail(email) ? email : null,
                 FullName = string.IsNullOrWhiteSpace(fullName) ? null : fullName,
                 CreatedAt = DateTime.UtcNow,
                 Access = 1,
@@ -334,7 +344,6 @@ namespace VCS_DOCs.Support.Controllers
                 return (false, null, login, email, null);
             }
 
-            // пароль
             var pwd = GenerateStrongPassword();
             var addPwd = await _userMgr.AddPasswordAsync(user, pwd);
             if (!addPwd.Succeeded)
@@ -344,7 +353,6 @@ namespace VCS_DOCs.Support.Controllers
                 pwd = null;
             }
 
-            // базовая роль
             if (await _roleMgr.RoleExistsAsync(Roles.BaseUser))
                 await _userMgr.AddToRoleAsync(user, Roles.BaseUser);
 
@@ -352,7 +360,7 @@ namespace VCS_DOCs.Support.Controllers
             return (true, user.Id, user.UserName, user.Email, pwd);
         }
 
-        // диагностика SMTP
+        /// <summary>Тест почты (диагностика SMTP).</summary>
         [HttpGet("debug/send-mail")]
         [AllowAnonymous]
         public async Task<IActionResult> SendTest([FromServices] IMailSender mail)

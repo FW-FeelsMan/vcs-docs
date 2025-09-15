@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Data;
 using VCS_DOCs.Support.Infrastructure.Provision;
+using VCS_DOCs.Models.Entities;
 
 namespace VCS_DOCs.Support.Pages.Support
 {
@@ -81,6 +82,12 @@ namespace VCS_DOCs.Support.Pages.Support
             {
                 get; set;
             }
+
+            // флаг подтверждени€ создани€ нового аккаунта (ставит фронт после диалога)
+            public bool? ConfirmCreate
+            {
+                get; set;
+            }
         }
 
         [BindProperty]
@@ -115,18 +122,13 @@ namespace VCS_DOCs.Support.Pages.Support
                 var email = (Input.ReplyTo ?? "").Trim();
                 var loginRaw = (Input.Login ?? "").Trim();
 
-                // автогенераци€ логина из email при необходимости
-                if (string.IsNullOrWhiteSpace(loginRaw))
+                // если логина нет Ч предложим на базе e-mail
+                if (string.IsNullOrWhiteSpace(loginRaw) && !string.IsNullOrWhiteSpace(email) && email.Contains('@'))
                 {
-                    if (!string.IsNullOrWhiteSpace(email) && email.Contains('@'))
-                    {
-                        var (local, domainRoot) = SplitEmail(email);
-                        var baseLogin = SanitizeLoginBase(local);
-                        if (string.IsNullOrWhiteSpace(baseLogin))
-                            baseLogin = "user";
-
-                        loginRaw = await BuildUniqueLoginAsync(baseLogin, domainRoot);
-                    }
+                    var (local, domainRoot) = SplitEmail(email);
+                    var baseLogin = SanitizeLoginBase(local);
+                    if (string.IsNullOrWhiteSpace(baseLogin)) baseLogin = "user";
+                    loginRaw = await BuildUniqueLoginAsync(baseLogin, domainRoot);
                 }
 
                 if (string.IsNullOrWhiteSpace(loginRaw))
@@ -141,6 +143,25 @@ namespace VCS_DOCs.Support.Pages.Support
                     };
                 }
 
+                // пользователь существует?
+                var exists = await _db.Users.AsNoTracking()
+                    .AnyAsync(u => u.NormalizedUserName == loginRaw.ToUpperInvariant());
+
+                if (!exists && Input.ConfirmCreate != true)
+                {
+                    // просим подтверждение у фронта (панель-диалог в новом support-request.js)
+                    return new JsonResult(new
+                    {
+                        success = false,
+                        code = "account_absent",
+                        message = "”четна€ запись с указанным логином не существует. —оздать новую и отправить запрос?",
+                        suggestedLogin = loginRaw
+                    })
+                    {
+                        StatusCode = 409
+                    };
+                }
+
                 _log.LogInformation("PROVISION start: login={Login} email={Email}", loginRaw, email);
 
                 var (user, created) = await _provisioning.EnsureUserExistsAsync(
@@ -151,10 +172,9 @@ namespace VCS_DOCs.Support.Pages.Support
                     department: null
                 );
 
-                _log.LogInformation("PROVISION done: id={Id} login={Login} created={Created}",
-                    user.Id, user.UserName, created);
+                _log.LogInformation("PROVISION done: id={Id} login={Login} created={Created}", user.Id, user.UserName, created);
 
-                // NEW: гарантируем установку StorageLimitBytes
+                // гарантируем StorageLimitBytes
                 var dbUser = await _db.Users.FirstOrDefaultAsync(u => u.Id == user.Id);
                 if (dbUser != null && (dbUser.StorageLimitBytes == null || dbUser.StorageLimitBytes <= 0))
                 {
@@ -163,12 +183,42 @@ namespace VCS_DOCs.Support.Pages.Support
                     _log.LogInformation("Set StorageLimitBytes={Limit} for user {Id}", dbUser.StorageLimitBytes, dbUser.Id);
                 }
 
+                // создаЄм тикет + первое сообщение
+                var ticketId = NewShortId(); // 8 hex, как в API :contentReference[oaicite:4]{index=4}
+                var now = DateTime.UtcNow;
+
+                var t = new SupportTicket
+                {
+                    Id = ticketId,
+                    Subject = Input.Subject?.Trim(),
+                    Status = "open",                 // модель предполагает строковый статус с дефолтом "open" :contentReference[oaicite:5]{index=5}
+                    CreatedAt = now,
+                    UpdatedAt = now,
+                    OwnerUserId = user.Id,
+                    OwnerLogin = user.UserName,
+                    ReplyToEmail = string.IsNullOrWhiteSpace(email) ? null : email
+                };
+
+                var first = new SupportTicketMessage
+                {
+                    TicketId = ticketId,
+                    AuthorUserId = user.Id,
+                    AuthorRole = "user",
+                    Body = Input.Message.Trim(),
+                    CreatedAt = now
+                }; // пол€ согласно модели сообщений :contentReference[oaicite:6]{index=6}
+
+                _db.SupportTickets.Add(t);
+                _db.SupportTicketMessages.Add(first);
+                await _db.SaveChangesAsync(); // DbSet-ы уже сконфигурированы в контексте :contentReference[oaicite:7]{index=7}
+
                 var traceId = HttpContext.TraceIdentifier;
 
                 return new JsonResult(new
                 {
                     success = true,
-                    created,
+                    created,               // был ли создан аккаунт
+                    ticketId,              // є тикета (короткий)
                     userId = user.Id,
                     login = user.UserName,
                     email = user.Email,
@@ -189,7 +239,8 @@ namespace VCS_DOCs.Support.Pages.Support
             }
         }
 
-       
+        private static string NewShortId() => Guid.NewGuid().ToString("N")[..8];
+
         private static (string local, string? domainRoot) SplitEmail(string email)
         {
             try
@@ -227,7 +278,7 @@ namespace VCS_DOCs.Support.Pages.Support
             {
                 var dom = SanitizeLoginBase(domainRoot);
                 if (!string.IsNullOrWhiteSpace(dom))
-                    candidates.Add(WithSuffix(baseLogin, dom, maxLen)); 
+                    candidates.Add(WithSuffix(baseLogin, dom, maxLen));
             }
 
             foreach (var cand in candidates)

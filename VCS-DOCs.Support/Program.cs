@@ -276,6 +276,14 @@ internal class Program
                 await next();
                 return;
             }
+            if (ctx.Request.Path.StartsWithSegments("/Support/Request", StringComparison.OrdinalIgnoreCase))
+            {
+                // X-Frame-Options блокирует кросс-доменные фреймы — убираем
+                ctx.Response.Headers.Remove("X-Frame-Options");
+
+                var csp = "frame-ancestors 'self' https://vcs-docs.local:7120";
+                ctx.Response.Headers["Content-Security-Policy"] = csp;
+            }
 
             if (ctx.User?.Identity?.IsAuthenticated == true)
             {

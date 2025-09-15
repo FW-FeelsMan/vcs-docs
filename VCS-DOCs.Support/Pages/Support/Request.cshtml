@@ -73,6 +73,15 @@
                 Тех.инфо приложим автоматически (URL, TraceId, User-Agent).
             </div>
         </form>
+        <div class="sr-loader" id="srLoader"><div class="sr-spinner"></div></div>
+        <div class="sr-result" id="srPanel" aria-live="polite">
+            <h3 id="srTitle">Подтверждение</h3>
+            <p id="srText">—</p>
+            <div class="sr-actions">
+                <button type="button" class="sr-btn primary" id="srConfirm">Создать и отправить</button>
+                <button type="button" class="sr-btn secondary" id="srCancel">Отмена</button>
+            </div>
+        </div>
     </div>
 </main>
 
