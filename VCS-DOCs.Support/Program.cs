@@ -318,7 +318,7 @@ internal class Program
         app.MapRazorPages();          
         app.MapControllers();
         app.MapHub<SupportPresenceHub>("/hubs/userStatus");
-        app.MapHub<TicketHub>("/hubs/tickets");
+        app.MapHub<TicketHub>("/hubs/ticket");
 
         app.Run();
     }

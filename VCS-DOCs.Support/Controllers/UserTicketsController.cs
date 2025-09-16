@@ -24,6 +24,8 @@ namespace VCS_DOCs.Support.Controllers
         private readonly IHubContext<TicketHub> _hub;
         private readonly ILogger<UserTicketsController> _log;
 
+        private const string TicketIdRoute = "{id:regex(^[[0-9a-fA-F]]{{8}}$)}";
+
         public UserTicketsController(
             ApplicationDbContext db,
             IHubContext<TicketHub> hub,
@@ -104,7 +106,7 @@ namespace VCS_DOCs.Support.Controllers
             return Ok(new { items = dto });
         }
 
-        [HttpGet("{id}")]
+        [HttpGet(TicketIdRoute)]
         public async Task<IActionResult> GetOne([FromRoute] string id)
         {
             var one = await _db.SupportTickets.AsNoTracking()
@@ -155,7 +157,7 @@ namespace VCS_DOCs.Support.Controllers
             }
         }
 
-        [HttpPost("{id}/message")]
+        [HttpPost(TicketIdRoute + "/messages")]
         public async Task<IActionResult> PostMessage([FromRoute] string id, [FromBody] NewMessageDto dto)
         {
             var body = (dto.Body ?? "").Trim();
@@ -184,16 +186,28 @@ namespace VCS_DOCs.Support.Controllers
             await _db.SaveChangesAsync();
 
             // Push в комнату заявки
+            //await _hub.Clients.Group($"ticket:{id}").SendAsync("message", new
+            //{
+            //    ticketId = id,
+            //    message = new
+            //    {
+            //        id = msg.Id,
+            //        role = msg.AuthorRole,
+            //        body = msg.Body,
+            //        createdAt = msg.CreatedAt,
+            //        mine = true
+            //    }
+            //});
             await _hub.Clients.Group($"ticket:{id}").SendAsync("message", new
             {
                 ticketId = id,
                 message = new
                 {
                     id = msg.Id,
-                    role = msg.AuthorRole,
+                    role = msg.AuthorRole,      
                     body = msg.Body,
                     createdAt = msg.CreatedAt,
-                    mine = true
+                    authorUserId = msg.AuthorUserId 
                 }
             });
 
