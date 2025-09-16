@@ -1,7 +1,11 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿// VCS-DOCs.Support/Controllers/SelfTicketsController.cs
+using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Data;
+using VCS_DOCs.Models.Entities;
 
 namespace VCS_DOCs.Support.Controllers;
 
@@ -19,10 +23,11 @@ public sealed class SelfTicketsController : ControllerBase
         _log = log;
     }
 
+    // -------- DTOs (для списка) --------
     public sealed record UserOpenTicketDto(
         string Id,
         string Subject,
-        string Wait,        // "user" | "operator" (кто написал ПОСЛЕДНИМ)
+        string Wait,        // "user" | "operator" (кто писал последним)
         DateTime CreatedAt,
         DateTime UpdatedAt,
         bool Notify);
@@ -33,6 +38,34 @@ public sealed class SelfTicketsController : ControllerBase
         DateTime CreatedAt,
         DateTime UpdatedAt);
 
+    // -------- helpers --------
+    private async Task<(string? userId, string? login)> GetCurrentUserAsync()
+    {
+        // 1) пробуем взять Id из клейма (NameIdentifier) — самый надёжный вариант
+        var uid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var login = User.Identity?.Name;
+
+        if (!string.IsNullOrWhiteSpace(uid))
+            return (uid, login);
+
+        // 2) фолбэк: если только Name (логин), найдём Id в БД
+        if (!string.IsNullOrWhiteSpace(login))
+        {
+            var norm = login.ToUpperInvariant();
+            var foundId = await _db.Users
+                .AsNoTracking()
+                .Where(u => u.NormalizedUserName == norm)
+                .Select(u => u.Id)
+                .FirstOrDefaultAsync();
+
+            if (!string.IsNullOrWhiteSpace(foundId))
+                return (foundId, login);
+        }
+
+        return (null, login); // нет Id — дальше Create вернёт вежливую ошибку
+    }
+
+    // -------- списки --------
     [HttpGet("open")]
     public async Task<IActionResult> Open()
     {
@@ -47,7 +80,7 @@ public sealed class SelfTicketsController : ControllerBase
                     (!string.IsNullOrEmpty(t.OwnerUserId) && t.OwnerUserId == uid) ||
                     (!string.IsNullOrEmpty(t.OwnerLogin) && t.OwnerLogin == login)
                 ))
-            .OrderByDescending(t => t.UpdatedAt)
+            .OrderByDescending(t => t.UpdatedAt ?? t.CreatedAt)
             .Select(t => new
             {
                 t.Id,
@@ -91,7 +124,7 @@ public sealed class SelfTicketsController : ControllerBase
                     (!string.IsNullOrEmpty(t.OwnerUserId) && t.OwnerUserId == uid) ||
                     (!string.IsNullOrEmpty(t.OwnerLogin) && t.OwnerLogin == login)
                 ))
-            .OrderByDescending(t => t.UpdatedAt)
+            .OrderByDescending(t => t.UpdatedAt ?? t.CreatedAt)
             .Select(t => new
             {
                 t.Id,
@@ -113,18 +146,87 @@ public sealed class SelfTicketsController : ControllerBase
         return Ok(rows);
     }
 
-    private async Task<(string? userId, string? login)> GetCurrentUserAsync()
+    // -------- создание --------
+    public sealed class NewTicketDto
     {
-        var login = User.Identity?.Name;
-        if (string.IsNullOrWhiteSpace(login)) return (null, null);
+        [Required, MinLength(3), MaxLength(200)]
+        public string Subject { get; set; } = string.Empty;
 
-        var norm = login.ToUpperInvariant();
-        var userId = await _db.Users
-            .AsNoTracking()
-            .Where(u => u.NormalizedUserName == norm)
-            .Select(u => u.Id)
+        [Required, MinLength(5), MaxLength(20000)]
+        public string Message { get; set; } = string.Empty;
+
+        public string? ReplyTo
+        {
+            get; set;
+        } // опционально переопределить e-mail
+    }
+
+    [HttpPost("tickets")]
+    public async Task<IActionResult> Create([FromBody] NewTicketDto dto)
+    {
+        var (uid, login) = await GetCurrentUserAsync();
+        if (string.IsNullOrWhiteSpace(uid) && string.IsNullOrWhiteSpace(login))
+            return Unauthorized(new { ok = false, error = "not_auth" });
+
+        if (!ModelState.IsValid)
+            return BadRequest(new { ok = false, error = "bad_input" });
+
+        // возьмём пользователя (чтобы точно был Id и корректный e-mail)
+        var user = await _db.Users.AsNoTracking()
+            .Where(u => u.Id == uid || u.NormalizedUserName == (login ?? "").ToUpperInvariant())
+            .Select(u => new { u.Id, u.UserName, u.Email })
             .FirstOrDefaultAsync();
 
-        return (userId, login);
+        var ownerId = user?.Id ?? uid;
+        var ownerLogin = user?.UserName ?? login;
+
+        if (string.IsNullOrWhiteSpace(ownerId))
+            return BadRequest(new { ok = false, error = "owner_not_found" });
+
+        var replyTo = string.IsNullOrWhiteSpace(dto.ReplyTo) ? (user?.Email ?? null) : dto.ReplyTo;
+
+        var ticketId = Guid.NewGuid().ToString("N")[..8];
+        var now = DateTime.UtcNow;
+
+        var t = new SupportTicket
+        {
+            Id = ticketId,
+            Subject = dto.Subject.Trim(),
+            Status = "open",
+            CreatedAt = now,
+            UpdatedAt = now,
+            OwnerUserId = ownerId,
+            OwnerLogin = ownerLogin,
+            ReplyToEmail = string.IsNullOrWhiteSpace(replyTo) ? null : replyTo
+        };
+
+        var first = new SupportTicketMessage
+        {
+            TicketId = ticketId,
+            AuthorUserId = ownerId,               // <— теперь точно НЕ null
+            AuthorRole = "user",
+            Body = dto.Message.Trim(),
+            CreatedAt = now
+        };
+
+        try
+        {
+            _db.SupportTickets.Add(t);
+            _db.SupportTicketMessages.Add(first);
+            await _db.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            _log.LogError(ex, "Failed to create self-ticket for {OwnerId}/{OwnerLogin}", ownerId, ownerLogin);
+            return StatusCode(500, new { ok = false, error = "save_failed" });
+        }
+
+        return Ok(new
+        {
+            ok = true,
+            ticketId,
+            subject = t.Subject,
+            createdAt = t.CreatedAt
+        });
     }
 }

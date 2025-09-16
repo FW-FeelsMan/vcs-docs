@@ -1,4 +1,4 @@
-﻿// wwwroot/js/user/user_open_tickets.js — realtime badge updates
+﻿// wwwroot/js/user/user_open_tickets.js — realtime badge updates + "Создать заявку" modal
 (() => {
     const USE_MOCK = /[?&]mock=1\b/i.test(location.search);
 
@@ -127,6 +127,13 @@
         const searchBox = root.querySelector('#user_searchBox');
         const btnSearch = root.querySelector('#btn-search');
 
+        // NEW: элементы модалки "Создать заявку"
+        const btnCreate = root.querySelector('#btn-create-ticket');
+        const modal = document.getElementById('newTicketModal');
+        const modalClose = document.getElementById('newTicketClose');
+        const modalBackdrop = document.getElementById('newTicketBackdrop');
+        const modalFrame = document.getElementById('newTicketFrame');
+
         let q = '';
         let debounce = null;
 
@@ -192,11 +199,39 @@
             }
         });
 
+        // --- NEW: Создать заявку (модалка с iframe) ---
+        function openCreate() {
+            if (modalFrame) modalFrame.src = '/Content/Users/new_ticket';
+            modal?.classList.add('show');
+            document.body.classList.add('modal-open');
+        }
+        function closeCreate(refresh = true) {
+            modal?.classList.remove('show');
+            document.body.classList.remove('modal-open');
+            if (modalFrame) modalFrame.src = 'about:blank';
+            if (refresh) loadRows();
+        }
+        btnCreate?.addEventListener('click', openCreate);
+        modalClose?.addEventListener('click', () => closeCreate(true));
+        modalBackdrop?.addEventListener('click', () => closeCreate(false));
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal?.classList.contains('show')) closeCreate(false);
+        });
+        // На будущее: если внутри формы после успеха пошлёте postMessage — обновим сразу
+        window.addEventListener('message', (e) => {
+            try {
+                const d = e.data || {};
+                if (d && d.kind === 'support:ticket_created') {
+                    // d.ticketId можно прочитать при желании
+                    closeCreate(true);
+                }
+            } catch { }
+        });
+
         loadRows();
 
         panel.__dispose = function () {
             try { clearTimeout(debounce); } catch { }
-            // соединение общее — не останавливаем
         };
     };
 })();
