@@ -22,7 +22,26 @@ public sealed class SelfTicketsController : ControllerBase
         _db = db;
         _log = log;
     }
+    public sealed class NotifyToggleDto
+    {
+        public string TicketId { get; set; } = "";
+        public bool Enabled
+        {
+            get; set;
+        }
+    }
+    [HttpPost("notify")]
+    public async Task<IActionResult> SetNotify([FromBody] NotifyToggleDto dto)
+    {
+        if (string.IsNullOrWhiteSpace(dto.TicketId))
+            return BadRequest(new { ok = false, error = "no_id" });
 
+        // TODO: сохранять per-user настройку, например, в таблицу SupportTicketNotifies:
+        // (UserId, TicketId, Enabled, UpdatedAt). Пока просто отвечаем 200 OK.
+
+        await Task.CompletedTask;
+        return Ok(new { ok = true });
+    }
     // -------- DTOs (для списка) --------
     public sealed record UserOpenTicketDto(
         string Id,

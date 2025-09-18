@@ -1,4 +1,4 @@
-// wwwroot/js/operator/ticket_thread.js — realtime + send (+dedup) для оператора
+// wwwroot/js/operator/ticket_thread.js — realtime + send (+dedup) + close для оператора
 (() => {
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const fmt = iso => {
@@ -28,8 +28,10 @@
             headers: { 'Content-Type': 'application/json; charset=utf-8', ...(token ? { 'RequestVerificationToken': token } : {}) },
             body: JSON.stringify(body ?? {})
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return await res.json().catch(() => ({}));
+        const txt = await res.text().catch(() => '');
+        let json = null; try { json = txt ? JSON.parse(txt) : null; } catch { }
+        if (!res.ok) throw new Error(json?.error || (`HTTP ${res.status}`));
+        return json || {};
     }
 
     // У оператора: сообщения пользователя → справа (usr), оператора → слева (op)
@@ -54,14 +56,17 @@
         const inputWrap = root.querySelector('.tt-input');
         const txt = root.querySelector('#tt_text');
         const btnSend = root.querySelector('#tt_send');
+        const btnClose = root.querySelector('#tt_close');
         if (closed) {
             inputWrap?.classList.add('disabled');
             if (txt) { txt.disabled = true; txt.placeholder = 'Заявка закрыта. Отправка сообщений недоступна.'; }
             if (btnSend) { btnSend.disabled = true; btnSend.classList.remove('primary'); }
+            if (btnClose) btnClose.disabled = true;
         } else {
             inputWrap?.classList.remove('disabled');
             if (txt) { txt.disabled = false; txt.placeholder = 'Напишите ответ… (Ctrl+Enter — отправить)'; }
             if (btnSend) { btnSend.disabled = false; btnSend.classList.add('primary'); }
+            if (btnClose) btnClose.disabled = false;
         }
     }
 
@@ -85,7 +90,7 @@
         }
         throw new Error('SignalR client not found');
     }
-    async function connectAndJoin(ticketId, onMessage) {
+    async function connectAndJoin(ticketId, onMessage, onStatus) {
         const signalR = await loadSignalR();
         const conn = new signalR.HubConnectionBuilder()
             .withUrl(HUB_URL, { withCredentials: true })
@@ -98,6 +103,14 @@
                 const msg = payload.message || {};
                 onMessage(msg);
                 document.dispatchEvent(new CustomEvent('SupportTicketMessage', { detail: { ticketId, message: msg } }));
+            } catch { }
+        });
+
+        conn.on('status', payload => {
+            try {
+                if (!payload || payload.ticketId !== ticketId) return;
+                onStatus?.(payload);
+                document.dispatchEvent(new CustomEvent('SupportTicketStatus', { detail: { ticketId, status: payload.status, updatedAt: payload.updatedAt } }));
             } catch { }
         });
 
@@ -135,6 +148,7 @@
         const txt = root.querySelector('#tt_text');
         const btnSend = root.querySelector('#tt_send');
         const btnBack = root.querySelector('#tt_back');
+        const btnClose = root.querySelector('#tt_close');
 
         titleId && (titleId.textContent = ticketId);
         dupId && (dupId.textContent = ticketId);
@@ -177,12 +191,9 @@
                 const id = res?.id;
                 const at = res?.at || new Date().toISOString();
 
-                // Если пуш уже успел прийти с этим id — ничего не рисуем (уже есть в DOM)
                 if (id && receivedIds.has(id)) {
                     receivedIds.delete(id);
                 } else {
-                    // Иначе рисуем локально своё сообщение и помечаем id,
-                    // чтобы игнорировать возможный последующий эхо-пуш.
                     const mineMsg = { id, role: 'agent', body: v, createdAt: at };
                     msgBox.insertAdjacentHTML('beforeend', renderMsg(mineMsg));
                     if (id) sentIds.add(id);
@@ -200,20 +211,56 @@
         txt?.addEventListener('keydown', onKey);
         btnSend?.addEventListener('click', sendNow);
 
+        // 2.1) закрытие
+        function applyClosed(updatedAtIso) {
+            stEl && (stEl.textContent = 'Закрыта');
+            stEl && stEl.classList.add('tt-status-closed');
+            applyClosedState(root, true);
+            if (upEl && updatedAtIso) upEl.textContent = fmt(updatedAtIso);
+
+            // локальный broadcast для списков
+            document.dispatchEvent(new CustomEvent('SupportTicketStatus', {
+                detail: { ticketId, status: 'closed', updatedAt: updatedAtIso }
+            }));
+        }
+
+        btnClose?.addEventListener('click', async () => {
+            if (ticket.status === 'closed') return;
+            if (!confirm('Закрыть эту заявку?')) return;
+            btnClose.disabled = true;
+            try {
+                const res = await postJson(`/api/support/tickets/${encodeURIComponent(ticketId)}/close`, {});
+                applyClosed(res?.updatedAt || new Date().toISOString());
+                ticket.status = 'closed';
+            } catch (e) {
+                alert('Не удалось закрыть заявку: ' + (e.message || 'ошибка'));
+            } finally {
+                btnClose.disabled = false;
+            }
+        });
+
         // 3) realtime подписка
         let conn = null;
         try {
-            conn = await connectAndJoin(ticketId, (m) => {
-                const id = m?.id;
-                if (id) {
-                    // если это эхо собственного отправления — игнорируем
-                    if (sentIds.has(id)) { sentIds.delete(id); return; }
-                    receivedIds.add(id);
+            conn = await connectAndJoin(
+                ticketId,
+                (m) => {
+                    const id = m?.id;
+                    if (id) {
+                        if (sentIds.has(id)) { sentIds.delete(id); return; }
+                        receivedIds.add(id);
+                    }
+                    msgBox.insertAdjacentHTML('beforeend', renderMsg(m));
+                    upEl && (upEl.textContent = fmt(m.createdAt ?? new Date()));
+                    if (wrap) wrap.scrollTop = wrap.scrollHeight;
+                },
+                (payload) => {
+                    if (payload?.status === 'closed') {
+                        applyClosed(payload.updatedAt || new Date().toISOString());
+                        ticket.status = 'closed';
+                    }
                 }
-                msgBox.insertAdjacentHTML('beforeend', renderMsg(m));
-                upEl && (upEl.textContent = fmt(m.createdAt ?? new Date()));
-                if (wrap) wrap.scrollTop = wrap.scrollHeight;
-            });
+            );
         } catch (e) {
             console.warn('[op-ticket] realtime off:', e?.message || e);
         }
@@ -233,6 +280,7 @@
             try { txt?.removeEventListener('keydown', onKey); } catch { }
             try { btnSend?.removeEventListener('click', sendNow); } catch { }
             try { btnBack?.removeEventListener('click', goBack); } catch { }
+            try { btnClose?.removeEventListener('click', applyClosed); } catch { }
             try { conn?.stop(); } catch { }
         };
     };

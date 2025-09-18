@@ -213,5 +213,43 @@ namespace VCS_DOCs.Support.Controllers
 
             return Ok(new { ok = true, id = msg.Id, at = msg.CreatedAt });
         }
+        // POST /api/support/tickets/{id}/close
+        [HttpPost("{id:regex(^[[0-9a-fA-F]]{{8}}$)}/close")]
+        public async Task<IActionResult> Close([FromRoute] string id)
+        {
+            var t = await _db.SupportTickets.FirstOrDefaultAsync(x => x.Id == id);
+            if (t is null) return NotFound();
+
+            // только агент/админ закрывают
+            var isAA = User.IsInRole(Roles.SupportAgent) || User.IsInRole(Roles.SupportAdmin);
+            if (!isAA) return Forbid();
+
+            if (t.Status == "closed")
+                return Ok(new { ok = true, status = "closed", updatedAt = t.UpdatedAt });
+
+            t.Status = "closed";
+            t.UpdatedAt = DateTime.UtcNow;
+
+            _db.SupportTicketMessages.Add(new SupportTicketMessage
+            {
+                TicketId = id,
+                AuthorUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
+                AuthorRole = "agent",
+                Body = "Заявка закрыта оператором.",
+                CreatedAt = DateTime.UtcNow
+            });
+
+            await _db.SaveChangesAsync();
+
+            // realtime: оповестим обе стороны
+            await _hub.Clients.Group($"ticket:{id}").SendAsync("status", new
+            {
+                ticketId = id,
+                status = "closed",
+                updatedAt = t.UpdatedAt
+            });
+
+            return Ok(new { ok = true, status = "closed", updatedAt = t.UpdatedAt });
+        }
     }
 }

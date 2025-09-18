@@ -28,7 +28,7 @@
         }
         throw new Error('SignalR client not found');
     }
-    async function ensureConn(onMessage) {
+    async function ensureConn(onMessage, onStatus) {
         if (conn && (conn.state === 'Connected' || conn.state === 1)) return conn;
         const signalR = await loadSignalR();
         conn = new signalR.HubConnectionBuilder()
@@ -41,6 +41,13 @@
                 if (!id) return;
                 onMessage(id, msg);
                 document.dispatchEvent(new CustomEvent('SupportTicketMessage', { detail: { ticketId: id, message: msg } }));
+            } catch { }
+        });
+        conn.on('status', payload => {
+            try {
+                if (!payload?.ticketId) return;
+                onStatus?.(payload.ticketId, payload.status, payload.updatedAt);
+                document.dispatchEvent(new CustomEvent('SupportTicketStatus', { detail: { ticketId: payload.ticketId, status: payload.status, updatedAt: payload.updatedAt } }));
             } catch { }
         });
         try { await conn.start(); } catch { /* ок, попробуем без реалтайма */ }
@@ -67,7 +74,7 @@
         const rows = [];
         for (let i = 0; i < 24; i++) {
             const id = `12${(1000 + i).toString().padStart(4, '0')}ab`;
-            const wait = (i % 2 === 0) ? 'user' : 'operator';  // user=последним писал пользователь
+            const wait = (i % 2 === 0) ? 'user' : 'operator';
             const assigned = i % 3 === 0;
             rows.push({
                 id,
@@ -162,12 +169,20 @@
 
                 // Реалтайм: подписываемся на все тикеты из списка
                 try {
-                    await ensureConn((ticketId, msg) => {
-                        const tr = tbody.querySelector(`tr[data-id="${ticketId}"]`);
-                        if (!tr) return;
-                        const who = (msg?.role === 'user') ? 'user' : 'operator';
-                        updateBadge(tr, who);
-                    });
+                    await ensureConn(
+                        (ticketId, msg) => {
+                            const tr = tbody.querySelector(`tr[data-id="${ticketId}"]`);
+                            if (!tr) return;
+                            const who = (msg?.role === 'user') ? 'user' : 'operator';
+                            updateBadge(tr, who);
+                        },
+                        (ticketId, status) => {
+                            if (status === 'closed') {
+                                const tr = tbody.querySelector(`tr[data-id="${ticketId}"]`);
+                                tr?.remove();
+                            }
+                        }
+                    );
                     const ids = list.map(x => x.id).filter(Boolean);
                     await joinMany(ids);
                 } catch { /* ок, без realtime */ }
@@ -194,6 +209,14 @@
                 if (!tr) return;
                 const who = (message?.role === 'user') ? 'user' : 'operator';
                 updateBadge(tr, who);
+            } catch { }
+        });
+        document.addEventListener('SupportTicketStatus', (e) => {
+            try {
+                const { ticketId, status } = e.detail || {};
+                if (status !== 'closed') return;
+                const tr = tbody?.querySelector(`tr[data-id="${ticketId}"]`);
+                tr?.remove();
             } catch { }
         });
 

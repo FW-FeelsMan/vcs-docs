@@ -1,4 +1,4 @@
-﻿// wwwroot/js/user/user_open_tickets.js — realtime badge updates + "Создать заявку" modal
+﻿// wwwroot/js/user/user_open_tickets.js — realtime + "Создать заявку" modal + notify toggle + hide on close
 (() => {
     const USE_MOCK = /[?&]mock=1\b/i.test(location.search);
 
@@ -7,6 +7,19 @@
         const r = await fetch(url, { credentials: 'same-origin', cache: 'no-store' });
         if (!r.ok) { const e = new Error('HTTP ' + r.status); e.status = r.status; throw e; }
         return r.json();
+    }
+    async function postJson(url, body) {
+        const token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const r = await fetch(url, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...(token ? { 'RequestVerificationToken': token } : {}) },
+            body: JSON.stringify(body ?? {})
+        });
+        const txt = await r.text().catch(() => '');
+        let json = null; try { json = txt ? JSON.parse(txt) : null; } catch { }
+        if (!r.ok) throw new Error(json?.error || ('HTTP ' + r.status));
+        return json || {};
     }
 
     const fmt = (ms) => {
@@ -37,7 +50,7 @@
         }
         throw new Error('SignalR client not found');
     }
-    async function ensureConn(onMessage) {
+    async function ensureConn(onMessage, onStatus) {
         if (conn && (conn.state === 'Connected' || conn.state === 1)) return conn;
         const signalR = await loadSignalR();
         conn = new signalR.HubConnectionBuilder()
@@ -50,6 +63,13 @@
                 if (!id) return;
                 onMessage(id, msg);
                 document.dispatchEvent(new CustomEvent('SupportTicketMessage', { detail: { ticketId: id, message: msg } }));
+            } catch { }
+        });
+        conn.on('status', payload => {
+            try {
+                if (!payload?.ticketId) return;
+                onStatus?.(payload.ticketId, payload.status, payload.updatedAt);
+                document.dispatchEvent(new CustomEvent('SupportTicketStatus', { detail: { ticketId: payload.ticketId, status: payload.status, updatedAt: payload.updatedAt } }));
             } catch { }
         });
         try { await conn.start(); } catch { }
@@ -94,8 +114,8 @@
         <td class="col-updated">${fmt(t.updatedAt)}</td>
         <td>
           <label class="checkbox notify-wrapper">
-            <input class="custom-checkbox notify-toggle" type="checkbox" ${t.notify ? 'checked' : ''} disabled />
-            <span class="notify-state">${t.notify ? 'включено' : 'отключены'}</span>
+            <input class="custom-checkbox notify-toggle" type="checkbox" ${t.notify ? 'checked' : ''} />
+            <span class="notify-state">${t.notify ? 'включено' : 'отключено'}</span>
           </label>
         </td>
         <td><button class="button-sliding primary small btn-view">Просмотр</button></td>
@@ -149,28 +169,52 @@
             try {
                 let list;
                 if (!USE_MOCK) {
-                    list = await getJson('/api/support/self/open'); // наш бек
+                    list = await getJson('/api/support/self/open');
                 } else { throw { status: 404 }; }
                 const filtered = filter(Array.isArray(list) ? list : [], q);
-                if (!filtered.length) { tbody.innerHTML = `<tr><td colspan="7">Нет данных</td></tr>`; }
-                else { tbody.innerHTML = filtered.map(rowHtml).join(''); }
+                tbody.innerHTML = filtered.length ? filtered.map(rowHtml).join('') : `<tr><td colspan="7">Нет данных</td></tr>`;
 
                 // Реалтайм подписка на id из таблицы
                 try {
-                    await ensureConn((ticketId, msg) => {
-                        const tr = tbody.querySelector(`tr[data-id="${ticketId}"]`);
-                        if (!tr) return;
-                        const who = (msg?.role === 'user') ? 'user' : 'operator';
-                        setRowState(tr, who, msg?.createdAt);
-                    });
+                    await ensureConn(
+                        (ticketId, msg) => {
+                            const tr = tbody.querySelector(`tr[data-id="${ticketId}"]`);
+                            if (!tr) return;
+                            const who = (msg?.role === 'user') ? 'user' : 'operator';
+                            setRowState(tr, who, msg?.createdAt);
+                        },
+                        (ticketId, status) => {
+                            if (status === 'closed') {
+                                tbody.querySelector(`tr[data-id="${ticketId}"]`)?.remove();
+                            }
+                        }
+                    );
                     const ids = filtered.map(x => x.id).filter(Boolean);
                     await joinMany(ids);
-                } catch { /* ок */ }
+                } catch { /* без realtime тоже ок */ }
             } catch {
                 const list = filter(mockOpenForUser(), q);
                 tbody.innerHTML = list.length ? list.map(rowHtml).join('') : `<tr><td colspan="7">Нет данных</td></tr>`;
             }
         }
+
+        // ▼ ТУМБЛЕР УВЕДОМЛЕНИЙ (оптимистично, с откатом при ошибке)
+        table?.addEventListener('change', async (e) => {
+            const cb = e.target && e.target.closest && e.target.closest('.notify-toggle');
+            if (!cb) return;
+            const tr = cb.closest('tr'); if (!tr) return;
+            const id = tr.getAttribute('data-id');
+            const on = !!cb.checked;
+            const label = tr.querySelector('.notify-state');
+            if (label) label.textContent = on ? 'включено' : 'отключено';
+            try {
+                await postJson('/api/support/self/notify', { ticketId: id, enabled: on });
+            } catch (err) {
+                cb.checked = !on;
+                if (label) label.textContent = (!on) ? 'включено' : 'отключено';
+                alert('Не удалось сохранить настройку уведомлений.');
+            }
+        });
 
         // Локальные события из карточки (если открыта рядом)
         document.addEventListener('SupportTicketMessage', (e) => {
@@ -180,6 +224,13 @@
                 if (!tr) return;
                 const who = (message?.role === 'user') ? 'user' : 'operator';
                 setRowState(tr, who, message?.createdAt);
+            } catch { }
+        });
+        document.addEventListener('SupportTicketStatus', (e) => {
+            try {
+                const { ticketId, status } = e.detail || {};
+                if (status !== 'closed') return;
+                tbody?.querySelector(`tr[data-id="${ticketId}"]`)?.remove();
             } catch { }
         });
 
@@ -199,7 +250,7 @@
             }
         });
 
-        // --- NEW: Создать заявку (модалка с iframe) ---
+        // --- "Создать заявку" (модалка с iframe) ---
         function openCreate() {
             if (modalFrame) modalFrame.src = '/Content/Users/new_ticket';
             modal?.classList.add('show');
@@ -217,12 +268,10 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && modal?.classList.contains('show')) closeCreate(false);
         });
-        // На будущее: если внутри формы после успеха пошлёте postMessage — обновим сразу
         window.addEventListener('message', (e) => {
             try {
                 const d = e.data || {};
                 if (d && d.kind === 'support:ticket_created') {
-                    // d.ticketId можно прочитать при желании
                     closeCreate(true);
                 }
             } catch { }
