@@ -1,5 +1,6 @@
-﻿// wwwroot/js/support-request.js — единый POST на Razor Page (+подтверждение при 409)
+﻿// wwwroot/js/support-request.js — Razor POST + подтверждение/подсказки (409/400 bad_login)
 (() => {
+    // если открыт во встраиваемом iframe — чуть иной стиль
     if (window.self !== window.top) {
         document.documentElement.classList.add('embedded');
         document.addEventListener('DOMContentLoaded', () => document.body.classList.add('embedded'));
@@ -8,7 +9,7 @@
     const form = document.getElementById('supportForm');
     if (!form) return;
 
-    // --- локальная капча (не блокирует отправку, если бэка нет) ---
+    // --- локальная "капча" (фейковая/простая) ---
     const box = document.getElementById('captchaContainerLocal');
     const img = document.getElementById('captchaImage');
     const btn = document.getElementById('captchaRefresh');
@@ -23,12 +24,12 @@
             captchaId = data?.id || null;
             if (img) img.src = `/api/Support/captcha/image/${encodeURIComponent(captchaId)}?t=${Date.now()}`;
             if (ans) ans.value = '';
-        } catch { /* ok */ }
+        } catch { /* ignore */ }
     }
     btn?.addEventListener('click', () => loadCaptcha());
     document.addEventListener('DOMContentLoaded', () => { if (box) box.style.display = 'flex'; loadCaptcha(); });
 
-    // --- UI: лоадер + слайд-панель ---
+    // --- UI: лоадер + слайд-панель результата/подтверждения ---
     const card = form.closest('.support-card');
     let loader = card?.querySelector('.sr-loader');
     let panel = card?.querySelector('.sr-result');
@@ -69,15 +70,32 @@
         };
     }
 
+    const loginRe = /^[a-zA-Z0-9._-]{3,32}$/;
+    function suggestLoginFromEmail(email) {
+        try {
+            if (!email || !email.includes('@')) return null;
+            const local = email.split('@', 2)[0];
+            let s = (local || '').normalize('NFKD')
+                .replace(/[^\w.\-]+/g, '')        // латиница/цифры/_ . -
+                .replace(/_+/g, '_')
+                .replace(/[.\-]{2,}/g, m => m[0])
+                .replace(/^[.\-_]+|[.\-_]+$/g, '');
+            if (!s) s = 'user';
+            if (!/^[A-Za-z0-9]/.test(s)) s = 'u-' + s;
+            return s.slice(0, 32);
+        } catch { return null; }
+    }
+
     function validate(m) {
         if (!m.subject || m.subject.length < 3) return 'Заполните тему (минимум 3 символа).';
         if (!m.message || m.message.length < 5) return 'Заполните текст обращения (минимум 5 символов).';
         if (m.replyTo && !/^\S+@\S+\.\S+$/.test(m.replyTo)) return 'Почта указана неверно.';
+        // login валидируем «мягко»: сервер даст точную подсказку/исправление
         return null;
     }
 
     async function postForm(model, confirmCreate = false) {
-        const url = '/Support/Request';                       // один Razor-хендлер
+        const url = '/Support/Request';
         const data = new URLSearchParams();
         const tok = antiToken();
 
@@ -89,8 +107,8 @@
         if (model.message != null) data.set('Input.Message', model.message);
         if (model.captchaAnswer != null) data.set('Input.CaptchaAnswer', model.captchaAnswer);
         if (model.captchaToken != null) data.set('Input.CaptchaToken', model.captchaToken);
-        if (captchaId) data.set('Input.CaptchaId', captchaId);          // на будущее
-        if (confirmCreate) data.set('Input.ConfirmCreate', 'true');     // ключевой флаг
+        if (captchaId) data.set('Input.CaptchaId', captchaId); // на будущее
+        if (confirmCreate) data.set('Input.ConfirmCreate', 'true');
         if (tok) data.set('__RequestVerificationToken', tok);
 
         const res = await fetch(url, {
@@ -114,12 +132,37 @@
             // 1-я попытка — без ConfirmCreate
             let r = await postForm(model, false);
 
-            // если аккаунта нет — вернётся 409 + code=account_absent + suggestedLogin
+            // 400 — неверный логин (символы/длина) с подсказкой
+            if (r.status === 400 && r.json?.code === 'bad_login') {
+                const suggested = r.json?.suggestedLogin || suggestLoginFromEmail(model.replyTo) || '';
+                title.textContent = 'Исправьте логин';
+                text.textContent = (suggested && suggested !== model.login)
+                    ? `Логин содержит недопустимые символы. Предложенный вариант: "${suggested}". Применить и продолжить?`
+                    : `Логин содержит недопустимые символы. Разрешены латиница, цифры и . _ - (3–32 символа).`;
+
+                btnYes.style.display = suggested ? '' : 'none';
+                btnYes.textContent = 'Применить';
+                btnYes.onclick = () => {
+                    try { document.getElementById('supLogin').value = suggested; } catch { }
+                    showPanel(false);
+                    doSubmit({ ...model, login: suggested });
+                };
+
+                btnNo.style.display = '';
+                btnNo.textContent = 'Отмена';
+                btnNo.onclick = () => showPanel(false);
+
+                showLoader(false);
+                showPanel(true);
+                return;
+            }
+
+            // 409 — аккаунта нет, спросить подтверждение
             if (r.status === 409 && r.json?.code === 'account_absent') {
                 const suggested = r.json?.suggestedLogin || model.login || model.replyTo || 'без логина';
                 title.textContent = 'Создать учётную запись?';
-                text.textContent = `Пользователь «${suggested}» не найден.\nСоздать нового и отправить обращение?` +
-                    (model.replyTo ? `\nДанные для входа отправим на ${model.replyTo}.` : '');
+                text.textContent = `Пользователь «${suggested}» не найден.\nСоздать нового и отправить обращение?`
+                    + (model.replyTo ? `\nДанные для входа отправим на ${model.replyTo}.` : '');
 
                 btnYes.style.display = '';
                 btnYes.textContent = 'Создать и отправить';
@@ -127,7 +170,6 @@
                     showPanel(false);
                     showLoader(true);
                     try {
-                        // 2-я попытка — с ConfirmCreate=true
                         const r2 = await postForm(model, true);
                         if (!r2.ok || !r2.json?.success) throw new Error(r2.json?.error || `HTTP ${r2.status}`);
 

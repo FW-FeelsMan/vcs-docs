@@ -1,4 +1,4 @@
-﻿// Program.cs
+﻿//D: \Unity\VCS - DOCs\VCS - DOCs.Support\Program.cs
 using System.Net.Security;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
@@ -6,7 +6,6 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.RateLimiting; // для AddRateLimiter
 using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Configuration;
 using VCS_DOCs.Data;
@@ -44,6 +43,14 @@ internal class Program
             .AddIdentity<User, IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
+        
+        builder.Services.AddScoped<IPasswordHasher<User>>(_ =>
+            new PasswordHasher<User>(
+                Microsoft.Extensions.Options.Options.Create(new PasswordHasherOptions
+                {
+                    CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV3
+                    // IterationCount не задаём — Verify читает его из хеша
+                })));
 
         // === SignalR ===
         builder.Services.AddSignalR(o => { o.EnableDetailedErrors = true; });
@@ -58,35 +65,6 @@ internal class Program
             o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             o.Cookie.SameSite = SameSiteMode.Lax;
 
-            //o.Events = new CookieAuthenticationEvents
-            //{
-            //    OnValidatePrincipal = async ctx =>
-            //    {
-            //        var userId = ctx.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            //        var sid = ctx.Principal.FindFirst("support_sid")?.Value;
-
-            //        if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(sid))
-            //        {
-            //            ctx.RejectPrincipal();
-            //            await ctx.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
-            //            return;
-            //        }
-
-            //        var db = ctx.HttpContext.RequestServices.GetRequiredService<ApplicationDbContext>();
-            //        var row = await db.SupportUserSessions.AsNoTracking()
-            //                      .FirstOrDefaultAsync(x => x.UserId == userId);
-
-            //        var mismatch = row != null
-            //                       && !string.IsNullOrEmpty(row.JwtId)
-            //                       && !string.Equals(row.JwtId, sid, StringComparison.Ordinal);
-
-            //        if (mismatch)
-            //        {
-            //            ctx.RejectPrincipal();
-            //            await ctx.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
-            //        }
-            //    }
-            //};
             o.Events = new CookieAuthenticationEvents
             {
                 OnValidatePrincipal = async ctx =>
@@ -138,7 +116,7 @@ internal class Program
             });
         });
 
-        // === Razor Pages (ВОТ ЭТОГО НЕ ХВАТАЛО) ===
+        // === Razor Pages ===
         builder.Services.AddRazorPages(o =>
         {
             // доступ к самому «деску»
@@ -189,6 +167,20 @@ internal class Program
                 return tp.Equals("1F1F09F62B5C4C450CA76CA1FDF2264276DFBF57", StringComparison.OrdinalIgnoreCase)
                     || tp.Equals("1179E6B4C27C5247ADB525DE245D65D7E3D73C8C", StringComparison.OrdinalIgnoreCase);
             }
+        });
+        builder.Services.Configure<IdentityOptions>(opt =>
+        {
+            opt.Password.RequireDigit = true;
+            opt.Password.RequireLowercase = true;
+            opt.Password.RequireUppercase = true;
+            opt.Password.RequireNonAlphanumeric = false;
+            opt.Password.RequiredLength = 6;
+            opt.Password.RequiredUniqueChars = 1;
+        });
+        builder.Services.Configure<PasswordHasherOptions>(o =>
+        {
+            o.CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV3;
+
         });
 
         builder.Services.AddScoped<PresenceOrchestrator>();

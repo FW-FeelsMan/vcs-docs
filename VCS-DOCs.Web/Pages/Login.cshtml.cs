@@ -1,6 +1,7 @@
-﻿// Pages/Login.cshtml.cs
+﻿// Pages/Login.cshtml.cs (Web)
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
+using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -11,244 +12,291 @@ using VCS_DOCs.Data.Hubs;
 using VCS_DOCs.Infrastructure.Auth;
 using VCS_DOCs.Models.Entities;
 using VCS_DOCs.Utilities;
-using System.Security.Claims;
-
 
 namespace VCS_DOCs.Pages
 {
     public class LoginModel : PageModel
-	{
-		private readonly ApplicationDbContext _context;
-		private readonly ILogger<LoginModel> _logger;
-		private readonly IServiceProvider _serviceProvider;
-		private readonly IHubContext<UserStatusHub> _hubContext;
-		private readonly IUserService _userService;
-		private readonly IWebHostEnvironment _webHostEnvironment;
+    {
+        private readonly ApplicationDbContext _context;
+        private readonly ILogger<LoginModel> _logger;
+        private readonly IServiceProvider _serviceProvider;
+        private readonly IHubContext<UserStatusHub> _hubContext;
+        private readonly IUserService _userService;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-		private readonly SignInManager<User> _signInManager;
-		private readonly UserManager<User> _userManager;
+        private readonly SignInManager<User> _signInManager;
+        private readonly UserManager<User> _userManager;
 
-		public LoginModel(
-			ApplicationDbContext context,
-			ILogger<LoginModel> logger,
-			IServiceProvider serviceProvider,
-			IHubContext<UserStatusHub> hubContext,
-			IUserService userService,
-			IWebHostEnvironment webHostEnvironment,
-			SignInManager<User> signInManager,
-			UserManager<User> userManager)
-		{
-			_context = context;
-			_logger = logger;
-			_serviceProvider = serviceProvider;
-			_hubContext = hubContext;
-			_userService = userService;
-			_webHostEnvironment = webHostEnvironment;
-			_signInManager = signInManager; 
-			_userManager = userManager;    
-		}
+        public LoginModel(
+            ApplicationDbContext context,
+            ILogger<LoginModel> logger,
+            IServiceProvider serviceProvider,
+            IHubContext<UserStatusHub> hubContext,
+            IUserService userService,
+            IWebHostEnvironment webHostEnvironment,
+            SignInManager<User> signInManager,
+            UserManager<User> userManager)
+        {
+            _context = context;
+            _logger = logger;
+            _serviceProvider = serviceProvider;
+            _hubContext = hubContext;
+            _userService = userService;
+            _webHostEnvironment = webHostEnvironment;
+            _signInManager = signInManager;
+            _userManager = userManager;
+        }
 
-		[BindProperty]
-		public string Username { get; set; } = string.Empty;
+        [BindProperty]
+        public string Username { get; set; } = string.Empty;
 
-		[BindProperty]
-		public string Password { get; set; } = string.Empty;
+        [BindProperty]
+        public string Password { get; set; } = string.Empty;
 
-		public List<string> LoginErrors { get; set; }
-		public List<string> RegistrationErrors { get; set; }
-		public bool IsRegistrationSuccessful { get; set; }
-		public string? ErrorMessage { get; set; }
-		public List<string> Specialities { get; set; }
-		private static readonly ConcurrentDictionary<string, (int Attempts, DateTime LastAttempt)> FailedLogins = new ConcurrentDictionary<string, (int, DateTime)>();
+        public List<string> LoginErrors
+        {
+            get; set;
+        }
+        public List<string> RegistrationErrors
+        {
+            get; set;
+        }
+        public bool IsRegistrationSuccessful
+        {
+            get; set;
+        }
+        public string? ErrorMessage
+        {
+            get; set;
+        }
+        public List<string> Specialities
+        {
+            get; set;
+        }
 
-		public async Task<IActionResult> OnPostLoginAsync()
-		{
-			var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
-			if (ip == null)
-				return new JsonResult(new { success = false, errors = new List<string> { "Ошибка авторизации." } });
+        private static readonly ConcurrentDictionary<string, (int Attempts, DateTime LastAttempt)> FailedLogins
+            = new ConcurrentDictionary<string, (int, DateTime)>();
 
-			if (FailedLogins.TryGetValue(ip, out var data))
-			{
-				if (data.Attempts >= 5 && (DateTime.Now - data.LastAttempt).TotalMinutes < 10)
-					return new JsonResult(new { success = false, errors = new List<string> { "Слишком много неудачных попыток. Попробуйте позже." } });
-			}
+        public async Task<IActionResult> OnPostLoginAsync()
+        {
+            var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+            LoginErrors ??= new List<string>();
 
-			if (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password))
-			{
-				FailedLogins[ip] = (data.Attempts + 1, DateTime.Now);
-				return new JsonResult(new { success = false, errors = new List<string> { "Имя пользователя и пароль обязательны." } });
-			}
-			
-			var user = await _context.Users.FirstOrDefaultAsync(u => u.UserName == Username);
+            Username = (Username ?? string.Empty).Trim();
+            Password = (Password ?? string.Empty).Trim();
 
-			if (user == null || user.IsDeleted || !BCrypt.Net.BCrypt.Verify(Password, user.PasswordHash))
-			{
-				FailedLogins[ip] = (data.Attempts + 1, DateTime.Now);
-				return new JsonResult(new { success = false, errors = new List<string> { "Неверное имя пользователя, пароль или аккаунт был удалён." } });
-			}
+            _logger.LogInformation("Login attempt for {U}, pwd len={L}", Username, Password?.Length ?? 0);
 
-			if (user.Access == 0)
-				return new JsonResult(new { success = false, errors = new List<string> { "Учетная запись не активирована." } });
+            if (ip == null)
+                return new JsonResult(new { success = false, errors = new List<string> { "Ошибка авторизации." } });
 
-			bool forceLogin = Request.Form["ForceLogin"].ToString().ToLower() == "true";
+            if (FailedLogins.TryGetValue(ip, out var data))
+            {
+                if (data.Attempts >= 5 && (DateTime.Now - data.LastAttempt).TotalMinutes < 10)
+                    return new JsonResult(new { success = false, errors = new List<string> { "Слишком много неудачных попыток. Попробуйте позже." } });
+            }
 
-			if (user.StatusOnline == 1 && !forceLogin)
-			{
-				return new JsonResult(new
-				{
-					success = false,
-					errors = new List<string> { "Этот аккаунт уже используется на другом устройстве." }
-				});
-			}
+            if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password))
+            {
+                FailedLogins[ip] = (data.Attempts + 1, DateTime.Now);
+                return new JsonResult(new { success = false, errors = new List<string> { "Имя пользователя и пароль обязательны." } });
+            }
 
-			if (user.StatusOnline == 1 && forceLogin)
-			{
-				await _hubContext.Clients.User(user.Id).SendAsync("ForceLogout");
-				await _userService.ClearUserJwtIdAsync(user.Id);
-			}
+            // Ищем пользователя через Identity
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.UserName == Username);
+            if (user == null || user.IsDeleted)
+            {
+                FailedLogins[ip] = (data.Attempts + 1, DateTime.Now);
+                return new JsonResult(new { success = false, errors = new List<string> { "Неверное имя пользователя, пароль или аккаунт был удалён." } });
+            }
 
-			user.JwtId = Guid.NewGuid().ToString();
-			user.HardwareId = Request.Form["hardwareId"].ToString() ?? user.HardwareId;
-			user.LastEntry = DateTime.Now;
-			user.StatusOnline = 1;
-			await _userManager.UpdateAsync(user);
+            // Проверяем пароль ТОЛЬКО через Identity (совместимо с AQAAAA... хэшами)
+            bool passwordOk = false;
+            try
+            {
+                passwordOk = await _userManager.CheckPasswordAsync(user, Password);
+            }
+            catch
+            {
+                passwordOk = false;
+            }
 
-            //await _signInManager.SignInAsync(user, isPersistent: true);
+            if (!passwordOk)
+            {
+                FailedLogins[ip] = (data.Attempts + 1, DateTime.Now);
+                return new JsonResult(new { success = false, errors = new List<string> { "Неверное имя пользователя, пароль или аккаунт был удалён." } });
+            }
+
+            if (user.Access == 0)
+                return new JsonResult(new { success = false, errors = new List<string> { "Учетная запись не активирована." } });
+
+            // Анти-дублирующий вход
+            bool forceLogin = Request.Form["ForceLogin"].ToString().ToLower() == "true";
+            if (user.StatusOnline == 1 && !forceLogin)
+            {
+                return new JsonResult(new
+                {
+                    success = false,
+                    errors = new List<string> { "Этот аккаунт уже используется на другом устройстве." }
+                });
+            }
+
+            if (user.StatusOnline == 1 && forceLogin)
+            {
+                await _hubContext.Clients.User(user.Id).SendAsync("ForceLogout");
+                await _userService.ClearUserJwtIdAsync(user.Id);
+            }
+
+            user.JwtId = Guid.NewGuid().ToString();
+            user.HardwareId = Request.Form["hardwareId"].ToString() ?? user.HardwareId;
+            user.LastEntry = DateTime.Now;
+            user.StatusOnline = 1;
+            await _userManager.UpdateAsync(user);
 
             var extraClaims = new List<Claim> { new Claim("web_sid", user.JwtId ?? string.Empty) };
             await _signInManager.SignInWithClaimsAsync(user, isPersistent: true, extraClaims);
 
             FailedLogins.TryRemove(ip, out _);
-			_logger.LogInformation($"Пользователь {user.UserName} вошел в систему.");
+            _logger.LogInformation($"Пользователь {user.UserName} вошел в систему.");
 
-			return new JsonResult(new { success = true });
-		}
+            return new JsonResult(new { success = true });
+        }
 
-		public async Task<IActionResult> OnPostRegisterAsync()
-		{
-			RegistrationErrors ??= new List<string>();
+        public async Task<IActionResult> OnPostRegisterAsync()
+        {
+            RegistrationErrors ??= new List<string>();
 
-			const int MaxPathLength = 260;
+            const int MaxPathLength = 260;
 
-			if (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password))
-			{
-				RegistrationErrors.Add("Имя пользователя и пароль обязательны.");
-				return new JsonResult(new { success = false, errors = RegistrationErrors });
-			}
+            if (string.IsNullOrEmpty(Username) || string.IsNullOrEmpty(Password))
+            {
+                RegistrationErrors.Add("Имя пользователя и пароль обязательны.");
+                return new JsonResult(new { success = false, errors = RegistrationErrors });
+            }
 
-			if (Username.Length > 20)
-			{
-				RegistrationErrors.Add("Имя пользователя не должно превышать 20 символов.");
-				return new JsonResult(new { success = false, errors = RegistrationErrors });
-			}
+            if (Username.Length > 20)
+            {
+                RegistrationErrors.Add("Имя пользователя не должно превышать 20 символов.");
+                return new JsonResult(new { success = false, errors = RegistrationErrors });
+            }
 
-			if (!Regex.IsMatch(Username, @"^[a-zA-Z0-9]+$"))
-			{
-				RegistrationErrors.Add("Имя пользователя может содержать только латинские буквы и цифры.");
-				return new JsonResult(new { success = false, errors = RegistrationErrors });
-			}
+            if (!Regex.IsMatch(Username, @"^[a-zA-Z0-9]+$"))
+            {
+                RegistrationErrors.Add("Имя пользователя может содержать только латинские буквы и цифры.");
+                return new JsonResult(new { success = false, errors = RegistrationErrors });
+            }
 
-			if (Password.Length > 20)
-			{
-				RegistrationErrors.Add("Пароль не должен превышать 20 символов.");
-				return new JsonResult(new { success = false, errors = RegistrationErrors });
-			}
+            if (Password.Length > 20)
+            {
+                RegistrationErrors.Add("Пароль не должен превышать 20 символов.");
+                return new JsonResult(new { success = false, errors = RegistrationErrors });
+            }
 
-			if (Password.Length < 6)
-			{
-				RegistrationErrors.Add("Пароль должен быть не менее 6 символов.");
-				return new JsonResult(new { success = false, errors = RegistrationErrors });
-			}
+            if (Password.Length < 6)
+            {
+                RegistrationErrors.Add("Пароль должен быть не менее 6 символов.");
+                return new JsonResult(new { success = false, errors = RegistrationErrors });
+            }
 
-			try
-			{
-				var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.UserName == Username);
-				if (existingUser != null)
-				{
-					RegistrationErrors.Add("Пользователь с таким логином уже существует.");
-					return new JsonResult(new { success = false, errors = RegistrationErrors });
-				}
-
-				string hashedPassword = BCrypt.Net.BCrypt.HashPassword(Password);
-
-				var newUser = new User
-				{
-					UserName = Username,
-					PasswordHash = hashedPassword,
-					Speciality = Request.Form["speciality"],
-					StatusOnline = 0,
-					HardwareId = null,
-					LastEntry = null,
-					CreatedAt = DateTime.Now,
-					UpdatedAt = DateTime.Now,
-					IsDeleted = false,
-					Access = 0,
-					StorageLimitBytes = 10L * 1024 * 1024 * 1024
-				};
-
-				_context.Users.Add(newUser);
-				await _context.SaveChangesAsync();
-
-				string appDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData");
-
-				string shortUserId = newUser.Id.Replace("-", "").Substring(0, 8);
-				string userFolderName = $"u_{shortUserId}";
-				string userDataPath = Path.Combine(appDataPath, userFolderName);
-
-				int fullFolderPathLength = Path.Combine(appDataPath, userFolderName).Length;
-
-				if (fullFolderPathLength >= MaxPathLength)
-				{
-					_context.Users.Remove(newUser);
-					await _context.SaveChangesAsync();
-
-					RegistrationErrors.Add($"Не удалось создать пользователя: путь к папке слишком длинный. Попробуйте использовать более короткий логин.");
-					return new JsonResult(new { success = false, errors = RegistrationErrors });
-				}
-
-				if (!Directory.Exists(userDataPath))
-				{
-					Directory.CreateDirectory(userDataPath);
-				}
-
-				IsRegistrationSuccessful = true;
-                var created = await _userManager.FindByIdAsync(newUser.Id);
-                if (created != null)
+            try
+            {
+                // Проверяем, что логин свободен
+                var existingUser = await _userManager.FindByNameAsync(Username);
+                if (existingUser != null)
                 {
-                    await _userManager.AddToRoleAsync(created, Roles.BaseUser);
+                    RegistrationErrors.Add("Пользователь с таким логином уже существует.");
+                    return new JsonResult(new { success = false, errors = RegistrationErrors });
                 }
 
+                // Создаём пользователя (хэш делает Identity)
+                var newUser = new User
+                {
+                    UserName = Username,
+                    Speciality = Request.Form["speciality"],
+                    StatusOnline = 0,
+                    HardwareId = null,
+                    LastEntry = null,
+                    CreatedAt = DateTime.Now,
+                    UpdatedAt = DateTime.Now,
+                    IsDeleted = false,
+                    Access = 0, // до активации админом
+                    StorageLimitBytes = 10L * 1024 * 1024 * 1024
+                };
+
+                var createRes = await _userManager.CreateAsync(newUser, Password);
+                if (!createRes.Succeeded)
+                {
+                    foreach (var err in createRes.Errors)
+                        RegistrationErrors.Add(err.Description);
+                    return new JsonResult(new { success = false, errors = RegistrationErrors });
+                }
+
+                // === РОЛИ: гарантируем существование и выдаём BaseUser ===
+                var roleMgr = HttpContext.RequestServices.GetRequiredService<RoleManager<IdentityRole>>();
+                if (!await roleMgr.RoleExistsAsync(Roles.BaseUser))
+                    await roleMgr.CreateAsync(new IdentityRole(Roles.BaseUser));
+
+                var roleRes = await _userManager.AddToRoleAsync(newUser, Roles.BaseUser);
+                if (!roleRes.Succeeded)
+                {
+                    foreach (var err in roleRes.Errors)
+                        RegistrationErrors.Add(err.Description);
+
+                    // Откатим создание пользователя, чтобы не оставлять «битую» запись без роли
+                    await _userManager.DeleteAsync(newUser);
+                    return new JsonResult(new { success = false, errors = RegistrationErrors });
+                }
+
+                // Создаём пользовательскую директорию
+                string appDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData");
+                string shortUserId = newUser.Id.Replace("-", "").Substring(0, 8);
+                string userFolderName = $"u_{shortUserId}";
+                string userDataPath = Path.Combine(appDataPath, userFolderName);
+
+                int fullFolderPathLength = userDataPath.Length;
+                if (fullFolderPathLength >= MaxPathLength)
+                {
+                    // Откат пользователя, если путь слишком длинный
+                    await _userManager.DeleteAsync(newUser);
+                    RegistrationErrors.Add("Не удалось создать пользователя: путь к папке слишком длинный. Попробуйте более короткий логин.");
+                    return new JsonResult(new { success = false, errors = RegistrationErrors });
+                }
+
+                if (!Directory.Exists(userDataPath))
+                {
+                    Directory.CreateDirectory(userDataPath);
+                }
+
+                IsRegistrationSuccessful = true;
                 return new JsonResult(new { success = true });
-			}
-			catch (Exception ex)
-			{
-				RegistrationErrors.Add("Произошла ошибка при регистрации.");
-				return new JsonResult(new { success = false, errors = RegistrationErrors });
-			}
-		}
+            }
+            catch
+            {
+                RegistrationErrors.Add("Произошла ошибка при регистрации.");
+                return new JsonResult(new { success = false, errors = RegistrationErrors });
+            }
+        }
+        public async Task<IActionResult> OnPostAsync(string action)
+        {
+            if (action == "Login")
+            {
+                return await OnPostLoginAsync();
+            }
+            else if (action == "Register")
+            {
+                return await OnPostRegisterAsync();
+            }
 
-		public async Task<IActionResult> OnPostAsync(string action)
-		{
-			if (action == "Login")
-			{
-				return await OnPostLoginAsync();
-			}
-			else if (action == "Register")
-			{
-				return await OnPostRegisterAsync();
-			}
+            return Page();
+        }
 
-			return Page();
-		}
+        public void OnGet()
+        {
+            var configPath = Path.Combine(Directory.GetCurrentDirectory(), "Utilities", "Config.ini");
+            Specialities = ConfigReader.GetSpecialities(configPath);
 
-		public void OnGet()
-		{
-			var configPath = Path.Combine(Directory.GetCurrentDirectory(), "Utilities", "Config.ini");
-			Specialities = ConfigReader.GetSpecialities(configPath);
-
-			RegistrationErrors ??= new List<string>();
-			LoginErrors ??= new List<string>();
-		}
-		
-	}
+            RegistrationErrors ??= new List<string>();
+            LoginErrors ??= new List<string>();
+        }
+    }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using System.Security.Cryptography;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Data;
 using VCS_DOCs.Infrastructure.Auth;
@@ -8,7 +9,11 @@ namespace VCS_DOCs.Support.Infrastructure.Provision
 {
     public interface ISupportUserProvisioning
     {
-        Task<(User user, bool created)> EnsureUserExistsAsync(
+        /// <summary>
+        /// Гарантирует наличие пользователя. Если не было — создаёт c временным паролем.
+        /// </summary>
+        /// <returns>(user, created, tempPassword)</returns>
+        Task<(User user, bool created, string? tempPassword)> EnsureUserExistsAsync(
             string login,
             string? email = null,
             string? fullName = null,
@@ -33,7 +38,7 @@ namespace VCS_DOCs.Support.Infrastructure.Provision
             _roleManager = roleManager;
         }
 
-        public async Task<(User user, bool created)> EnsureUserExistsAsync(
+        public async Task<(User user, bool created, string? tempPassword)> EnsureUserExistsAsync(
             string login,
             string? email = null,
             string? fullName = null,
@@ -87,7 +92,7 @@ namespace VCS_DOCs.Support.Infrastructure.Provision
                     await _db.SaveChangesAsync(ct);
                 }
 
-                return (user, false);
+                return (user, false, null);
             }
 
             var now = DateTime.UtcNow;
@@ -107,22 +112,57 @@ namespace VCS_DOCs.Support.Infrastructure.Provision
                 IsDeleted = false
             };
 
-            // Случайный безопасный временный пароль (на шаге 2 будем высылать/сбрасывать по почте)
-            var tempPassword = $"Aa1!{Guid.NewGuid():N}";
+            // ВАЖНО: генерим пароль без спецсимволов, длина <= 20 (Web-ограничение)
+            var tempPassword = GenerateTempPassword(16, requireNonAlnum: false);
 
             var createRes = await _userManager.CreateAsync(newUser, tempPassword);
             if (!createRes.Succeeded)
-                throw new InvalidOperationException("Failed to create user: " + string.Join("; ", createRes.Errors));
+                throw new InvalidOperationException("Failed to create user: " + string.Join("; ", createRes.Errors.Select(e => $"{e.Code}: {e.Description}")));
 
-            // Гарантируем базовую роль
             if (!await _roleManager.RoleExistsAsync(Roles.BaseUser))
                 await _roleManager.CreateAsync(new IdentityRole(Roles.BaseUser));
 
             if (!await _userManager.IsInRoleAsync(newUser, Roles.BaseUser))
                 await _userManager.AddToRoleAsync(newUser, Roles.BaseUser);
 
-            // Чтобы Accounts-таблица подхватила нового юзера через /delta — CreatedAt уже выставлен (UTC)
-            return (newUser, true);
+            return (newUser, true, tempPassword);
+        }
+
+        private static string GenerateTempPassword(int length = 16, bool requireNonAlnum = false)
+        {
+            // Жёстко укладываемся в [6..20]
+            if (length < 6) length = 6;
+            if (length > 20) length = 20;
+
+            const string U = "ABCDEFGHJKLMNPQRSTUVWXYZ"; // без I/O
+            const string L = "abcdefghijkmnopqrstuvwxyz"; // без l
+            const string D = "23456789";                  // без 0/1
+            const string S = "!@#$%^*";                   // если когда-то понадобится
+
+            var pool = requireNonAlnum ? (U + L + D + S) : (U + L + D);
+            using var rng = RandomNumberGenerator.Create();
+
+            char Pick(string src)
+            {
+                var b = new byte[4];
+                rng.GetBytes(b);
+                var idx = (int)(BitConverter.ToUInt32(b, 0) % (uint)src.Length);
+                return src[idx];
+            }
+
+            var chars = new List<char>(length) { Pick(U), Pick(L), Pick(D) }; // гарантируем классы
+            while (chars.Count < length) chars.Add(Pick(pool));
+
+            // перемешаем Фишер–Йейтсом
+            for (int i = chars.Count - 1; i > 0; i--)
+            {
+                var b = new byte[4];
+                rng.GetBytes(b);
+                int j = (int)(BitConverter.ToUInt32(b, 0) % (uint)(i + 1));
+                (chars[i], chars[j]) = (chars[j], chars[i]);
+            }
+
+            return new string(chars.ToArray());
         }
     }
 }

@@ -1,11 +1,9 @@
-﻿using AspNetCoreRateLimit;
+﻿//D:\Unity\VCS-DOCs\VCS-DOCs.Web\Program.cs
+using AspNetCoreRateLimit;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.FileProviders;
-using StackExchange.Profiling;
-using StackExchange.Profiling.Storage;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using VCS_DOCs.Utilities;
@@ -25,7 +23,6 @@ using Microsoft.Extensions.Options;
 using VCS_DOCs.Infrastructure;
 using VCS_DOCs.Infrastructure.Services;
 using VCS_DOCs.Upload.Core.Services.Antivirus;
-using ClamAV.Net.Client;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication;
@@ -104,8 +101,32 @@ builder.WebHost.ConfigureKestrel(options =>
 // === DB + Identity ===
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
+builder.Services.AddScoped<IPasswordHasher<User>>(_ =>
+    new PasswordHasher<User>(
+        Microsoft.Extensions.Options.Options.Create(new PasswordHasherOptions
+        {
+            CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV3
+        })));
+
+// Парольная политика: без обязательного спецсимвола
+builder.Services.Configure<IdentityOptions>(opt =>
+{
+    opt.Password.RequireDigit = true;
+    opt.Password.RequireLowercase = true;
+    opt.Password.RequireUppercase = true;
+    opt.Password.RequireNonAlphanumeric = false; 
+    opt.Password.RequiredLength = 6;
+    opt.Password.RequiredUniqueChars = 1;
+});
+builder.Services.Configure<PasswordHasherOptions>(o =>
+{
+    o.CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV3;
+
+});
+
 builder.Services.AddAuthentication().AddCookie();
 builder.Services.AddAuthorization();
 
@@ -160,14 +181,8 @@ builder.Services.AddScoped<FilePathValidator>();
 builder.Services.AddScoped<IServerSettingsService, ServerSettingsService>();
 builder.Services.AddScoped<IUserInfoProvider, UserInfoProvider>();
 
-// === MVC + Profiling ===
+// === MVC (без профайлера) ===
 builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
-builder.Services.AddMiniProfiler(options =>
-{
-    options.RouteBasePath = "/profiler";
-    options.ShouldProfile = _ => builder.Environment.IsDevelopment();
-    options.ResultsAuthorize = _ => true;
-});
 
 // === Rate Limiting ===
 builder.Services.Configure<IpRateLimitOptions>(options =>
@@ -206,6 +221,18 @@ builder.Configuration.AddJsonFile("appsettings.Secrets.json", optional: true, re
 // === App Build ===
 var app = builder.Build();
 
+// === Ensure Identity Roles exist (BaseUser / SupportAgent / SupportAdmin) ===
+using (var scope = app.Services.CreateScope())
+{
+    var roleMgr = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    foreach (var role in new[] { Roles.BaseUser, Roles.SupportAgent, Roles.SupportAdmin })
+    {
+        if (!await roleMgr.RoleExistsAsync(role))
+            await roleMgr.CreateAsync(new IdentityRole(role));
+    }
+}
+
 // === Ensure User Data Directory ===
 if (!Directory.Exists(absoluteUserDataPath))
     Directory.CreateDirectory(absoluteUserDataPath);
@@ -240,10 +267,7 @@ app.UseStaticFiles(new StaticFileOptions
 });
 app.UseStaticFiles(); // wwwroot
 
-// === MiniProfiler ===
-var memoryCache = app.Services.GetRequiredService<IMemoryCache>();
-MiniProfiler.DefaultOptions.Storage = new MemoryCacheStorage(memoryCache, TimeSpan.FromMinutes(30));
-app.UseMiniProfiler();
+// === (MiniProfiler удалён) ===
 
 // === Rest of pipeline ===
 app.UseSession();
@@ -260,8 +284,8 @@ app.Use(async (ctx, next) =>
     {
         if (ctx.User?.Identity?.IsAuthenticated == true)
         {
-            await ctx.SignOutAsync();                         // погасили cookie
-            ctx.User = new ClaimsPrincipal(new ClaimsIdentity()); // очистили principal
+            await ctx.SignOutAsync();
+            ctx.User = new ClaimsPrincipal(new ClaimsIdentity());
         }
         ctx.Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate";
         ctx.Response.Headers["Pragma"] = "no-cache";
@@ -296,9 +320,7 @@ app.Use(async (ctx, next) =>
         path.StartsWithSegments("/lib", StringComparison.OrdinalIgnoreCase) ||
         path.StartsWithSegments("/fonts", StringComparison.OrdinalIgnoreCase) ||
         path.StartsWithSegments("/userdata", StringComparison.OrdinalIgnoreCase) ||
-        path.StartsWithSegments("/_framework", StringComparison.OrdinalIgnoreCase) ||
-        path.StartsWithSegments("/profiler", StringComparison.OrdinalIgnoreCase) ||
-        path.Equals("/favicon.ico", StringComparison.OrdinalIgnoreCase);
+        path.StartsWithSegments("/_framework", StringComparison.OrdinalIgnoreCase);
 
     if (!isLogin && !isApi && !isStatic && ctx.User?.Identity?.IsAuthenticated == true)
     {
@@ -313,13 +335,12 @@ app.Use(async (ctx, next) =>
         bool hasSidClaim = !string.IsNullOrEmpty(sid);
         bool sidMismatch = hasSidClaim && !string.IsNullOrEmpty(u?.JwtId) && !string.Equals(u!.JwtId, sid, StringComparison.Ordinal);
 
-        // «мягкая» невалидность — гоняем на /Login без сообщения
         bool softInvalid =
             u == null ||
             u.IsDeleted ||
             u.Access == 0 ||
             u.StatusOnline != 1 ||
-            (!hasSidClaim && !string.IsNullOrEmpty(u?.JwtId)); // старый cookie без web_sid
+            (!hasSidClaim && !string.IsNullOrEmpty(u?.JwtId));
 
         if (sidMismatch)
         {

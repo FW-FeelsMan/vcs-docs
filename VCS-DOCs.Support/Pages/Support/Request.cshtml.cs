@@ -1,11 +1,15 @@
 using System.ComponentModel.DataAnnotations;
+using System.Net;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Data;
-using VCS_DOCs.Support.Infrastructure.Provision;
 using VCS_DOCs.Models.Entities;
+using VCS_DOCs.Support.Infrastructure.Provision;
+using VCS_DOCs.Support.Infrastructure.Email; // SmtpOptions in DI
+using VCS_DOCs.Support.Infrastructure.Mail;  // IMailSender
+using Microsoft.Extensions.Configuration;
 
 namespace VCS_DOCs.Support.Pages.Support
 {
@@ -15,6 +19,7 @@ namespace VCS_DOCs.Support.Pages.Support
         private readonly ISupportUserProvisioning _provisioning;
         private readonly ILogger<RequestModel> _log;
         private readonly ApplicationDbContext _db;
+        private readonly IMailSender _mailer;
 
         private readonly long _defaultStorageLimitBytes;
 
@@ -22,12 +27,14 @@ namespace VCS_DOCs.Support.Pages.Support
             IConfiguration cfg,
             ISupportUserProvisioning provisioning,
             ILogger<RequestModel> log,
-            ApplicationDbContext db)
+            ApplicationDbContext db,
+            IMailSender mailer)
         {
             _cfg = cfg;
             _provisioning = provisioning;
             _log = log;
             _db = db;
+            _mailer = mailer;
 
             _defaultStorageLimitBytes =
                 _cfg.GetValue<long?>("Storage:DefaultLimitBytes")
@@ -83,7 +90,7 @@ namespace VCS_DOCs.Support.Pages.Support
                 get; set;
             }
 
-            // флаг подтверждения создания нового аккаунта (ставит фронт после диалога)
+            // Флаг подтверждения создания нового аккаунта
             public bool? ConfirmCreate
             {
                 get; set;
@@ -122,7 +129,7 @@ namespace VCS_DOCs.Support.Pages.Support
                 var email = (Input.ReplyTo ?? "").Trim();
                 var loginRaw = (Input.Login ?? "").Trim();
 
-                // если логина нет — предложим на базе e-mail
+                // если логина нет — сгенерируем от e-mail (ограничения Identity: [a-z0-9._-], без пробелов)
                 if (string.IsNullOrWhiteSpace(loginRaw) && !string.IsNullOrWhiteSpace(email) && email.Contains('@'))
                 {
                     var (local, domainRoot) = SplitEmail(email);
@@ -143,13 +150,13 @@ namespace VCS_DOCs.Support.Pages.Support
                     };
                 }
 
-                // пользователь существует?
+                // Проверим, есть ли такой пользователь
                 var exists = await _db.Users.AsNoTracking()
                     .AnyAsync(u => u.NormalizedUserName == loginRaw.ToUpperInvariant());
 
                 if (!exists && Input.ConfirmCreate != true)
                 {
-                    // просим подтверждение у фронта (панель-диалог в новом support-request.js)
+                    // просим подтверждение (фронт покажет диалог и повторит запрос с ConfirmCreate=true)
                     return new JsonResult(new
                     {
                         success = false,
@@ -164,7 +171,7 @@ namespace VCS_DOCs.Support.Pages.Support
 
                 _log.LogInformation("PROVISION start: login={Login} email={Email}", loginRaw, email);
 
-                var (user, created) = await _provisioning.EnsureUserExistsAsync(
+                var (user, created, tempPassword) = await _provisioning.EnsureUserExistsAsync(
                     login: loginRaw,
                     email: string.IsNullOrWhiteSpace(email) ? null : email,
                     fullName: string.IsNullOrWhiteSpace(fullName) ? null : fullName,
@@ -174,7 +181,7 @@ namespace VCS_DOCs.Support.Pages.Support
 
                 _log.LogInformation("PROVISION done: id={Id} login={Login} created={Created}", user.Id, user.UserName, created);
 
-                // гарантируем StorageLimitBytes
+                // Гарантируем StorageLimitBytes
                 var dbUser = await _db.Users.FirstOrDefaultAsync(u => u.Id == user.Id);
                 if (dbUser != null && (dbUser.StorageLimitBytes == null || dbUser.StorageLimitBytes <= 0))
                 {
@@ -183,15 +190,15 @@ namespace VCS_DOCs.Support.Pages.Support
                     _log.LogInformation("Set StorageLimitBytes={Limit} for user {Id}", dbUser.StorageLimitBytes, dbUser.Id);
                 }
 
-                // создаём тикет + первое сообщение
-                var ticketId = NewShortId(); // 8 hex, как в API :contentReference[oaicite:4]{index=4}
+                // Создаём тикет + первое сообщение
+                var ticketId = NewShortId(); // 8 hex
                 var now = DateTime.UtcNow;
 
                 var t = new SupportTicket
                 {
                     Id = ticketId,
                     Subject = Input.Subject?.Trim(),
-                    Status = "open",                 // модель предполагает строковый статус с дефолтом "open" :contentReference[oaicite:5]{index=5}
+                    Status = "open",
                     CreatedAt = now,
                     UpdatedAt = now,
                     OwnerUserId = user.Id,
@@ -206,11 +213,40 @@ namespace VCS_DOCs.Support.Pages.Support
                     AuthorRole = "user",
                     Body = Input.Message.Trim(),
                     CreatedAt = now
-                }; // поля согласно модели сообщений :contentReference[oaicite:6]{index=6}
+                };
 
                 _db.SupportTickets.Add(t);
                 _db.SupportTicketMessages.Add(first);
-                await _db.SaveChangesAsync(); // DbSet-ы уже сконфигурированы в контексте :contentReference[oaicite:7]{index=7}
+                await _db.SaveChangesAsync();
+
+                // Письмо пользователю (если указан email)
+                if (!string.IsNullOrWhiteSpace(email))
+                {
+                    try
+                    {
+                        var baseUrl = _cfg["TicketUrlTemplate"]; // например: https://vcs-docs.local:7120/Support/Tickets/{id}
+                        var ticketUrl = !string.IsNullOrWhiteSpace(baseUrl)
+                            ? baseUrl.Replace("{id}", WebUtility.UrlEncode(ticketId))
+                            : $"#{ticketId}";
+
+                        var subj = $"[Поддержка] Заявка № {ticketId} создана";
+
+                        var html = BuildEmailHtml(
+                            ticketId: ticketId,
+                            ticketSubject: Input.Subject?.Trim() ?? "(без темы)",
+                            ticketUrl: ticketUrl,
+                            userLogin: user.UserName ?? "",
+                            wasCreated: created,
+                            tempPassword: created ? (tempPassword ?? "") : null
+                        );
+
+                        await _mailer.SendAsync(email, subj, html);
+                    }
+                    catch (Exception mex)
+                    {
+                        _log.LogWarning(mex, "Failed to send ticket email to {Email}", email);
+                    }
+                }
 
                 var traceId = HttpContext.TraceIdentifier;
 
@@ -218,10 +254,10 @@ namespace VCS_DOCs.Support.Pages.Support
                 {
                     success = true,
                     created,               // был ли создан аккаунт
-                    ticketId,              // № тикета (короткий)
+                    ticketId,              // № тикета
                     userId = user.Id,
                     login = user.UserName,
-                    email = user.Email,
+                    email = string.IsNullOrWhiteSpace(email) ? user.Email : email,
                     traceId
                 });
             }
@@ -316,6 +352,48 @@ namespace VCS_DOCs.Support.Pages.Support
         {
             var norm = candidate.ToUpperInvariant();
             return await _db.Users.AsNoTracking().AnyAsync(u => u.NormalizedUserName == norm);
+        }
+
+        private static string Html(string? s)
+            => WebUtility.HtmlEncode(s ?? "");
+
+        private static string BuildEmailHtml(string ticketId, string ticketSubject, string ticketUrl, string userLogin, bool wasCreated, string? tempPassword)
+        {
+            // очень простой адаптивный HTML
+            var intro = wasCreated
+                ? $"<p>Для вас создана учётная запись в системе поддержки.</p>"
+                : $"<p>Ваше обращение принято в работу.</p>";
+
+            var creds = wasCreated
+                ? $@"<div style=""margin:12px 0;padding:12px;border:1px solid #e5e7eb;border-radius:8px;background:#f9fafb"">
+                      <div style=""font-weight:700;margin-bottom:6px"">Данные для входа</div>
+                      <div>Логин: <code>{Html(userLogin)}</code></div>
+                      <div>Временный пароль: <code>{Html(tempPassword ?? "")}</code></div>
+                      <div style=""color:#6b7280;margin-top:6px;font-size:.9rem"">Рекомендуем сменить пароль после первого входа.</div>
+                    </div>"
+                : "";
+
+            return $@"
+            <!doctype html>
+            <html lang=""ru"">
+            <head>
+              <meta charset=""utf-8"">
+              <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+              <title>Заявка № {Html(ticketId)}</title>
+            </head>
+            <body style=""font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#ffffff;color:#111827;margin:0;padding:16px"">
+              <div style=""max-width:640px;margin:0 auto"">
+                <h2 style=""margin:0 0 8px 0"">Заявка № {Html(ticketId)} создана</h2>
+                <div style=""color:#6b7280;margin-bottom:12px"">{Html(ticketSubject)}</div>
+                {intro}
+                <p>Вы можете открыть заявку по ссылке:<br>
+                   <a href=""{Html(ticketUrl)}"">{Html(ticketUrl)}</a></p>
+                {creds}
+                <hr style=""border:none;border-top:1px solid #e5e7eb;margin:16px 0"">
+                <div style=""color:#6b7280;font-size:.9rem"">Это автоматическое письмо. Пожалуйста, не отвечайте на него.</div>
+              </div>
+            </body>
+            </html>";
         }
     }
 }
