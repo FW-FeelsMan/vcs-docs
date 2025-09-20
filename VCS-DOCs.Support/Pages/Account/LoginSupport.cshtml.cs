@@ -47,7 +47,7 @@ namespace VCS_DOCs.Support.Pages.Account
         {
             [Required(ErrorMessage = "Укажите логин.")]
             [StringLength(20, MinimumLength = 1, ErrorMessage = "Логин не более 20 символов.")]
-            [RegularExpression("^[a-zA-Z0-9]+$", ErrorMessage = "Логин может содержать только латиницу и цифры.")]
+            [RegularExpression("^[a-zA-Z0-9._-]+$", ErrorMessage = "Логин может содержать только латиницу, цифры, точку, подчёркивание и дефис.")]
             public string Username { get; set; } = "";
 
             [Required(ErrorMessage = "Укажите пароль.")]
@@ -107,7 +107,8 @@ namespace VCS_DOCs.Support.Pages.Account
             }
 
             // Ищем пользователя ТАК ЖЕ, как в Web
-            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.UserName == Input.Username);
+            var norm = (Input.Username ?? string.Empty).ToUpperInvariant();
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.NormalizedUserName == norm);
             if (user == null || user.IsDeleted || user.Access == 0)
             {
                 ErrorMessage = "Неверное имя пользователя или аккаунт не активирован.";

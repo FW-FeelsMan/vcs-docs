@@ -17,14 +17,15 @@ signInButton?.addEventListener('click', () => container?.classList.remove('right
 
 // ===== Вспомогательные =====
 function isPrintableKey(e) {
-    // служебные сочетания
-    if (e.ctrlKey || e.metaKey || e.altKey) return false;
-    const k = e.key;
-    if (!k || typeof k !== 'string') return false;
-    if (k === 'Unidentified') return false;
-    // системные названия клавиш (ArrowLeft, Backspace, Enter, ...), кроме пробела
-    if (k.length > 1 && k !== ' ') return false;
-    return true;
+    try {
+        if (!e || typeof e.key !== 'string') return false;
+        if (e.ctrlKey || e.metaKey || e.altKey) return false;
+        const k = e.key;
+        if (k.length > 1 && k !== ' ') return false;
+        return true;
+    } catch {
+        return false;
+    }
 }
 
 function blinkHint(hintEl, inputEl) {
@@ -100,8 +101,8 @@ function validateInput(event, isPassword = false) {
     }
 
     if (!isPassword) {
-        if (!/^[a-zA-Z0-9]*$/.test(input.value)) {
-            input.value = input.value.replace(/[^a-zA-Z0-9]/g, '');
+        if (!/^[a-zA-Z0-9._-]*$/.test(input.value)) {
+            input.value = input.value.replace(/[^a-zA-Z0-9._-]/g, '');
         }
     }
 }
@@ -136,39 +137,70 @@ async function submitForm(event, url, errorSelector, successRedirect = null) {
     event.preventDefault();
     const form = event.target;
     const formData = new FormData(form);
-
-    const u = (formData.get('Username') || '').toString().trim();
-    const p = (formData.get('Password') || '').toString(); // пароль НЕ трогаем
-    formData.set('Username', u);
-    formData.set('Password', p);
-
     showLoader();
 
     try {
-        const response = await fetch(url, { method: 'POST', body: formData });
-        if (!response.ok) throw new Error('Ошибка сервера');
+        const response = await fetch(url, {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin' // важно для куки/антииз
+        });
 
-        const result = await response.json();
+        // Если сервер решил нас редиректнуть (например, истекла аутентификация)
+        if (response.redirected) {
+            window.location.href = response.url;
+            return;
+        }
+
+        const ct = (response.headers.get('content-type') || '').toLowerCase();
+        const raw = await response.text();
+
+        let result = null;
+        if (ct.includes('application/json')) {
+            // нормальный JSON
+            result = JSON.parse(raw);
+        } else {
+            // попытка распарсить на случай, если сервер не выставил content-type
+            try { result = JSON.parse(raw); }
+            catch {
+                // это HTML/текст — покажем понятное сообщение и кусок тела для диагностики
+                const snippet = raw.slice(0, 400);
+                console.error('Ответ сервера не JSON:', snippet);
+                alert('Сервер вернул HTML вместо JSON. Возможно, истекла сессия или произошла ошибка.\n\nКратко:\n' + snippet);
+                return;
+            }
+        }
+
         const errorMessage = document.querySelector(errorSelector);
-
-        if (result.success) {
+        if (result && result.success) {
             if (successRedirect) {
                 window.location.href = successRedirect;
             } else {
+                // у вас: показать success-панель/перезагрузить
                 document.querySelector('.successful-message')?.setAttribute('style', 'display:block');
                 if (errorMessage) errorMessage.style.display = 'none';
+                // для Support-скрипта можете вместо этого делать: window.location.reload();
             }
         } else {
+            const errs = (result && (result.errors || result.details)) || null;
             if (errorMessage) {
-                errorMessage.innerHTML = (result.errors || []).map(e => `<p>${e}</p>`).join('');
+                if (Array.isArray(errs)) {
+                    errorMessage.innerHTML = errs.map(e => `<p>${e}</p>`).join('');
+                } else if (errs && typeof errs === 'object') {
+                    // details: { field: ["msg1","msg2"], ... }
+                    const flat = Object.entries(errs).flatMap(([k, arr]) => arr.map(x => `${k}: ${x}`));
+                    errorMessage.innerHTML = flat.map(e => `<p>${e}</p>`).join('');
+                } else {
+                    errorMessage.textContent = (result && (result.error || 'Ошибка')) || 'Ошибка';
+                }
                 errorMessage.style.display = 'block';
             } else {
-                alert((result.errors || ['Ошибка']).join('\n'));
+                alert((Array.isArray(errs) ? errs : [result?.error || 'Ошибка']).join('\n'));
             }
         }
-    } catch (error) {
-        console.error('Ошибка:', error);
-        alert('Произошла ошибка. Попробуйте позже.');
+    } catch (err) {
+        console.error('Ошибка fetch/парсинга:', err);
+        alert('Произошла ошибка сети или парсинга ответа. Попробуйте позже.');
     } finally {
         hideLoader();
     }

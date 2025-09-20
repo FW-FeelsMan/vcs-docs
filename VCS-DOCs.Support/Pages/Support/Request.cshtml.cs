@@ -248,10 +248,8 @@ namespace VCS_DOCs.Support.Pages.Support
                 {
                     try
                     {
-                        var baseUrl = _cfg["TicketUrlTemplate"]; // напр.: https://vcs-docs.local:7120/Support/Tickets/{id}
-                        var ticketUrl = !string.IsNullOrWhiteSpace(baseUrl)
-                            ? baseUrl.Replace("{id}", WebUtility.UrlEncode(ticketId))
-                            : $"#{ticketId}";
+                        var portalUrl = _cfg["Portal:PublicBaseUrl"] ?? "https://vcs-docs.support.local:7121";
+                        var ticketUrl = $"{portalUrl.TrimEnd('/')}/Support/Tickets/{WebUtility.UrlEncode(ticketId)}";
 
                         var subj = $"[Поддержка] Заявка № {ticketId} создана";
 
@@ -261,7 +259,8 @@ namespace VCS_DOCs.Support.Pages.Support
                             ticketUrl: ticketUrl,
                             userLogin: user.UserName ?? "",
                             wasCreated: created,
-                            tempPassword: created ? (tempPassword ?? "") : null
+                            tempPassword: created ? (tempPassword ?? "") : null,
+                            portalUrl: portalUrl
                         );
 
                         await _mailer.SendAsync(email, subj, html);
@@ -381,42 +380,47 @@ namespace VCS_DOCs.Support.Pages.Support
         private static string Html(string? s)
             => WebUtility.HtmlEncode(s ?? "");
 
-        private static string BuildEmailHtml(string ticketId, string ticketSubject, string ticketUrl, string userLogin, bool wasCreated, string? tempPassword)
+        private static string BuildEmailHtml(string ticketId, string ticketSubject,
+                            string ticketUrl, string userLogin,
+                            bool wasCreated, string? tempPassword,
+                            string portalUrl) 
         {
             var intro = wasCreated
-                ? $"<p>Для вас создана учётная запись в системе поддержки.</p>"
-                : $"<p>Ваше обращение принято в работу.</p>";
+                ? "<p>Для вас создана учётная запись в системе поддержки.</p>"
+                : "<p>Ваше обращение принято в работу.</p>";
 
             var creds = wasCreated
                 ? $@"<div style=""margin:12px 0;padding:12px;border:1px solid #e5e7eb;border-radius:8px;background:#f9fafb"">
-                      <div style=""font-weight:700;margin-bottom:6px"">Данные для входа</div>
-                      <div>Логин: <code>{Html(userLogin)}</code></div>
-                      <div>Временный пароль: <code>{Html(tempPassword ?? "")}</code></div>
-                      <div style=""color:#6b7280;margin-top:6px;font-size:.9rem"">Рекомендуем сменить пароль после первого входа.</div>
-                    </div>"
+                <div style=""font-weight:700;margin-bottom:6px"">Данные для входа</div>
+                <div>Логин: <code>{Html(userLogin)}</code></div>
+                <div>Временный пароль: <code>{Html(tempPassword ?? "")}</code></div>
+                <div style=""color:#6b7280;margin-top:6px;font-size:.9rem"">Рекомендуем сменить пароль после первого входа.</div>
+             </div>"
                 : "";
 
             return $@"
-            <!doctype html>
-            <html lang=""ru"">
-            <head>
-              <meta charset=""utf-8"">
-              <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
-              <title>Заявка № {Html(ticketId)}</title>
-            </head>
-            <body style=""font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#ffffff;color:#111827;margin:0;padding:16px"">
-              <div style=""max-width:640px;margin:0 auto"">
-                <h2 style=""margin:0 0 8px 0"">Заявка № {Html(ticketId)} создана</h2>
-                <div style=""color:#6b7280;margin-bottom:12px"">{Html(ticketSubject)}</div>
-                {intro}
-                <p>Вы можете открыть заявку по ссылке:<br>
-                   <a href=""{Html(ticketUrl)}"">{Html(ticketUrl)}</a></p>
-                {creds}
-                <hr style=""border:none;border-top:1px solid #e5e7eb;margin:16px 0"">
-                <div style=""color:#6b7280;font-size:.9rem"">Это автоматическое письмо. Пожалуйста, не отвечайте на него.</div>
-              </div>
-            </body>
-            </html>";
+                    <!doctype html>
+                    <html lang=""ru"">
+                    <head>
+                      <meta charset=""utf-8"">
+                      <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+                      <title>Заявка № {Html(ticketId)}</title>
+                    </head>
+                    <body style=""font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#ffffff;color:#111827;margin:0;padding:16px"">
+                      <div style=""max-width:640px;margin:0 auto"">
+                        <h2 style=""margin:0 0 8px 0"">Заявка № {Html(ticketId)} создана</h2>
+                        <div style=""color:#6b7280;margin-bottom:12px"">{Html(ticketSubject)}</div>
+                        {intro}
+                        <p>Откройте заявку по ссылке (может потребоваться вход в портал поддержки):<br>
+                           <a href=""{Html(ticketUrl)}"">{Html(ticketUrl)}</a></p>
+                        <p>Портал поддержки: <a href=""{Html(portalUrl)}"">{Html(portalUrl)}</a></p>
+                        {creds}
+                        <hr style=""border:none;border-top:1px solid #e5e7eb;margin:16px 0"">
+                        <div style=""color:#6b7280;font-size:.9rem"">Это автоматическое письмо. Пожалуйста, не отвечайте на него.</div>
+                      </div>
+                    </body>
+                    </html>";
         }
+
     }
 }

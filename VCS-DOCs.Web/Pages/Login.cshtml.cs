@@ -105,11 +105,12 @@ namespace VCS_DOCs.Pages
                 FailedLogins[ip] = (data.Attempts + 1, DateTime.Now);
                 return new JsonResult(new { success = false, errors = new List<string> { "Логин не более 20 символов." } });
             }
-            if (!Regex.IsMatch(Username, @"^[a-zA-Z0-9]+$"))
+            if (!Regex.IsMatch(Username, @"^[a-zA-Z0-9._-]+$"))
             {
                 FailedLogins[ip] = (data.Attempts + 1, DateTime.Now);
-                return new JsonResult(new { success = false, errors = new List<string> { "Логин может содержать только латиницу и цифры." } });
+                return new JsonResult(new { success = false, errors = new List<string> { "Логин может содержать только латиницу, цифры, точку, подчёркивание и дефис." } });
             }
+
             if (Password.Length > 100)
             {
                 FailedLogins[ip] = (data.Attempts + 1, DateTime.Now);
@@ -196,9 +197,9 @@ namespace VCS_DOCs.Pages
                 return new JsonResult(new { success = false, errors = RegistrationErrors });
             }
 
-            if (!Regex.IsMatch(Username, @"^[a-zA-Z0-9]+$"))
+            if (!Regex.IsMatch(Username, @"^[a-zA-Z0-9._-]+$"))
             {
-                RegistrationErrors.Add("Имя пользователя может содержать только латинские буквы и цифры.");
+                RegistrationErrors.Add("Имя пользователя может содержать только латиницу, цифры, точку, подчёркивание и дефис.");
                 return new JsonResult(new { success = false, errors = RegistrationErrors });
             }
 
