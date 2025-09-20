@@ -45,8 +45,15 @@ namespace VCS_DOCs.Support.Pages.Account
 
         public class InputModel
         {
-            [Required] public string Username { get; set; } = "";
-            [Required] public string Password { get; set; } = "";
+            [Required(ErrorMessage = "Укажите логин.")]
+            [StringLength(20, MinimumLength = 1, ErrorMessage = "Логин не более 20 символов.")]
+            [RegularExpression("^[a-zA-Z0-9]+$", ErrorMessage = "Логин может содержать только латиницу и цифры.")]
+            public string Username { get; set; } = "";
+
+            [Required(ErrorMessage = "Укажите пароль.")]
+            [StringLength(100, MinimumLength = 1, ErrorMessage = "Пароль не более 100 символов.")]
+            public string Password { get; set; } = "";
+
             public bool ForceLogin
             {
                 get; set;
@@ -80,16 +87,19 @@ namespace VCS_DOCs.Support.Pages.Account
 
         public async Task<IActionResult> OnPostAsync()
         {
+            // Триммим только логин; ПАРОЛЬ НЕ ТРОГАЕМ
             Input.Username = (Input.Username ?? string.Empty).Trim();
             Input.Password = Input.Password ?? string.Empty;
 
+            // Санитация ReturnUrl
             if (string.IsNullOrEmpty(Input.ReturnUrl)
                 || !Url.IsLocalUrl(Input.ReturnUrl)
                 || Input.ReturnUrl.StartsWith("/Errors", StringComparison.OrdinalIgnoreCase)
                 || Input.ReturnUrl.StartsWith("/Account/LoginSupport", StringComparison.OrdinalIgnoreCase))
                 Input.ReturnUrl = Url.Content("~/");
 
-            if (!ModelState.IsValid)
+            // Серверная валидация через DataAnnotations
+            if (!TryValidateModel(Input))
             {
                 ErrorMessage = string.Join("; ",
                     ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage ?? e.Exception?.Message));
@@ -115,7 +125,7 @@ namespace VCS_DOCs.Support.Pages.Account
                 return Page();
             }
 
-            // Инспекция хеша (корректная, big-endian)
+            // (опционально) Инспекция хеша
             var meta = InspectIdentityV3(user.PasswordHash);
             if (meta != null)
             {
@@ -128,22 +138,16 @@ namespace VCS_DOCs.Support.Pages.Account
                     user.UserName, (user.PasswordHash ?? string.Empty).Length >= 12 ? user.PasswordHash!.Substring(0, 12) : user.PasswordHash);
             }
 
-            // Проверка пароля двумя хешерами (оба V3)
-            PasswordVerificationResult v1 = PasswordVerificationResult.Failed;
-            PasswordVerificationResult v2 = PasswordVerificationResult.Failed;
-
+            // Проверка пароля строго через Identity V3
+            var v1 = PasswordVerificationResult.Failed;
             try { v1 = _userManager.PasswordHasher.VerifyHashedPassword(user, user.PasswordHash ?? "", Input.Password); } catch { }
-            try { v2 = new PasswordHasher<User>().VerifyHashedPassword(user, user.PasswordHash ?? "", Input.Password); } catch { }
+            var passwordOk = v1 is PasswordVerificationResult.Success or PasswordVerificationResult.SuccessRehashNeeded;
 
-            _logger.LogInformation("SUPPORT LOGIN pwd-check: user={user}, pwdLen={len}, hashPrefix={pfx}, verify(UserMgr)={v1}, verify(Local)={v2}",
+            _logger.LogInformation("SUPPORT LOGIN pwd-check: user={user}, pwdLen={len}, hashPrefix={pfx}, verify(UserMgr)={v1}",
                 user.UserName,
                 Input.Password?.Length ?? 0,
                 (user.PasswordHash ?? string.Empty).Length >= 12 ? user.PasswordHash!.Substring(0, 12) : user.PasswordHash,
-                v1, v2);
-
-            var passwordOk =
-                   v1 == PasswordVerificationResult.Success || v1 == PasswordVerificationResult.SuccessRehashNeeded
-                || v2 == PasswordVerificationResult.Success || v2 == PasswordVerificationResult.SuccessRehashNeeded;
+                v1);
 
             if (!passwordOk)
             {

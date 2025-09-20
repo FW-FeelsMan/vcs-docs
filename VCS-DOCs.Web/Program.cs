@@ -103,7 +103,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddIdentity<User, IdentityRole>()
+    .AddErrorDescriber<RussianIdentityErrorDescriber>()
     .AddEntityFrameworkStores<ApplicationDbContext>();
+
 builder.Services.AddScoped<IPasswordHasher<User>>(_ =>
     new PasswordHasher<User>(
         Microsoft.Extensions.Options.Options.Create(new PasswordHasherOptions

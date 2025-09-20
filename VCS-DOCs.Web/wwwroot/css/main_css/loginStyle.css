@@ -365,3 +365,13 @@ button[type="submit"]:disabled {
 .overlay-right {
     right: 0;
 }
+.field-hint {
+    color: #ef4444;
+    font-size: .85rem;
+    margin-top: 4px
+}
+
+input.over-limit {
+    outline: 2px solid #ef4444;
+    border-color: #ef4444
+}

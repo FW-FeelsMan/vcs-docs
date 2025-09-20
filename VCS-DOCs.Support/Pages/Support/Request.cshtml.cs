@@ -60,31 +60,44 @@ namespace VCS_DOCs.Support.Pages.Support
 
         public sealed class InputModel
         {
+            [MaxLength(80, ErrorMessage = "ФИО — не более 80 символов.")]
             public string? FullName
             {
                 get; set;
             }
+
+            [MaxLength(20, ErrorMessage = "Логин — не более 20 символов.")]
+            [RegularExpression("^[a-zA-Z0-9._-]*$", ErrorMessage = "Логин может содержать только латиницу, цифры, точку, подчёркивание и дефис.")]
             public string? Login
             {
                 get; set;
             }
 
-            [EmailAddress]
+            [EmailAddress(ErrorMessage = "Неверный формат e-mail.")]
+            [MaxLength(100, ErrorMessage = "E-mail — не более 100 символов.")]
             public string? ReplyTo
             {
                 get; set;
             }
 
-            [Required, MinLength(3), MaxLength(200)]
+            [Required(ErrorMessage = "Укажите тему.")]
+            [MinLength(3, ErrorMessage = "Тема — не короче 3 символов.")]
+            [MaxLength(100, ErrorMessage = "Тема — не более 100 символов.")]
             public string Subject { get; set; } = string.Empty;
 
-            [Required, MinLength(5), MaxLength(20_000)]
+            [Required(ErrorMessage = "Опишите проблему.")]
+            [MinLength(5, ErrorMessage = "Текст — не короче 5 символов.")]
+            [MaxLength(4000, ErrorMessage = "Текст — не более 4000 символов.")]
             public string Message { get; set; } = string.Empty;
 
+            [MaxLength(10, ErrorMessage = "Ответ на капчу — не более 10 символов.")]
             public string? CaptchaAnswer
             {
                 get; set;
             }
+
+            // токен reCAPTCHA; ограничим разумно
+            [MaxLength(4000)]
             public string? CaptchaToken
             {
                 get; set;
@@ -105,7 +118,18 @@ namespace VCS_DOCs.Support.Pages.Support
         {
             try
             {
-                if (!ModelState.IsValid)
+                // Нормализация (триммим все строковые поля)
+                Input.FullName = (Input.FullName ?? string.Empty).Trim();
+                Input.Login = (Input.Login ?? string.Empty).Trim();
+                Input.ReplyTo = (Input.ReplyTo ?? string.Empty).Trim();
+                Input.Subject = (Input.Subject ?? string.Empty).Trim();
+                Input.Message = (Input.Message ?? string.Empty).Trim();
+                Input.CaptchaAnswer = (Input.CaptchaAnswer ?? string.Empty).Trim();
+                Input.CaptchaToken = (Input.CaptchaToken ?? string.Empty).Trim();
+
+                // Пере-валидация после нормализации
+                ModelState.Clear();
+                if (!TryValidateModel(Input))
                 {
                     var errs = ModelState
                         .Where(kv => kv.Value?.Errors.Count > 0)
@@ -125,9 +149,9 @@ namespace VCS_DOCs.Support.Pages.Support
                     };
                 }
 
-                var fullName = (Input.FullName ?? "").Trim();
-                var email = (Input.ReplyTo ?? "").Trim();
-                var loginRaw = (Input.Login ?? "").Trim();
+                var fullName = Input.FullName!;
+                var email = Input.ReplyTo!;
+                var loginRaw = Input.Login!;
 
                 // если логина нет — сгенерируем от e-mail (ограничения Identity: [a-z0-9._-], без пробелов)
                 if (string.IsNullOrWhiteSpace(loginRaw) && !string.IsNullOrWhiteSpace(email) && email.Contains('@'))
@@ -135,7 +159,7 @@ namespace VCS_DOCs.Support.Pages.Support
                     var (local, domainRoot) = SplitEmail(email);
                     var baseLogin = SanitizeLoginBase(local);
                     if (string.IsNullOrWhiteSpace(baseLogin)) baseLogin = "user";
-                    loginRaw = await BuildUniqueLoginAsync(baseLogin, domainRoot);
+                    loginRaw = await BuildUniqueLoginAsync(baseLogin, domainRoot, maxLen: 20); // <= 20 символов
                 }
 
                 if (string.IsNullOrWhiteSpace(loginRaw))
@@ -150,7 +174,7 @@ namespace VCS_DOCs.Support.Pages.Support
                     };
                 }
 
-                // Проверим, есть ли такой пользователь
+                // Проверим существование пользователя
                 var exists = await _db.Users.AsNoTracking()
                     .AnyAsync(u => u.NormalizedUserName == loginRaw.ToUpperInvariant());
 
@@ -197,7 +221,7 @@ namespace VCS_DOCs.Support.Pages.Support
                 var t = new SupportTicket
                 {
                     Id = ticketId,
-                    Subject = Input.Subject?.Trim(),
+                    Subject = Input.Subject,
                     Status = "open",
                     CreatedAt = now,
                     UpdatedAt = now,
@@ -211,7 +235,7 @@ namespace VCS_DOCs.Support.Pages.Support
                     TicketId = ticketId,
                     AuthorUserId = user.Id,
                     AuthorRole = "user",
-                    Body = Input.Message.Trim(),
+                    Body = Input.Message,
                     CreatedAt = now
                 };
 
@@ -224,7 +248,7 @@ namespace VCS_DOCs.Support.Pages.Support
                 {
                     try
                     {
-                        var baseUrl = _cfg["TicketUrlTemplate"]; // например: https://vcs-docs.local:7120/Support/Tickets/{id}
+                        var baseUrl = _cfg["TicketUrlTemplate"]; // напр.: https://vcs-docs.local:7120/Support/Tickets/{id}
                         var ticketUrl = !string.IsNullOrWhiteSpace(baseUrl)
                             ? baseUrl.Replace("{id}", WebUtility.UrlEncode(ticketId))
                             : $"#{ticketId}";
@@ -233,7 +257,7 @@ namespace VCS_DOCs.Support.Pages.Support
 
                         var html = BuildEmailHtml(
                             ticketId: ticketId,
-                            ticketSubject: Input.Subject?.Trim() ?? "(без темы)",
+                            ticketSubject: Input.Subject ?? "(без темы)",
                             ticketUrl: ticketUrl,
                             userLogin: user.UserName ?? "",
                             wasCreated: created,
@@ -305,7 +329,7 @@ namespace VCS_DOCs.Support.Pages.Support
             return s;
         }
 
-        private async Task<string> BuildUniqueLoginAsync(string baseLogin, string? domainRoot, int maxLen = 32)
+        private async Task<string> BuildUniqueLoginAsync(string baseLogin, string? domainRoot, int maxLen = 20)
         {
             baseLogin = TruncateClean(baseLogin, maxLen);
             var candidates = new List<string> { baseLogin };
@@ -359,7 +383,6 @@ namespace VCS_DOCs.Support.Pages.Support
 
         private static string BuildEmailHtml(string ticketId, string ticketSubject, string ticketUrl, string userLogin, bool wasCreated, string? tempPassword)
         {
-            // очень простой адаптивный HTML
             var intro = wasCreated
                 ? $"<p>Для вас создана учётная запись в системе поддержки.</p>"
                 : $"<p>Ваше обращение принято в работу.</p>";

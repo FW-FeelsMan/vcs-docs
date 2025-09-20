@@ -29,27 +29,36 @@
             <div class="grid">
                 <div>
                     <label for="supFullName">ФИО</label>
-                    <input id="supFullName" name="fullName" type="text" placeholder="Иванов Иван Иванович" />
+                    <input id="supFullName" name="fullName" type="text" placeholder="Иванов Иван Иванович"
+                           maxlength="80" data-maxlen="80" />
+                    <small class="field-hint" data-hint-for="fullName" style="display:none;">Не более 80 символов</small>
                 </div>
                 <div>
                     <label for="supLogin">Логин</label>
-                    <input id="supLogin" name="login" type="text" placeholder="логин (если есть)" />
+                    <input id="supLogin" name="login" type="text" placeholder="логин (если есть)"
+                           maxlength="20" data-maxlen="20" />
+                    <small class="field-hint" data-hint-for="login" style="display:none;">Не более 20 символов</small>
                 </div>
             </div>
 
             <div class="grid">
                 <div>
                     <label for="supEmail">Почта для ответа</label>
-                    <input id="supEmail" name="replyTo" type="email" placeholder="you@example.com" />
+                    <input id="supEmail" name="replyTo" type="email" placeholder="you@example.com"
+                           maxlength="100" data-maxlen="100" />
                 </div>
                 <div>
                     <label for="supSubject">Тема</label>
-                    <input id="supSubject" name="subject" type="text" placeholder="Коротко о проблеме" />
+                    <input id="supSubject" name="subject" type="text" placeholder="Коротко о проблеме"
+                           maxlength="100" data-maxlen="100" />
+                    <small class="field-hint" data-hint-for="subject" style="display:none;">Не более 100 символов</small>
                 </div>
             </div>
 
             <label for="supMessage">Текст обращения</label>
-            <textarea id="supMessage" name="message" placeholder="Что произошло? Какие шаги приводят к ошибке?" rows="6"></textarea>
+            <textarea id="supMessage" name="message" placeholder="Что произошло?... "
+                      rows="6" maxlength="4000" data-maxlen="4000"></textarea>
+            <small class="field-hint" data-hint-for="message" style="display:none;">Не более 4000 символов</small>
 
             <!-- Captcha -->
             <div class="captcha-row">
@@ -58,7 +67,8 @@
                 <div id="captchaContainerLocal" style="display:none; align-items:center; gap:10px;">
                     <img id="captchaImage" alt="Капча" />
                     <button id="captchaRefresh" class="btn secondary" data-click="throttle:800" type="button">Обновить</button>
-                    <input id="captchaAnswer" name="captchaAnswer" type="text" placeholder="Ответ" />
+                    <input id="captchaAnswer" name="captchaAnswer" type="text" placeholder="Ответ"
+                           maxlength="10" data-maxlen="10" />
                 </div>
             </div>
 

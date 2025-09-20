@@ -42,8 +42,9 @@ internal class Program
         builder.Services
             .AddIdentity<User, IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
-            .AddDefaultTokenProviders();
-        
+            .AddDefaultTokenProviders()
+            .AddErrorDescriber<RussianIdentityErrorDescriber>();
+
         builder.Services.AddScoped<IPasswordHasher<User>>(_ =>
             new PasswordHasher<User>(
                 Microsoft.Extensions.Options.Options.Create(new PasswordHasherOptions

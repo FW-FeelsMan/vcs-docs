@@ -47,11 +47,8 @@ namespace VCS_DOCs.Pages
             _userManager = userManager;
         }
 
-        [BindProperty]
-        public string Username { get; set; } = string.Empty;
-
-        [BindProperty]
-        public string Password { get; set; } = string.Empty;
+        [BindProperty] public string Username { get; set; } = string.Empty;
+        [BindProperty] public string Password { get; set; } = string.Empty;
 
         public List<string> LoginErrors
         {
@@ -82,8 +79,9 @@ namespace VCS_DOCs.Pages
             var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
             LoginErrors ??= new List<string>();
 
+            // Триммим только логин; ПАРОЛЬ НЕ ТРОГАЕМ
             Username = (Username ?? string.Empty).Trim();
-            Password = (Password ?? string.Empty).Trim();
+            Password = Password ?? string.Empty;
 
             _logger.LogInformation("Login attempt for {U}, pwd len={L}", Username, Password?.Length ?? 0);
 
@@ -96,11 +94,28 @@ namespace VCS_DOCs.Pages
                     return new JsonResult(new { success = false, errors = new List<string> { "Слишком много неудачных попыток. Попробуйте позже." } });
             }
 
-            if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password))
+            // --- Серверные проверки формата/длины ---
+            if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrEmpty(Password))
             {
                 FailedLogins[ip] = (data.Attempts + 1, DateTime.Now);
                 return new JsonResult(new { success = false, errors = new List<string> { "Имя пользователя и пароль обязательны." } });
             }
+            if (Username.Length > 20)
+            {
+                FailedLogins[ip] = (data.Attempts + 1, DateTime.Now);
+                return new JsonResult(new { success = false, errors = new List<string> { "Логин не более 20 символов." } });
+            }
+            if (!Regex.IsMatch(Username, @"^[a-zA-Z0-9]+$"))
+            {
+                FailedLogins[ip] = (data.Attempts + 1, DateTime.Now);
+                return new JsonResult(new { success = false, errors = new List<string> { "Логин может содержать только латиницу и цифры." } });
+            }
+            if (Password.Length > 100)
+            {
+                FailedLogins[ip] = (data.Attempts + 1, DateTime.Now);
+                return new JsonResult(new { success = false, errors = new List<string> { "Пароль не более 100 символов." } });
+            }
+            // ---------------------------------------
 
             // Ищем пользователя через Identity
             var user = await _userManager.Users.FirstOrDefaultAsync(u => u.UserName == Username);
@@ -110,7 +125,7 @@ namespace VCS_DOCs.Pages
                 return new JsonResult(new { success = false, errors = new List<string> { "Неверное имя пользователя, пароль или аккаунт был удалён." } });
             }
 
-            // Проверяем пароль ТОЛЬКО через Identity (совместимо с AQAAAA... хэшами)
+            // Проверяем пароль ТОЛЬКО через Identity (AQAAAA... совместимо)
             bool passwordOk = false;
             try
             {
@@ -162,6 +177,7 @@ namespace VCS_DOCs.Pages
             return new JsonResult(new { success = true });
         }
 
+        // --- остальной код (регистрация/OnGet) без изменений ---
         public async Task<IActionResult> OnPostRegisterAsync()
         {
             RegistrationErrors ??= new List<string>();
@@ -186,9 +202,9 @@ namespace VCS_DOCs.Pages
                 return new JsonResult(new { success = false, errors = RegistrationErrors });
             }
 
-            if (Password.Length > 20)
+            if (Password.Length > 100) // синхронизировано с логином
             {
-                RegistrationErrors.Add("Пароль не должен превышать 20 символов.");
+                RegistrationErrors.Add("Пароль не должен превышать 100 символов.");
                 return new JsonResult(new { success = false, errors = RegistrationErrors });
             }
 
@@ -200,7 +216,6 @@ namespace VCS_DOCs.Pages
 
             try
             {
-                // Проверяем, что логин свободен
                 var existingUser = await _userManager.FindByNameAsync(Username);
                 if (existingUser != null)
                 {
@@ -208,7 +223,6 @@ namespace VCS_DOCs.Pages
                     return new JsonResult(new { success = false, errors = RegistrationErrors });
                 }
 
-                // Создаём пользователя (хэш делает Identity)
                 var newUser = new User
                 {
                     UserName = Username,
@@ -219,7 +233,7 @@ namespace VCS_DOCs.Pages
                     CreatedAt = DateTime.Now,
                     UpdatedAt = DateTime.Now,
                     IsDeleted = false,
-                    Access = 0, // до активации админом
+                    Access = 0,
                     StorageLimitBytes = 10L * 1024 * 1024 * 1024
                 };
 
@@ -231,7 +245,6 @@ namespace VCS_DOCs.Pages
                     return new JsonResult(new { success = false, errors = RegistrationErrors });
                 }
 
-                // === РОЛИ: гарантируем существование и выдаём BaseUser ===
                 var roleMgr = HttpContext.RequestServices.GetRequiredService<RoleManager<IdentityRole>>();
                 if (!await roleMgr.RoleExistsAsync(Roles.BaseUser))
                     await roleMgr.CreateAsync(new IdentityRole(Roles.BaseUser));
@@ -241,13 +254,10 @@ namespace VCS_DOCs.Pages
                 {
                     foreach (var err in roleRes.Errors)
                         RegistrationErrors.Add(err.Description);
-
-                    // Откатим создание пользователя, чтобы не оставлять «битую» запись без роли
                     await _userManager.DeleteAsync(newUser);
                     return new JsonResult(new { success = false, errors = RegistrationErrors });
                 }
 
-                // Создаём пользовательскую директорию
                 string appDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData");
                 string shortUserId = newUser.Id.Replace("-", "").Substring(0, 8);
                 string userFolderName = $"u_{shortUserId}";
@@ -256,7 +266,6 @@ namespace VCS_DOCs.Pages
                 int fullFolderPathLength = userDataPath.Length;
                 if (fullFolderPathLength >= MaxPathLength)
                 {
-                    // Откат пользователя, если путь слишком длинный
                     await _userManager.DeleteAsync(newUser);
                     RegistrationErrors.Add("Не удалось создать пользователя: путь к папке слишком длинный. Попробуйте более короткий логин.");
                     return new JsonResult(new { success = false, errors = RegistrationErrors });
@@ -276,17 +285,11 @@ namespace VCS_DOCs.Pages
                 return new JsonResult(new { success = false, errors = RegistrationErrors });
             }
         }
+
         public async Task<IActionResult> OnPostAsync(string action)
         {
-            if (action == "Login")
-            {
-                return await OnPostLoginAsync();
-            }
-            else if (action == "Register")
-            {
-                return await OnPostRegisterAsync();
-            }
-
+            if (action == "Login") return await OnPostLoginAsync();
+            else if (action == "Register") return await OnPostRegisterAsync();
             return Page();
         }
 

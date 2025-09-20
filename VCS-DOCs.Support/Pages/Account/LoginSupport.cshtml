@@ -23,8 +23,12 @@
             <h1>Вход</h1>
             <p>Введите ваши данные для входа</p>
 
-            <input asp-for="Input.Username" placeholder="Ваш логин" required />
-            <input asp-for="Input.Password" type="password" autocomplete="on" placeholder="Пароль" required />
+            <input asp-for="Input.Username" placeholder="Ваш логин" required maxlength="20" data-maxlen="20" />
+            <small class="field-hint" data-hint-for="Input.Username" style="display:none;">Не более 20 символов</small>
+
+            <input asp-for="Input.Password" type="password" autocomplete="on"
+                   placeholder="Пароль" required maxlength="100" data-maxlen="100" />
+            <small class="field-hint" data-hint-for="Input.Password" style="display:none;">Не более 100 символов</small>
 
             <div class="error-message" style="@(string.IsNullOrEmpty(Model.ErrorMessage) ? " display:none" : "" )">
                 @Model.ErrorMessage
@@ -47,4 +51,5 @@
     <script>
         document.getElementById('hardwareId').value = navigator.userAgent;
     </script>
+    <script src="~/js/auth/auth-login.js" asp-append-version="true" defer></script>
 }

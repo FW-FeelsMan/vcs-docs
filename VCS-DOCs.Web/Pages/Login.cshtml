@@ -22,8 +22,14 @@
             <input type="hidden" name="hardwareId" id="hardwareId" />
             <h1>Вход</h1>
             <p>Введите Ваши данные для входа в систему</p>
-            <input type="text" name="Username" placeholder="Ваш логин" value="@Model.Username" required />
-            <input type="password" name="Password" autocomplete="on" placeholder="Пароль" required />
+            <input type="text" name="Username" placeholder="Ваш логин" value="@Model.Username"
+                   required maxlength="20" data-maxlen="20" />
+            <small class="field-hint" data-hint-for="Username" style="display:none;">Не более 20 символов</small>            
+
+            <input type="password" name="Password" autocomplete="on" placeholder="Пароль"
+                   required maxlength="100" data-maxlen="100" />
+            <small class="field-hint" data-hint-for="Password" style="display:none;">Не более 100 символов</small>
+
 
             <div class="error-message" style="display:none;"></div>
 
@@ -45,7 +51,14 @@
             <input type="hidden" name="action" value="Register" />
             <input type="hidden" name="hardwareId" id="hardwareIdRegister" />
             <h1>Регистрация</h1>
-            <input type="text" name="Username" placeholder="Ваш логин" required />
+
+            <!-- ЛОГИН -->
+            <input type="text" name="Username" placeholder="Ваш логин"
+                   required maxlength="20" data-maxlen="20" />
+            <small class="field-hint" data-hint-for="Username" style="display:none;">
+                Не более 20 символов
+            </small>
+
             <select name="speciality" required>
                 <option value="" disabled selected>Выберите тип учетной записи</option>
                 @foreach (var speciality in Model.Specialities)
@@ -53,7 +66,13 @@
                     <option value="@speciality">@speciality</option>
                 }
             </select>
-            <input type="password" name="Password" autocomplete="on" placeholder="Пароль" required />
+
+            <!-- ПАРОЛЬ -->
+            <input type="password" name="Password" autocomplete="on" placeholder="Пароль"
+                   required maxlength="100" data-maxlen="100" />
+            <small class="field-hint" data-hint-for="Password" style="display:none;">
+                Не более 100 символов
+            </small>
 
             @if (Model.RegistrationErrors.Any())
             {
@@ -78,12 +97,12 @@
             <div class="overlay-panel overlay-left">
                 <h1>Регистрация пользователя</h1>
                 <p>Введите Ваши данные и нажмите кнопку "Зарегистрировать"</p>
-                <button class="ghost" id="signIn" data-click="throttle:800" >Вернуться</button>
+                <button class="ghost" id="signIn" data-click="throttle:800">Вернуться</button>
             </div>
             <div class="overlay-panel overlay-right">
                 <h1>VCS-DOCs</h1>
                 <p>Еще не зарегистрированы в системе?</p>
-                <button class="ghost" id="signUp" data-click="throttle:800" >Зарегистрироваться</button>
+                <button class="ghost" id="signUp" data-click="throttle:800">Зарегистрироваться</button>
             </div>
         </div>
     </div>
@@ -91,5 +110,6 @@
 
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/fingerprintjs@3.3.0/dist/fp.min.js"></script>
-    @await Html.PartialAsync("~/Pages/Shared/Scripts/Scripts_Login.cshtml")
+    <script src="~/js/auth/auth-login.js" asp-append-version="true" defer></script>
+    <script src="~/js/ui/support_modal.js"></script>
 }
