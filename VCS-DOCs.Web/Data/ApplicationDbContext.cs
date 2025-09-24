@@ -60,6 +60,7 @@ namespace VCS_DOCs.Data
                 e.Property(x => x.Status).HasMaxLength(16).HasDefaultValue("open");
                 e.HasIndex(x => x.Status);
                 e.HasIndex(x => new { x.OwnerUserId, x.OwnerLogin });
+                e.Property(t => t.EmailNotifyEnabled).HasDefaultValue(true);
             });
 
             b.Entity<SupportTicketMessage>(e =>
@@ -73,6 +74,7 @@ namespace VCS_DOCs.Data
                  .WithMany(t => t.Messages)
                  .HasForeignKey(x => x.TicketId)
                  .OnDelete(DeleteBehavior.Cascade);
+                e.HasIndex(m => new { m.TicketId, m.CreatedAt });
             });
 
             b.Entity<SupportProject>(e =>

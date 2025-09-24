@@ -2,7 +2,8 @@
 {
     public class SupportTicket
     {
-        public string Id { get; set; } = default!;          
+        public string Id { get; set; } = default!;
+        public bool EmailNotifyEnabled { get; set; } = true;
         public string? Subject
         {
             get; set;

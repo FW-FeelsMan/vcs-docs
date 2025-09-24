@@ -9,10 +9,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using VCS_DOCs.Core.Notifications;
 using VCS_DOCs.Data;
 using VCS_DOCs.Infrastructure.Auth;
 using VCS_DOCs.Models.Entities;
-using VCS_DOCs.Support.Infrastructure.Email;
 
 namespace VCS_DOCs.Support.Controllers
 {

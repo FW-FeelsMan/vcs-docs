@@ -17,7 +17,6 @@ using VCS_DOCs.Upload.Core;
 using VCS_DOCs.Core.Interfaces;
 using VCS_DOCs.Services;
 using VCS_DOCs.Upload.Core.Services;
-using VCS_DOCs.TaskEngine;
 using VCS_DOCs.Upload.Core.Services.Tasks;
 using Microsoft.Extensions.Options;
 using VCS_DOCs.Infrastructure;
@@ -196,13 +195,13 @@ builder.Services.Configure<IpRateLimitOptions>(options =>
     ];
 });
 
-// === Connected Task-Engine ===
-builder.Services.AddSingleton<TaskRunner>(sp =>
-{
-    var config = sp.GetRequiredService<IConfiguration>();
-    var modulesPath = Path.Combine(builder.Environment.ContentRootPath, config["TaskEngineOptions:ModulesPath"]);
-    return new TaskRunner(modulesPath);
-});
+//// === Connected Task-Engine ===
+//builder.Services.AddSingleton<TaskRunner>(sp =>
+//{
+//    var config = sp.GetRequiredService<IConfiguration>();
+//    var modulesPath = Path.Combine(builder.Environment.ContentRootPath, config["TaskEngineOptions:ModulesPath"]);
+//    return new TaskRunner(modulesPath);
+//});
 builder.Services.AddSingleton<ChunkHashService>(sp =>
 {
     var userPaths = sp.GetRequiredService<UserStoragePaths>();

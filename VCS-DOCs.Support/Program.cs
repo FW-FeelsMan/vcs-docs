@@ -13,10 +13,11 @@ using VCS_DOCs.Infrastructure.Auth;
 using VCS_DOCs.Models.Entities;
 using VCS_DOCs.Support.Hubs;
 using VCS_DOCs.Support.Infrastructure.Auth;
-using VCS_DOCs.Support.Infrastructure.Email;
+//using VCS_DOCs.Support.Infrastructure.Mail;
 using VCS_DOCs.Support.Infrastructure.Provision;
 using VCS_DOCs.Support.Integration;
-
+using VCS_DOCs.TaskEngine;
+using VCS_DOCs.Core.Notifications;
 internal class Program
 {
     private static async Task Main(string[] args)
@@ -193,9 +194,8 @@ internal class Program
                 builder.Configuration.GetConnectionString("VDocsDb")
                 ?? builder.Configuration.GetConnectionString("DefaultConnection") // fallback
             ));
-        builder.Services.Configure<VCS_DOCs.Support.Infrastructure.Email.SmtpOptions>(
-            builder.Configuration.GetSection("Mail"));
-        builder.Services.AddSingleton<IMailSender, VCS_DOCs.Support.Infrastructure.Mail.SmtpMailSender>();
+        builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Mail"));
+        builder.Services.AddSingleton<IMailSender, SmtpMailSender>();
 
         // === Kestrel / dev-cert ===
         builder.WebHost.ConfigureKestrel((ctx, opts) =>
@@ -217,6 +217,10 @@ internal class Program
                 https.ServerCertificate = cert;
             });
         });
+        if (builder.Configuration.GetValue("TaskEngine:Enabled", false))
+        {
+            builder.Services.AddTaskEngine(builder.Configuration);
+        }
 
         var app = builder.Build();
 

@@ -2,7 +2,7 @@
 using System.Net;
 using System.Net.Mail;
 using Microsoft.Extensions.Options;
-using VCS_DOCs.Support.Infrastructure.Email;
+using VCS_DOCs.Core.Notifications;
 
 namespace VCS_DOCs.Support.Infrastructure.Mail
 {

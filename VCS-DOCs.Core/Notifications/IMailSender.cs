@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace VCS_DOCs.Support.Infrastructure.Email
+namespace VCS_DOCs.Core.Notifications
 {
     public interface IMailSender
     {

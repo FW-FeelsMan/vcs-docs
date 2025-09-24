@@ -42,6 +42,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.6" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.9" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="MiniProfiler.AspNetCore.Mvc" Version="4.5.4" />
     <PackageReference Include="MiniProfiler.EntityFrameworkCore" Version="4.5.4" />
@@ -63,7 +64,6 @@
     <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.6" />
     <ProjectReference Include="..\VCS-DOCs.Infrastructure\VCS-DOCs.Infrastructure.csproj" />
-    <ProjectReference Include="..\VCS-DOCs.TaskEngine\VCS-DOCs.TaskEngine.csproj" />
     <ProjectReference Include="..\VCS-DOCs.Upload.Core\VCS-DOCs.Upload.Core.csproj" />
     <ProjectReference Include="..\VCS-DOCs.WebCAD\VCS-DOCs.WebCAD.csproj" />
 	  <ProjectReference Include="..\\VCS-DOCs.Models\\VCS-DOCs.Models.csproj" />

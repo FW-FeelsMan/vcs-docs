@@ -14,7 +14,10 @@
         public string AuthorRole { get; set; } = "user";    // user | agent
         public string Body { get; set; } = default!;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
+        public DateTime? ReminderEmailSentAt
+        {
+            get; set;
+        }
         public SupportTicket? Ticket
         {
             get; set;

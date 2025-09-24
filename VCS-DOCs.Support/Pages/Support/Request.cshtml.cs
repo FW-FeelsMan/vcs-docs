@@ -7,9 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Data;
 using VCS_DOCs.Models.Entities;
 using VCS_DOCs.Support.Infrastructure.Provision;
-using VCS_DOCs.Support.Infrastructure.Email; // SmtpOptions in DI
-using VCS_DOCs.Support.Infrastructure.Mail;  // IMailSender
-using Microsoft.Extensions.Configuration;
+using VCS_DOCs.Core.Notifications;
 
 namespace VCS_DOCs.Support.Pages.Support
 {

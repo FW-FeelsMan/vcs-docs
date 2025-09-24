@@ -1,4 +1,4 @@
-﻿namespace VCS_DOCs.Support.Infrastructure.Email
+﻿namespace VCS_DOCs.Core.Notifications
 {
     public class SmtpOptions
     {

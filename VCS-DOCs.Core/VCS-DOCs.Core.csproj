@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="ClamAV.Net" Version="0.1.166" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.9" />
   </ItemGroup>
 
 	<ItemGroup>

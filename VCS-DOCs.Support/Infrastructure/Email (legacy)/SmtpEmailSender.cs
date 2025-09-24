@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using VCS_DOCs.Core.Notifications;
 
 namespace VCS_DOCs.Support.Infrastructure.Email
 {
