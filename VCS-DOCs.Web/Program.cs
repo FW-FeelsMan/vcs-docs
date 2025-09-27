@@ -1,5 +1,4 @@
-﻿//D:\Unity\VCS-DOCs\VCS-DOCs.Web\Program.cs
-using AspNetCoreRateLimit;
+﻿using AspNetCoreRateLimit;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
@@ -26,6 +25,7 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -99,7 +99,17 @@ builder.WebHost.ConfigureKestrel(options =>
 
 // === DB + Identity ===
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    var cs = builder.Configuration.GetConnectionString("DefaultConnection")
+             ?? "Data Source=VCSDocs.db";
+
+    // Улучшаем конкурентность и устойчивость к lock'ам
+    if (!cs.Contains("Cache=", StringComparison.OrdinalIgnoreCase)) cs += ";Cache=Shared";
+    if (!cs.Contains("Pooling=", StringComparison.OrdinalIgnoreCase)) cs += ";Pooling=True";
+    if (!cs.Contains("Default Timeout=", StringComparison.OrdinalIgnoreCase)) cs += ";Default Timeout=60";
+
+    options.UseSqlite(cs);
+});
 
 builder.Services.AddIdentity<User, IdentityRole>()
     .AddErrorDescriber<RussianIdentityErrorDescriber>()
@@ -118,14 +128,13 @@ builder.Services.Configure<IdentityOptions>(opt =>
     opt.Password.RequireDigit = true;
     opt.Password.RequireLowercase = true;
     opt.Password.RequireUppercase = true;
-    opt.Password.RequireNonAlphanumeric = false; 
+    opt.Password.RequireNonAlphanumeric = false;
     opt.Password.RequiredLength = 6;
     opt.Password.RequiredUniqueChars = 1;
 });
 builder.Services.Configure<PasswordHasherOptions>(o =>
 {
     o.CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV3;
-
 });
 
 builder.Services.AddAuthentication().AddCookie();
@@ -139,10 +148,18 @@ builder.Services.AddSingleton<IAntivirusScanner>(sp =>
 {
     var cfg = sp.GetRequiredService<IConfiguration>();
     var loggerFactory = sp.GetService<ILoggerFactory>();
+
+    var userData = sp.GetRequiredService<IOptions<UserDataPathOptions>>().Value.BasePath;
+    var avTemp = Path.Combine(userData, "_tmp", "av");
+    Directory.CreateDirectory(avTemp);
+
     var amsi = new AmsiScanner("VCS-DOCs", loggerFactory?.CreateLogger<AmsiScanner>());
     var simple = new SimpleSignaturesScanner(cfg);
-    return new CompositeScanner(amsi, simple);
+
+    // ✓ соответствует перегрузке CompositeScanner(string avTempDir, params scanners)
+    return new CompositeScanner(avTemp, amsi, simple);
 });
+
 
 // === App Cookies ===
 builder.Services.ConfigureApplicationCookie(options =>
@@ -195,13 +212,7 @@ builder.Services.Configure<IpRateLimitOptions>(options =>
     ];
 });
 
-//// === Connected Task-Engine ===
-//builder.Services.AddSingleton<TaskRunner>(sp =>
-//{
-//    var config = sp.GetRequiredService<IConfiguration>();
-//    var modulesPath = Path.Combine(builder.Environment.ContentRootPath, config["TaskEngineOptions:ModulesPath"]);
-//    return new TaskRunner(modulesPath);
-//});
+//builder.Services.AddSingleton<TaskRunner>(...) — отключено
 builder.Services.AddSingleton<ChunkHashService>(sp =>
 {
     var userPaths = sp.GetRequiredService<UserStoragePaths>();
@@ -221,6 +232,15 @@ builder.Configuration.AddJsonFile("appsettings.Secrets.json", optional: true, re
 
 // === App Build ===
 var app = builder.Build();
+
+// === PRAGMA для SQLite (WAL + busy_timeout) ===
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
+    db.Database.ExecuteSqlRaw("PRAGMA synchronous=NORMAL;");
+    db.Database.ExecuteSqlRaw("PRAGMA busy_timeout=8000;"); // 8s
+}
 
 // === Ensure Identity Roles exist (BaseUser / SupportAgent / SupportAdmin) ===
 using (var scope = app.Services.CreateScope())

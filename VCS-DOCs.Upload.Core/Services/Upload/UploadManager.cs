@@ -14,6 +14,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace VCS_DOCs.Upload.Core
 {
@@ -35,7 +36,8 @@ namespace VCS_DOCs.Upload.Core
             UserStoragePaths paths,
             IUserInfoProvider userInfoProvider,
             IAntivirusScanner av,
-            IConfiguration cfg
+            IConfiguration cfg,
+            ILogger<UploadManager>? log = null
         )
         {
             _db = db;
@@ -45,6 +47,7 @@ namespace VCS_DOCs.Upload.Core
             _userInfoProvider = userInfoProvider;
             _av = av;
             _cfg = cfg;
+            _log = log;
         }
 
         public async Task<(long usedBytes, long tempBytes, long limitBytes)> GetStorageStatsAsync(string shortUserId, CancellationToken ct = default)
@@ -123,7 +126,8 @@ namespace VCS_DOCs.Upload.Core
                 var chunkDir = _pathValidator.GetChunkDirectory(shortUserId, active.FileId);
                 if (Directory.Exists(chunkDir))
                 {
-                    try { Directory.Delete(chunkDir, true); } catch { }
+                    //try { Directory.Delete(chunkDir, true); } catch { }
+                    TryDeleteDirectoryWithRetries(chunkDir);
                 }
                 active.Status = "deleted";
                 active.UpdatedAt = DateTime.UtcNow;
@@ -141,8 +145,8 @@ namespace VCS_DOCs.Upload.Core
 
         // Main overload (9 args) with targetVersion support
         public async Task<(bool ok, string message, int nextExpectedIndex, Guid sessionId)> HandleChunkUploadAsync(
-            string shortUserId, IFormFile chunk, string fileHash, int chunkIndex, int totalChunks,
-            long fileSize, string originalFileName, int? targetVersion, CancellationToken ct = default)
+    string shortUserId, IFormFile chunk, string fileHash, int chunkIndex, int totalChunks,
+    long fileSize, string originalFileName, int? targetVersion, CancellationToken ct = default)
         {
             // Start/continue session
             var session = await StartOrContinueSessionAsync(shortUserId, originalFileName, fileHash, fileSize, ct);
@@ -179,17 +183,67 @@ namespace VCS_DOCs.Upload.Core
                 await _db.SaveChangesAsync(ct);
             }
 
-            // Save chunk to session temp
+            // ===== Save chunk to session temp (1MB буфер, async I/O, SequentialScan) =====
             var chunkDir = _pathValidator.GetChunkDirectory(shortUserId, session.FileId);
             Directory.CreateDirectory(chunkDir);
             TryClearStoppedFlag(chunkDir);
+            if (IsStopped(chunkDir)){
+                try { TryDeleteDirectoryWithRetries(chunkDir); } catch { }
+                session.Status = "deleted";
+                session.UpdatedAt = DateTime.UtcNow;
+                await _db.SaveChangesAsync(ct);
+                    return (false, "stopped", chunkIndex, session.FileId);
+            }
 
             var chunkPath = Path.Combine(chunkDir, $"chunk_{chunkIndex:D8}");
-            using (var s = chunk.OpenReadStream())
-            using (var fs = File.Create(chunkPath))
+
+            double sizeMb = chunk.Length / (1024d * 1024d);
+            double copySec = 0, flushSec = 0;
+            double copyMbPerSec = 0, flushMbPerSec = 0;
+
+            try
             {
+                using var s = chunk.OpenReadStream();
+                using var fs = new FileStream(
+                    chunkPath,
+                    FileMode.Create,
+                    FileAccess.Write,
+                    FileShare.None,
+                    bufferSize: 1024 * 1024,
+                    options: FileOptions.Asynchronous | FileOptions.SequentialScan);
+
+                var swCopy = Stopwatch.StartNew();
                 await s.CopyToAsync(fs, ct);
+                swCopy.Stop();
+                copySec = swCopy.Elapsed.TotalSeconds;
+                copyMbPerSec = copySec > 0 ? sizeMb / copySec : 0;
+
+                var swFlush = Stopwatch.StartNew();
+                await fs.FlushAsync(ct);
+                swFlush.Stop();
+                flushSec = swFlush.Elapsed.TotalSeconds;
+                flushMbPerSec = flushSec > 0 ? sizeMb / flushSec : 0;
             }
+            catch (OperationCanceledException)
+            {
+                _log?.LogInformation("Chunk {Idx}/{Total} cancelled by client (abort).", chunkIndex + 1, totalChunks);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _log?.LogWarning(ex,
+                    "Chunk {Idx}/{Total}: ошибка записи (size={SizeMB:n2} MB, path={Path})",
+                    chunkIndex + 1, totalChunks, sizeMb, chunkPath);
+                throw;
+            }
+
+            _log?.LogInformation(
+                "Chunk {Idx}/{Total} saved: size={SizeMB:n2} MB, copy={CopySec:n2}s ({CopyMBps:n2} MB/s), flush={FlushSec:n2}s ({FlushMBps:n2} MB/s) [dir={Dir}]",
+                chunkIndex + 1, totalChunks,
+                sizeMb,
+                copySec, copyMbPerSec,
+                flushSec, flushMbPerSec,
+                chunkDir);
 
             session.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync(ct);
@@ -202,60 +256,81 @@ namespace VCS_DOCs.Upload.Core
                 return (true, "chunk saved", next, session.FileId);
             }
 
-            // Antivirus on concatenated stream
+            // ===== Antivirus on concatenated stream =====
             var chunkFiles = Enumerable.Range(0, totalChunks)
                 .Select(i => Path.Combine(chunkDir, $"chunk_{i:D8}"))
                 .ToArray();
 
             var timeoutMs = CfgInt("Antivirus:TimeoutMs", 30000);
-            using (var concatForScan = new ConcatenatedReadStream(chunkFiles))
-            using (var cts = CancellationTokenSource.CreateLinkedTokenSource(ct))
-            {
-                cts.CancelAfter(timeoutMs);
-                var verdict = await _av.ScanAsync(concatForScan, originalFileName, cts.Token);
 
-                if (verdict == ScanVerdict.Infected)
-                {
-                    session.Status = "deleted";
-                    session.UpdatedAt = DateTime.UtcNow;
-                    await _db.SaveChangesAsync(ct);
-                    try { Directory.Delete(chunkDir, true); } catch { }
-                    return (false, "infected", totalChunks, session.FileId);
-                }
-                if (verdict == ScanVerdict.Unavailable || verdict == ScanVerdict.Error)
-                {
-                    if (CfgBool("Antivirus:BlockWhenNoAV", true))
-                    {
-                        return (false, "av_unavailable", totalChunks, session.FileId);
-                    }
-                    // else: allow without AV
-                }
+            ScanVerdict verdict;
+            try
+            {
+                // Отдельный таймаут, НЕ связанный с RequestAborted
+                using var avCts = new CancellationTokenSource(TimeSpan.FromMilliseconds(Math.Max(1000, timeoutMs)));
+                using var concatForScan = new ConcatenatedReadStream(chunkFiles);
+                verdict = await _av.ScanAsync(concatForScan, originalFileName, avCts.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                verdict = ScanVerdict.Unavailable;
+            }
+            catch
+            {
+                verdict = ScanVerdict.Unavailable;
             }
 
-            // MD5 hash over concatenated stream (if fileHash is true MD5)
-            string? computedMd5 = null;
-            using (var md5 = MD5.Create())
-            using (var concatForHash = new ConcatenatedReadStream(chunkFiles))
+            if (verdict == ScanVerdict.Infected)
             {
-                var hash = md5.ComputeHash(concatForHash);
-                computedMd5 = Convert.ToHexString(hash);
-            }
-
-            bool isFingerprint = fileHash != null && fileHash.StartsWith("fp:", StringComparison.OrdinalIgnoreCase);
-            if (!isFingerprint && !string.Equals(computedMd5, fileHash, StringComparison.OrdinalIgnoreCase))
-            {
-                try { Directory.Delete(chunkDir, true); } catch { }
                 session.Status = "deleted";
                 session.UpdatedAt = DateTime.UtcNow;
                 await _db.SaveChangesAsync(ct);
-                return (false, "hash mismatch", totalChunks, session.FileId);
+                //try { Directory.Delete(chunkDir, true); } catch { }
+                TryDeleteDirectoryWithRetries(chunkDir);
+                return (false, "infected", totalChunks, session.FileId);
             }
-            if (isFingerprint && computedMd5 != null)
+            if (verdict == ScanVerdict.Unavailable || verdict == ScanVerdict.Error)
             {
-                session.FileHash = computedMd5;
+                if (CfgBool("Antivirus:BlockWhenNoAV", true))
+                {
+                    return (false, "av_unavailable", totalChunks, session.FileId);
+                }
+                // иначе пропускаем без AV
             }
 
-            // Move chunks into version folder (lazy materialization)
+            // ===== Fingerprint-режим по умолчанию (без полного MD5) =====
+            bool isFingerprint = !string.IsNullOrEmpty(fileHash) &&
+                                 fileHash.StartsWith("fp:", StringComparison.OrdinalIgnoreCase);
+
+            if (!isFingerprint)
+            {
+                if (CfgBool("Upload:RequireFullMd5ForLegacy", false))
+                {
+                    string? computedMd5 = null;
+                    using (var md5 = MD5.Create())
+                    using (var concatForHash = new ConcatenatedReadStream(chunkFiles))
+                    {
+                        var hash = md5.ComputeHash(concatForHash);
+                        computedMd5 = Convert.ToHexString(hash);
+                    }
+
+                    if (!string.Equals(computedMd5, fileHash, StringComparison.OrdinalIgnoreCase))
+                    {
+                        //try { Directory.Delete(chunkDir, true); } catch { }
+                        TryDeleteDirectoryWithRetries(chunkDir);
+                        session.Status = "deleted";
+                        session.UpdatedAt = DateTime.UtcNow;
+                        await _db.SaveChangesAsync(ct);
+                        return (false, "hash mismatch", totalChunks, session.FileId);
+                    }
+                }
+            }
+            else
+            {
+                session.FileHash = fileHash; // удобнее для резюма
+            }
+
+            // ===== Move chunks into version folder (lazy materialization) =====
             var versionFolder = _paths.GetVersionedFileFolder(shortUserId, session.FileGroupId.ToString(), session.Version);
             Directory.CreateDirectory(versionFolder);
 
@@ -280,6 +355,25 @@ namespace VCS_DOCs.Upload.Core
             await _db.SaveChangesAsync(ct);
 
             return (true, "completed", totalChunks, session.FileId);
+        }
+        private static void TryDeleteDirectoryWithRetries(string path, int attempts = 6, int delayMs = 150)
+        {
+            if (string.IsNullOrWhiteSpace(path)) return;
+            for (int i = 0; i < attempts; i++)
+            {
+                try
+                {
+                    if (Directory.Exists(path))
+                        Directory.Delete(path, true);
+                    return;
+                }
+                catch
+                {
+                    Thread.Sleep(delayMs);
+                }
+            }
+            // последняя попытка — тихо
+            try { if (Directory.Exists(path)) Directory.Delete(path, true); } catch { }
         }
 
         public async Task<(string ownerShort, FileUploadSessionModel session)?> FindAnyCompletedByGroupVersionAsync(
@@ -439,27 +533,22 @@ namespace VCS_DOCs.Upload.Core
                 foreach (var p in Directory.EnumerateFiles(chunkDir, "chunk_*", SearchOption.TopDirectoryOnly))
                 {
                     var name = Path.GetFileName(p);
-                    if (name.StartsWith("chunk_"))
+                    if (!name.StartsWith("chunk_")) continue;
+
+                    var tail = name.Substring("chunk_".Length);
+                    if (tail.StartsWith("0x"))
                     {
-                        var tail = name.Substring("chunk_".Length);
-                        if (tail.StartsWith("0x"))
-                        {
-                            var hex = tail.Substring(2);
-                            if (int.TryParse(hex, System.Globalization.NumberStyles.HexNumber, null, out var idxHex))
-                            {
-                                uploaded.Add(idxHex);
-                                try { uploadedBytes += new FileInfo(p).Length; } catch { }
-                            }
-                        }
-                        else
-                        {
-                            if (int.TryParse(tail, out var idxDec))
-                            {
-                                uploaded.Add(idxDec);
-                                try { uploadedBytes += new FileInfo(p).Length; } catch { }
-                            }
-                        }
+                        var hex = tail[2..];
+                        if (int.TryParse(hex, System.Globalization.NumberStyles.HexNumber, null, out var idxHex))
+                            uploaded.Add(idxHex);
                     }
+                    else
+                    {
+                        if (int.TryParse(tail, out var idxDec))
+                            uploaded.Add(idxDec);
+                    }
+
+                    try { uploadedBytes += new FileInfo(p).Length; } catch { }
                 }
             }
 
@@ -640,7 +729,8 @@ namespace VCS_DOCs.Upload.Core
             private readonly Queue<string> _pathsQueue;
             private FileStream? _current;
 
-            public ConcatenatedReadStream(IEnumerable<string> paths) => _pathsQueue = new Queue<string>(paths);
+            public ConcatenatedReadStream(IEnumerable<string> paths)
+                => _pathsQueue = new Queue<string>(paths);
 
             public override bool CanRead => true;
             public override bool CanSeek => false;

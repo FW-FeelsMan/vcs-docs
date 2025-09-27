@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <RootNamespace>VCS_DOCs.TaskModule.EmailReminder</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <SupportModulesDir>$(MSBuildProjectDirectory)\..\VCS-DOCs.Support\Modules\</SupportModulesDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VCS-DOCs.Core\VCS-DOCs.Core.csproj" />
+    <ProjectReference Include="..\VCS-DOCs.TaskEngine\VCS-DOCs.TaskEngine.csproj" />
+    <ProjectReference Include="..\VCS-DOCs.Web\VCS-DOCs.Web.csproj" />
+  </ItemGroup>
+
+  <Target Name="CopyModuleToSupport" AfterTargets="Build">
+    <MakeDir Directories="$(SupportModulesDir)" />
+    <ItemGroup>
+      <_ModuleOutputs Include="$(TargetPath)" />
+      <_ModuleOutputs Include="$(TargetDir)$(AssemblyName).pdb" Condition="Exists('$(TargetDir)$(AssemblyName).pdb')" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_ModuleOutputs)" DestinationFolder="$(SupportModulesDir)" SkipUnchangedFiles="true" />
+  </Target>
+
+</Project>

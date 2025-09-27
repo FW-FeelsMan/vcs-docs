@@ -303,7 +303,7 @@
                         });
                     break;
                 case 'delete':
-                    if (!confirm(`Удалить v${v}?`)) return;
+                    if (!confirm(`Удалить ${fileGroupId} v${v}?`)) return;
                     fetch(`/api/upload/delete/${fileGroupId}/${v}`, { method: 'DELETE' })
                         .then(r => {
                             if (!r.ok) throw new Error('Ошибка удаления');

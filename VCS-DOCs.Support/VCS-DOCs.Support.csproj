@@ -29,6 +29,10 @@
     <ProjectReference Include="..\VCS-DOCs.Upload.Core\VCS-DOCs.Upload.Core.csproj" />
     <ProjectReference Include="..\VCS-DOCs.WebCAD\VCS-DOCs.WebCAD.csproj" />
     <ProjectReference Include="..\VCS-DOCs.Web\VCS-DOCs.Web.csproj" />
+
+    <!-- ССЫЛКА НА МОДУЛЬ, ЧТОБЫ ОН СТРОИЛСЯ, НО НЕ ПОДКЛЮЧАЛСЯ К ХОСТУ КАК ЗАВИСИМОСТЬ -->
+    <ProjectReference Include="..\VCS-DOCs.TaskModule.EmailReminder\VCS-DOCs.TaskModule.EmailReminder.csproj"
+                      ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>
@@ -90,5 +94,36 @@
     <Folder Include="Domain\" />
     <Folder Include="Modules\" />
   </ItemGroup>
+
+  <!-- Если вручную кладёшь файлы в Modules в проекте — это скопирует их -->
+  <ItemGroup>
+    <None Include="Modules\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>Always</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+
+  <!-- Гарантируем существование папки Modules -->
+  <Target Name="EnsureModulesFolder" BeforeTargets="BeforeBuild">
+    <MakeDir Directories="$(MSBuildProjectDirectory)\Modules" />
+  </Target>
+
+  <!-- Копируем DLL модулей из их выходных папок в bin\...\Modules -->
+  <Target Name="CopyExternalModules" AfterTargets="Build">
+    <ItemGroup>
+      <BuiltModuleDlls Include="..\VCS-DOCs.TaskModule.EmailReminder\bin\$(Configuration)\$(TargetFramework)\VCS-DOCs.TaskModule.EmailReminder.dll" />
+    </ItemGroup>
+    <Message Text="Copying modules to $(OutputPath)Modules" Importance="high" />
+    <Copy SourceFiles="@(BuiltModuleDlls)" DestinationFolder="$(OutputPath)Modules" SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- И в publish -->
+  <Target Name="CopyExternalModulesToPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <BuiltModuleDlls Include="..\VCS-DOCs.TaskModule.EmailReminder\bin\$(Configuration)\$(TargetFramework)\VCS-DOCs.TaskModule.EmailReminder.dll" />
+    </ItemGroup>
+    <Message Text="Copying modules to $(PublishDir)Modules" Importance="high" />
+    <Copy SourceFiles="@(BuiltModuleDlls)" DestinationFolder="$(PublishDir)Modules" SkipUnchangedFiles="true" />
+  </Target>
 
 </Project>

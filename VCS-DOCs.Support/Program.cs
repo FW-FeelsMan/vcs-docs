@@ -1,5 +1,4 @@
-﻿//D: \Unity\VCS - DOCs\VCS - DOCs.Support\Program.cs
-using System.Net.Security;
+﻿using System.Net.Security;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.RateLimiting;
@@ -13,32 +12,31 @@ using VCS_DOCs.Infrastructure.Auth;
 using VCS_DOCs.Models.Entities;
 using VCS_DOCs.Support.Hubs;
 using VCS_DOCs.Support.Infrastructure.Auth;
-//using VCS_DOCs.Support.Infrastructure.Mail;
 using VCS_DOCs.Support.Infrastructure.Provision;
 using VCS_DOCs.Support.Integration;
 using VCS_DOCs.TaskEngine;
 using VCS_DOCs.Core.Notifications;
+
 internal class Program
 {
     private static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // === DB + Identity ===
         builder.Services.AddDbContext<ApplicationDbContext>(o =>
-            o.UseSqlite(
-                builder.Configuration.GetConnectionString("DefaultConnection"),
-                x => x.MigrationsAssembly("VCS-DOCs.Web")
-            )
-        );
+        {
+            var cs = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=VCSDocs.db";
+            if (!cs.Contains("Cache=", StringComparison.OrdinalIgnoreCase)) cs += ";Cache=Shared";
+            if (!cs.Contains("Pooling=", StringComparison.OrdinalIgnoreCase)) cs += ";Pooling=True";
+            if (!cs.Contains("Default Timeout=", StringComparison.OrdinalIgnoreCase)) cs += ";Default Timeout=60";
+            o.UseSqlite(cs, x => x.MigrationsAssembly("VCS-DOCs.Web"));
+        });
 
-        builder.Services.AddControllers()
-            .ConfigureApplicationPartManager(apm =>
-            {
-                // вычищаем чужую сборку контроллеров, если вдруг подцепилась
-                var dead = apm.ApplicationParts.Where(p => p.Name == "VCS-DOCs.Web").ToList();
-                foreach (var part in dead) apm.ApplicationParts.Remove(part);
-            });
+        builder.Services.AddControllers().ConfigureApplicationPartManager(apm =>
+        {
+            var dead = apm.ApplicationParts.Where(p => p.Name == "VCS-DOCs.Web").ToList();
+            foreach (var part in dead) apm.ApplicationParts.Remove(part);
+        });
 
         builder.Services
             .AddIdentity<User, IdentityRole>()
@@ -47,17 +45,13 @@ internal class Program
             .AddErrorDescriber<RussianIdentityErrorDescriber>();
 
         builder.Services.AddScoped<IPasswordHasher<User>>(_ =>
-            new PasswordHasher<User>(
-                Microsoft.Extensions.Options.Options.Create(new PasswordHasherOptions
-                {
-                    CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV3
-                    // IterationCount не задаём — Verify читает его из хеша
-                })));
+            new PasswordHasher<User>(Microsoft.Extensions.Options.Options.Create(new PasswordHasherOptions
+            {
+                CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV3
+            })));
 
-        // === SignalR ===
         builder.Services.AddSignalR(o => { o.EnableDetailedErrors = true; });
 
-        // === Cookie-аутентификация ===
         builder.Services.ConfigureApplicationCookie(o =>
         {
             o.Cookie.Name = ".VcsDocs.Support.Auth";
@@ -65,15 +59,13 @@ internal class Program
             o.AccessDeniedPath = "/Errors/403";
             o.Cookie.HttpOnly = true;
             o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-            o.Cookie.SameSite = SameSiteMode.Lax;
-
+            o.Cookie.SameSite = SameSiteMode.None;
             o.Events = new CookieAuthenticationEvents
             {
                 OnValidatePrincipal = async ctx =>
                 {
                     var userId = ctx.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                     var sid = ctx.Principal.FindFirst("support_sid")?.Value;
-
                     if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(sid))
                     {
                         ctx.RejectPrincipal();
@@ -82,23 +74,18 @@ internal class Program
                     }
                 }
             };
-
         });
 
-        // === Опции путей пользователя (для аватаров и т.п.) ===
         builder.Services.Configure<UserDataPathOptions>(builder.Configuration.GetSection("UserDataPath"));
 
-        // === Авторизация / политики ===
         builder.Services.AddAuthorization(o =>
         {
             o.AddPolicy("SupportOnly", p => p.RequireRole(Roles.SupportAdmin, Roles.SupportAgent));
             o.AddPolicy("SupportDeskAccess", p => p.RequireRole(Roles.SupportAdmin, Roles.SupportAgent, Roles.BaseUser));
         });
 
-        // === Rate Limiter (для API) ===
         builder.Services.AddRateLimiter(options =>
         {
-            // Политика на API: 10 запросов за 2 сек на пользователя (или IP)
             options.AddPolicy("api-burst", http =>
             {
                 string partitionKey =
@@ -118,31 +105,24 @@ internal class Program
             });
         });
 
-        // === Razor Pages ===
         builder.Services.AddRazorPages(o =>
         {
-            // доступ к самому «деску»
             o.Conventions.AuthorizeFolder("/", "SupportDeskAccess");
-
-            // пользовательские панели
             o.Conventions.AuthorizeFolder("/Content/Users", "SupportDeskAccess");
-
-            // операторские панели
             o.Conventions.AuthorizeFolder("/Content/Operators", "SupportOnly");
-
-            // анонимный доступ
             o.Conventions.AllowAnonymousToPage("/Account/LoginSupport");
             o.Conventions.AllowAnonymousToPage("/Errors/404");
             o.Conventions.AllowAnonymousToPage("/Errors/500");
         });
 
-        // === кэш/сессии/HTTP client ===
-        builder.Services.AddDistributedMemoryCache(); // для идемпотентности
+        builder.Services.AddDistributedMemoryCache();
         builder.Services.AddSession(o =>
         {
             o.IdleTimeout = TimeSpan.FromMinutes(30);
             o.Cookie.HttpOnly = true;
             o.Cookie.IsEssential = true;
+            o.Cookie.SameSite = SameSiteMode.None;
+            o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         });
         builder.Services.AddMemoryCache();
 
@@ -170,6 +150,7 @@ internal class Program
                     || tp.Equals("1179E6B4C27C5247ADB525DE245D65D7E3D73C8C", StringComparison.OrdinalIgnoreCase);
             }
         });
+
         builder.Services.Configure<IdentityOptions>(opt =>
         {
             opt.Password.RequireDigit = true;
@@ -182,7 +163,6 @@ internal class Program
         builder.Services.Configure<PasswordHasherOptions>(o =>
         {
             o.CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV3;
-
         });
 
         builder.Services.AddScoped<PresenceOrchestrator>();
@@ -192,12 +172,12 @@ internal class Program
         builder.Services.AddSingleton<IExternalProjectAdapter>(sp =>
             new SqliteVDocsAdapter(
                 builder.Configuration.GetConnectionString("VDocsDb")
-                ?? builder.Configuration.GetConnectionString("DefaultConnection") // fallback
+                ?? builder.Configuration.GetConnectionString("DefaultConnection")
             ));
+
         builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Mail"));
         builder.Services.AddSingleton<IMailSender, SmtpMailSender>();
 
-        // === Kestrel / dev-cert ===
         builder.WebHost.ConfigureKestrel((ctx, opts) =>
         {
             opts.ConfigureHttpsDefaults(https =>
@@ -217,6 +197,7 @@ internal class Program
                 https.ServerCertificate = cert;
             });
         });
+
         if (builder.Configuration.GetValue("TaskEngine:Enabled", false))
         {
             builder.Services.AddTaskEngine(builder.Configuration);
@@ -224,7 +205,14 @@ internal class Program
 
         var app = builder.Build();
 
-        // === Инициализация БД/ролей ===
+        using (var scope = app.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+            db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
+            db.Database.ExecuteSqlRaw("PRAGMA synchronous=NORMAL;");
+            db.Database.ExecuteSqlRaw("PRAGMA busy_timeout=8000;");
+        }
+
         using (var scope = app.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -238,14 +226,12 @@ internal class Program
                 if (!await roleMgr.RoleExistsAsync(role))
                     await roleMgr.CreateAsync(new IdentityRole(role));
 
-            // пример: гарантируем роль агенту
             var sampleUserId = "6bbbcc2b-bcc8-4c20-b7ea-7993664339d2";
             var u = await userMgr.FindByIdAsync(sampleUserId);
             if (u != null && !await userMgr.IsInRoleAsync(u, Roles.SupportAgent))
                 await userMgr.AddToRoleAsync(u, Roles.SupportAgent);
         }
 
-        // === пайплайн ===
         app.UseHttpsRedirection();
         app.UseStaticFiles();
 
@@ -257,62 +243,36 @@ internal class Program
 
         app.UseRouting();
 
-        app.UseRateLimiter();     // включаем политики лимитирования
+        app.UseRateLimiter();
         app.UseSession();
         app.UseAuthentication();
 
-        // идемпотентность после аутентификации (видим UserId)
         app.UseMiddleware<IdempotencyMiddleware>();
 
-        // «single-login» проверка
+        var allowedAncestor = "https://vcs-docs.local:7120";
+
         app.Use(async (ctx, next) =>
         {
-            // не вмешиваемся в сам логин/ошибки, чтобы не зациклиться
-            if (ctx.Request.Path.StartsWithSegments("/Account/LoginSupport", StringComparison.OrdinalIgnoreCase))
-            {
-                await next();
-                return;
-            }
-            if (ctx.Request.Path.StartsWithSegments("/Support/Request", StringComparison.OrdinalIgnoreCase))
-            {
-                // X-Frame-Options блокирует кросс-доменные фреймы — убираем
-                ctx.Response.Headers.Remove("X-Frame-Options");
-
-                var csp = "frame-ancestors 'self' https://vcs-docs.local:7120";
-                ctx.Response.Headers["Content-Security-Policy"] = csp;
-            }
-
-            if (ctx.User?.Identity?.IsAuthenticated == true)
-            {
-                var userId = ctx.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                var sid = ctx.User.FindFirst("support_sid")?.Value;
-
-                if (!string.IsNullOrEmpty(userId) && !string.IsNullOrEmpty(sid))
-                {
-                    var db = ctx.RequestServices.GetRequiredService<ApplicationDbContext>();
-                    var row = await db.SupportUserSessions.AsNoTracking()
-                                    .FirstOrDefaultAsync(x => x.UserId == userId);
-
-                    var mismatch = row != null && !string.IsNullOrEmpty(row.JwtId)
-                                   && !string.Equals(row.JwtId, sid, StringComparison.Ordinal);
-
-                    if (mismatch)
-                    {
-                        await ctx.SignOutAsync(IdentityConstants.ApplicationScheme);
-
-                        var returnUrl = Uri.EscapeDataString(ctx.Request.Path + ctx.Request.QueryString);
-                        ctx.Response.Redirect($"/Account/LoginSupport?forced=1&ReturnUrl={returnUrl}");
-                        return;
-                    }
-                }
-            }
-
             await next();
+
+            var p = ctx.Request.Path;
+            bool needEmbedHeaders =
+                p.StartsWithSegments("/Support", StringComparison.OrdinalIgnoreCase) ||
+                p.StartsWithSegments("/Account/LoginSupport", StringComparison.OrdinalIgnoreCase);
+
+            if (!needEmbedHeaders) return;
+
+            ctx.Response.OnStarting(() =>
+            {
+                ctx.Response.Headers.Remove("X-Frame-Options");
+                ctx.Response.Headers["Content-Security-Policy"] = $"frame-ancestors 'self' {allowedAncestor}";
+                return Task.CompletedTask;
+            });
         });
 
         app.UseAuthorization();
 
-        app.MapRazorPages();          
+        app.MapRazorPages();
         app.MapControllers();
         app.MapHub<SupportPresenceHub>("/hubs/userStatus");
         app.MapHub<TicketHub>("/hubs/ticket");
