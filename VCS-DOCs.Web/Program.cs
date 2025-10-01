@@ -25,11 +25,9 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
-using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// === Razor Pages + JSON ===
 builder.Services
     .AddRazorPages(options =>
     {
@@ -45,7 +43,6 @@ builder.Services
         jsonOptions.JsonSerializerOptions.PropertyNamingPolicy = null;
     });
 
-// === HTTP client (если нужен мост) ===
 builder.Services.AddHttpClient("VDocsBridge", client =>
 {
     var baseUrl = builder.Configuration["VDocs:BaseUrl"] ?? "https://vcs-docs.support.local:7120/";
@@ -89,25 +86,19 @@ var configPath = builder.Configuration.GetSection("UserDataPathOptions")["BasePa
 var absoluteUserDataPath = Path.GetFullPath(configPath ?? throw new InvalidOperationException("UserData path not found"));
 builder.Services.Configure<UserDataPathOptions>(options => { options.BasePath = absoluteUserDataPath; });
 
-// === File Upload Limits ===
 builder.Services.Configure<FormOptions>(options => { options.MultipartBodyLengthLimit = long.MaxValue; });
 
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.Limits.MaxRequestBodySize = 10L * 1024 * 1024 * 1024; // 10 GB
+    options.Limits.MaxRequestBodySize = 10L * 1024 * 1024 * 1024;
 });
 
-// === DB + Identity ===
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    var cs = builder.Configuration.GetConnectionString("DefaultConnection")
-             ?? "Data Source=VCSDocs.db";
-
-    // Улучшаем конкурентность и устойчивость к lock'ам
+    var cs = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=VCSDocs.db";
     if (!cs.Contains("Cache=", StringComparison.OrdinalIgnoreCase)) cs += ";Cache=Shared";
     if (!cs.Contains("Pooling=", StringComparison.OrdinalIgnoreCase)) cs += ";Pooling=True";
     if (!cs.Contains("Default Timeout=", StringComparison.OrdinalIgnoreCase)) cs += ";Default Timeout=60";
-
     options.UseSqlite(cs);
 });
 
@@ -122,7 +113,6 @@ builder.Services.AddScoped<IPasswordHasher<User>>(_ =>
             CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV3
         })));
 
-// Парольная политика: без обязательного спецсимвола
 builder.Services.Configure<IdentityOptions>(opt =>
 {
     opt.Password.RequireDigit = true;
@@ -140,7 +130,6 @@ builder.Services.Configure<PasswordHasherOptions>(o =>
 builder.Services.AddAuthentication().AddCookie();
 builder.Services.AddAuthorization();
 
-// === SignalR + Hubs ===
 builder.Services.AddSignalR(o => o.EnableDetailedErrors = true);
 builder.Services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
 
@@ -148,20 +137,14 @@ builder.Services.AddSingleton<IAntivirusScanner>(sp =>
 {
     var cfg = sp.GetRequiredService<IConfiguration>();
     var loggerFactory = sp.GetService<ILoggerFactory>();
-
     var userData = sp.GetRequiredService<IOptions<UserDataPathOptions>>().Value.BasePath;
     var avTemp = Path.Combine(userData, "_tmp", "av");
     Directory.CreateDirectory(avTemp);
-
     var amsi = new AmsiScanner("VCS-DOCs", loggerFactory?.CreateLogger<AmsiScanner>());
     var simple = new SimpleSignaturesScanner(cfg);
-
-    // ✓ соответствует перегрузке CompositeScanner(string avTempDir, params scanners)
     return new CompositeScanner(avTemp, amsi, simple);
 });
 
-
-// === App Cookies ===
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.HttpOnly = true;
@@ -173,7 +156,6 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
 });
 
-// === Session + Middleware ===
 builder.Services.AddSession(o =>
 {
     o.IdleTimeout = TimeSpan.FromMinutes(30);
@@ -187,32 +169,26 @@ builder.Services.AddCors(o =>
     o.AddPolicy("AllowAll", p => p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 });
 
-// === Custom Services ===
 builder.Services.AddScoped<ISharedLinkService, VCS_DOCs.Infrastructure.Services.SharedLinkService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUserFileService, UserFileService>();
-builder.Services.AddScoped<IUploadDbContext>(provider =>
-    (IUploadDbContext)provider.GetRequiredService<ApplicationDbContext>());
+builder.Services.AddScoped<IUploadDbContext>(provider => (IUploadDbContext)provider.GetRequiredService<ApplicationDbContext>());
 builder.Services.AddScoped<IFileStorageService, PhysicalFileStorageService>();
 builder.Services.AddScoped<UploadManager>();
 builder.Services.AddScoped<FilePathValidator>();
 builder.Services.AddScoped<IServerSettingsService, ServerSettingsService>();
 builder.Services.AddScoped<IUserInfoProvider, UserInfoProvider>();
-
-// === MVC (без профайлера) ===
 builder.Services.AddControllersWithViews().AddRazorRuntimeCompilation();
 
-// === Rate Limiting ===
 builder.Services.Configure<IpRateLimitOptions>(options =>
 {
     options.GeneralRules =
     [
-        new RateLimitRule { Endpoint = "*",      Limit = 50, Period = "10s" },
-        new RateLimitRule { Endpoint = "/hub/*", Limit = 0,  Period = "1s" }
+        new RateLimitRule { Endpoint = "*", Limit = 50, Period = "10s" },
+        new RateLimitRule { Endpoint = "/hub/*", Limit = 0, Period = "1s" }
     ];
 });
 
-//builder.Services.AddSingleton<TaskRunner>(...) — отключено
 builder.Services.AddSingleton<ChunkHashService>(sp =>
 {
     var userPaths = sp.GetRequiredService<UserStoragePaths>();
@@ -224,41 +200,32 @@ builder.Services.AddSingleton(sp =>
     return new UserStoragePaths(options.Value.BasePath);
 });
 
-// === Logging ===
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.SetMinimumLevel(LogLevel.Debug);
 builder.Configuration.AddJsonFile("appsettings.Secrets.json", optional: true, reloadOnChange: true);
 
-// === App Build ===
 var app = builder.Build();
 
-// === PRAGMA для SQLite (WAL + busy_timeout) ===
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
     db.Database.ExecuteSqlRaw("PRAGMA synchronous=NORMAL;");
-    db.Database.ExecuteSqlRaw("PRAGMA busy_timeout=8000;"); // 8s
+    db.Database.ExecuteSqlRaw("PRAGMA busy_timeout=8000;");
 }
 
-// === Ensure Identity Roles exist (BaseUser / SupportAgent / SupportAdmin) ===
 using (var scope = app.Services.CreateScope())
 {
     var roleMgr = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
     foreach (var role in new[] { Roles.BaseUser, Roles.SupportAgent, Roles.SupportAdmin })
-    {
         if (!await roleMgr.RoleExistsAsync(role))
             await roleMgr.CreateAsync(new IdentityRole(role));
-    }
 }
 
-// === Ensure User Data Directory ===
 if (!Directory.Exists(absoluteUserDataPath))
     Directory.CreateDirectory(absoluteUserDataPath);
 
-// === Status code pages (pretty) ===
 app.UseHttpsRedirection();
 
 app.UseWhen(ctx => !ctx.Request.Path.StartsWithSegments("/api"), branch =>
@@ -280,25 +247,18 @@ branch =>
     branch.UseStatusCodePagesWithReExecute("/Errors/{0}");
 });
 
-// === Static Files ===
 app.UseStaticFiles(new StaticFileOptions
 {
     FileProvider = new PhysicalFileProvider(absoluteUserDataPath),
     RequestPath = "/userdata"
 });
-app.UseStaticFiles(); // wwwroot
+app.UseStaticFiles();
 
-// === (MiniProfiler удалён) ===
-
-// === Rest of pipeline ===
 app.UseSession();
 app.UseRouting();
 app.UseCors("AllowAll");
-
-// ВАЖНО: один раз
 app.UseAuthentication();
 
-// 1) На /Login — чистим куки и запрещаем кэш
 app.Use(async (ctx, next) =>
 {
     if (ctx.Request.Path.Equals("/Login", StringComparison.OrdinalIgnoreCase))
@@ -312,8 +272,6 @@ app.Use(async (ctx, next) =>
         ctx.Response.Headers["Pragma"] = "no-cache";
         ctx.Response.Headers["Expires"] = "0";
     }
-
-    // Любой HTML — no-cache
     ctx.Response.OnStarting(() =>
     {
         if (ctx.Response.ContentType?.Contains("text/html", StringComparison.OrdinalIgnoreCase) == true)
@@ -324,11 +282,11 @@ app.Use(async (ctx, next) =>
         }
         return Task.CompletedTask;
     });
-
     await next();
 });
 
-// 2) Проверка «живости» только на обычных страницах (не API, не статика, не /Login)
+app.UseMiddleware<IdempotencyMiddleware>();
+
 app.Use(async (ctx, next) =>
 {
     var path = ctx.Request.Path;
@@ -356,23 +314,10 @@ app.Use(async (ctx, next) =>
         bool hasSidClaim = !string.IsNullOrEmpty(sid);
         bool sidMismatch = hasSidClaim && !string.IsNullOrEmpty(u?.JwtId) && !string.Equals(u!.JwtId, sid, StringComparison.Ordinal);
 
-        bool softInvalid =
-            u == null ||
-            u.IsDeleted ||
-            u.Access == 0 ||
-            u.StatusOnline != 1 ||
-            (!hasSidClaim && !string.IsNullOrEmpty(u?.JwtId));
-
         if (sidMismatch)
         {
             await ctx.SignOutAsync();
             ctx.Response.Redirect("/Login?message=session_terminated");
-            return;
-        }
-        if (softInvalid)
-        {
-            await ctx.SignOutAsync();
-            ctx.Response.Redirect("/Login");
             return;
         }
     }
@@ -382,7 +327,6 @@ app.Use(async (ctx, next) =>
 
 app.UseAuthorization();
 
-// === Routes ===
 app.MapRazorPages();
 app.MapControllers();
 app.MapHub<UserStatusHub>("/Data/userStatusHub");
