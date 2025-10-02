@@ -1,4 +1,5 @@
-﻿using System.Net.Security;
+﻿//D:\Unity\VCS-DOCs\VCS-DOCs.Support\Program.cs
+using System.Net.Security;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.RateLimiting;
@@ -249,25 +250,32 @@ internal class Program
 
         app.UseMiddleware<IdempotencyMiddleware>();
 
-        var allowedAncestor = "https://vcs-docs.local:7120";
+
+        var allowedAncestors =
+     "https://vcs-docs.local:7120 https://localhost:7120 https://127.0.0.1:7120";
 
         app.Use(async (ctx, next) =>
         {
-            await next();
-
-            var p = ctx.Request.Path;
             bool needEmbedHeaders =
-                p.StartsWithSegments("/Support", StringComparison.OrdinalIgnoreCase) ||
-                p.StartsWithSegments("/Account/LoginSupport", StringComparison.OrdinalIgnoreCase);
+                ctx.Request.Path.StartsWithSegments("/Support", StringComparison.OrdinalIgnoreCase) ||
+                ctx.Request.Path.StartsWithSegments("/Account/LoginSupport", StringComparison.OrdinalIgnoreCase);
 
-            if (!needEmbedHeaders) return;
-
-            ctx.Response.OnStarting(() =>
+            if (needEmbedHeaders)
             {
-                ctx.Response.Headers.Remove("X-Frame-Options");
-                ctx.Response.Headers["Content-Security-Policy"] = $"frame-ancestors 'self' {allowedAncestor}";
-                return Task.CompletedTask;
-            });
+                ctx.Response.OnStarting(() =>
+                {
+                    var h = ctx.Response.Headers;
+                    h.Remove("X-Frame-Options");
+                    h.Remove("Content-Security-Policy");
+
+                    h.Append("Content-Security-Policy",
+                        $"frame-ancestors 'self' {allowedAncestors}");
+
+                    return Task.CompletedTask;
+                });
+            }
+
+            await next();
         });
 
         app.UseAuthorization();
