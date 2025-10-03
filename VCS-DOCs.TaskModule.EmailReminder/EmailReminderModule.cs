@@ -17,10 +17,12 @@ namespace VCS_DOCs.TaskModule.EmailReminder
         private ILogger _log = default!;
 
         private int _batchSize = 100;
-        private TimeSpan _delay = TimeSpan.FromHours(12);
+        private TimeSpan _replyDelay = TimeSpan.FromHours(2);   // follow-up (включены уведомления)
+        private TimeSpan _idleDelay = TimeSpan.FromHours(12);   // общий простой
         private TimeSpan _runEvery = TimeSpan.FromMinutes(2);
         private string[] _operatorRoles = new[] { "operator", "agent" };
         private bool _useLocalTime = false;
+        private bool _respectEmailNotifyForIdle = false;
 
         public string Id => "support.email-reminder";
         public string Name => "Support ticket reminder emailer";
@@ -34,37 +36,40 @@ namespace VCS_DOCs.TaskModule.EmailReminder
 
             var s = cfg.GetSection("Modules:EmailReminder");
 
-            // частота запуска (по умолчанию 120с)
             var runEverySec = s.GetValue<int?>("RunEverySeconds");
             _runEvery = TimeSpan.FromSeconds(Math.Max(1, runEverySec ?? 120));
 
-            // задержка до напоминания
-            var delaySec = s.GetValue<int?>("DelaySeconds");
-            var delayHours = s.GetValue<int?>("DelayHours");
-            _delay = delaySec.HasValue
-                ? TimeSpan.FromSeconds(Math.Max(1, delaySec.Value))
-                : TimeSpan.FromHours(Math.Max(1, delayHours ?? 12));
+            int? replySec = s.GetValue<int?>("ReplyDelaySeconds");
+            int? replyHours = s.GetValue<int?>("ReplyDelayHours");
+            _replyDelay = replySec.HasValue
+                ? TimeSpan.FromSeconds(Math.Max(1, replySec.Value))
+                : TimeSpan.FromHours(Math.Max(1, replyHours ?? 2));
 
-            // размер пачки
+            int? idleSec = s.GetValue<int?>("IdleDelaySeconds");
+            int? idleHours = s.GetValue<int?>("IdleDelayHours") ?? s.GetValue<int?>("DelayHours");
+            _idleDelay = idleSec.HasValue
+                ? TimeSpan.FromSeconds(Math.Max(1, idleSec.Value))
+                : TimeSpan.FromHours(Math.Max(1, idleHours ?? 12));
+
             _batchSize = Math.Max(1, s.GetValue<int?>("BatchSize") ?? 100);
 
-            // роли операторов
             var roles = s.GetSection("OperatorRoles").Get<string[]>();
             if (roles != null && roles.Length > 0)
                 _operatorRoles = roles.Where(r => !string.IsNullOrWhiteSpace(r)).Select(r => r.Trim()).ToArray();
 
-            // локальное время (если вдруг CreatedAt хранится в локали, обычно FALSE)
             _useLocalTime = s.GetValue<bool?>("UseLocalTime") ?? false;
+            _respectEmailNotifyForIdle = s.GetValue<bool?>("RespectEmailNotifyForIdle") ?? false;
 
             _log.LogInformation(
-                "[EmailReminder] Init: Delay={Delay}s, RunEvery={RunEvery}s, BatchSize={Batch}, Roles=[{Roles}], TicketUrlTemplate={Tpl}, UseLocalTime={UseLocalTime}",
-                _delay.TotalSeconds, _runEvery.TotalSeconds, _batchSize, string.Join(",", _operatorRoles),
-                _cfg["TicketUrlTemplate"], _useLocalTime
+                "[EmailReminder] Init: ReplyDelay={Reply}s, IdleDelay={Idle}s, RunEvery={Every}s, Batch={Batch}, UseLocalTime={UseLocalTime}, RespectEmailNotifyForIdle={RespectIdle}",
+                _replyDelay.TotalSeconds, _idleDelay.TotalSeconds, _runEvery.TotalSeconds,
+                _batchSize, _useLocalTime, _respectEmailNotifyForIdle
             );
 
             TouchHeartbeat("init");
             return Task.CompletedTask;
         }
+
         public async Task<TaskResult> ExecuteAsync(TaskContext ctx, CancellationToken ct)
         {
             TouchHeartbeat("tick");
@@ -76,101 +81,183 @@ namespace VCS_DOCs.TaskModule.EmailReminder
                 var mailer = scope.ServiceProvider.GetRequiredService<IMailSender>();
 
                 var now = _useLocalTime ? DateTime.Now : DateTime.UtcNow;
-                var border = now - _delay;
+                var borderReply = now - _replyDelay;
+                var borderIdle = now - _idleDelay;
 
-                _log.LogDebug("[EmailReminder] Tick now={Now:o} border={Border:o}", now, border);
-
-                // Кандидаты: по одному последнему ОПЕРАТОРСКОМУ (AuthorRole <> 'user') до border и без ReminderEmailSentAt
-                // Берём без GroupBy — через NOT EXISTS (стабильно для SQLite/EF)
-                var latestByTicket = await db.SupportTicketMessages
-                    .AsNoTracking()
-                    .Where(m =>
-                        m.AuthorRole != "user" &&
-                        m.ReminderEmailSentAt == null &&
-                        m.CreatedAt <= border &&
-                        !db.SupportTicketMessages.Any(m2 =>
-                            m2.TicketId == m.TicketId &&
-                            m2.AuthorRole != "user" &&
-                            m2.ReminderEmailSentAt == null &&
-                            m2.CreatedAt <= border &&
-                            m2.CreatedAt > m.CreatedAt))
-                    .Select(m => new { m.TicketId, LastOpCreatedAt = m.CreatedAt })
-                    .OrderBy(x => x.LastOpCreatedAt)
-                    .Take(_batchSize)
-                    .ToListAsync(ct);
-
-                if (latestByTicket.Count == 0)
-                {
-                    _log.LogDebug("[EmailReminder] No candidates");
-                    return new TaskResult { Success = true, Message = "no candidates" };
-                }
-
-                _log.LogInformation("[EmailReminder] Tickets to notify: {Count}", latestByTicket.Count);
+                _log.LogDebug("[EmailReminder] Tick now={Now:o} replyBorder={ReplyBorder:o} idleBorder={IdleBorder:o}",
+                    now, borderReply, borderIdle);
 
                 int sent = 0;
-                foreach (var cand in latestByTicket)
+
+                // ==== A) FOLLOW-UP: берём именно ПОСЛЕДНЮЮ операторскую реплику ====
+                // lastOpPerTicket: { TicketId, LastOpAt }
+                var lastOpPerTicket =
+                    from m in db.SupportTicketMessages.AsNoTracking()
+                    where _operatorRoles.Contains(m.AuthorRole)
+                    group m by m.TicketId into g
+                    select new
+                    {
+                        TicketId = g.Key,
+                        LastOpAt = g.Max(x => x.CreatedAt)
+                    };
+
+                // join на саму запись последней опер.реплики, чтобы взять её ReminderEmailSentAt и Id
+                var replyCandidates = await (
+                    from lo in lastOpPerTicket
+                    join t in db.SupportTickets.AsNoTracking()
+                        on lo.TicketId equals t.Id
+                    join lm in db.SupportTicketMessages.AsNoTracking()
+                        on new
+                        {
+                            lo.TicketId,
+                            lo.LastOpAt
+                        } equals new
+                        {
+                            lm.TicketId,
+                            LastOpAt = lm.CreatedAt
+                        }
+                    where t.Status != "closed"
+                          && t.EmailNotifyEnabled
+                          && lo.LastOpAt <= borderReply
+                          && lm.ReminderEmailSentAt == null
+                          && !db.SupportTicketMessages.Any(mu =>
+                              mu.TicketId == lo.TicketId &&
+                              mu.AuthorRole == "user" &&
+                              mu.CreatedAt > lo.LastOpAt)
+                    orderby lo.LastOpAt
+                    select new
+                    {
+                        TicketId = t.Id,
+                        LastOpId = lm.Id,
+                        LastOpAt = lo.LastOpAt
+                    }
+                )
+                .Take(_batchSize)
+                .ToListAsync(ct);
+
+                _log.LogDebug("[EmailReminder] reply candidates: {Count}", replyCandidates.Count);
+
+                // Диагностика по первым открытым с notify=on, если кандидатов нет:
+                if (replyCandidates.Count == 0)
+                {
+                    var diag = await (
+                        from t in db.SupportTickets.AsNoTracking()
+                        where t.Status != "closed" && t.EmailNotifyEnabled
+                        orderby (t.UpdatedAt ?? t.CreatedAt) descending
+                        select new
+                        {
+                            t.Id,
+                            LastOpAt = db.SupportTicketMessages
+                                .Where(m => m.TicketId == t.Id && _operatorRoles.Contains(m.AuthorRole))
+                                .Max(m => (DateTime?)m.CreatedAt),
+                            LastOpReminder = (
+                                from m in db.SupportTicketMessages
+                                where m.TicketId == t.Id && _operatorRoles.Contains(m.AuthorRole)
+                                orderby m.CreatedAt descending
+                                select m.ReminderEmailSentAt
+                            ).FirstOrDefault(),
+                            LastUserAt = db.SupportTicketMessages
+                                .Where(m => m.TicketId == t.Id && m.AuthorRole == "user")
+                                .Max(m => (DateTime?)m.CreatedAt)
+                        }
+                    ).Take(20).ToListAsync(ct);
+
+                    foreach (var d in diag)
+                    {
+                        var unnotOpOldEnough = d.LastOpAt.HasValue && d.LastOpAt.Value <= borderReply && d.LastOpReminder == null;
+                        var userAfter = d.LastUserAt.HasValue && d.LastOpAt.HasValue && d.LastUserAt > d.LastOpAt;
+                        _log.LogDebug("[EmailReminder][diag] {Id} lastOpAt={LastOp:o} lastOpReminder={Rem:o} lastUserAt={LastUser:o} unnotOpOldEnough={Old} userAfter={UserAfter}",
+                            d.Id, d.LastOpAt, d.LastOpReminder, d.LastUserAt, unnotOpOldEnough, userAfter);
+                    }
+                }
+
+                foreach (var cand in replyCandidates)
                 {
                     ct.ThrowIfCancellationRequested();
 
-                    var t = await db.SupportTickets.AsNoTracking()
-                        .FirstOrDefaultAsync(x => x.Id == cand.TicketId, ct);
-                    if (t == null) { _log.LogDebug("Ticket {Id} not found", cand.TicketId); continue; }
-                    if (!t.EmailNotifyEnabled) { _log.LogDebug("Ticket {Id}: notify disabled", cand.TicketId); continue; }
-
-                    // Был ли ответ пользователя ПОСЛЕ последнего операторского?
-                    bool hasUserReplyAfter = await db.SupportTicketMessages.AsNoTracking()
-                        .AnyAsync(m => m.TicketId == cand.TicketId
-                                       && m.AuthorRole == "user"
-                                       && m.CreatedAt > cand.LastOpCreatedAt, ct);
-                    if (hasUserReplyAfter) { _log.LogDebug("Ticket {Id}: user replied", cand.TicketId); continue; }
-
-                    var to = t.ReplyToEmail;
+                    var to = await ResolveRecipientAsync(db, cand.TicketId, ct);
                     if (string.IsNullOrWhiteSpace(to))
                     {
-                        to = await db.Users.AsNoTracking()
-                            .Where(u => u.Id == t.OwnerUserId)
-                            .Select(u => u.Email)
-                            .FirstOrDefaultAsync(ct);
+                        _log.LogDebug("[EmailReminder] reply skip {Id}: no recipient", cand.TicketId);
+                        continue;
                     }
-                    if (string.IsNullOrWhiteSpace(to)) { _log.LogDebug("Ticket {Id}: no recipient email", cand.TicketId); continue; }
 
                     try
                     {
-                        var ticketUrlTemplate = _cfg["TicketUrlTemplate"] ??
-                                                (_cfg["Portal:PublicBaseUrl"] is string b && !string.IsNullOrWhiteSpace(b)
-                                                 ? $"{b.TrimEnd('/')}/Support/Tickets/{{id}}"
-                                                 : "https://vcs-docs.support.local:7121/Support/Tickets/{id}");
-                        var ticketUrl = ticketUrlTemplate.Replace("{id}", Uri.EscapeDataString(t.Id));
+                        var ticketUrl = BuildTicketUrl(cand.TicketId);
+                        var subject = $"[VCS-DOCs] Новый ответ по заявке № {cand.TicketId}";
+                        var html = BuildFollowUpHtml(cand.TicketId, ticketUrl, _replyDelay);
 
-                        var subject = $"[Поддержка] Напоминание по заявке № {t.Id}";
-                        var html = $@"
-<!doctype html>
-<html lang=""ru""><head><meta charset=""utf-8""></head>
-<body style=""font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif"">
-  <p>По вашей заявке № <b>{WebUtility.HtmlEncode(t.Id)}</b> оператор оставил сообщение.</p>
-  <p>Ссылка на заявку: <a href=""{WebUtility.HtmlEncode(ticketUrl)}"">{WebUtility.HtmlEncode(ticketUrl)}</a></p>
-  <p style=""color:#6b7280;font-size:.9rem"">Это напоминание отправлено автоматически, т.к. с момента ответа прошло более {_delay.TotalSeconds:0} секунд.</p>
-</body></html>";
-
-                        _log.LogInformation("[EmailReminder] Sending to {To} for ticket {Id}", to, t.Id);
                         await mailer.SendAsync(to, subject, html);
 
-                        // Помечаем все операторские сообщения тикета до найденного (включая его)
                         var ts = _useLocalTime ? DateTime.Now : DateTime.UtcNow;
-                        var affected = await db.Database.ExecuteSqlInterpolatedAsync($@"
-UPDATE SupportTicketMessages
-SET ReminderEmailSentAt = {ts}
-WHERE TicketId = {cand.TicketId}
-  AND ReminderEmailSentAt IS NULL
-  AND CreatedAt <= {cand.LastOpCreatedAt}
-  AND AuthorRole <> 'user';", ct);
+                        var affected = await db.Database.ExecuteSqlInterpolatedAsync(
+                            $@"UPDATE SupportTicketMessages
+                               SET ReminderEmailSentAt = {ts}
+                               WHERE Id = {cand.LastOpId};", ct);
 
-                        _log.LogDebug("Marked {Rows} operator message(s) as notified for ticket {Id}", affected, cand.TicketId);
+                        _log.LogDebug("[EmailReminder] reply sent for ticket {Id}; marked messageId={Mid} (rows={Rows})",
+                            cand.TicketId, cand.LastOpId, affected);
                         sent++;
                     }
                     catch (Exception ex)
                     {
-                        _log.LogWarning(ex, "Failed to send reminder for ticket {Id}", cand.TicketId);
+                        _log.LogWarning(ex, "[EmailReminder] Follow-up send failed for ticket {Id}", cand.TicketId);
+                    }
+                }
+
+                // ==== B) IDLE ====
+                var idleQuery = db.SupportTickets.AsNoTracking().Where(t => t.Status != "closed");
+                if (_respectEmailNotifyForIdle) idleQuery = idleQuery.Where(t => t.EmailNotifyEnabled);
+
+                var idleCandidates = await idleQuery
+                    .Select(t => new
+                    {
+                        t.Id,
+                        t.EmailNotifyEnabled,
+                        t.LastIdleReminderAt,
+                        LastMsgAt = db.SupportTicketMessages.Where(m => m.TicketId == t.Id).Max(m => (DateTime?)m.CreatedAt)
+                    })
+                    .Where(x =>
+                        x.LastMsgAt != null &&
+                        x.LastMsgAt <= borderIdle &&
+                        (x.LastIdleReminderAt == null || x.LastIdleReminderAt <= borderIdle))
+                    .OrderBy(x => x.LastMsgAt)
+                    .Take(_batchSize)
+                    .ToListAsync(ct);
+
+                _log.LogDebug("[EmailReminder] idle candidates: {Count}", idleCandidates.Count);
+
+                foreach (var cand in idleCandidates)
+                {
+                    ct.ThrowIfCancellationRequested();
+
+                    var to = await ResolveRecipientAsync(db, cand.Id, ct);
+                    if (string.IsNullOrWhiteSpace(to))
+                    {
+                        _log.LogDebug("[EmailReminder] idle skip {Id}: no recipient", cand.Id);
+                        continue;
+                    }
+
+                    try
+                    {
+                        var ticketUrl = BuildTicketUrl(cand.Id);
+                        var subject = $"[VCS-DOCs] Напоминание: нет активности по заявке № {cand.Id}";
+                        var html = BuildIdleHtml(cand.Id, ticketUrl, _idleDelay);
+
+                        await mailer.SendAsync(to, subject, html);
+
+                        var ts = _useLocalTime ? DateTime.Now : DateTime.UtcNow;
+                        var affected = await db.Database.ExecuteSqlInterpolatedAsync(
+                            $@"UPDATE SupportTickets SET LastIdleReminderAt = {ts} WHERE Id = {cand.Id};", ct);
+
+                        _log.LogDebug("[EmailReminder] idle sent for ticket {Id}; set LastIdleReminderAt (rows={Rows})",
+                            cand.Id, affected);
+                        sent++;
+                    }
+                    catch (Exception ex)
+                    {
+                        _log.LogWarning(ex, "[EmailReminder] Idle send failed for ticket {Id}", cand.Id);
                     }
                 }
 
@@ -184,141 +271,86 @@ WHERE TicketId = {cand.TicketId}
             }
         }
 
-        //        public async Task<TaskResult> ExecuteAsync(TaskContext ctx, CancellationToken ct)
-        //        {
-        //            TouchHeartbeat("tick");
+        // ===== Helpers =====
 
-        //            try
-        //            {
-        //                using var scope = _services.CreateScope();
-        //                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        //                var mailer = scope.ServiceProvider.GetRequiredService<IMailSender>();
+        private async Task<string?> ResolveRecipientAsync(ApplicationDbContext db, string ticketId, CancellationToken ct)
+        {
+            var to = await db.SupportTickets.AsNoTracking()
+                .Where(t => t.Id == ticketId)
+                .Select(t => new { t.ReplyToEmail, t.OwnerUserId })
+                .FirstOrDefaultAsync(ct);
 
-        //                var now = _useLocalTime ? DateTime.Now : DateTime.UtcNow;
-        //                var border = now - _delay;
+            if (to == null) return null;
+            if (!string.IsNullOrWhiteSpace(to.ReplyToEmail)) return to.ReplyToEmail;
 
-        //                _log.LogDebug("[EmailReminder] Tick: now={Now:o}, border={Border:o}, roles=[{Roles}]",
-        //                    now, border, string.Join(",", _operatorRoles));
+            return await db.Users.AsNoTracking()
+                .Where(u => u.Id == to.OwnerUserId)
+                .Select(u => u.Email)
+                .FirstOrDefaultAsync(ct);
+        }
 
-        //                // важное исправление: ищем по списку ролей операторов
-        //                var candidates = await db.SupportTicketMessages
-        //                    .AsNoTracking()
-        //                    .Where(m =>
-        //                        _operatorRoles.Contains(m.AuthorRole) &&
-        //                        m.ReminderEmailSentAt == null &&
-        //                        m.CreatedAt <= border)
-        //                    .OrderBy(m => m.CreatedAt)
-        //                    .Take(_batchSize)
-        //                    .Select(m => new { m.TicketId, m.CreatedAt, m.Id })
-        //                    .ToListAsync(ct);
+        private string BuildTicketUrl(string ticketId)
+        {
+            var tpl = _cfg["TicketUrlTemplate"] ??
+                      (_cfg["Portal:PublicBaseUrl"] is string b && !string.IsNullOrWhiteSpace(b)
+                          ? $"{b.TrimEnd('/')}/Support/Tickets/{{id}}"
+                          : "https://vcs-docs.support.local:7121/Support/Tickets/{id}");
+            return tpl.Replace("{id}", Uri.EscapeDataString(ticketId));
+        }
 
-        //                if (candidates.Count == 0)
-        //                {
-        //                    _log.LogDebug("[EmailReminder] No candidates");
-        //                    return new TaskResult { Success = true, Message = "no candidates" };
-        //                }
+        private static string BrandStyleBlock => @"
+<style>
+  .mail-wrap{max-width:640px;margin:0 auto;padding:24px 20px;background:#0b1020;color:#e5e7eb;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+  .card{background:#111827;border:1px solid #1f2937;border-radius:12px;padding:20px}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:#3b82f6;display:inline-block}
+  .title{font-size:18px;margin:0 0 8px 0;color:#f3f4f6}
+  .muted{color:#9ca3af;font-size:13px}
+  .btn{display:inline-block;padding:10px 14px;border-radius:10px;background:#2563eb;color:#fff;text-decoration:none}
+  .btn:visited{color:#fff}
+  .row{margin:14px 0}
+  a{color:#93c5fd}
+</style>";
 
-        //                _log.LogInformation("[EmailReminder] Candidates found: {Count}", candidates.Count);
+        private static string BuildFooterNote() =>
+            @"<p class=""muted"">Пожалуйста, не отвечайте на это письмо — переходите по ссылке и отвечайте прямо в заявке.</p>";
 
-        //                int sent = 0;
-        //                foreach (var opMsg in candidates)
-        //                {
-        //                    ct.ThrowIfCancellationRequested();
+        private string BuildFollowUpHtml(string ticketId, string ticketUrl, TimeSpan delay) => $@"
+<!doctype html><html lang=""ru""><head><meta charset=""utf-8"">{BrandStyleBlock}</head>
+<body>
+  <div class=""mail-wrap"">
+    <div class=""brand""><span class=""dot""></span><strong>VCS-DOCs Support</strong></div>
+    <div class=""card"">
+      <h1 class=""title"">Новый ответ по заявке № {WebUtility.HtmlEncode(ticketId)}</h1>
+      <div class=""row"">Оператор оставил сообщение по вашей заявке.</div>
+      <div class=""row""><a class=""btn"" href=""{WebUtility.HtmlEncode(ticketUrl)}"">Открыть заявку</a></div>
+      <div class=""row muted"">Это напоминание отправлено автоматически спустя ~{(int)delay.TotalSeconds} сек. после ответа.</div>
+      {BuildFooterNote()}
+    </div>
+  </div>
+</body></html>";
 
-        //                    var t = await db.SupportTickets.AsNoTracking()
-        //                        .FirstOrDefaultAsync(x => x.Id == opMsg.TicketId, ct);
-
-        //                    if (t == null)
-        //                    {
-        //                        _log.LogWarning("[EmailReminder] Ticket {Id} not found", opMsg.TicketId);
-        //                        continue;
-        //                    }
-
-        //                    if (!t.EmailNotifyEnabled)
-        //                    {
-        //                        _log.LogDebug("[EmailReminder] Ticket {Id}: email notify disabled", opMsg.TicketId);
-        //                        continue;
-        //                    }
-
-        //                    // есть ли ответ пользователя после операторского сообщения?
-        //                    var hasUserReplyAfter = await db.SupportTicketMessages.AsNoTracking()
-        //                        .AnyAsync(m => m.TicketId == opMsg.TicketId
-        //                                       && m.AuthorRole == "user"
-        //                                       && m.CreatedAt > opMsg.CreatedAt, ct);
-        //                    if (hasUserReplyAfter)
-        //                    {
-        //                        _log.LogDebug("[EmailReminder] Ticket {Id}: user replied after operator message", opMsg.TicketId);
-        //                        continue;
-        //                    }
-
-        //                    // адресат
-        //                    var to = t.ReplyToEmail;
-        //                    if (string.IsNullOrWhiteSpace(to))
-        //                    {
-        //                        to = await db.Users.AsNoTracking()
-        //                            .Where(u => u.Id == t.OwnerUserId)
-        //                            .Select(u => u.Email)
-        //                            .FirstOrDefaultAsync(ct);
-        //                    }
-        //                    if (string.IsNullOrWhiteSpace(to))
-        //                    {
-        //                        _log.LogWarning("[EmailReminder] Ticket {Id}: no recipient email", opMsg.TicketId);
-        //                        continue;
-        //                    }
-
-        //                    try
-        //                    {
-        //                        // ссылка на тикет
-        //                        var ticketUrlTemplate = _cfg["TicketUrlTemplate"] ??
-        //                                                (_cfg["Portal:PublicBaseUrl"] is string b && !string.IsNullOrWhiteSpace(b)
-        //                                                    ? $"{b.TrimEnd('/')}/Support/Tickets/{{id}}"
-        //                                                    : "https://vcs-docs.support.local:7121/Support/Tickets/{id}");
-        //                        var ticketUrl = ticketUrlTemplate.Replace("{id}", Uri.EscapeDataString(t.Id));
-
-        //                        var subject = $"[Поддержка] Напоминание по заявке № {t.Id}";
-        //                        var html = $@"
-        //<!doctype html>
-        //<html lang=""ru""><head><meta charset=""utf-8""></head>
-        //<body style=""font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif"">
-        //  <p>По вашей заявке № <b>{WebUtility.HtmlEncode(t.Id)}</b> оператор оставил сообщение.</p>
-        //  <p>Ссылка на заявку: <a href=""{WebUtility.HtmlEncode(ticketUrl)}"">{WebUtility.HtmlEncode(ticketUrl)}</a></p>
-        //  <p style=""color:#6b7280;font-size:.9rem"">Это напоминание отправлено автоматически, т.к. с момента ответа прошло более {_delay.TotalSeconds:0} секунд.</p>
-        //</body></html>";
-
-        //                        _log.LogInformation("[EmailReminder] Sending to {To} for ticket {Id}", to, t.Id);
-        //                        await mailer.SendAsync(to, subject, html);
-
-        //                        // помечаем отправку (ключ — TicketId + CreatedAt операторского сообщения)
-        //                        var affected = await db.Database.ExecuteSqlInterpolatedAsync($@"
-        //UPDATE SupportTicketMessages
-        //SET ReminderEmailSentAt = {(_useLocalTime ? DateTime.Now : DateTime.UtcNow)}
-        //WHERE TicketId = {opMsg.TicketId} AND CreatedAt = {opMsg.CreatedAt};", ct);
-
-        //                        _log.LogInformation("[EmailReminder] Marked ReminderEmailSentAt for ticket {Id} (rows={Rows})", opMsg.TicketId, affected);
-        //                        sent++;
-        //                    }
-        //                    catch (Exception ex)
-        //                    {
-        //                        _log.LogWarning(ex, "[EmailReminder] Failed to send reminder for ticket {Id}", opMsg.TicketId);
-        //                    }
-        //                }
-
-        //                _log.LogInformation("[EmailReminder] Done: sent={Sent}", sent);
-        //                return new TaskResult { Success = true, Message = $"sent={sent}" };
-        //            }
-        //            catch (Exception ex)
-        //            {
-        //                _log.LogError(ex, "[EmailReminder] Execute error");
-        //                return new TaskResult { Success = false, Message = ex.Message };
-        //            }
-        //        }
+        private string BuildIdleHtml(string ticketId, string ticketUrl, TimeSpan delay) => $@"
+<!doctype html><html lang=""ru""><head><meta charset=""utf-8"">{BrandStyleBlock}</head>
+<body>
+  <div class=""mail-wrap"">
+    <div class=""brand""><span class=""dot""></span><strong>VCS-DOCs Support</strong></div>
+    <div class=""card"">
+      <h1 class=""title"">Давно нет активности по заявке № {WebUtility.HtmlEncode(ticketId)}</h1>
+      <div class=""row"">По заявке давно не было ответов. Если вопрос решён — закройте её; если нет — ответьте, пожалуйста.</div>
+      <div class=""row""><a class=""btn"" href=""{WebUtility.HtmlEncode(ticketUrl)}"">Перейти к заявке</a></div>
+      <div class=""row muted"">Это напоминание отправлено автоматически после ~{(int)delay.TotalSeconds} сек. простоя.</div>
+      {BuildFooterNote()}
+    </div>
+  </div>
+</body></html>";
 
         private void TouchHeartbeat(string phase)
         {
             try
             {
                 var path = Path.Combine(Path.GetTempPath(), "email-reminder-heartbeat.txt");
-                var line = $"{DateTime.UtcNow:O} {phase} Delay={_delay.TotalSeconds}s RunEvery={_runEvery.TotalSeconds}s Roles=[{string.Join(",", _operatorRoles)}]{Environment.NewLine}";
+                var line = $"{DateTime.UtcNow:O} {phase} ReplyDelay={_replyDelay.TotalSeconds}s IdleDelay={_idleDelay.TotalSeconds}s RunEvery={_runEvery.TotalSeconds}s Roles=[{string.Join(",", _operatorRoles)}]{Environment.NewLine}";
                 File.AppendAllText(path, line, Encoding.UTF8);
             }
             catch { /* ignore */ }

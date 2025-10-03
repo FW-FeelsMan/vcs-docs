@@ -1,4 +1,4 @@
-﻿// wwwroot/js/user/user_open_tickets.js — realtime + "Создать заявку" modal + notify toggle + hide on close
+﻿// D:\Unity\VCS-DOCs\VCS-DOCs.Support\wwwroot\js\user\user_open_tickets.js — realtime + "Создать заявку" modal + notify toggle + hide on close
 (() => {
     const USE_MOCK = /[?&]mock=1\b/i.test(location.search);
 

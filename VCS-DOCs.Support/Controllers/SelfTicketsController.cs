@@ -31,17 +31,29 @@ public sealed class SelfTicketsController : ControllerBase
         }
     }
     [HttpPost("notify")]
+    [ValidateAntiForgeryToken] 
     public async Task<IActionResult> SetNotify([FromBody] NotifyToggleDto dto)
     {
         if (string.IsNullOrWhiteSpace(dto.TicketId))
             return BadRequest(new { ok = false, error = "no_id" });
 
-        // TODO: сохранять per-user настройку, например, в таблицу SupportTicketNotifies:
-        // (UserId, TicketId, Enabled, UpdatedAt). Пока просто отвечаем 200 OK.
+        var uid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var login = User.Identity?.Name;
 
-        await Task.CompletedTask;
-        return Ok(new { ok = true });
+        var t = await _db.SupportTickets
+            .FirstOrDefaultAsync(x =>
+                x.Id == dto.TicketId &&
+                (x.OwnerUserId == uid || (x.OwnerUserId == null && x.OwnerLogin == login)));
+
+        if (t == null)
+            return NotFound(new { ok = false, error = "ticket_not_found" });
+
+        t.EmailNotifyEnabled = dto.Enabled;
+        await _db.SaveChangesAsync();
+
+        return Ok(new { ok = true, enabled = t.EmailNotifyEnabled });
     }
+
     // -------- DTOs (для списка) --------
     public sealed record UserOpenTicketDto(
         string Id,
@@ -106,12 +118,13 @@ public sealed class SelfTicketsController : ControllerBase
                 t.Subject,
                 t.CreatedAt,
                 t.UpdatedAt,
+                t.EmailNotifyEnabled,
                 Last = _db.SupportTicketMessages
-                         .AsNoTracking()
-                         .Where(m => m.TicketId == t.Id)
-                         .OrderByDescending(m => m.CreatedAt)
-                         .Select(m => new { m.AuthorRole })
-                         .FirstOrDefault()
+             .AsNoTracking()
+             .Where(m => m.TicketId == t.Id)
+             .OrderByDescending(m => m.CreatedAt)
+             .Select(m => new { m.AuthorRole })
+             .FirstOrDefault()
             });
 
         var rowsRaw = await q.ToListAsync();
@@ -120,10 +133,10 @@ public sealed class SelfTicketsController : ControllerBase
             new UserOpenTicketDto(
                 Id: x.Id,
                 Subject: x.Subject ?? "(без темы)",
-                Wait: (x.Last?.AuthorRole == "operator") ? "operator" : "user",
+                Wait: (string.Equals(x.Last?.AuthorRole, "user", StringComparison.OrdinalIgnoreCase)) ? "user" : "operator",
                 CreatedAt: ((DateTime?)x.CreatedAt ?? (DateTime?)x.UpdatedAt ?? DateTime.UtcNow),
                 UpdatedAt: ((DateTime?)x.UpdatedAt ?? (DateTime?)x.CreatedAt ?? DateTime.UtcNow),
-                Notify: false
+                Notify: x.EmailNotifyEnabled
             )).ToArray();
 
         return Ok(rows);

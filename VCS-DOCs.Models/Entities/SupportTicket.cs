@@ -10,6 +10,10 @@
         }
         public string Status { get; set; } = "open";       
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime? LastIdleReminderAt
+        {
+            get; set; 
+        } 
         public DateTime? UpdatedAt
         {
             get; set;

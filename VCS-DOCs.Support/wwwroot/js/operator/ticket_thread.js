@@ -224,20 +224,33 @@
             }));
         }
 
-        btnClose?.addEventListener('click', async () => {
-            if (ticket.status === 'closed') return;
+        // общая навигация "назад" (та же, что по кнопке ← Вернуться)
+        function goBack() {
+            const exists = id => !!document.querySelector(`.sidebar .sidebar-button[data-content="${id}"]`);
+            const fromId = ds.from || 'user_tickets';
+            const backup = (typeof window.__support_backTarget === 'string' && window.__support_backTarget) ? window.__support_backTarget : '';
+            const target = (fromId && exists(fromId)) ? fromId : (backup && exists(backup)) ? backup : 'user_tickets';
+            if (typeof window.selectSidebarByContentId === 'function') window.selectSidebarByContentId(target); else history.back();
+        }
+
+        // обработчик закрытия, с дальнейшим возвратом
+        const onCloseClick = async () => {
+            if (ticket.status === 'closed') { goBack(); return; }
             if (!confirm('Закрыть эту заявку?')) return;
             btnClose.disabled = true;
             try {
                 const res = await postJson(`/api/support/tickets/${encodeURIComponent(ticketId)}/close`, {});
                 applyClosed(res?.updatedAt || new Date().toISOString());
                 ticket.status = 'closed';
+                // даём DOM обновиться и уходим назад
+                setTimeout(goBack, 50);
             } catch (e) {
                 alert('Не удалось закрыть заявку: ' + (e.message || 'ошибка'));
             } finally {
                 btnClose.disabled = false;
             }
-        });
+        };
+        btnClose?.addEventListener('click', onCloseClick);
 
         // 3) realtime подписка
         let conn = null;
@@ -266,13 +279,6 @@
         }
 
         // back
-        function goBack() {
-            const exists = id => !!document.querySelector(`.sidebar .sidebar-button[data-content="${id}"]`);
-            const fromId = ds.from || 'user_tickets';
-            const backup = (typeof window.__support_backTarget === 'string' && window.__support_backTarget) ? window.__support_backTarget : '';
-            const target = (fromId && exists(fromId)) ? fromId : (backup && exists(backup)) ? backup : 'user_tickets';
-            if (typeof window.selectSidebarByContentId === 'function') window.selectSidebarByContentId(target); else history.back();
-        }
         btnBack?.addEventListener('click', goBack);
 
         // dispose
@@ -280,7 +286,7 @@
             try { txt?.removeEventListener('keydown', onKey); } catch { }
             try { btnSend?.removeEventListener('click', sendNow); } catch { }
             try { btnBack?.removeEventListener('click', goBack); } catch { }
-            try { btnClose?.removeEventListener('click', applyClosed); } catch { }
+            try { btnClose?.removeEventListener('click', onCloseClick); } catch { }
             try { conn?.stop(); } catch { }
         };
     };
