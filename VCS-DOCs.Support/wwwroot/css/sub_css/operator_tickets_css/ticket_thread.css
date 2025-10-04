@@ -243,3 +243,39 @@
         max-width: min(40ch,70%);
     }
 }
+.tt-attach {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.tt-files {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.tt-chip {
+    background: #f2f3f5;
+    border-radius: 10px;
+    padding: 4px 8px;
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+}
+
+    .tt-chip b {
+        max-width: 220px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        display: inline-block;
+    }
+
+    .tt-chip button {
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+        font-size: 14px;
+    }

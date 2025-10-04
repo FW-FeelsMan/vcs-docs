@@ -9,12 +9,45 @@
 <link rel="stylesheet" href="~/css/sub_css/support_accountsStyle.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/sub_css/operator_tickets_css/ticket_thread.css" asp-append-version="true" />
 
+<style>
+    /* мини-стили под список вложений у пользователя */
+    .tt-attach {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 6px;
+    }
+
+    .tt-attach-list {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .tt-attach-pill {
+        padding: 3px 8px;
+        border-radius: 10px;
+        background: #f3f4f6;
+        border: 1px solid #e5e7eb;
+    }
+
+        .tt-attach-pill b {
+            margin-right: 6px;
+        }
+
+        .tt-attach-pill button {
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+        }
+</style>
+
 <div id="ticket-thread"
      class="profile_background accounts-page tickets-page"
      data-ticket-id="@Model.Id"
      data-subject="@Request?.Query["subject"]"
      data-from="@(Request?.Query["from"].ToString() ?? "open_tickets")">
-    <!-- from: open_tickets | closed_tickets -->
 
     <div class="button-container tt-header">
         <button id="tt_back" class="button-sliding small">← Вернуться</button>
@@ -22,9 +55,10 @@
             Заявка <span id="tt_id">@Model.Id</span>
             <span class="tt-subject muted">Тема: <span id="tt_subject">—</span></span>
         </h2>
-
     </div>
+
     <hr class="solid" />
+
     <!-- скролл только здесь -->
     <div class="content-scrollable tt-wrap">
         <div class="tt-meta">
@@ -39,7 +73,15 @@
 
     <!-- вне скролла — всегда на виду -->
     <div class="tt-input">
+        <div class="tt-attach">
+            <button id="tt_attach" class="button-sliding small">Добавить файл</button>
+            <input id="tt_files" type="file" multiple style="display:none" />
+            <div id="tt_attach_list" class="tt-attach-list muted"></div>
+        </div>
+
         <textarea id="tt_text" rows="3" placeholder="Напишите ответ… (Ctrl+Enter — отправить)"></textarea>
         <button id="tt_send" class="button-sliding primary">Отправить</button>
     </div>
 </div>
+
+<script src="~/js/user/user_ticket_thread.js" asp-append-version="true" defer></script>

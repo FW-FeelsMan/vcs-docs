@@ -1,4 +1,4 @@
-﻿//D:\Unity\VCS-DOCs\VCS-DOCs.Support\Program.cs
+﻿// D:\Unity\VCS-DOCs\VCS-DOCs.Support\Program.cs
 using System.Net.Security;
 using System.Security.Claims;
 using System.Security.Cryptography.X509Certificates;
@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Configuration;
-using VCS_DOCs.Data;
+using VCS_DOCs.Infrastructure.Data;
 using VCS_DOCs.Infrastructure.Auth;
 using VCS_DOCs.Models.Entities;
 using VCS_DOCs.Support.Hubs;
@@ -17,6 +17,10 @@ using VCS_DOCs.Support.Infrastructure.Provision;
 using VCS_DOCs.Support.Integration;
 using VCS_DOCs.TaskEngine;
 using VCS_DOCs.Core.Notifications;
+// мониторинг
+using VCS_DOCs.Support.Monitoring;
+using VCS_DOCs.Support.Controllers;
+using Microsoft.AspNetCore.Http.Features;
 
 internal class Program
 {
@@ -24,21 +28,24 @@ internal class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
+        // ---------- EF Core ----------
         builder.Services.AddDbContext<ApplicationDbContext>(o =>
         {
             var cs = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=VCSDocs.db";
             if (!cs.Contains("Cache=", StringComparison.OrdinalIgnoreCase)) cs += ";Cache=Shared";
             if (!cs.Contains("Pooling=", StringComparison.OrdinalIgnoreCase)) cs += ";Pooling=True";
             if (!cs.Contains("Default Timeout=", StringComparison.OrdinalIgnoreCase)) cs += ";Default Timeout=60";
-            o.UseSqlite(cs, x => x.MigrationsAssembly("VCS-DOCs.Web"));
+            o.UseSqlite(cs, x => x.MigrationsAssembly("VCS-DOCs.Infrastructure"));
         });
 
+        // ---------- MVC/Controllers ----------
         builder.Services.AddControllers().ConfigureApplicationPartManager(apm =>
         {
             var dead = apm.ApplicationParts.Where(p => p.Name == "VCS-DOCs.Web").ToList();
             foreach (var part in dead) apm.ApplicationParts.Remove(part);
         });
 
+        // ---------- Identity ----------
         builder.Services
             .AddIdentity<User, IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -50,6 +57,20 @@ internal class Program
             {
                 CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV3
             })));
+
+        builder.Services.Configure<IdentityOptions>(opt =>
+        {
+            opt.Password.RequireDigit = true;
+            opt.Password.RequireLowercase = true;
+            opt.Password.RequireUppercase = true;
+            opt.Password.RequireNonAlphanumeric = false;
+            opt.Password.RequiredLength = 6;
+            opt.Password.RequiredUniqueChars = 1;
+        });
+        builder.Services.Configure<PasswordHasherOptions>(o =>
+        {
+            o.CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV3;
+        });
 
         builder.Services.AddSignalR(o => { o.EnableDetailedErrors = true; });
 
@@ -85,6 +106,7 @@ internal class Program
             o.AddPolicy("SupportDeskAccess", p => p.RequireRole(Roles.SupportAdmin, Roles.SupportAgent, Roles.BaseUser));
         });
 
+        // ---------- Rate limiting ----------
         builder.Services.AddRateLimiter(options =>
         {
             options.AddPolicy("api-burst", http =>
@@ -106,6 +128,7 @@ internal class Program
             });
         });
 
+        // ---------- Razor Pages ----------
         builder.Services.AddRazorPages(o =>
         {
             o.Conventions.AuthorizeFolder("/", "SupportDeskAccess");
@@ -127,6 +150,7 @@ internal class Program
         });
         builder.Services.AddMemoryCache();
 
+        // ---------- HTTP clients ----------
         builder.Services.AddHttpClient("VDocsBridge", (sp, c) =>
         {
             var cfg = sp.GetRequiredService<IConfiguration>();
@@ -152,20 +176,13 @@ internal class Program
             }
         });
 
-        builder.Services.Configure<IdentityOptions>(opt =>
+        // лёгкий клиент для health-пингов из WorkloadStore
+        builder.Services.AddHttpClient("workload", c =>
         {
-            opt.Password.RequireDigit = true;
-            opt.Password.RequireLowercase = true;
-            opt.Password.RequireUppercase = true;
-            opt.Password.RequireNonAlphanumeric = false;
-            opt.Password.RequiredLength = 6;
-            opt.Password.RequiredUniqueChars = 1;
-        });
-        builder.Services.Configure<PasswordHasherOptions>(o =>
-        {
-            o.CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV3;
+            c.Timeout = TimeSpan.FromSeconds(1.5);
         });
 
+        // ---------- доменные сервисы ----------
         builder.Services.AddScoped<PresenceOrchestrator>();
         builder.Services.AddScoped<IUserService, SupportUserService>();
         builder.Services.AddScoped<ISupportUserProvisioning, SupportUserProvisioning>();
@@ -179,6 +196,7 @@ internal class Program
         builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Mail"));
         builder.Services.AddSingleton<IMailSender, SmtpMailSender>();
 
+        // ---------- Kestrel / TLS ----------
         builder.WebHost.ConfigureKestrel((ctx, opts) =>
         {
             opts.ConfigureHttpsDefaults(https =>
@@ -199,13 +217,25 @@ internal class Program
             });
         });
 
+        // ---------- Task Engine ----------
         if (builder.Configuration.GetValue("TaskEngine:Enabled", false))
         {
             builder.Services.AddTaskEngine(builder.Configuration);
         }
 
+        // ---------- Мониторинг нагрузки ----------
+        builder.Services.AddSingleton<WorkloadStore>();
+        builder.Services.AddHostedService<WorkloadSampler>(); // тик каждые ~5с
+        builder.Services.Configure<UploadsOptions>("Support", builder.Configuration.GetSection("Uploads:Support"));
+
+        builder.Services.Configure<FormOptions>(o =>
+        {
+            o.MultipartBodyLengthLimit = 100L * 1024 * 1024; // 100 MB
+        });
+
         var app = builder.Build();
 
+        // ---------- SQLite PRAGMA ----------
         using (var scope = app.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -214,6 +244,7 @@ internal class Program
             db.Database.ExecuteSqlRaw("PRAGMA busy_timeout=8000;");
         }
 
+        // ---------- миграции/seed ----------
         using (var scope = app.Services.CreateScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -233,6 +264,7 @@ internal class Program
                 await userMgr.AddToRoleAsync(u, Roles.SupportAgent);
         }
 
+        // ---------- pipeline ----------
         app.UseHttpsRedirection();
         app.UseStaticFiles();
 
@@ -250,9 +282,11 @@ internal class Program
 
         app.UseMiddleware<IdempotencyMiddleware>();
 
+        // метрики эндпоинтов (после аутентификации/сессии и после UseRouting)
+        app.UseMiddleware<EndpointStatsCollector>();
 
         var allowedAncestors =
-     "https://vcs-docs.local:7120 https://localhost:7120 https://127.0.0.1:7120";
+            "https://vcs-docs.local:7120 https://localhost:7120 https://127.0.0.1:7120";
 
         app.Use(async (ctx, next) =>
         {

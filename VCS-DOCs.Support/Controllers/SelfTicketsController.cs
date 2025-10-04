@@ -1,10 +1,11 @@
-﻿// VCS-DOCs.Support/Controllers/SelfTicketsController.cs
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using VCS_DOCs.Data;
+using Microsoft.Extensions.Configuration;
+using VCS_DOCs.Infrastructure.Data;
+using VCS_DOCs.Infrastructure.Data;
 using VCS_DOCs.Models.Entities;
 
 namespace VCS_DOCs.Support.Controllers;
@@ -16,12 +17,15 @@ public sealed class SelfTicketsController : ControllerBase
 {
     private readonly ApplicationDbContext _db;
     private readonly ILogger<SelfTicketsController> _log;
+    private readonly IConfiguration _cfg;
 
-    public SelfTicketsController(ApplicationDbContext db, ILogger<SelfTicketsController> log)
+    public SelfTicketsController(ApplicationDbContext db, ILogger<SelfTicketsController> log, IConfiguration cfg)
     {
         _db = db;
         _log = log;
+        _cfg = cfg;
     }
+
     public sealed class NotifyToggleDto
     {
         public string TicketId { get; set; } = "";
@@ -30,8 +34,9 @@ public sealed class SelfTicketsController : ControllerBase
             get; set;
         }
     }
+
     [HttpPost("notify")]
-    [ValidateAntiForgeryToken] 
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> SetNotify([FromBody] NotifyToggleDto dto)
     {
         if (string.IsNullOrWhiteSpace(dto.TicketId))
@@ -54,14 +59,16 @@ public sealed class SelfTicketsController : ControllerBase
         return Ok(new { ok = true, enabled = t.EmailNotifyEnabled });
     }
 
-    // -------- DTOs (для списка) --------
+    // DTOs
     public sealed record UserOpenTicketDto(
         string Id,
         string Subject,
         string Wait,        // "user" | "operator" (кто писал последним)
         DateTime CreatedAt,
         DateTime UpdatedAt,
-        bool Notify);
+        bool Notify,
+        int? AutoCloseEtaSec // секунды до авто-закрытия; null — если неприменимо
+    );
 
     public sealed record UserClosedTicketDto(
         string Id,
@@ -69,17 +76,14 @@ public sealed class SelfTicketsController : ControllerBase
         DateTime CreatedAt,
         DateTime UpdatedAt);
 
-    // -------- helpers --------
     private async Task<(string? userId, string? login)> GetCurrentUserAsync()
     {
-        // 1) пробуем взять Id из клейма (NameIdentifier) — самый надёжный вариант
         var uid = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var login = User.Identity?.Name;
 
         if (!string.IsNullOrWhiteSpace(uid))
             return (uid, login);
 
-        // 2) фолбэк: если только Name (логин), найдём Id в БД
         if (!string.IsNullOrWhiteSpace(login))
         {
             var norm = login.ToUpperInvariant();
@@ -93,15 +97,30 @@ public sealed class SelfTicketsController : ControllerBase
                 return (foundId, login);
         }
 
-        return (null, login); // нет Id — дальше Create вернёт вежливую ошибку
+        return (null, login);
     }
 
-    // -------- списки --------
     [HttpGet("open")]
     public async Task<IActionResult> Open()
     {
         var (uid, login) = await GetCurrentUserAsync();
         if (uid is null && login is null) return Ok(Array.Empty<UserOpenTicketDto>());
+
+        //// конфиг автозакрытия
+        //var autoCloseEnabled = _cfg.GetValue<bool?>("Modules:EmailReminder:AutoCloseEnabled") ?? false;
+        //var autoCloseHours = _cfg.GetValue<int?>("Modules:EmailReminder:AutoCloseAfterHours") ?? 72;
+        //var autoCloseAfter = TimeSpan.FromHours(Math.Max(1, autoCloseHours));
+        //var now = DateTime.UtcNow;
+        
+        // тест-конфиг автозакрытия
+        var autoCloseEnabled = _cfg.GetValue<bool?>("Modules:EmailReminder:AutoCloseEnabled") ?? false;
+        var autoCloseHours = _cfg.GetValue<int?>("Modules:EmailReminder:AutoCloseAfterHours") ?? 72;
+        var autoCloseSeconds = _cfg.GetValue<int?>("Modules:EmailReminder:AutoCloseAfterSeconds");
+        TimeSpan autoCloseAfter =
+            (autoCloseSeconds.HasValue && autoCloseSeconds.Value > 0)
+                ? TimeSpan.FromSeconds(autoCloseSeconds.Value)
+                : TimeSpan.FromHours(Math.Max(1, autoCloseHours));
+        var now = DateTime.UtcNow;
 
         var q = _db.SupportTickets
             .AsNoTracking()
@@ -119,25 +138,53 @@ public sealed class SelfTicketsController : ControllerBase
                 t.CreatedAt,
                 t.UpdatedAt,
                 t.EmailNotifyEnabled,
+
+                // последняя реплика (кто писал)
                 Last = _db.SupportTicketMessages
-             .AsNoTracking()
-             .Where(m => m.TicketId == t.Id)
-             .OrderByDescending(m => m.CreatedAt)
-             .Select(m => new { m.AuthorRole })
-             .FirstOrDefault()
+                    .AsNoTracking()
+                    .Where(m => m.TicketId == t.Id)
+                    .OrderByDescending(m => m.CreatedAt)
+                    .Select(m => new { m.AuthorRole, m.CreatedAt })
+                    .FirstOrDefault(),
+
+                // максимум по operator/agent и по user отдельно
+                LastOpAt = _db.SupportTicketMessages
+                    .AsNoTracking()
+                    .Where(m => m.TicketId == t.Id && m.AuthorRole != "user")
+                    .Max(m => (DateTime?)m.CreatedAt),
+
+                LastUserAt = _db.SupportTicketMessages
+                    .AsNoTracking()
+                    .Where(m => m.TicketId == t.Id && m.AuthorRole == "user")
+                    .Max(m => (DateTime?)m.CreatedAt)
             });
 
         var rowsRaw = await q.ToListAsync();
 
         var rows = rowsRaw.Select(x =>
-            new UserOpenTicketDto(
+        {
+            var wait = (string.Equals(x.Last?.AuthorRole, "user", StringComparison.OrdinalIgnoreCase)) ? "user" : "operator";
+
+            int? etaSec = null;
+            if (autoCloseEnabled && wait == "operator" && x.LastOpAt.HasValue)
+            {
+                // пользователь "должен ответить": считаем дедлайн от последней operator-реплики
+                var deadline = x.LastOpAt.Value + autoCloseAfter;
+                var left = deadline - now;
+                if (left.TotalSeconds <= 0) etaSec = 0;
+                else etaSec = (int)Math.Round(left.TotalSeconds);
+            }
+
+            return new UserOpenTicketDto(
                 Id: x.Id,
                 Subject: x.Subject ?? "(без темы)",
-                Wait: (string.Equals(x.Last?.AuthorRole, "user", StringComparison.OrdinalIgnoreCase)) ? "user" : "operator",
-                CreatedAt: ((DateTime?)x.CreatedAt ?? (DateTime?)x.UpdatedAt ?? DateTime.UtcNow),
-                UpdatedAt: ((DateTime?)x.UpdatedAt ?? (DateTime?)x.CreatedAt ?? DateTime.UtcNow),
-                Notify: x.EmailNotifyEnabled
-            )).ToArray();
+                Wait: wait,
+                CreatedAt: x.CreatedAt,
+                UpdatedAt: x.UpdatedAt ?? x.CreatedAt,
+                Notify: x.EmailNotifyEnabled,
+                AutoCloseEtaSec: etaSec
+            );
+        }).ToArray();
 
         return Ok(rows);
     }
@@ -171,8 +218,8 @@ public sealed class SelfTicketsController : ControllerBase
             new UserClosedTicketDto(
                 Id: x.Id,
                 Subject: x.Subject ?? "(без темы)",
-                CreatedAt: ((DateTime?)x.CreatedAt ?? (DateTime?)x.UpdatedAt ?? DateTime.UtcNow),
-                UpdatedAt: ((DateTime?)x.UpdatedAt ?? (DateTime?)x.CreatedAt ?? DateTime.UtcNow)
+                CreatedAt: x.CreatedAt,
+                UpdatedAt: x.UpdatedAt ?? x.CreatedAt
             )).ToArray();
 
         return Ok(rows);
@@ -190,7 +237,7 @@ public sealed class SelfTicketsController : ControllerBase
         public string? ReplyTo
         {
             get; set;
-        } // опционально переопределить e-mail
+        }
     }
 
     [HttpPost("tickets")]
@@ -203,7 +250,6 @@ public sealed class SelfTicketsController : ControllerBase
         if (!ModelState.IsValid)
             return BadRequest(new { ok = false, error = "bad_input" });
 
-        // возьмём пользователя (чтобы точно был Id и корректный e-mail)
         var user = await _db.Users.AsNoTracking()
             .Where(u => u.Id == uid || u.NormalizedUserName == (login ?? "").ToUpperInvariant())
             .Select(u => new { u.Id, u.UserName, u.Email })
@@ -235,7 +281,7 @@ public sealed class SelfTicketsController : ControllerBase
         var first = new SupportTicketMessage
         {
             TicketId = ticketId,
-            AuthorUserId = ownerId,               // <— теперь точно НЕ null
+            AuthorUserId = ownerId,
             AuthorRole = "user",
             Body = dto.Message.Trim(),
             CreatedAt = now

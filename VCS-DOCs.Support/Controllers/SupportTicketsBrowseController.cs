@@ -3,7 +3,8 @@ using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using VCS_DOCs.Data;
+using VCS_DOCs.Infrastructure.Data;
+using VCS_DOCs.Infrastructure.Data;
 
 namespace VCS_DOCs.Support.Controllers
 {

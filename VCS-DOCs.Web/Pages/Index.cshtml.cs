@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using VCS_DOCs.Configuration;
-using VCS_DOCs.Data;
+using VCS_DOCs.Infrastructure.Data;
 
 using VCS_DOCs.Models.Entities;
 

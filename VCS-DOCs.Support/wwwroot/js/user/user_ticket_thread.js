@@ -1,4 +1,4 @@
-﻿// wwwroot/js/user/user_ticket_thread.js — realtime + send
+﻿// wwwroot/js/user/user_ticket_thread.js — realtime + send + attachments
 (() => {
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const fmt = iso => {
@@ -28,17 +28,25 @@
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return await res.json().catch(() => ({}));
     }
+    async function safeJson(resp) { try { return await resp.json(); } catch { return null; } }
+    function fmtSize(n) { if (n >= 1048576) return (n / 1048576).toFixed(1) + ' MB'; if (n >= 1024) return (n / 1024).toFixed(1) + ' KB'; return n + ' B'; }
 
     function renderMsg(m, mine = false) {
-        // у пользователя bubbles: user → справа, operator/agent → слева
         const isOp = (m.role && m.role !== 'user') && !mine;
         const cls = isOp ? 'tt-msg op' : 'tt-msg usr';
         const who = isOp ? 'Оператор' : 'Вы';
         const msgIdAttr = m.id ? ` data-msg-id="${String(m.id)}"` : '';
+        let filesHtml = '';
+        if (Array.isArray(m.attachments) && m.attachments.length) {
+            filesHtml = `<div class="tt-files">` + m.attachments.map(a =>
+                `<a class="tt-file" href="/api/support/files/${encodeURIComponent(a.id)}" target="_blank" rel="noopener">${esc(a.name || a.fileName || ('file-' + a.id))}</a>`
+            ).join(' ') + `</div>`;
+        }
         return `
       <div class="${cls}"${msgIdAttr}>
         <div class="tt-bubble">
           <div class="tt-msg-text">${esc(m.body ?? m.text ?? '')}</div>
+          ${filesHtml}
           <div class="tt-msg-meta">
             <span class="tt-msg-who">${who}</span>
             <span class="tt-msg-at">${fmt(m.createdAt ?? m.at ?? new Date())}</span>
@@ -46,6 +54,7 @@
         </div>
       </div>`;
     }
+
     function applyClosedState(root, closed) {
         const inputWrap = root.querySelector('.tt-input');
         const txt = root.querySelector('#tt_text');
@@ -61,21 +70,14 @@
         }
     }
 
-    // SignalR
+    // ---- SignalR ----
     const HUB_URL = '/hubs/ticket';
     async function loadSignalR() {
         if (window.signalR?.HubConnectionBuilder) return window.signalR;
-        const srcs = [
-            '/lib/microsoft/signalr/dist/browser/signalr.js',
-            '/lib/microsoft/signalr/signalr.js'
-        ];
+        const srcs = ['/lib/microsoft/signalr/dist/browser/signalr.js', '/lib/microsoft/signalr/signalr.js'];
         for (const src of srcs) {
             try {
-                await new Promise((res, rej) => {
-                    const s = document.createElement('script'); s.src = src; s.defer = true;
-                    s.onload = res; s.onerror = () => rej(new Error('load ' + src));
-                    document.head.appendChild(s);
-                });
+                await new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.defer = true; s.onload = res; s.onerror = () => rej(new Error('load ' + src)); document.head.appendChild(s); });
                 if (window.signalR?.HubConnectionBuilder) return window.signalR;
             } catch { }
         }
@@ -83,33 +85,64 @@
     }
     async function connectAndJoin(ticketId, onMessage) {
         const signalR = await loadSignalR();
-        const conn = new signalR.HubConnectionBuilder()
-            .withUrl(HUB_URL, { withCredentials: true })
-            .withAutomaticReconnect()
-            .build();
-
+        const conn = new signalR.HubConnectionBuilder().withUrl(HUB_URL, { withCredentials: true }).withAutomaticReconnect().build();
         conn.on('message', payload => {
-            try {
-                if (!payload || payload.ticketId !== ticketId) return;
-                const msg = payload.message || {};
-                onMessage(msg);
-                document.dispatchEvent(new CustomEvent('SupportTicketMessage', { detail: { ticketId, message: msg } }));
-            } catch { }
+            try { if (!payload || payload.ticketId !== ticketId) return; const msg = payload.message || {}; onMessage(msg); document.dispatchEvent(new CustomEvent('SupportTicketMessage', { detail: { ticketId, message: msg } })); } catch { }
         });
-
         await conn.start().catch(() => { });
-        const tryCalls = [
-            ['JoinTicketGroup', ticketId],
-            ['JoinTicket', ticketId],
-            ['Join', `ticket:${ticketId}`]
-        ];
-        for (const [m, arg] of tryCalls) {
-            try { await conn.invoke(m, arg); break; } catch { }
-        }
+        for (const [m, arg] of [['JoinTicketGroup', ticketId], ['JoinTicket', ticketId], ['Join', `ticket:${ticketId}`]]) { try { await conn.invoke(m, arg); break; } catch { } }
         return conn;
     }
 
-    // init
+    // ========= Attachments (user) =========
+    async function uploadSelected(uploadUrl, files, csrf, pending, renderList) {
+        if (!files || !files.length) return;
+        const fd = new FormData();
+        Array.from(files).forEach(f => fd.append("files", f, f.name));
+        let resp;
+        try {
+            resp = await fetch(uploadUrl, { method: "POST", body: fd, headers: { "RequestVerificationToken": csrf } });
+        } catch (e) {
+            console.error('upload fetch failed', e);
+            alert('Сеть недоступна или соединение оборвалось.');
+            return;
+        }
+        if (!resp.ok) {
+            const t = await safeJson(resp);
+            alert(`Ошибка загрузки: ${(t && (t.error || t.message)) || ('HTTP ' + resp.status)}`);
+            return;
+        }
+        const data = await resp.json().catch(() => null);
+        if (data?.ok && Array.isArray(data.files)) {
+            for (const f of data.files) pending.push(f); // {id,name,size,contentType,url}
+            renderList();
+        }
+    }
+
+    async function bindAttachments(bindUrl, csrf, pending, messageId, onCleared) {
+        if (!pending.length) return;
+        const ids = pending.map(p => p.id);
+        let resp;
+        try {
+            resp = await fetch(bindUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "RequestVerificationToken": csrf },
+                body: JSON.stringify({ attachmentIds: ids, messageId })
+            });
+        } catch (e) {
+            console.warn('bind fetch failed', e);
+            return;
+        }
+        if (!resp.ok) {
+            const t = await safeJson(resp);
+            console.warn("bind failed", t);
+            return;
+        }
+        pending.length = 0;
+        onCleared?.();
+    }
+
+    // ========= INIT =========
     window.initUTicketThread = async function (panel) {
         if (!panel || panel.__u_tt_inited) return;
         panel.__u_tt_inited = true;
@@ -132,6 +165,36 @@
         const btnSend = root.querySelector('#tt_send');
         const btnBack = root.querySelector('#tt_back');
 
+        // attach UI
+        const btnAttach = root.querySelector('#tt_attach');
+        const inpFiles = root.querySelector('#tt_files');
+        const list = root.querySelector('#tt_attach_list');
+        const csrf = anti();
+        const uploadUrl = `/api/user/tickets/${encodeURIComponent(ticketId)}/files`;
+        const bindUrl = `/api/user/tickets/${encodeURIComponent(ticketId)}/files/bind`;
+        const pending = []; // {id,name,size,contentType,url}
+
+        function renderList() {
+            if (!list) return;
+            list.innerHTML = pending.map(p =>
+                `<span class="tt-attach-pill"><b>${esc(p.name)}</b><small>${fmtSize(p.size)}</small>
+           <button title="Убрать" data-id="${p.id}">×</button></span>`
+            ).join("");
+            list.querySelectorAll("button[data-id]").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const id = Number(btn.dataset.id);
+                    const i = pending.findIndex(x => x.id === id);
+                    if (i >= 0) { pending.splice(i, 1); renderList(); }
+                });
+            });
+        }
+        btnAttach?.addEventListener("click", () => inpFiles?.click());
+        inpFiles?.addEventListener("change", () => {
+            if (inpFiles.files?.length) uploadSelected(uploadUrl, inpFiles.files, csrf, pending, renderList);
+            inpFiles.value = "";
+        });
+
+        // header
         titleId && (titleId.textContent = ticketId);
         dupId && (dupId.textContent = ticketId);
         subjEl && (subjEl.textContent = subject || '—');
@@ -154,9 +217,7 @@
         crEl && (crEl.textContent = ticket.createdAt ? fmt(ticket.createdAt) : '—');
         upEl && (upEl.textContent = ticket.updatedAt ? fmt(ticket.updatedAt) : '—');
 
-        // набор уже показанных id (чтобы не дублировать при SignalR-эхе)
         const seenIds = new Set(messages.map(m => m.id).filter(Boolean));
-
         function addMessageAndScroll(m, mine = false) {
             if (m && m.id && seenIds.has(m.id)) return;
             if (m && m.id) seenIds.add(m.id);
@@ -172,15 +233,27 @@
 
         applyClosedState(root, ticket.status === 'closed');
 
-        // 2) отправка
+        // 2) отправка (со вложениями)
         async function sendNow() {
             const v = (txt?.value || '').trim();
-            if (!v || ticket.status === 'closed') return;
+            if ((!v && !pending.length) || ticket.status === 'closed') return;
+
+            // локально подготовим отображение вложений в пузырьке
+            const localAtt = pending.map(p => ({ id: p.id, name: p.name }));
+
             try {
                 const res = await postJson(`/api/support/tickets/${encodeURIComponent(ticketId)}/messages`, { body: v });
-                const mineMsg = { id: res?.id, role: 'user', body: v, createdAt: res?.at || new Date().toISOString() };
+                const newId = res?.id;
+                const mineMsg = { id: newId, role: 'user', body: v, createdAt: res?.at || new Date().toISOString(), attachments: localAtt };
                 addMessageAndScroll(mineMsg, true);
                 txt.value = '';
+
+                // привязать вложения к созданному сообщению
+                if (newId) {
+                    await bindAttachments(bindUrl, csrf, pending, newId, () => renderList());
+                } else {
+                    pending.length = 0; renderList();
+                }
             } catch (e) {
                 console.error('[user-ticket] post failed:', e);
                 alert('Не удалось отправить сообщение. Попробуйте ещё раз.');
@@ -194,7 +267,6 @@
         let conn = null;
         try {
             conn = await connectAndJoin(ticketId, (msg) => {
-                // если это моё же только что отправленное — отфильтруем по id
                 addMessageAndScroll(msg, !!msg.mine);
             });
         } catch (e) {
@@ -213,17 +285,22 @@
                 history.back();
             }
         }
-        btnBack?.addEventListener('click', goBack);
+        const btnBackEl = root.querySelector('#tt_back');
+        btnBackEl?.addEventListener('click', goBack);
 
         // 5) dispose
         panel.__dispose = async function () {
             try { txt?.removeEventListener('keydown', onKey); } catch { }
             try { btnSend?.removeEventListener('click', sendNow); } catch { }
-            try { btnBack?.removeEventListener('click', goBack); } catch { }
-            if (conn) {
-                try { await conn.stop(); } catch { }
-                conn = null;
-            }
+            try { btnBackEl?.removeEventListener('click', goBack); } catch { }
+            if (conn) { try { await conn.stop(); } catch { } conn = null; }
+        };
+
+        // экспорт (если вдруг пригодится)
+        window.TT_Attach = {
+            bindTo: (messageId) => bindAttachments(bindUrl, csrf, pending, messageId, () => renderList()),
+            getIds: () => pending.map(p => p.id),
+            clear: () => { pending.length = 0; renderList(); }
         };
     };
 })();

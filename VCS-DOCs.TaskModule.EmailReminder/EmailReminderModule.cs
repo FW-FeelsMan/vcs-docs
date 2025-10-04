@@ -5,7 +5,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using VCS_DOCs.Core.Notifications;
-using VCS_DOCs.Data;
+using VCS_DOCs.Infrastructure.Data;
+using VCS_DOCs.Infrastructure.Data;
 using VCS_DOCs.TaskEngine;
 
 namespace VCS_DOCs.TaskModule.EmailReminder
@@ -23,6 +24,12 @@ namespace VCS_DOCs.TaskModule.EmailReminder
         private string[] _operatorRoles = new[] { "operator", "agent" };
         private bool _useLocalTime = false;
         private bool _respectEmailNotifyForIdle = false;
+
+        // === автозакрытие (опционально) ===
+        private bool _autoCloseEnabled = false;
+        private TimeSpan _autoCloseAfter = TimeSpan.FromHours(72);
+        private bool _requireFollowUpBeforeAutoClose = true;
+        private bool _autoCloseSendEmail = true;
 
         public string Id => "support.email-reminder";
         public string Name => "Support ticket reminder emailer";
@@ -60,10 +67,27 @@ namespace VCS_DOCs.TaskModule.EmailReminder
             _useLocalTime = s.GetValue<bool?>("UseLocalTime") ?? false;
             _respectEmailNotifyForIdle = s.GetValue<bool?>("RespectEmailNotifyForIdle") ?? false;
 
+            // --- автозакрытие ---
+            _autoCloseEnabled = s.GetValue<bool?>("AutoCloseEnabled") ?? false;
+
+            int? acSec = s.GetValue<int?>("AutoCloseAfterSeconds");
+            int? acHours = s.GetValue<int?>("AutoCloseAfterHours") ?? s.GetValue<int?>("AutoCloseAfter");
+            _autoCloseAfter = (acSec.HasValue && acSec.Value > 0)
+                ? TimeSpan.FromSeconds(Math.Max(1, acSec.Value))
+                : TimeSpan.FromHours(Math.Max(1, acHours ?? 72));
+
+            _requireFollowUpBeforeAutoClose = s.GetValue<bool?>("RequireFollowUpBeforeAutoClose") ?? true;
+            _autoCloseSendEmail = s.GetValue<bool?>("AutoCloseSendEmail") ?? true;
+
+            var autoAfterLabel = (acSec.HasValue && acSec.Value > 0)
+                ? $"{_autoCloseAfter.TotalSeconds:0}s"
+                : $"{_autoCloseAfter.TotalHours:0}h";
+
             _log.LogInformation(
-                "[EmailReminder] Init: ReplyDelay={Reply}s, IdleDelay={Idle}s, RunEvery={Every}s, Batch={Batch}, UseLocalTime={UseLocalTime}, RespectEmailNotifyForIdle={RespectIdle}",
+                "[EmailReminder] Init: ReplyDelay={Reply}s, IdleDelay={Idle}s, RunEvery={Every}s, Batch={Batch}, UseLocalTime={UseLocalTime}, RespectEmailNotifyForIdle={RespectIdle}, AutoCloseEnabled={AutoClose}, AutoCloseAfter={AutoAfter}, RequireFollowUpBeforeAutoClose={ReqFU}, AutoCloseSendEmail={CloseMail}",
                 _replyDelay.TotalSeconds, _idleDelay.TotalSeconds, _runEvery.TotalSeconds,
-                _batchSize, _useLocalTime, _respectEmailNotifyForIdle
+                _batchSize, _useLocalTime, _respectEmailNotifyForIdle,
+                _autoCloseEnabled, autoAfterLabel, _requireFollowUpBeforeAutoClose, _autoCloseSendEmail
             );
 
             TouchHeartbeat("init");
@@ -89,8 +113,7 @@ namespace VCS_DOCs.TaskModule.EmailReminder
 
                 int sent = 0;
 
-                // ==== A) FOLLOW-UP: берём именно ПОСЛЕДНЮЮ операторскую реплику ====
-                // lastOpPerTicket: { TicketId, LastOpAt }
+                // ==== A) FOLLOW-UP: последняя операторская, прошло replyDelay, e-mail включён, пользователя после не было ====
                 var lastOpPerTicket =
                     from m in db.SupportTicketMessages.AsNoTracking()
                     where _operatorRoles.Contains(m.AuthorRole)
@@ -101,17 +124,16 @@ namespace VCS_DOCs.TaskModule.EmailReminder
                         LastOpAt = g.Max(x => x.CreatedAt)
                     };
 
-                // join на саму запись последней опер.реплики, чтобы взять её ReminderEmailSentAt и Id
                 var replyCandidates = await (
                     from lo in lastOpPerTicket
-                    join t in db.SupportTickets.AsNoTracking()
-                        on lo.TicketId equals t.Id
+                    join t in db.SupportTickets.AsNoTracking() on lo.TicketId equals t.Id
                     join lm in db.SupportTicketMessages.AsNoTracking()
                         on new
                         {
                             lo.TicketId,
                             lo.LastOpAt
-                        } equals new
+                        }
+                        equals new
                         {
                             lm.TicketId,
                             LastOpAt = lm.CreatedAt
@@ -129,7 +151,7 @@ namespace VCS_DOCs.TaskModule.EmailReminder
                     {
                         TicketId = t.Id,
                         LastOpId = lm.Id,
-                        LastOpAt = lo.LastOpAt
+                        lo.LastOpAt
                     }
                 )
                 .Take(_batchSize)
@@ -137,9 +159,9 @@ namespace VCS_DOCs.TaskModule.EmailReminder
 
                 _log.LogDebug("[EmailReminder] reply candidates: {Count}", replyCandidates.Count);
 
-                // Диагностика по первым открытым с notify=on, если кандидатов нет:
                 if (replyCandidates.Count == 0)
                 {
+                    // Диагностика
                     var diag = await (
                         from t in db.SupportTickets.AsNoTracking()
                         where t.Status != "closed" && t.EmailNotifyEnabled
@@ -206,7 +228,7 @@ namespace VCS_DOCs.TaskModule.EmailReminder
                     }
                 }
 
-                // ==== B) IDLE ====
+                // ==== B) IDLE: давно нет активности ====
                 var idleQuery = db.SupportTickets.AsNoTracking().Where(t => t.Status != "closed");
                 if (_respectEmailNotifyForIdle) idleQuery = idleQuery.Where(t => t.EmailNotifyEnabled);
 
@@ -258,6 +280,95 @@ namespace VCS_DOCs.TaskModule.EmailReminder
                     catch (Exception ex)
                     {
                         _log.LogWarning(ex, "[EmailReminder] Idle send failed for ticket {Id}", cand.Id);
+                    }
+                }
+
+                // ==== C) AUTO-CLOSE ====
+                if (_autoCloseEnabled)
+                {
+                    var borderClose = now - _autoCloseAfter;
+
+                    var autoCloseCands = await (
+                        from lo in lastOpPerTicket
+                        join t in db.SupportTickets on lo.TicketId equals t.Id
+                        join lm in db.SupportTicketMessages on new
+                        {
+                            lo.TicketId,
+                            lo.LastOpAt
+                        }
+                            equals new
+                            {
+                                lm.TicketId,
+                                LastOpAt = lm.CreatedAt
+                            }
+                        where t.Status != "closed"
+                              && lo.LastOpAt <= borderClose
+                              && (!_requireFollowUpBeforeAutoClose || lm.ReminderEmailSentAt != null)
+                              && !db.SupportTicketMessages.Any(mu =>
+                                  mu.TicketId == lo.TicketId &&
+                                  mu.AuthorRole == "user" &&
+                                  mu.CreatedAt > lo.LastOpAt)
+                        orderby lo.LastOpAt
+                        select new
+                        {
+                            t.Id,
+                            lo.LastOpAt
+                        }
+                    )
+                    .Take(_batchSize)
+                    .ToListAsync(ct);
+
+                    _log.LogDebug("[EmailReminder] auto-close candidates: {Count}", autoCloseCands.Count);
+
+                    foreach (var c in autoCloseCands)
+                    {
+                        ct.ThrowIfCancellationRequested();
+
+                        var t = await db.SupportTickets.FirstOrDefaultAsync(x => x.Id == c.Id, ct);
+                        if (t == null || t.Status == "closed") continue;
+
+                        var ts = _useLocalTime ? DateTime.Now : DateTime.UtcNow;
+
+                        // системная запись
+                        db.SupportTicketMessages.Add(new Models.Entities.SupportTicketMessage
+                        {
+                            TicketId = t.Id,
+                            AuthorRole = "agent",
+                            Body = $"Заявка закрыта автоматически из-за отсутствия ответа более {FormatSpanHuman(_autoCloseAfter)}. Чтобы переоткрыть — просто ответьте в заявке.",
+                            CreatedAt = ts
+                        });
+
+                        t.Status = "closed";
+                        t.UpdatedAt = ts;
+
+                        try
+                        {
+                            await db.SaveChangesAsync(ct);
+                        }
+                        catch (Exception ex)
+                        {
+                            _log.LogWarning(ex, "[EmailReminder] Auto-close save failed for ticket {Id}", t.Id);
+                            continue;
+                        }
+
+                        if (_autoCloseSendEmail)
+                        {
+                            try
+                            {
+                                var to = await ResolveRecipientAsync(db, t.Id, ct);
+                                if (!string.IsNullOrWhiteSpace(to))
+                                {
+                                    var ticketUrl = BuildTicketUrl(t.Id);
+                                    var subject = $"[VCS-DOCs] Заявка № {t.Id} закрыта из-за отсутствия ответа";
+                                    var html = BuildAutoCloseHtml(t.Id, ticketUrl, _autoCloseAfter);
+                                    await mailer.SendAsync(to, subject, html);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _log.LogWarning(ex, "[EmailReminder] Auto-close mail failed for ticket {Id}", t.Id);
+                            }
+                        }
                     }
                 }
 
@@ -315,6 +426,13 @@ namespace VCS_DOCs.TaskModule.EmailReminder
         private static string BuildFooterNote() =>
             @"<p class=""muted"">Пожалуйста, не отвечайте на это письмо — переходите по ссылке и отвечайте прямо в заявке.</p>";
 
+        private static string FormatSpanHuman(TimeSpan t)
+        {
+            if (t.TotalHours >= 1) return $"{Math.Round(t.TotalHours):0} ч.";
+            if (t.TotalMinutes >= 1) return $"{Math.Round(t.TotalMinutes):0} мин.";
+            return $"{Math.Round(t.TotalSeconds):0} сек.";
+        }
+
         private string BuildFollowUpHtml(string ticketId, string ticketUrl, TimeSpan delay) => $@"
 <!doctype html><html lang=""ru""><head><meta charset=""utf-8"">{BrandStyleBlock}</head>
 <body>
@@ -325,21 +443,43 @@ namespace VCS_DOCs.TaskModule.EmailReminder
       <div class=""row"">Оператор оставил сообщение по вашей заявке.</div>
       <div class=""row""><a class=""btn"" href=""{WebUtility.HtmlEncode(ticketUrl)}"">Открыть заявку</a></div>
       <div class=""row muted"">Это напоминание отправлено автоматически спустя ~{(int)delay.TotalSeconds} сек. после ответа.</div>
+      {(_autoCloseEnabled ? $@"<div class=""row muted"">Если ответа не будет, заявка закроется автоматически через ~{FormatSpanHuman(_autoCloseAfter)}.</div>" : "")}
       {BuildFooterNote()}
     </div>
   </div>
 </body></html>";
 
-        private string BuildIdleHtml(string ticketId, string ticketUrl, TimeSpan delay) => $@"
+        private string BuildIdleHtml(string ticketId, string ticketUrl, TimeSpan delay)
+        {
+            var closeWarn = _autoCloseEnabled
+                ? $@" Иначе оператор закроет заявку через {FormatSpanHuman(_autoCloseAfter)}"
+                : "";
+            return $@"
 <!doctype html><html lang=""ru""><head><meta charset=""utf-8"">{BrandStyleBlock}</head>
 <body>
   <div class=""mail-wrap"">
     <div class=""brand""><span class=""dot""></span><strong>VCS-DOCs Support</strong></div>
     <div class=""card"">
       <h1 class=""title"">Давно нет активности по заявке № {WebUtility.HtmlEncode(ticketId)}</h1>
-      <div class=""row"">По заявке давно не было ответов. Если вопрос решён — закройте её; если нет — ответьте, пожалуйста.</div>
+      <div class=""row"">По заявке давно не было ответов. Ответьте, пожалуйста, если вопрос ещё актуален.{closeWarn}.</div>
       <div class=""row""><a class=""btn"" href=""{WebUtility.HtmlEncode(ticketUrl)}"">Перейти к заявке</a></div>
       <div class=""row muted"">Это напоминание отправлено автоматически после ~{(int)delay.TotalSeconds} сек. простоя.</div>
+      {BuildFooterNote()}
+    </div>
+  </div>
+</body></html>";
+        }
+
+        private string BuildAutoCloseHtml(string ticketId, string ticketUrl, TimeSpan after) => $@"
+<!doctype html><html lang=""ru""><head><meta charset=""utf-8"">{BrandStyleBlock}</head>
+<body>
+  <div class=""mail-wrap"">
+    <div class=""brand""><span class=""dot""></span><strong>VCS-DOCs Support</strong></div>
+    <div class=""card"">
+      <h1 class=""title"">Заявка № {WebUtility.HtmlEncode(ticketId)} закрыта</h1>
+      <div class=""row"">Мы не получили ответ в течение ~{FormatSpanHuman(after)}, поэтому заявка закрыта автоматически.</div>
+      <div class=""row""><a class=""btn"" href=""{WebUtility.HtmlEncode(ticketUrl)}"">Открыть заявку</a></div>
+      <div class=""row muted"">Чтобы переоткрыть — просто напишите ответ в этой заявке.</div>
       {BuildFooterNote()}
     </div>
   </div>
@@ -350,7 +490,7 @@ namespace VCS_DOCs.TaskModule.EmailReminder
             try
             {
                 var path = Path.Combine(Path.GetTempPath(), "email-reminder-heartbeat.txt");
-                var line = $"{DateTime.UtcNow:O} {phase} ReplyDelay={_replyDelay.TotalSeconds}s IdleDelay={_idleDelay.TotalSeconds}s RunEvery={_runEvery.TotalSeconds}s Roles=[{string.Join(",", _operatorRoles)}]{Environment.NewLine}";
+                var line = $"{DateTime.UtcNow:O} {phase} ReplyDelay={_replyDelay.TotalSeconds}s IdleDelay={_idleDelay.TotalSeconds}s AutoClose={_autoCloseEnabled}/{_autoCloseAfter.TotalSeconds}s RunEvery={_runEvery.TotalSeconds}s Roles=[{string.Join(",", _operatorRoles)}]{Environment.NewLine}";
                 File.AppendAllText(path, line, Encoding.UTF8);
             }
             catch { /* ignore */ }

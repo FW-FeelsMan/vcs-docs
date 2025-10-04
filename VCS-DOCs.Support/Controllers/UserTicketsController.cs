@@ -4,8 +4,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using VCS_DOCs.Data;
+using VCS_DOCs.Infrastructure.Data;
 using VCS_DOCs.Infrastructure.Auth;
+using VCS_DOCs.Infrastructure.Data;
 using VCS_DOCs.Models.Entities;
 using VCS_DOCs.Support.Hubs;
 

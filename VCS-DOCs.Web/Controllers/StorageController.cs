@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using VCS_DOCs.Data;
+using VCS_DOCs.Infrastructure.Data;
 using VCS_DOCs.Upload.Core.Services;
 
 namespace VCS_DOCs.Controllers

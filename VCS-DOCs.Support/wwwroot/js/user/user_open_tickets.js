@@ -1,4 +1,4 @@
-﻿// D:\Unity\VCS-DOCs\VCS-DOCs.Support\wwwroot\js\user\user_open_tickets.js — realtime + "Создать заявку" modal + notify toggle + hide on close
+﻿// D:\Unity\VCS-DOCs\VCS-DOCs.Support\wwwroot\js\user\user_open_tickets.js
 (() => {
     const USE_MOCK = /[?&]mock=1\b/i.test(location.search);
 
@@ -30,6 +30,31 @@
             return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
         }
     };
+
+    // --- pluralization & ETA text ---
+    function plural(n, forms) {
+        n = Math.abs(n) % 100; const n1 = n % 10;
+        if (n > 10 && n < 20) return forms[2];
+        if (n1 > 1 && n1 < 5) return forms[1];
+        if (n1 === 1) return forms[0];
+        return forms[2];
+    }
+    function fmtEta(sec) {
+        sec = Math.max(0, Math.round(sec));
+        if (sec < 60) return `До авто-закрытия: ${sec} ${plural(sec, ['секунда', 'секунды', 'секунд'])}`;
+        const min = Math.ceil(sec / 60);
+        if (min < 60) return `До авто-закрытия: ${min} ${plural(min, ['минута', 'минуты', 'минут'])}`;
+        const h = Math.ceil(min / 60);
+        return `До авто-закрытия: ${h} ${plural(h, ['час', 'часа', 'часов'])}`;
+    }
+
+    // --- horizon from config (seconds has priority for tests) ---
+    function getHorizonMs() {
+        const sec = (window.SUPPORT_AUTO_CLOSE_SECONDS | 0);
+        if (sec > 0) return sec * 1000;
+        const hrs = (window.SUPPORT_AUTO_CLOSE_HOURS | 0);
+        return hrs > 0 ? hrs * 3600 * 1000 : 0;
+    }
 
     // ---- SignalR (реалтайм для списка) ----
     const HUB_URL = '/hubs/ticket';
@@ -90,13 +115,13 @@
         }
     }
 
-    // ---- Моки для BaseUser (открытые) ----
+    // ---- Моки ----
     function mockOpenForUser() {
         const now = Date.now();
         return [
-            { id: '121000ab', subject: 'Проблема с входом', wait: 'operator', createdAt: now - 86400000, updatedAt: now - 3600000, notify: false },
-            { id: '121001ab', subject: 'Не приходит письмо', wait: 'user', createdAt: now - 7200000, updatedAt: now - 4200000, notify: true },
-            { id: '121002ab', subject: 'Доступ к отчётам', wait: 'operator', createdAt: now - 5400000, updatedAt: now - 1800000, notify: false },
+            { id: '121000ab', subject: 'Проблема с входом', wait: 'operator', createdAt: now - 86400000, updatedAt: now - 3600000, notify: false, autoCloseEtaSec: 20 },
+            { id: '121001ab', subject: 'Не приходит письмо', wait: 'user', createdAt: now - 7200000, updatedAt: now - 4200000, notify: true, autoCloseEtaSec: null },
+            { id: '121002ab', subject: 'Доступ к отчётам', wait: 'operator', createdAt: now - 5400000, updatedAt: now - 1800000, notify: false, autoCloseEtaSec: 12 },
         ];
     }
 
@@ -105,11 +130,39 @@
 
     function rowHtml(t) {
         const w = (t.wait === 'user') ? 'user' : 'operator';
+
+        // --- вычисляем, надо ли показывать ETA ---
+        const horizonMs = getHorizonMs();
+        let etaHtml = '';
+        let showEta = false;
+
+        // 1) если сервер прислал точные секунды — используем их
+        if (w === 'operator' && t.autoCloseEtaSec != null) {
+            showEta = true;
+            const etaAttr = `data-eta="${t.autoCloseEtaSec}"`;
+            etaHtml = `<div class="auto-eta muted" ${etaAttr} style="margin-top:4px;"></div>`;
+        }
+        // 2) fallback: сервер не прислал, но можем посчитать по updatedAt + horizon
+        else if (w === 'operator' && horizonMs > 0 && t.updatedAt) {
+            const u = Date.parse(t.updatedAt);
+            if (!Number.isNaN(u)) {
+                const deadline = u + horizonMs;
+                if (deadline > Date.now()) {
+                    showEta = true;
+                    const dlAttr = `data-deadline="${deadline}"`;
+                    etaHtml = `<div class="auto-eta muted" ${dlAttr} style="margin-top:4px;"></div>`;
+                }
+            }
+        }
+
         return `
       <tr data-id="${esc(t.id)}" data-subject="${esc(t.subject)}" data-wait="${w}">
         <td>${esc(t.id)}</td>
         <td class="tt-auto" title="${esc(t.subject)}">${esc(t.subject)}</td>
-        <td><span class="status-badge ${badgeCls(w)}">${badgeTxt(w)}</span></td>
+        <td>
+          <span class="status-badge ${badgeCls(w)}">${badgeTxt(w)}</span>
+          ${showEta ? etaHtml : ''}
+        </td>
         <td>${fmt(t.createdAt)}</td>
         <td class="col-updated">${fmt(t.updatedAt)}</td>
         <td>
@@ -120,6 +173,63 @@
         </td>
         <td><button class="button-sliding primary small btn-view">Просмотр</button></td>
       </tr>`;
+    }
+
+    // --- ETA: инициализация и периодический апдейт ---
+    function setupEta(container) {
+        // из data-eta (сек) — выставляем deadline = now + eta (даже если 0!)
+        container.querySelectorAll('.auto-eta[data-eta]').forEach(el => {
+            let eta = parseInt(el.getAttribute('data-eta') || '', 10);
+            if (!isFinite(eta)) return;
+            eta = Math.max(0, eta);
+            const deadline = Date.now() + eta * 1000;
+            el.setAttribute('data-deadline', String(deadline));
+            el.removeAttribute('data-eta');
+            el.textContent = fmtEta(eta);
+            el.style.display = '';
+        });
+
+        // первичный рендер по готовому deadline
+        container.querySelectorAll('.auto-eta[data-deadline]').forEach(el => {
+            const dl = parseInt(el.getAttribute('data-deadline') || '', 10);
+            if (!isFinite(dl)) return;
+            const leftSec = Math.max(0, Math.round((dl - Date.now()) / 1000));
+            el.textContent = fmtEta(leftSec);
+            el.style.display = '';
+        });
+    }
+
+    let etaTimer = null;
+    function startEtaLoop(root, reloadFn) {
+        stopEtaLoop();
+        const zeroFired = new Set();
+
+        etaTimer = setInterval(() => {
+            root.querySelectorAll('.auto-eta[data-deadline]').forEach(el => {
+                const dl = parseInt(el.getAttribute('data-deadline') || '', 10);
+                if (!isFinite(dl)) return;
+                const leftSec = Math.max(0, Math.round((dl - Date.now()) / 1000));
+                el.textContent = fmtEta(leftSec);
+
+                // если дошли до 0 — один раз попробуем мягко обновить список через 1.5с
+                if (leftSec === 0) {
+                    const tr = el.closest('tr');
+                    const id = tr?.getAttribute('data-id');
+                    if (id && !zeroFired.has(id)) {
+                        zeroFired.add(id);
+                        setTimeout(() => {
+                            if (document.body.contains(tr)) {
+                                try { reloadFn?.(); } catch { }
+                            }
+                        }, 1500);
+                    }
+                }
+            });
+        }, 1000);
+    }
+    function stopEtaLoop() {
+        try { if (etaTimer) clearInterval(etaTimer); } catch { }
+        etaTimer = null;
     }
 
     function setRowState(tr, who, atIso) {
@@ -135,8 +245,25 @@
         if (colUp && atIso) {
             try { colUp.textContent = fmt(new Date(atIso).getTime()); } catch { }
         }
+
+        // ETA: показываем, если ждём пользователя и есть horizon
+        const etaEl = tr.querySelector('.auto-eta');
+        const horizonMs = getHorizonMs();
+        if (!etaEl) return;
+
+        if (who === 'operator' && horizonMs > 0 && atIso) {
+            const opAt = (new Date(atIso)).getTime();
+            const deadline = opAt + horizonMs;
+            etaEl.setAttribute('data-deadline', String(deadline));
+            etaEl.textContent = fmtEta(Math.max(0, Math.round((deadline - Date.now()) / 1000)));
+            etaEl.style.display = '';
+        } else {
+            etaEl.style.display = 'none';
+            etaEl.removeAttribute('data-deadline');
+        }
     }
 
+    // ---------- INIT ----------
     window.initUserOpenTickets = function (panel) {
         if (panel.__user_open_inited) return;
         panel.__user_open_inited = true;
@@ -165,16 +292,23 @@
 
         async function loadRows() {
             if (!tbody) return;
+            stopEtaLoop();
             tbody.innerHTML = `<tr><td>Загрузка…</td></tr>`;
             try {
                 let list;
                 if (!USE_MOCK) {
                     list = await getJson('/api/support/self/open');
                 } else { throw { status: 404 }; }
+
+                try { console.debug('self/open payload', list?.slice?.(0, 3)); } catch { }
+
                 const filtered = filter(Array.isArray(list) ? list : [], q);
                 tbody.innerHTML = filtered.length ? filtered.map(rowHtml).join('') : `<tr><td colspan="7">Нет данных</td></tr>`;
 
-                // Реалтайм подписка на id из таблицы
+                setupEta(tbody);
+                startEtaLoop(root, loadRows);
+
+                // Реалтайм
                 try {
                     await ensureConn(
                         (ticketId, msg) => {
@@ -195,10 +329,12 @@
             } catch {
                 const list = filter(mockOpenForUser(), q);
                 tbody.innerHTML = list.length ? list.map(rowHtml).join('') : `<tr><td colspan="7">Нет данных</td></tr>`;
+                setupEta(tbody);
+                startEtaLoop(root, loadRows);
             }
         }
 
-        // ▼ ТУМБЛЕР УВЕДОМЛЕНИЙ (оптимистично, с откатом при ошибке)
+        // ▼ ТУМБЛЕР УВЕДОМЛЕНИЙ
         table?.addEventListener('change', async (e) => {
             const cb = e.target && e.target.closest && e.target.closest('.notify-toggle');
             if (!cb) return;
@@ -216,7 +352,7 @@
             }
         });
 
-        // Локальные события из карточки (если открыта рядом)
+        // Локальные события
         document.addEventListener('SupportTicketMessage', (e) => {
             try {
                 const { ticketId, message } = e.detail || {};
@@ -252,7 +388,8 @@
 
         // --- "Создать заявку" (модалка с iframe) ---
         function openCreate() {
-            if (modalFrame) modalFrame.src = '/Content/Users/new_ticket';
+            const f = '/Content/Users/new_ticket';
+            if (modalFrame && modalFrame.src !== f) modalFrame.src = f;
             modal?.classList.add('show');
             document.body.classList.add('modal-open');
         }
@@ -281,6 +418,7 @@
 
         panel.__dispose = function () {
             try { clearTimeout(debounce); } catch { }
+            stopEtaLoop();
         };
     };
 })();

@@ -37,10 +37,17 @@
         <div id="tt_messages" class="tt-messages"></div>
     </div>
 
-    <!-- ВНЕ скролла — всегда на виду -->
     <div class="tt-input">
+        <div class="tt-attach">
+            <button id="tt_attach" class="button-sliding small">📎 Прикрепить</button>
+            <input id="tt_file" type="file" multiple style="display:none" />
+            <div id="tt_files" class="tt-files"></div>
+        </div>
+
         <textarea id="tt_text" rows="3"
                   placeholder="Напишите ответ… (Ctrl+Enter — отправить)"></textarea>
         <button id="tt_send" class="button-sliding primary">Отправить</button>
     </div>
+
+    <script src="~/js/operator/ticket_thread.attach.js" asp-append-version="true" defer></script>
 </div>

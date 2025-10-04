@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Upload.Core.Models;
 using VCS_DOCs.Upload.Core.Services;
-using VCS_DOCs.Data;
+using VCS_DOCs.Infrastructure.Data;
 
 namespace VCS_DOCs.Services
 {

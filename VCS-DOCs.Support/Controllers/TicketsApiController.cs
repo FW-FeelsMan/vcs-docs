@@ -2,7 +2,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using VCS_DOCs.Data;
+using VCS_DOCs.Infrastructure.Data;
+using VCS_DOCs.Infrastructure.Data;
 
 [ApiController]
 [Route("api/support/tickets")]

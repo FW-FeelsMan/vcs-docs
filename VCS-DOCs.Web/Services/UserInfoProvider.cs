@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Core.Interfaces;
-using VCS_DOCs.Data;
+using VCS_DOCs.Infrastructure.Data;
 
 namespace VCS_DOCs.Infrastructure.Services
 {

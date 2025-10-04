@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using VCS_DOCs.Data;
+using VCS_DOCs.Infrastructure.Data;
 
 namespace VCS_DOCs.Infrastructure.Auth
 {

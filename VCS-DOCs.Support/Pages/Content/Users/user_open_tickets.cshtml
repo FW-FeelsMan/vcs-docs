@@ -2,12 +2,22 @@
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "SupportDeskAccess")]
 @model VCS_DOCs.Support.Pages.Content.Users.UserOpenTicketsModel
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@inject Microsoft.Extensions.Configuration.IConfiguration Cfg
 @{
     Layout = null;
+    var acEnabled = Cfg.GetValue<bool?>("Modules:EmailReminder:AutoCloseEnabled") ?? false;
+    var acHours = Cfg.GetValue<int?>("Modules:EmailReminder:AutoCloseAfterHours") ?? 72;
+    var acSec = Cfg.GetValue<int?>("Modules:EmailReminder:AutoCloseAfterSeconds") ?? 0; // тест-режим
 }
 <link rel="stylesheet" href="~/css/sub_css/support_accountsStyle.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/sub_css/user_opentickets_css/user_opentickets.css" asp-append-version="true" />
 <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(HttpContext).RequestToken" />
+<script>
+  // если задано значение в секундах — используем его (для тестов),
+  // иначе часы (если автозакрытие включено)
+  window.SUPPORT_AUTO_CLOSE_SECONDS = @(acSec > 0 ? acSec : 0);
+  window.SUPPORT_AUTO_CLOSE_HOURS   = @(acEnabled ? acHours : 0);
+</script>
 
 <style>
     /* мини-стили модалки создания заявки */
@@ -30,22 +40,21 @@
             backdrop-filter: blur(1px);
         }
 
-     .embed-modal .embed-dialog {
-         position: relative;
-         width: min(960px, 96vw);
-         height: min(680px, 92vh);
-         background: transparent; 
-         border-radius: 0; 
-         box-shadow: none; 
-         overflow: hidden;        
-    }
+        .embed-modal .embed-dialog {
+            position: relative;
+            width: min(960px, 96vw);
+            height: min(680px, 92vh);
+            background: transparent;
+            border-radius: 0;
+            box-shadow: none;
+            overflow: hidden;
+        }
 
     .embed-dialog iframe {
         width: 100%;
         height: 100%;
         border: 0;
         display: block;
-        /*background: #fafafa;*/
         background: transparent;
     }
 

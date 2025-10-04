@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using VCS_DOCs.Data;
+using VCS_DOCs.Infrastructure.Data;
 using VCS_DOCs.Infrastructure.Auth;
+using VCS_DOCs.Infrastructure.Data;
 using VCS_DOCs.Models.Entities;
 
 namespace VCS_DOCs.Support.Infrastructure.Auth
