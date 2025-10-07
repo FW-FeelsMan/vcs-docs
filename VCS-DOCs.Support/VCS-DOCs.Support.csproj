@@ -91,6 +91,7 @@
 
   <ItemGroup>
     <Folder Include="App_Data\SupportFiles\" />
+    <Folder Include="App_Data\SupportFiles\a46b28e5\" />
     <Folder Include="Modules\" />
   </ItemGroup>
 

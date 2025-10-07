@@ -5,22 +5,22 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Configuration;
-using VCS_DOCs.Infrastructure.Data;
+using VCS_DOCs.Core.Notifications;
 using VCS_DOCs.Infrastructure.Auth;
+using VCS_DOCs.Infrastructure.Data;
 using VCS_DOCs.Models.Entities;
+using VCS_DOCs.Support.Controllers;
 using VCS_DOCs.Support.Hubs;
-using VCS_DOCs.Support.Infrastructure.Auth;
 using VCS_DOCs.Support.Infrastructure.Provision;
 using VCS_DOCs.Support.Integration;
 using VCS_DOCs.TaskEngine;
-using VCS_DOCs.Core.Notifications;
 // мониторинг
 using VCS_DOCs.Support.Monitoring;
-using VCS_DOCs.Support.Controllers;
-using Microsoft.AspNetCore.Http.Features;
+using VCS_DOCs.Support.Infrastructure.Auth;
 
 internal class Program
 {
@@ -196,7 +196,7 @@ internal class Program
         builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Mail"));
         builder.Services.AddSingleton<IMailSender, SmtpMailSender>();
 
-        // ---------- Kestrel / TLS ----------
+        // ---------- Kestrel / TLS / Upload limits ----------
         builder.WebHost.ConfigureKestrel((ctx, opts) =>
         {
             opts.ConfigureHttpsDefaults(https =>
@@ -215,6 +215,21 @@ internal class Program
 
                 https.ServerCertificate = cert;
             });
+
+            // глобальный лимит тела (важно для HTTP/2)
+            opts.Limits.MaxRequestBodySize = 200L * 1024 * 1024; // 200 MB
+        });
+
+        // IIS (если когда-то будет) — снять лимит
+        builder.Services.Configure<Microsoft.AspNetCore.Builder.IISServerOptions>(o =>
+        {
+            o.MaxRequestBodySize = null;
+        });
+
+        // Глобальный лимит multipart (должен быть ≥ MaxSizeMb в настройках Uploads:Support)
+        builder.Services.Configure<FormOptions>(o =>
+        {
+            o.MultipartBodyLengthLimit = 200L * 1024 * 1024; // 200 MB
         });
 
         // ---------- Task Engine ----------
@@ -226,12 +241,9 @@ internal class Program
         // ---------- Мониторинг нагрузки ----------
         builder.Services.AddSingleton<WorkloadStore>();
         builder.Services.AddHostedService<WorkloadSampler>(); // тик каждые ~5с
-        builder.Services.Configure<UploadsOptions>("Support", builder.Configuration.GetSection("Uploads:Support"));
 
-        builder.Services.Configure<FormOptions>(o =>
-        {
-            o.MultipartBodyLengthLimit = 100L * 1024 * 1024; // 100 MB
-        });
+        // Настройки upload’ов для саппорта
+        builder.Services.Configure<UploadsOptions>("Support", builder.Configuration.GetSection("Uploads:Support"));
 
         var app = builder.Build();
 

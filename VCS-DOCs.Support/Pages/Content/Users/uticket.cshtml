@@ -10,36 +10,46 @@
 <link rel="stylesheet" href="~/css/sub_css/operator_tickets_css/ticket_thread.css" asp-append-version="true" />
 
 <style>
-    /* мини-стили под список вложений у пользователя */
     .tt-attach {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 6px;
+        margin-right: 8px;
     }
 
     .tt-attach-list {
         display: flex;
-        align-items: center;
-        gap: 8px;
+        gap: 6px;
         flex-wrap: wrap;
+        margin: 6px 0 0;
     }
 
     .tt-attach-pill {
-        padding: 3px 8px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid #ddd;
         border-radius: 10px;
-        background: #f3f4f6;
-        border: 1px solid #e5e7eb;
+        padding: 2px 6px;
+        background: #f7f7f7;
     }
 
-        .tt-attach-pill b {
-            margin-right: 6px;
+        .tt-attach-pill small {
+            color: #888;
+            margin-left: 4px;
         }
 
         .tt-attach-pill button {
             border: 0;
             background: transparent;
             cursor: pointer;
+            font-size: 14px;
+        }
+
+    .tt-files {
+        margin-top: 6px;
+    }
+
+        .tt-files .tt-file {
+            display: inline-block;
+            margin-right: 8px;
         }
 </style>
 
@@ -59,7 +69,6 @@
 
     <hr class="solid" />
 
-    <!-- скролл только здесь -->
     <div class="content-scrollable tt-wrap">
         <div class="tt-meta">
             <div><b>№:</b> <span id="tt_id_dup">@Model.Id</span></div>
@@ -71,13 +80,10 @@
         <div id="tt_messages" class="tt-messages"></div>
     </div>
 
-    <!-- вне скролла — всегда на виду -->
     <div class="tt-input">
-        <div class="tt-attach">
-            <button id="tt_attach" class="button-sliding small">Добавить файл</button>
-            <input id="tt_files" type="file" multiple style="display:none" />
-            <div id="tt_attach_list" class="tt-attach-list muted"></div>
-        </div>
+        <button id="tt_attach" class="button-sliding tt-attach">Прикрепить файл</button>
+        <input id="tt_files" type="file" multiple style="display:none" />
+        <div id="tt_attach_list" class="tt-attach-list"></div>
 
         <textarea id="tt_text" rows="3" placeholder="Напишите ответ… (Ctrl+Enter — отправить)"></textarea>
         <button id="tt_send" class="button-sliding primary">Отправить</button>

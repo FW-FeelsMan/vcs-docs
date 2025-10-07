@@ -1,4 +1,4 @@
-﻿// wwwroot/js/user/user_ticket_thread.js — realtime + send + attachments
+﻿// wwwroot/js/user/user_ticket_thread.js — realtime + send + attachments (+ ожидание аплоадов и блок кнопки)
 (() => {
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const fmt = iso => {
@@ -31,17 +31,19 @@
     async function safeJson(resp) { try { return await resp.json(); } catch { return null; } }
     function fmtSize(n) { if (n >= 1048576) return (n / 1048576).toFixed(1) + ' MB'; if (n >= 1024) return (n / 1024).toFixed(1) + ' KB'; return n + ' B'; }
 
+    const renderAttList = list =>
+        (list || []).map(a =>
+            `<a class="tt-file" href="/api/support/files/${encodeURIComponent(a.id)}" target="_blank" rel="noopener">${esc(a.name || a.fileName || ('file-' + a.id))}</a>`
+        ).join(' ');
+
     function renderMsg(m, mine = false) {
         const isOp = (m.role && m.role !== 'user') && !mine;
         const cls = isOp ? 'tt-msg op' : 'tt-msg usr';
         const who = isOp ? 'Оператор' : 'Вы';
         const msgIdAttr = m.id ? ` data-msg-id="${String(m.id)}"` : '';
-        let filesHtml = '';
-        if (Array.isArray(m.attachments) && m.attachments.length) {
-            filesHtml = `<div class="tt-files">` + m.attachments.map(a =>
-                `<a class="tt-file" href="/api/support/files/${encodeURIComponent(a.id)}" target="_blank" rel="noopener">${esc(a.name || a.fileName || ('file-' + a.id))}</a>`
-            ).join(' ') + `</div>`;
-        }
+        const filesHtml = (Array.isArray(m.attachments) && m.attachments.length)
+            ? `<div class="tt-files">${renderAttList(m.attachments)}</div>`
+            : '';
         return `
       <div class="${cls}"${msgIdAttr}>
         <div class="tt-bubble">
@@ -53,6 +55,23 @@
           </div>
         </div>
       </div>`;
+    }
+
+    function ensureAttachmentsInDom(msgBox, msgId, attList) {
+        if (!msgId || !Array.isArray(attList) || !attList.length) return;
+        const root = msgBox.querySelector(`.tt-msg[data-msg-id="${msgId}"]`);
+        if (!root) return;
+        let files = root.querySelector('.tt-files');
+        if (!files) {
+            files = document.createElement('div');
+            files.className = 'tt-files';
+            const bubble = root.querySelector('.tt-bubble');
+            const meta = bubble?.querySelector('.tt-msg-meta');
+            files.innerHTML = renderAttList(attList);
+            if (bubble) bubble.insertBefore(files, meta || null);
+        } else if (!files.innerHTML.trim()) {
+            files.innerHTML = renderAttList(attList);
+        }
     }
 
     function applyClosedState(root, closed) {
@@ -95,28 +114,56 @@
     }
 
     // ========= Attachments (user) =========
-    async function uploadSelected(uploadUrl, files, csrf, pending, renderList) {
+    const inflight = new Set(); // активные загрузки
+
+    function track(promise, onChange) {
+        inflight.add(promise);
+        onChange?.();
+        promise.finally(() => { inflight.delete(promise); onChange?.(); });
+        return promise;
+    }
+
+    // создадим маленький статус под списком вложений (если его нет)
+    function ensureStatusEl(container) {
+        let st = container?.querySelector?.('.tt-attach-status');
+        if (!st && container) {
+            st = document.createElement('div');
+            st.className = 'tt-attach-status muted';
+            st.style.fontSize = '12px';
+            st.style.marginTop = '4px';
+            container.appendChild(st);
+        }
+        return st;
+    }
+
+    async function uploadSelected(uploadUrl, files, csrf, pending, renderList, onInflightChange) {
         if (!files || !files.length) return;
+
         const fd = new FormData();
         Array.from(files).forEach(f => fd.append("files", f, f.name));
-        let resp;
-        try {
-            resp = await fetch(uploadUrl, { method: "POST", body: fd, headers: { "RequestVerificationToken": csrf } });
-        } catch (e) {
-            console.error('upload fetch failed', e);
-            alert('Сеть недоступна или соединение оборвалось.');
-            return;
-        }
-        if (!resp.ok) {
-            const t = await safeJson(resp);
-            alert(`Ошибка загрузки: ${(t && (t.error || t.message)) || ('HTTP ' + resp.status)}`);
-            return;
-        }
-        const data = await resp.json().catch(() => null);
-        if (data?.ok && Array.isArray(data.files)) {
-            for (const f of data.files) pending.push(f); // {id,name,size,contentType,url}
-            renderList();
-        }
+
+        const p = (async () => {
+            let resp;
+            try {
+                resp = await fetch(uploadUrl, { method: "POST", body: fd, headers: { "RequestVerificationToken": csrf } });
+            } catch (e) {
+                console.error('upload fetch failed', e);
+                alert('Сеть недоступна или соединение оборвалось.');
+                return;
+            }
+            if (!resp.ok) {
+                const t = await safeJson(resp);
+                alert(`Ошибка загрузки: ${(t && (t.error || t.message)) || ('HTTP ' + resp.status)}`);
+                return;
+            }
+            const data = await resp.json().catch(() => null);
+            if (data?.ok && Array.isArray(data.files)) {
+                for (const f of data.files) pending.push(f); // {id,name,size,contentType,url}
+                renderList();
+            }
+        })();
+
+        return track(p, onInflightChange);
     }
 
     async function bindAttachments(bindUrl, csrf, pending, messageId, onCleared) {
@@ -163,16 +210,28 @@
 
         const txt = root.querySelector('#tt_text');
         const btnSend = root.querySelector('#tt_send');
-        const btnBack = root.querySelector('#tt_back');
 
         // attach UI
         const btnAttach = root.querySelector('#tt_attach');
         const inpFiles = root.querySelector('#tt_files');
         const list = root.querySelector('#tt_attach_list');
+        const statusEl = ensureStatusEl(list);
         const csrf = anti();
         const uploadUrl = `/api/user/tickets/${encodeURIComponent(ticketId)}/files`;
         const bindUrl = `/api/user/tickets/${encodeURIComponent(ticketId)}/files/bind`;
         const pending = []; // {id,name,size,contentType,url}
+
+        function setSendDisabled(disabled, text) {
+            if (!btnSend) return;
+            if (!btnSend.dataset.orig) btnSend.dataset.orig = btnSend.textContent || '';
+            btnSend.disabled = !!disabled;
+            btnSend.textContent = disabled && text ? text : btnSend.dataset.orig;
+        }
+        function onInflightChange() {
+            const n = inflight.size;
+            if (statusEl) statusEl.textContent = n > 0 ? `Загрузка файлов… (${n})` : '';
+            setSendDisabled(n > 0, 'Ждём файлы…');
+        }
 
         function renderList() {
             if (!list) return;
@@ -180,6 +239,7 @@
                 `<span class="tt-attach-pill"><b>${esc(p.name)}</b><small>${fmtSize(p.size)}</small>
            <button title="Убрать" data-id="${p.id}">×</button></span>`
             ).join("");
+            list.appendChild(statusEl); // держим статус внизу
             list.querySelectorAll("button[data-id]").forEach(btn => {
                 btn.addEventListener("click", () => {
                     const id = Number(btn.dataset.id);
@@ -190,7 +250,7 @@
         }
         btnAttach?.addEventListener("click", () => inpFiles?.click());
         inpFiles?.addEventListener("change", () => {
-            if (inpFiles.files?.length) uploadSelected(uploadUrl, inpFiles.files, csrf, pending, renderList);
+            if (inpFiles.files?.length) uploadSelected(uploadUrl, inpFiles.files, csrf, pending, renderList, onInflightChange);
             inpFiles.value = "";
         });
 
@@ -236,22 +296,39 @@
         // 2) отправка (со вложениями)
         async function sendNow() {
             const v = (txt?.value || '').trim();
-            if ((!v && !pending.length) || ticket.status === 'closed') return;
+            if (ticket.status === 'closed') return;
 
-            // локально подготовим отображение вложений в пузырьке
+            // подождать активные аплоады
+            if (inflight.size) {
+                onInflightChange();
+                try { await Promise.all([...inflight]); } catch { /* проглотим */ }
+                finally { onInflightChange(); }
+            }
+
+            if (!v && !pending.length) {
+                alert('Добавьте текст или вложение.');
+                return;
+            }
+
             const localAtt = pending.map(p => ({ id: p.id, name: p.name }));
 
             try {
                 const res = await postJson(`/api/support/tickets/${encodeURIComponent(ticketId)}/messages`, { body: v });
                 const newId = res?.id;
+
+                // мгновенно рисуем пузырёк с вложениями
                 const mineMsg = { id: newId, role: 'user', body: v, createdAt: res?.at || new Date().toISOString(), attachments: localAtt };
                 addMessageAndScroll(mineMsg, true);
-                txt.value = '';
+                // на всякий — гарантированно вставим attachments в DOM
+                ensureAttachmentsInDom(msgBox, newId, localAtt);
 
-                // привязать вложения к созданному сообщению
-                if (newId) {
+                if (txt) txt.value = '';
+
+                // биндим вложения к сообщению; после бинда ещё раз убеждаемся, что ссылки на месте
+                if (newId && pending.length) {
                     await bindAttachments(bindUrl, csrf, pending, newId, () => renderList());
-                } else {
+                    ensureAttachmentsInDom(msgBox, newId, localAtt);
+                } else if (!newId) {
                     pending.length = 0; renderList();
                 }
             } catch (e) {
@@ -274,6 +351,7 @@
         }
 
         // 4) Назад
+        const btnBackEl = root.querySelector('#tt_back');
         function goBack() {
             const exists = id => !!document.querySelector(`.sidebar .sidebar-button[data-content="${id}"]`);
             const fromId = ds.from || '';
@@ -285,7 +363,6 @@
                 history.back();
             }
         }
-        const btnBackEl = root.querySelector('#tt_back');
         btnBackEl?.addEventListener('click', goBack);
 
         // 5) dispose
@@ -296,7 +373,7 @@
             if (conn) { try { await conn.stop(); } catch { } conn = null; }
         };
 
-        // экспорт (если вдруг пригодится)
+        // экспорт
         window.TT_Attach = {
             bindTo: (messageId) => bindAttachments(bindUrl, csrf, pending, messageId, () => renderList()),
             getIds: () => pending.map(p => p.id),

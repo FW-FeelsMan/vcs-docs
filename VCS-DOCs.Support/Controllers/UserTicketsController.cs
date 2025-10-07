@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Infrastructure.Data;
 using VCS_DOCs.Infrastructure.Auth;
-using VCS_DOCs.Infrastructure.Data;
 using VCS_DOCs.Models.Entities;
 using VCS_DOCs.Support.Hubs;
 
@@ -48,13 +47,8 @@ namespace VCS_DOCs.Support.Controllers
         private IQueryable<SupportTicket> QueryMyTickets()
         {
             var (uid, uname, isAA) = GetMe();
-            if (isAA)
-            {
-                // Агенты/админы видят всё — пригодится для их панелей позже
-                return _db.SupportTickets.AsNoTracking();
-            }
+            if (isAA) return _db.SupportTickets.AsNoTracking();
 
-            // Базовый пользователь — только свои заявки (по Id или, если его ещё не связали, по логину)
             return _db.SupportTickets.AsNoTracking()
                 .Where(t => t.OwnerUserId == uid || (t.OwnerUserId == null && t.OwnerLogin == uname));
         }
@@ -130,7 +124,8 @@ namespace VCS_DOCs.Support.Controllers
             var isMine = isAA || one.OwnerUserId == uid || (one.OwnerUserId == null && one.OwnerLogin == uname);
             if (!isMine) return Forbid();
 
-            var messages = await _db.SupportTicketMessages.AsNoTracking()
+            // сообщения
+            var messagesRaw = await _db.SupportTicketMessages.AsNoTracking()
                 .Where(m => m.TicketId == id)
                 .OrderBy(m => m.CreatedAt)
                 .Select(m => new
@@ -139,15 +134,35 @@ namespace VCS_DOCs.Support.Controllers
                     role = m.AuthorRole,
                     body = m.Body,
                     createdAt = m.CreatedAt,
-                    mine = m.AuthorUserId == uid
+                    authorUserId = m.AuthorUserId
                 })
                 .ToListAsync();
 
-            return Ok(new
+            var msgIds = messagesRaw.Select(m => m.id).ToArray();
+
+            // вложения для этих сообщений (группировкой по MessageId)
+            var attByMsg = (msgIds.Length == 0)
+                ? new Dictionary<long, List<object>>()
+                : await _db.SupportTicketAttachments.AsNoTracking()
+                    .Where(s => s.TicketId == id && s.MessageId != null && msgIds.Contains(s.MessageId.Value))
+                    .OrderBy(s => s.MessageId)
+                    .GroupBy(s => s.MessageId!.Value)
+                    .ToDictionaryAsync(
+                        g => g.Key,
+                        g => g.Select(s => (object)new { id = s.Id, name = s.FileName, size = s.Size }).ToList()
+                    );
+
+            var messages = messagesRaw.Select(m => new
             {
-                ticket = one,
-                messages
+                m.id,
+                m.role,
+                m.body,
+                m.createdAt,
+                mine = m.authorUserId == uid,
+                attachments = attByMsg.TryGetValue(m.id, out var list) ? (IEnumerable<object>)list : Array.Empty<object>()
             });
+
+            return Ok(new { ticket = one, messages });
         }
 
         public sealed class NewMessageDto
@@ -161,8 +176,8 @@ namespace VCS_DOCs.Support.Controllers
         [HttpPost(TicketIdRoute + "/messages")]
         public async Task<IActionResult> PostMessage([FromRoute] string id, [FromBody] NewMessageDto dto)
         {
-            var body = (dto.Body ?? "").Trim();
-            if (string.IsNullOrEmpty(body)) return BadRequest(new { ok = false, error = "Пустое сообщение" });
+            // Разрешаем пустой текст — пользователь может отправлять только вложение
+            var body = (dto.Body ?? string.Empty);
 
             var t = await _db.SupportTickets.FirstOrDefaultAsync(x => x.Id == id);
             if (t is null) return NotFound();
@@ -186,42 +201,31 @@ namespace VCS_DOCs.Support.Controllers
             t.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
 
-            // Push в комнату заявки
-            //await _hub.Clients.Group($"ticket:{id}").SendAsync("message", new
-            //{
-            //    ticketId = id,
-            //    message = new
-            //    {
-            //        id = msg.Id,
-            //        role = msg.AuthorRole,
-            //        body = msg.Body,
-            //        createdAt = msg.CreatedAt,
-            //        mine = true
-            //    }
-            //});
+            // realtime push
             await _hub.Clients.Group($"ticket:{id}").SendAsync("message", new
             {
                 ticketId = id,
                 message = new
                 {
                     id = msg.Id,
-                    role = msg.AuthorRole,      
+                    role = msg.AuthorRole,
                     body = msg.Body,
                     createdAt = msg.CreatedAt,
-                    authorUserId = msg.AuthorUserId 
+                    authorUserId = msg.AuthorUserId
+                    // Вещаем без attachments — клиент уже отрисовал свои pending;
+                    // после биндинга при следующей загрузке все подхватится.
                 }
             });
 
             return Ok(new { ok = true, id = msg.Id, at = msg.CreatedAt });
         }
-        // POST /api/support/tickets/{id}/close
+
         [HttpPost("{id:regex(^[[0-9a-fA-F]]{{8}}$)}/close")]
         public async Task<IActionResult> Close([FromRoute] string id)
         {
             var t = await _db.SupportTickets.FirstOrDefaultAsync(x => x.Id == id);
             if (t is null) return NotFound();
 
-            // только агент/админ закрывают
             var isAA = User.IsInRole(Roles.SupportAgent) || User.IsInRole(Roles.SupportAdmin);
             if (!isAA) return Forbid();
 
@@ -234,7 +238,7 @@ namespace VCS_DOCs.Support.Controllers
             _db.SupportTicketMessages.Add(new SupportTicketMessage
             {
                 TicketId = id,
-                AuthorUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
+                AuthorUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value,
                 AuthorRole = "agent",
                 Body = "Заявка закрыта оператором.",
                 CreatedAt = DateTime.UtcNow
@@ -242,7 +246,6 @@ namespace VCS_DOCs.Support.Controllers
 
             await _db.SaveChangesAsync();
 
-            // realtime: оповестим обе стороны
             await _hub.Clients.Group($"ticket:{id}").SendAsync("status", new
             {
                 ticketId = id,

@@ -37,8 +37,8 @@ public sealed class SupportFilesController : ControllerBase
     [HttpPost("ops/tickets/{ticketId}/files")]
     [Authorize(Policy = "SupportOnly")]
     [Consumes("multipart/form-data")]
-    [RequestFormLimits(MultipartBodyLengthLimit = 100L * 1024 * 1024)]
-    [RequestSizeLimit(100L * 1024 * 1024)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 200L * 1024 * 1024)]
+    [RequestSizeLimit(200L * 1024 * 1024)]
     public Task<IActionResult> UploadByOperator(string ticketId) =>
         UploadInternal(ticketId, createdByRole: "agent", enforceOwner: false);
 
@@ -52,8 +52,8 @@ public sealed class SupportFilesController : ControllerBase
     [HttpPost("user/tickets/{ticketId}/files")]
     [Authorize(Policy = "SupportDeskAccess")]
     [Consumes("multipart/form-data")]
-    [RequestFormLimits(MultipartBodyLengthLimit = 100L * 1024 * 1024)]
-    [RequestSizeLimit(100L * 1024 * 1024)]
+    [RequestFormLimits(MultipartBodyLengthLimit = 200L * 1024 * 1024)]
+    [RequestSizeLimit(200L * 1024 * 1024)]
     public Task<IActionResult> UploadByUser(string ticketId) =>
         UploadInternal(ticketId, createdByRole: "user", enforceOwner: true);
 
