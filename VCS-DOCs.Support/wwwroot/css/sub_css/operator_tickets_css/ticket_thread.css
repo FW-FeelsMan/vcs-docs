@@ -1,4 +1,8 @@
-﻿/* ===== Карточка заявки ===== */
+﻿/* =========================
+   Ticket thread (feed-like)
+   ========================= */
+
+/* ===== Карточка / шапка ===== */
 #ticket-thread {
     display: flex;
     flex-direction: column;
@@ -36,135 +40,222 @@
         box-shadow: 0 8px 24px rgba(0,0,0,.04);
     }
 
-    /* Метаданные над перепиской */
+    /* Метаданные */
     #ticket-thread .tt-meta {
         display: grid;
         grid-template-columns: repeat(4, minmax(140px, 1fr));
         gap: 6px 12px;
         margin: 4px 0 10px;
-        padding: 0;
-        background: transparent;
-        border: 0;
         font-size: 13px;
         opacity: .85;
     }
 
-    /* Сообщения */
+    /* ===== Список сообщений ===== */
     #ticket-thread .tt-messages {
         display: flex;
         flex-direction: column;
-        gap: 4px;
-        padding: 6px 8px 10px;
+        gap: 12px;
+        padding: 6px 8px 12px;
     }
 
+/* ===== Сообщение: общий «бабл» вокруг всего ===== */
 .tt-msg {
+    position: relative;
     display: flex;
     align-items: flex-start;
-    padding: 0 2px;
+    gap: 10px;
+    padding: 10px 12px 10px 14px; /* запас слева под полоску */
+    border-radius: 16px;
+    overflow: hidden;
+    /* фон и бордер через переменные (перекрашиваем по ролям ниже) */
+    --bubble-bg: rgba(15,23,42,.04);
+    --bubble-br: rgba(15,23,42,.08);
 }
 
-    .tt-msg.op {
-        justify-content: flex-start;
+    /* фон-пластина — именно её «увеличиваем» на hover (чтобы текст не мылится) */
+    .tt-msg::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: var(--bubble-bg);
+        border: 1px solid var(--bubble-br);
+        box-shadow: 0 1px 2px rgba(0,0,0,.06);
+        transform: scale(1);
+        transform-origin: center left;
+        transition: transform .12s ease, box-shadow .12s ease, background-color .12s ease, border-color .12s ease;
+        will-change: transform;
+        z-index: 0; /* под полоской и контентом */
     }
+
+    /* тонкая цветная полоска слева */
+    .tt-msg::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+        background: linear-gradient(to bottom, rgba(15,23,42,.22), rgba(15,23,42,.28));
+        z-index: 1; /* поверх пластины, но под контентом */
+    }
+
+    /* контент поверх псевдоэлементов */
+    .tt-msg > * {
+        position: relative;
+        z-index: 2;
+    }
+
+    /* лёгкий эффект наведения — без тряски текста */
+    .tt-msg:hover::after {
+        transform: scale(1.01);
+        box-shadow: 0 4px 12px rgba(0,0,0,.12);
+    }
+
+    /* ===== Роли (меняем только переменные и полоску) ===== */
+    .tt-msg.op {
+        --bubble-bg: rgba(90,155,213,.12);
+        --bubble-br: rgba(90,155,213,.28);
+    }
+
+        .tt-msg.op::before {
+            background: linear-gradient(to bottom, #6eace0, #3d7bbf);
+        }
 
     .tt-msg.usr {
-        justify-content: flex-end;
+        --bubble-bg: rgba(15,23,42,.05);
+        --bubble-br: rgba(15,23,42,.10);
     }
 
-/* Пузырь */
-.tt-bubble {
+        .tt-msg.usr::before {
+            background: linear-gradient(to bottom, rgba(100,116,139,.35), rgba(71,85,105,.45));
+        }
+
+/* ===== Аватар + индикатор присутствия ===== */
+.tt-avatar {
     position: relative;
+    flex: 0 0 auto;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #eef2ff;
+    color: #3b82f6;
+    font-weight: 700;
+    user-select: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,.08);
+}
+
+    /* содержимое аватара — скругляем, чтобы не вылазило за круг */
+    .tt-avatar img,
+    .tt-avatar .initials {
+        width: 100%;
+        height: 100%;
+        display: block;
+        border-radius: inherit;
+        object-fit: cover; /* для img */
+    }
+
+    .tt-avatar .initials {
+        font-size: 16px;
+        line-height: 1;
+    }
+
+/* маленькая точка статуса в правом-нижнем углу аватара */
+.tt-presence {
+    position: absolute;
+    right: -1px;
+    bottom: -1px;
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    background: #cbd5e1; /* offline по умолчанию */
+    box-shadow: 0 0 0 2px #fff; /* белое кольцо вокруг */
+    z-index: 3;
+}
+
+    .tt-presence.online {
+        background: #22c55e;
+    }
+    /* online — зелёный */
+    .tt-presence.away {
+        background: #f59e0b;
+    }
+    /* (если понадобится) */
+    .tt-presence.offline {
+        background: #cbd5e1;
+    }
+/* offline — серый */
+
+/* ===== Контент сообщения ===== */
+.tt-bubble {
+    flex: 1 1 auto;
+    max-width: 100%;
     display: flex;
     flex-direction: column;
     gap: 4px;
-    width: fit-content;
-    max-width: min(32ch, 42%);
-    font-size: 13px;
-    line-height: 1.24;
-    padding: 6px 8px;
-    border-radius: 10px;
-    white-space: pre-wrap;
-    word-break: break-word;
-    overflow-wrap: anywhere;
-    box-shadow: 0 1px 2px rgba(0,0,0,.10), 0 6px 14px rgba(0,0,0,.06);
-}
-
-    .tt-bubble * {
-        margin: 0 !important;
-    }
-
-.tt-msg.op .tt-bubble {
-    color: #fff;
-    background: rgba(90,155,213,.92);
-    border-top-left-radius: 6px;
-    margin-left: 6px;
-    box-shadow: 0 1px 3px rgba(27,40,58,.18), 0 8px 16px rgba(27,40,58,.10);
-}
-
-    .tt-msg.op .tt-bubble::after {
-        content: "";
-        position: absolute;
-        bottom: 6px;
-        left: -6px;
-        width: 0;
-        height: 0;
-        border: 6px solid transparent;
-        border-right-color: rgba(90,155,213,.92);
-        filter: drop-shadow(0 1px 1px rgba(0,0,0,.12));
-    }
-
-.tt-msg.usr .tt-bubble {
-    color: #1e293b;
-    background: #fff;
-    border: 1px solid #e6ebf5;
-    border-top-right-radius: 6px;
-    margin-right: 6px;
-    box-shadow: 0 1px 2px rgba(13,18,30,.06), 0 8px 20px rgba(13,18,30,.08);
-}
-
-    .tt-msg.usr .tt-bubble::before,
-    .tt-msg.usr .tt-bubble::after {
-        content: "";
-        position: absolute;
-        bottom: 6px;
-        right: -7px;
-        width: 0;
-        height: 0;
-        border: 7px solid transparent;
-    }
-
-    .tt-msg.usr .tt-bubble::before {
-        border-left-color: #e6ebf5;
-    }
-
-    .tt-msg.usr .tt-bubble::after {
-        right: -6px;
-        border: 6px solid transparent;
-        border-left-color: #fff;
-    }
-
-.tt-bubble .tt-msg-text {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    padding: 0;
     margin: 0;
 }
 
-.tt-bubble .tt-msg-meta {
-    font-size: 10.5px;
-    opacity: .85;
+/* Заголовок (имя + время) */
+.tt-msg-head {
+    font-size: 14px;
     display: flex;
-    gap: 6px;
-    white-space: nowrap;
+    align-items: baseline;
+    gap: 10px;
 }
 
-/* Слипание подряд идущих сообщений */
-.tt-msg.op + .tt-msg.op .tt-bubble {
-    margin-top: 2px;
+    .tt-msg-head .tt-name {
+        font-weight: 700;
+        color: #111827;
+        font-size: 17px;
+    }
+
+    .tt-msg-head .tt-time {
+        font-size: 12px;
+        opacity: .6;
+    }
+
+/* Текст */
+.tt-msg-text {
+    font-size: 15px;
+    line-height: 1.35;
+    color: #1f2937;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
-.tt-msg.usr + .tt-msg.usr .tt-bubble {
-    margin-top: 2px;
+/* Файлы (чипы) */
+.tt-files {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 4px;
 }
 
-/* Блок ввода */
+.tt-file {
+    background: #f2f4f7;
+    border: 1px solid #e6ebf5;
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 12.5px;
+    text-decoration: none;
+    color: #1f2937;
+}
+
+    .tt-file:hover {
+        background: #eaf1ff;
+        border-color: #d4e3ff;
+        color: #0f172a;
+    }
+
+/* ===== Блок ввода ===== */
 #ticket-thread .tt-input {
     display: flex;
     gap: 10px;
@@ -203,7 +294,7 @@
     font-weight: 600;
 }
 
-/* Тёмная тема */
+/* ===== Тёмная тема ===== */
 .profile_background.is-dark #ticket-thread .tt-wrap {
     background: #0f1324;
     border-color: #1c2038;
@@ -216,66 +307,68 @@
     box-shadow: 0 10px 30px rgba(0,0,0,.25);
 }
 
-.profile_background.is-dark .tt-msg.usr .tt-bubble {
-    background: #0f1324;
+/* сами сообщения — через переменные */
+.profile_background.is-dark .tt-msg {
+    --bubble-bg: rgba(255,255,255,.04);
+    --bubble-br: rgba(255,255,255,.08);
+}
+
+    .profile_background.is-dark .tt-msg::after {
+        box-shadow: 0 1px 2px rgba(0,0,0,.30);
+    }
+
+    .profile_background.is-dark .tt-msg.op {
+        --bubble-bg: rgba(90,155,213,.18);
+        --bubble-br: rgba(90,155,213,.35);
+    }
+
+    .profile_background.is-dark .tt-msg.usr {
+        --bubble-bg: rgba(255,255,255,.05);
+        --bubble-br: rgba(255,255,255,.10);
+    }
+
+    .profile_background.is-dark .tt-msg.op::before {
+        background: linear-gradient(to bottom, #86c2ee, #4c8ed1);
+    }
+
+    .profile_background.is-dark .tt-msg.usr::before {
+        background: linear-gradient(to bottom, rgba(148,163,184,.50), rgba(100,116,139,.55));
+    }
+
+.profile_background.is-dark .tt-msg-text {
     color: #e7ecff;
-    border: 1px solid #222845;
-    box-shadow: 0 2px 6px rgba(0,0,0,.35), 0 16px 28px rgba(0,0,0,.25);
 }
 
-    .profile_background.is-dark .tt-msg.usr .tt-bubble::before {
-        border-left-color: #222845;
-    }
-
-    .profile_background.is-dark .tt-msg.usr .tt-bubble::after {
-        border-left-color: #0f1324;
-    }
-
-/* Адаптив */
-@media (min-width:1400px) {
-    .tt-bubble {
-        max-width: min(30ch,40%);
-    }
+.profile_background.is-dark .tt-msg-head .tt-name {
+    color: #f3f6ff;
 }
 
-@media (max-width:700px) {
-    .tt-bubble {
-        max-width: min(40ch,70%);
-    }
-}
-.tt-attach {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 6px;
+.profile_background.is-dark .tt-file {
+    background: #1a203b;
+    border-color: #242b4b;
+    color: #dbe5ff;
 }
 
-.tt-files {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-.tt-chip {
-    background: #f2f3f5;
-    border-radius: 10px;
-    padding: 4px 8px;
-    display: inline-flex;
-    gap: 6px;
-    align-items: center;
-}
-
-    .tt-chip b {
-        max-width: 220px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        display: inline-block;
+    .profile_background.is-dark .tt-file:hover {
+        background: #111735;
+        border-color: #2d3661;
+        color: #fff;
     }
 
-    .tt-chip button {
-        border: 0;
-        background: transparent;
-        cursor: pointer;
-        font-size: 14px;
+/* ===== Адаптив ===== */
+@media (max-width: 700px) {
+    .tt-msg {
+        padding: 8px 10px 8px 12px;
+        border-radius: 14px;
     }
+
+    .tt-avatar {
+        width: 42px;
+        height: 42px;
+    }
+
+    .tt-presence {
+        width: 10px;
+        height: 10px;
+    }
+}

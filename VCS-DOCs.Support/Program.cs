@@ -278,7 +278,47 @@ internal class Program
 
         // ---------- pipeline ----------
         app.UseHttpsRedirection();
+
+        // статика по-умолчанию (wwwroot)
         app.UseStaticFiles();
+
+        // --- Аватары пользователей из Web-проекта ---
+        // userId -> ..\VCS-DOCs.Web\storage\userData\u_{first8}\a\avatar.jpg
+        var webUserDataRoot = Path.GetFullPath(
+            Path.Combine(app.Environment.ContentRootPath, "..", "VCS-DOCs.Web", "storage", "userData"));
+
+        // путь к дефолтной аве: ..\VCS-DOCs.Web\wwwroot\images\default_avatar.png
+        var defaultAvatarPath = Path.GetFullPath(
+            Path.Combine(app.Environment.ContentRootPath, "..", "VCS-DOCs.Web", "wwwroot", "images", "default_avatar.png"));
+
+        app.MapGet("/avatars/{userId}.jpg", (HttpContext ctx, string userId) =>
+        {
+            string? actualPath = null;
+            string contentType = "image/jpeg";
+
+            if (!string.IsNullOrWhiteSpace(userId) && !userId.Equals("none", StringComparison.OrdinalIgnoreCase))
+            {
+                var first8 = (userId.Length >= 8 ? userId[..8] : userId).ToLowerInvariant();
+                var candidate = Path.Combine(webUserDataRoot, $"u_{first8}", "a", "avatar.jpg");
+                if (System.IO.File.Exists(candidate))
+                    actualPath = candidate;
+            }
+
+            if (actualPath == null)
+            {
+                if (!System.IO.File.Exists(defaultAvatarPath))
+                    return Results.NotFound();
+
+                actualPath = defaultAvatarPath;
+                contentType = "image/png";
+            }
+
+            // лёгкое кэширование
+            ctx.Response.Headers["Cache-Control"] = "public,max-age=86400,immutable";
+            ctx.Response.Headers["Last-Modified"] = System.IO.File.GetLastWriteTimeUtc(actualPath).ToString("R");
+
+            return Results.File(actualPath, contentType);
+        });
 
         app.UseWhen(ctx => !ctx.Request.Path.StartsWithSegments("/api"), branch =>
         {

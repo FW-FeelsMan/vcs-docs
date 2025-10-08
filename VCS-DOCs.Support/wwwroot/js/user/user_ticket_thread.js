@@ -1,11 +1,14 @@
-﻿// wwwroot/js/user/user_ticket_thread.js — realtime + send + attachments (+ ожидание аплоадов и блок кнопки)
+﻿// wwwroot/js/user/user_ticket_thread.js — realtime + send + attachments + presence via SignalR (fixed)
 (() => {
+    // ===== utils =================================================================
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    const fmt = iso => {
-        try {
-            const d = (iso instanceof Date) ? iso : new Date(iso);
-            return new Intl.DateTimeFormat('ru-RU', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(d);
-        } catch { return String(iso); }
+    const fmtTime = iso => {            // для сообщений — HH:mm
+        try { return new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' }).format(new Date(iso)); }
+        catch { return String(iso); }
+    };
+    const fmtFull = iso => {            // для мета «Создано/Обновлено»
+        try { return new Intl.DateTimeFormat('ru-RU', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(iso)); }
+        catch { return String(iso); }
     };
 
     const csrfMeta = () => document.querySelector('meta[name="csrf-token"]')?.content || '';
@@ -36,61 +39,31 @@
             `<a class="tt-file" href="/api/support/files/${encodeURIComponent(a.id)}" target="_blank" rel="noopener">${esc(a.name || a.fileName || ('file-' + a.id))}</a>`
         ).join(' ');
 
-    function renderMsg(m, mine = false) {
-        const isOp = (m.role && m.role !== 'user') && !mine;
-        const cls = isOp ? 'tt-msg op' : 'tt-msg usr';
-        const who = isOp ? 'Оператор' : 'Вы';
-        const msgIdAttr = m.id ? ` data-msg-id="${String(m.id)}"` : '';
-        const filesHtml = (Array.isArray(m.attachments) && m.attachments.length)
-            ? `<div class="tt-files">${renderAttList(m.attachments)}</div>`
-            : '';
-        return `
-      <div class="${cls}"${msgIdAttr}>
-        <div class="tt-bubble">
-          <div class="tt-msg-text">${esc(m.body ?? m.text ?? '')}</div>
-          ${filesHtml}
-          <div class="tt-msg-meta">
-            <span class="tt-msg-who">${who}</span>
-            <span class="tt-msg-at">${fmt(m.createdAt ?? m.at ?? new Date())}</span>
-          </div>
-        </div>
-      </div>`;
-    }
+    const initialsFrom = (name) => {
+        const s = String(name || '').trim();
+        if (!s) return '•';
+        const parts = s.split(/\s+/).slice(0, 2);
+        return parts.map(p => p[0]).join('').toUpperCase();
+    };
+    const whoDisplay = (m, mine, isOp) => m?.authorName ?? (mine ? 'Вы' : (isOp ? 'Оператор' : 'Пользователь'));
 
-    function ensureAttachmentsInDom(msgBox, msgId, attList) {
-        if (!msgId || !Array.isArray(attList) || !attList.length) return;
-        const root = msgBox.querySelector(`.tt-msg[data-msg-id="${msgId}"]`);
-        if (!root) return;
-        let files = root.querySelector('.tt-files');
-        if (!files) {
-            files = document.createElement('div');
-            files.className = 'tt-files';
-            const bubble = root.querySelector('.tt-bubble');
-            const meta = bubble?.querySelector('.tt-msg-meta');
-            files.innerHTML = renderAttList(attList);
-            if (bubble) bubble.insertBefore(files, meta || null);
-        } else if (!files.innerHTML.trim()) {
-            files.innerHTML = renderAttList(attList);
-        }
-    }
+    // ===== Presence (UI) =========================================================
+    const cssEsc = (v) => (window.CSS && CSS.escape) ? CSS.escape(String(v)) : String(v).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
 
-    function applyClosedState(root, closed) {
-        const inputWrap = root.querySelector('.tt-input');
-        const txt = root.querySelector('#tt_text');
-        const btnSend = root.querySelector('#tt_send');
-        if (closed) {
-            inputWrap?.classList.add('disabled');
-            if (txt) { txt.disabled = true; txt.placeholder = 'Заявка закрыта. Отправка сообщений недоступна.'; }
-            if (btnSend) { btnSend.disabled = true; btnSend.classList.remove('primary'); }
-        } else {
-            inputWrap?.classList.remove('disabled');
-            if (txt) { txt.disabled = false; txt.placeholder = 'Напишите ответ… (Ctrl+Enter — отправить)'; }
-            if (btnSend) { btnSend.disabled = false; btnSend.classList.add('primary'); }
-        }
+    function setPresence(userId, online) {
+        if (!userId) return;
+        document.querySelectorAll(`.tt-msg[data-author-id="${cssEsc(userId)}"] .tt-presence`)
+            .forEach(dot => {
+                dot.classList.toggle('online', !!online);
+                dot.classList.toggle('offline', !online);
+            });
     }
+    function setPresenceFor(userId, online) { setPresence(userId, online); }
 
-    // ---- SignalR ----
-    const HUB_URL = '/hubs/ticket';
+    // ===== SignalR ===============================================================
+    const TICKET_HUB_URL = '/hubs/ticket';
+    const PRESENCE_HUB_URL = '/hubs/userStatus';
+
     async function loadSignalR() {
         if (window.signalR?.HubConnectionBuilder) return window.signalR;
         const srcs = ['/lib/microsoft/signalr/dist/browser/signalr.js', '/lib/microsoft/signalr/signalr.js'];
@@ -102,18 +75,57 @@
         }
         throw new Error('SignalR client not found');
     }
-    async function connectAndJoin(ticketId, onMessage) {
+
+    async function connectTicketHub(ticketId, onMessage) {
         const signalR = await loadSignalR();
-        const conn = new signalR.HubConnectionBuilder().withUrl(HUB_URL, { withCredentials: true }).withAutomaticReconnect().build();
+        const conn = new signalR.HubConnectionBuilder().withUrl(TICKET_HUB_URL, { withCredentials: true }).withAutomaticReconnect().build();
         conn.on('message', payload => {
-            try { if (!payload || payload.ticketId !== ticketId) return; const msg = payload.message || {}; onMessage(msg); document.dispatchEvent(new CustomEvent('SupportTicketMessage', { detail: { ticketId, message: msg } })); } catch { }
+            try {
+                if (!payload || payload.ticketId !== ticketId) return;
+                const msg = payload.message || {};
+                onMessage(msg);
+                document.dispatchEvent(new CustomEvent('SupportTicketMessage', { detail: { ticketId, message: msg } }));
+            } catch { }
         });
         await conn.start().catch(() => { });
-        for (const [m, arg] of [['JoinTicketGroup', ticketId], ['JoinTicket', ticketId], ['Join', `ticket:${ticketId}`]]) { try { await conn.invoke(m, arg); break; } catch { } }
+        for (const [m, arg] of [['JoinTicketGroup', ticketId], ['JoinTicket', ticketId], ['Join', `ticket:${ticketId}`]]) {
+            try { await conn.invoke(m, arg); break; } catch { }
+        }
         return conn;
     }
 
-    // ========= Attachments (user) =========
+    async function connectPresenceHub(authorIds, onPresence) {
+        if (!Array.isArray(authorIds) || authorIds.length === 0) return null;
+
+        const signalR = await loadSignalR();
+        const conn = new signalR.HubConnectionBuilder().withUrl(PRESENCE_HUB_URL, { withCredentials: true }).withAutomaticReconnect().build();
+
+        const handle = p => {
+            try {
+                const uid = p?.userId || p?.uid || p?.id || p?.UserId || p?.Id;
+                const online = !!(p?.online ?? p?.isOnline);
+                if (uid != null) onPresence(String(uid), online);
+            } catch { }
+        };
+
+        conn.on('Presence', handle);
+        conn.on('presence', handle); // запасной алиас
+
+        await conn.start().catch(() => { });
+
+        // подписка + стартовый снапшот
+        try { await conn.invoke('WatchUsers', authorIds); } catch { }
+        try {
+            const dict = await conn.invoke('GetPresenceMany', authorIds);
+            if (dict && typeof dict === 'object') {
+                Object.values(dict).forEach(handle);
+            }
+        } catch { }
+
+        return conn;
+    }
+
+    // ===== Attachments (user) =====================================================
     const inflight = new Set(); // активные загрузки
 
     function track(promise, onChange) {
@@ -123,7 +135,6 @@
         return promise;
     }
 
-    // создадим маленький статус под списком вложений (если его нет)
     function ensureStatusEl(container) {
         let st = container?.querySelector?.('.tt-attach-status');
         if (!st && container) {
@@ -189,7 +200,7 @@
         onCleared?.();
     }
 
-    // ========= INIT =========
+    // ===== INIT ===================================================================
     window.initUTicketThread = async function (panel) {
         if (!panel || panel.__u_tt_inited) return;
         panel.__u_tt_inited = true;
@@ -210,6 +221,13 @@
 
         const txt = root.querySelector('#tt_text');
         const btnSend = root.querySelector('#tt_send');
+
+        // ограничение на длину сообщения
+        const MAX_LEN = 1500;
+        if (txt) {
+            txt.setAttribute('maxlength', String(MAX_LEN)); // нативный лимит
+            txt.placeholder = 'Напишите ответ… (Ctrl+Enter — отправить, ≤ 1500 символов)';
+        }
 
         // attach UI
         const btnAttach = root.querySelector('#tt_attach');
@@ -242,8 +260,8 @@
             list.appendChild(statusEl); // держим статус внизу
             list.querySelectorAll("button[data-id]").forEach(btn => {
                 btn.addEventListener("click", () => {
-                    const id = Number(btn.dataset.id);
-                    const i = pending.findIndex(x => x.id === id);
+                    const id = btn.dataset.id;
+                    const i = pending.findIndex(x => String(x.id) === id);
                     if (i >= 0) { pending.splice(i, 1); renderList(); }
                 });
             });
@@ -274,16 +292,19 @@
         const statusRu = ticket.status === 'closed' ? 'Закрыта' : 'Открыта';
         stEl && (stEl.textContent = statusRu);
         if (ticket.status === 'closed') stEl?.classList.add('tt-status-closed');
-        crEl && (crEl.textContent = ticket.createdAt ? fmt(ticket.createdAt) : '—');
-        upEl && (upEl.textContent = ticket.updatedAt ? fmt(ticket.updatedAt) : '—');
+        crEl && (crEl.textContent = ticket.createdAt ? fmtFull(ticket.createdAt) : '—');
+        upEl && (upEl.textContent = ticket.updatedAt ? fmtFull(ticket.updatedAt) : '—');
 
         const seenIds = new Set(messages.map(m => m.id).filter(Boolean));
         function addMessageAndScroll(m, mine = false) {
             if (m && m.id && seenIds.has(m.id)) return;
             if (m && m.id) seenIds.add(m.id);
             msgBox.insertAdjacentHTML('beforeend', renderMsg(m, mine));
-            if (upEl && (m?.createdAt || m?.at)) upEl.textContent = fmt(m.createdAt ?? m.at);
+            if (upEl && (m?.createdAt || m?.at)) upEl.textContent = fmtFull(m.createdAt ?? m.at);
             if (wrap) wrap.scrollTop = wrap.scrollHeight;
+
+            // живое сообщение ⇒ автора считаем online
+            if (m?.authorUserId) setPresenceFor(m.authorUserId, true);
         }
 
         if (msgBox) {
@@ -293,20 +314,28 @@
 
         applyClosedState(root, ticket.status === 'closed');
 
+        // участники тикета (для presence)
+        const participantIds = new Set();
+        (messages || []).forEach(m => { if (m?.authorUserId) participantIds.add(String(m.authorUserId)); });
+        if (ticket?.ownerUserId) participantIds.add(String(ticket.ownerUserId));
+
         // 2) отправка (со вложениями)
         async function sendNow() {
             const v = (txt?.value || '').trim();
             if (ticket.status === 'closed') return;
 
-            // подождать активные аплоады
             if (inflight.size) {
                 onInflightChange();
-                try { await Promise.all([...inflight]); } catch { /* проглотим */ }
+                try { await Promise.all([...inflight]); } catch { }
                 finally { onInflightChange(); }
             }
 
             if (!v && !pending.length) {
                 alert('Добавьте текст или вложение.');
+                return;
+            }
+            if (v.length > MAX_LEN) {
+                alert(`Слишком длинное сообщение (${v.length}). Максимум ${MAX_LEN} символов.`);
                 return;
             }
 
@@ -316,15 +345,26 @@
                 const res = await postJson(`/api/support/tickets/${encodeURIComponent(ticketId)}/messages`, { body: v });
                 const newId = res?.id;
 
-                // мгновенно рисуем пузырёк с вложениями
-                const mineMsg = { id: newId, role: 'user', body: v, createdAt: res?.at || new Date().toISOString(), attachments: localAtt };
+                const mineMsg = {
+                    id: newId,
+                    role: 'user',
+                    body: v,
+                    createdAt: res?.at || new Date().toISOString(),
+                    attachments: localAtt,
+                    authorName: res?.authorName,
+                    authorUserId: res?.authorUserId,
+                    authorOnline: true
+                };
                 addMessageAndScroll(mineMsg, true);
-                // на всякий — гарантированно вставим attachments в DOM
                 ensureAttachmentsInDom(msgBox, newId, localAtt);
 
                 if (txt) txt.value = '';
 
-                // биндим вложения к сообщению; после бинда ещё раз убеждаемся, что ссылки на месте
+                if (mineMsg.authorUserId) {
+                    participantIds.add(String(mineMsg.authorUserId));
+                    setPresenceFor(mineMsg.authorUserId, true);
+                }
+
                 if (newId && pending.length) {
                     await bindAttachments(bindUrl, csrf, pending, newId, () => renderList());
                     ensureAttachmentsInDom(msgBox, newId, localAtt);
@@ -341,16 +381,29 @@
         btnSend?.addEventListener('click', sendNow);
 
         // 3) SignalR: живые сообщения
-        let conn = null;
+        let ticketConn = null;
         try {
-            conn = await connectAndJoin(ticketId, (msg) => {
+            ticketConn = await connectTicketHub(ticketId, (msg) => {
                 addMessageAndScroll(msg, !!msg.mine);
+                if (msg?.authorUserId) participantIds.add(String(msg.authorUserId));
             });
         } catch (e) {
-            console.warn('[user-ticket] signalr disabled:', e?.message || e);
+            console.warn('[user-ticket] signalr(ticket) disabled:', e?.message || e);
         }
 
-        // 4) Назад
+        // 4) SignalR: presence (подписка + снапшот)
+        let presenceConn = null;
+        try {
+            if (participantIds.size > 0) {
+                presenceConn = await connectPresenceHub([...participantIds], (uid, online) => {
+                    setPresenceFor(uid, online);
+                });
+            }
+        } catch (e) {
+            console.warn('[user-ticket] signalr(presence) disabled:', e?.message || e);
+        }
+
+        // 5) Назад
         const btnBackEl = root.querySelector('#tt_back');
         function goBack() {
             const exists = id => !!document.querySelector(`.sidebar .sidebar-button[data-content="${id}"]`);
@@ -365,19 +418,94 @@
         }
         btnBackEl?.addEventListener('click', goBack);
 
-        // 5) dispose
+        // 6) dispose
         panel.__dispose = async function () {
             try { txt?.removeEventListener('keydown', onKey); } catch { }
             try { btnSend?.removeEventListener('click', sendNow); } catch { }
             try { btnBackEl?.removeEventListener('click', goBack); } catch { }
-            if (conn) { try { await conn.stop(); } catch { } conn = null; }
+            if (ticketConn) { try { await ticketConn.stop(); } catch { } ticketConn = null; }
+            if (presenceConn) { try { await presenceConn.stop(); } catch { } presenceConn = null; }
         };
 
-        // экспорт
+        // экспорт (если понадобится триггерить статус извне)
+        window.TT_Presence = {
+            set: (authorUserId, online) => setPresenceFor(authorUserId, online)
+        };
         window.TT_Attach = {
             bindTo: (messageId) => bindAttachments(bindUrl, csrf, pending, messageId, () => renderList()),
             getIds: () => pending.map(p => p.id),
             clear: () => { pending.length = 0; renderList(); }
         };
     };
+
+    // ===== render =================================================================
+    function renderMsg(m, mine = false) {
+        const isOp = (m.role && m.role !== 'user') && !mine;
+        const name = whoDisplay(m, mine, isOp);
+        const atIso = m.createdAt ?? m.at ?? new Date();
+        const atStr = fmtTime(atIso);
+        const atFull = fmtFull(atIso);
+
+        const avatarUrl = m.authorAvatarUrl;
+        const avHtml = avatarUrl
+            ? `<img src="${esc(avatarUrl)}" alt="${esc(name)}" />`
+            : `<span class="initials">${esc(initialsFrom(name))}</span>`;
+
+        const filesHtml = Array.isArray(m.attachments) && m.attachments.length
+            ? `<div class="tt-files">` + m.attachments.map(a =>
+                `<a class="tt-file" href="/api/support/files/${encodeURIComponent(a.id)}" target="_blank" rel="noopener">${esc(a.name || a.fileName || ('file-' + a.id))}</a>`
+            ).join('') + `</div>`
+            : '';
+
+        const msgIdAttr = m.id ? ` data-msg-id="${String(m.id)}"` : '';
+        const roleCls = isOp ? ' op' : ' usr';
+        const authorIdAttr = m.authorUserId ? ` data-author-id="${esc(m.authorUserId)}"` : '';
+
+        return `
+  <div class="tt-msg${roleCls}"${msgIdAttr}${authorIdAttr}>
+    <div class="tt-avatar" title="${esc(name)}">
+      ${avHtml}
+      <span class="tt-presence offline" aria-hidden="true"></span>
+    </div>
+    <div class="tt-bubble">
+      <div class="tt-msg-head">
+        <span class="tt-name">${esc(name)}</span>
+        <span class="tt-time" title="${esc(atFull)}">${esc(atStr)}</span>
+      </div>
+      <div class="tt-msg-text">${esc(m.body ?? m.text ?? '')}</div>
+      ${filesHtml}
+    </div>
+  </div>`;
+    }
+
+    function ensureAttachmentsInDom(msgBox, msgId, attList) {
+        if (!msgId || !Array.isArray(attList) || !attList.length) return;
+        const root = msgBox.querySelector(`.tt-msg[data-msg-id="${msgId}"]`);
+        if (!root) return;
+        let files = root.querySelector('.tt-files');
+        if (!files) {
+            files = document.createElement('div');
+            files.className = 'tt-files';
+            const bubble = root.querySelector('.tt-bubble');
+            files.innerHTML = renderAttList(attList);
+            if (bubble) bubble.appendChild(files);
+        } else if (!files.innerHTML.trim()) {
+            files.innerHTML = renderAttList(attList);
+        }
+    }
+
+    function applyClosedState(root, closed) {
+        const inputWrap = root.querySelector('.tt-input');
+        const txt = root.querySelector('#tt_text');
+        const btnSend = root.querySelector('#tt_send');
+        if (closed) {
+            inputWrap?.classList.add('disabled');
+            if (txt) { txt.disabled = true; txt.placeholder = 'Заявка закрыта. Отправка сообщений недоступна.'; }
+            if (btnSend) { btnSend.disabled = true; btnSend.classList.remove('primary'); }
+        } else {
+            inputWrap?.classList.remove('disabled');
+            if (txt) { txt.disabled = false; txt.placeholder = 'Напишите ответ… (Ctrl+Enter — отправить, ≤ 1500 символов)'; }
+            if (btnSend) { btnSend.disabled = false; btnSend.classList.add('primary'); }
+        }
+    }
 })();

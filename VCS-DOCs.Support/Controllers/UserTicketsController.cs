@@ -140,6 +140,30 @@ namespace VCS_DOCs.Support.Controllers
 
             var msgIds = messagesRaw.Select(m => m.id).ToArray();
 
+            // вытащим логины авторов
+            var authorIds = messagesRaw.Select(m => m.authorUserId)
+                                       .Where(s => s != null)
+                                       .Distinct()
+                                       .Cast<string>()
+                                       .ToArray();
+
+            var userNameById = (authorIds.Length == 0)
+                ? new Dictionary<string, string>()
+                : await _db.Users.AsNoTracking()
+                    .Where(u => authorIds.Contains(u.Id))
+                    .Select(u => new { u.Id, u.UserName })
+                    .ToDictionaryAsync(x => x.Id, x => x.UserName ?? x.Id);
+
+            string DisplayName(string? role, string? authorUserId)
+            {
+                userNameById.TryGetValue(authorUserId ?? "", out var login);
+                if (string.Equals(role, "user", StringComparison.OrdinalIgnoreCase))
+                    return login ?? one.OwnerLogin ?? "Пользователь";
+                // агент/админ
+                var tag = login ?? "operator";
+                return $"Оператор#{tag}";
+            }
+
             // вложения для этих сообщений (группировкой по MessageId)
             var attByMsg = (msgIds.Length == 0)
                 ? new Dictionary<long, List<object>>()
@@ -159,6 +183,8 @@ namespace VCS_DOCs.Support.Controllers
                 m.body,
                 m.createdAt,
                 mine = m.authorUserId == uid,
+                authorName = DisplayName(m.role, m.authorUserId),
+                authorAvatarUrl = m.authorUserId != null ? $"/avatars/{m.authorUserId}.jpg" : "/avatars/none.jpg",
                 attachments = attByMsg.TryGetValue(m.id, out var list) ? (IEnumerable<object>)list : Array.Empty<object>()
             });
 
@@ -177,7 +203,10 @@ namespace VCS_DOCs.Support.Controllers
         public async Task<IActionResult> PostMessage([FromRoute] string id, [FromBody] NewMessageDto dto)
         {
             // Разрешаем пустой текст — пользователь может отправлять только вложение
-            var body = (dto.Body ?? string.Empty);
+            var body = dto.Body ?? string.Empty;
+
+            if (body.Length > 1500)
+                return BadRequest(new { ok = false, error = "MAX_LEN", message = "Сообщение не должно превышать 1500 символов." });
 
             var t = await _db.SupportTickets.FirstOrDefaultAsync(x => x.Id == id);
             if (t is null) return NotFound();
@@ -201,7 +230,22 @@ namespace VCS_DOCs.Support.Controllers
             t.UpdatedAt = DateTime.UtcNow;
             await _db.SaveChangesAsync();
 
-            // realtime push
+            // авторские метаданные для live-пуша
+            string authorName;
+            if (string.Equals(role, "user", StringComparison.OrdinalIgnoreCase))
+            {
+                // логин юзера или OwnerLogin заявки
+                var login = await _db.Users.Where(u => u.Id == uid).Select(u => u.UserName).FirstOrDefaultAsync();
+                authorName = login ?? t.OwnerLogin ?? "Пользователь";
+            }
+            else
+            {
+                var login = await _db.Users.Where(u => u.Id == uid).Select(u => u.UserName).FirstOrDefaultAsync();
+                authorName = $"Оператор#{(login ?? "operator")}";
+            }
+            var authorAvatarUrl = uid != null ? $"/avatars/{uid}.jpg" : "/avatars/none.jpg";
+
+            // realtime push (включая имя/аватар)
             await _hub.Clients.Group($"ticket:{id}").SendAsync("message", new
             {
                 ticketId = id,
@@ -211,9 +255,10 @@ namespace VCS_DOCs.Support.Controllers
                     role = msg.AuthorRole,
                     body = msg.Body,
                     createdAt = msg.CreatedAt,
-                    authorUserId = msg.AuthorUserId
-                    // Вещаем без attachments — клиент уже отрисовал свои pending;
-                    // после биндинга при следующей загрузке все подхватится.
+                    authorUserId = msg.AuthorUserId,
+                    authorName,
+                    authorAvatarUrl
+                    // attachments клиент дорисует из pending, а после бинда — по API
                 }
             });
 
