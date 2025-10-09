@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -10,11 +9,7 @@ using VCS_DOCs.Infrastructure.Auth;
 
 namespace VCS_DOCs.Support.Hubs
 {
-    /// <summary>
-    /// Трекает подключения, обновляет флаг онлайна в БД,
-    /// рассылает presence-ивенты и даёт снапшоты по запросу.
-    /// </summary>
-    [Authorize(Policy = "SupportDeskAccess")]
+    [Authorize] // доступен всем авторизованным (входит и BaseUser)
     public class SupportPresenceHub : Hub
     {
         private readonly IUserService _userService;
@@ -25,22 +20,7 @@ namespace VCS_DOCs.Support.Hubs
 
         public SupportPresenceHub(IUserService userService) => _userService = userService;
 
-        private static bool IsOnline(string userId) =>
-            _connections.TryGetValue(userId, out var conns) && conns is { IsEmpty: false };
-
-        private Task BroadcastPresence(string userId, bool online) =>
-            Clients.Group($"watch:{userId}")
-                   .SendAsync("Presence", new
-                   {
-                       userId,
-                       online
-                   });
-
-        private async Task SendSnapshotToCaller(IEnumerable<string> userIds)
-        {
-            foreach (var id in userIds.Where(s => !string.IsNullOrWhiteSpace(s)).Distinct(StringComparer.Ordinal))
-                await Clients.Caller.SendAsync("Presence", new { userId = id, online = IsOnline(id) });
-        }
+        private static string GroupFor(string userId) => $"presence:{userId}";
 
         public override async Task OnConnectedAsync()
         {
@@ -52,8 +32,14 @@ namespace VCS_DOCs.Support.Hubs
 
                 if (conns.Count == 1)
                 {
+                    // первый коннект пользователя на сервере
                     await _userService.UpdateUserStatusAsync(userId, true);
-                    await BroadcastPresence(userId, true);
+                    await Clients.Group(GroupFor(userId))
+                                 .SendAsync("Presence", new
+                                 {
+                                     userId,
+                                     online = true
+                                 });
                 }
             }
             await base.OnConnectedAsync();
@@ -68,9 +54,8 @@ namespace VCS_DOCs.Support.Hubs
 
                 if (conns.IsEmpty)
                 {
-                    // даём шанс на быстрое переподключение (F5/шатания сети)
+                    // ждём возможный auto-reconnect
                     await Task.Delay(5000);
-
                     if (_connections.TryGetValue(userId, out var check) && !check.IsEmpty)
                     {
                         await base.OnDisconnectedAsync(exception);
@@ -79,59 +64,39 @@ namespace VCS_DOCs.Support.Hubs
 
                     _connections.TryRemove(userId, out _);
                     await _userService.UpdateUserStatusAsync(userId, false);
-                    await BroadcastPresence(userId, false);
+                    await Clients.Group(GroupFor(userId))
+                                 .SendAsync("Presence", new
+                                 {
+                                     userId,
+                                     online = false
+                                 });
                 }
             }
             await base.OnDisconnectedAsync(exception);
         }
 
-        // ----- API -----
-
-        public async Task WatchUsers(IEnumerable<string> userIds)
+        /// Клиент подписывается на список юзеров и получает моментальный снимок статусов.
+        public async Task WatchUsers(string[] userIds)
         {
-            var ids = (userIds ?? Enumerable.Empty<string>())
-                      .Where(s => !string.IsNullOrWhiteSpace(s))
-                      .Distinct(StringComparer.Ordinal)
-                      .ToArray();
+            if (userIds == null || userIds.Length == 0) return;
+
+            var ids = userIds.Where(s => !string.IsNullOrWhiteSpace(s))
+                             .Select(s => s.Trim())
+                             .Distinct(StringComparer.Ordinal)
+                             .ToArray();
 
             foreach (var id in ids)
-                await Groups.AddToGroupAsync(Context.ConnectionId, $"watch:{id}");
+                await Groups.AddToGroupAsync(Context.ConnectionId, GroupFor(id));
 
-            await SendSnapshotToCaller(ids);
+            // мгновенный снимок по каждому наблюдаемому
+            foreach (var id in ids)
+            {
+                var online = _connections.TryGetValue(id, out var set) && set is { IsEmpty: false } == true;
+                await Clients.Caller.SendAsync("Presence", new { userId = id, online });
+            }
         }
 
-        public async Task Watch(string userId)
-        {
-            if (string.IsNullOrWhiteSpace(userId)) return;
-            await Groups.AddToGroupAsync(Context.ConnectionId, $"watch:{userId}");
-            await Clients.Caller.SendAsync("Presence", new { userId, online = IsOnline(userId) });
-        }
-
-        public async Task UnwatchUsers(IEnumerable<string> userIds)
-        {
-            foreach (var id in (userIds ?? Enumerable.Empty<string>())
-                     .Where(s => !string.IsNullOrWhiteSpace(s))
-                     .Distinct(StringComparer.Ordinal))
-                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"watch:{id}");
-        }
-
-        public Task<IDictionary<string, object>> GetPresenceMany(IEnumerable<string> userIds)
-        {
-            var dict = new Dictionary<string, object>(StringComparer.Ordinal);
-            foreach (var id in (userIds ?? Enumerable.Empty<string>())
-                     .Where(s => !string.IsNullOrWhiteSpace(s))
-                     .Distinct(StringComparer.Ordinal))
-                dict[id] = new { userId = id, online = IsOnline(id) };
-            return Task.FromResult<IDictionary<string, object>>(dict);
-        }
-
-        public Task<object> GetPresence(string userId)
-        {
-            if (string.IsNullOrWhiteSpace(userId))
-                return Task.FromResult<object>(new { userId = "", online = false });
-            return Task.FromResult<object>(new { userId, online = IsOnline(userId) });
-        }
-
+        /// Пинг от клиента — продлеваем online текущему пользователю.
         public Task Pulse()
         {
             var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);

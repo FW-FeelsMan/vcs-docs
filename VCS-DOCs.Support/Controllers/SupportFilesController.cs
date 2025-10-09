@@ -155,7 +155,7 @@ public sealed class SupportFilesController : ControllerBase
             var safeName = SanitizeFileName(f.FileName);
             var ext = Path.GetExtension(safeName).ToLowerInvariant();
             if (allowed.Count > 0 && !allowed.Contains(ext))
-                return BadRequest(new { ok = false, error = "bad_ext", ext, allowed });
+                return BadRequest(new { ok = false, error = "Не поддерживаемое расширение файла.\nДоступно к загрузке: \".png\", \".jpg\", \".jpeg\", \".pdf\", \".docx\", \".xlsx\", \".txt\", \".zip\", \".7z\" ", ext, allowed });
 
             var key = $"{ticketId}/{Guid.NewGuid():N}-{safeName}";
             var full = Path.Combine(root, key.Replace('/', Path.DirectorySeparatorChar));

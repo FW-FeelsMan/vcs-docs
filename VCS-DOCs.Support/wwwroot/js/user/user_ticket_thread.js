@@ -1,19 +1,13 @@
-﻿// wwwroot/js/user/user_ticket_thread.js — realtime + send + attachments + presence via SignalR (fixed)
+﻿// realtime + send + attachments + presence via SignalR (snapshot + live)
 (() => {
     // ===== utils =================================================================
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-    const fmtTime = iso => {            // для сообщений — HH:mm
-        try { return new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' }).format(new Date(iso)); }
-        catch { return String(iso); }
-    };
-    const fmtFull = iso => {            // для мета «Создано/Обновлено»
-        try { return new Intl.DateTimeFormat('ru-RU', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(iso)); }
-        catch { return String(iso); }
-    };
-
+    const fmtTime = iso => { try { return new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' }).format(new Date(iso)); } catch { return String(iso); } };
+    const fmtFull = iso => { try { return new Intl.DateTimeFormat('ru-RU', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).format(new Date(iso)); } catch { return String(iso); } };
     const csrfMeta = () => document.querySelector('meta[name="csrf-token"]')?.content || '';
     const aftInput = () => /** @type {HTMLInputElement|null} */(document.querySelector('input[name="__RequestVerificationToken"]'));
     const anti = () => aftInput()?.value || csrfMeta();
+    const cssEsc = v => (window.CSS && CSS.escape) ? CSS.escape(String(v)) : String(v).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
 
     async function getJson(url) {
         const res = await fetch(url, { credentials: 'same-origin', cache: 'no-store', headers: { 'X-Requested-With': 'fetch' } });
@@ -23,8 +17,7 @@
     async function postJson(url, body) {
         const token = anti();
         const res = await fetch(url, {
-            method: 'POST',
-            credentials: 'same-origin',
+            method: 'POST', credentials: 'same-origin',
             headers: { 'Content-Type': 'application/json; charset=utf-8', ...(token ? { 'RequestVerificationToken': token } : {}) },
             body: JSON.stringify(body ?? {})
         });
@@ -34,22 +27,25 @@
     async function safeJson(resp) { try { return await resp.json(); } catch { return null; } }
     function fmtSize(n) { if (n >= 1048576) return (n / 1048576).toFixed(1) + ' MB'; if (n >= 1024) return (n / 1024).toFixed(1) + ' KB'; return n + ' B'; }
 
-    const renderAttList = list =>
-        (list || []).map(a =>
-            `<a class="tt-file" href="/api/support/files/${encodeURIComponent(a.id)}" target="_blank" rel="noopener">${esc(a.name || a.fileName || ('file-' + a.id))}</a>`
-        ).join(' ');
+    const renderAttList = list => (list || []).map(a => `<a class="tt-file" href="/api/support/files/${encodeURIComponent(a.id)}" target="_blank" rel="noopener">${esc(a.name || a.fileName || ('file-' + a.id))}</a>`).join(' ');
 
     const initialsFrom = (name) => {
-        const s = String(name || '').trim();
-        if (!s) return '•';
-        const parts = s.split(/\s+/).slice(0, 2);
-        return parts.map(p => p[0]).join('').toUpperCase();
+        const s = String(name || '').trim(); if (!s) return '•';
+        const parts = s.split(/\s+/).slice(0, 2); return parts.map(p => p[0]).join('').toUpperCase();
     };
     const whoDisplay = (m, mine, isOp) => m?.authorName ?? (mine ? 'Вы' : (isOp ? 'Оператор' : 'Пользователь'));
 
-    // ===== Presence (UI) =========================================================
-    const cssEsc = (v) => (window.CSS && CSS.escape) ? CSS.escape(String(v)) : String(v).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
+    // --- извлекаем userId автора ---
+    function authorIdFrom(m) {
+        const direct = m?.authorUserId || m?.authorId || m?.userId || m?.user?.id || m?.author?.id || m?.author?.userId;
+        if (direct) return String(direct);
+        const url = m?.authorAvatarUrl || '';
+        const m1 = String(url).match(/\/avatars\/([^\/]+)\.jpg(?:\?|$)/i);
+        if (m1) return m1[1];
+        return null;
+    }
 
+    // ===== Presence UI ===========================================================
     function setPresence(userId, online) {
         if (!userId) return;
         document.querySelectorAll(`.tt-msg[data-author-id="${cssEsc(userId)}"] .tt-presence`)
@@ -96,7 +92,6 @@
 
     async function connectPresenceHub(authorIds, onPresence) {
         if (!Array.isArray(authorIds) || authorIds.length === 0) return null;
-
         const signalR = await loadSignalR();
         const conn = new signalR.HubConnectionBuilder().withUrl(PRESENCE_HUB_URL, { withCredentials: true }).withAutomaticReconnect().build();
 
@@ -109,95 +104,46 @@
         };
 
         conn.on('Presence', handle);
-        conn.on('presence', handle); // запасной алиас
+        conn.on('presence', handle);
 
         await conn.start().catch(() => { });
 
-        // подписка + стартовый снапшот
+        // подписка + моментальный снимок (сервер шлёт в ответ)
         try { await conn.invoke('WatchUsers', authorIds); } catch { }
-        try {
-            const dict = await conn.invoke('GetPresenceMany', authorIds);
-            if (dict && typeof dict === 'object') {
-                Object.values(dict).forEach(handle);
-            }
-        } catch { }
 
         return conn;
     }
 
-    // ===== Attachments (user) =====================================================
-    const inflight = new Set(); // активные загрузки
-
-    function track(promise, onChange) {
-        inflight.add(promise);
-        onChange?.();
-        promise.finally(() => { inflight.delete(promise); onChange?.(); });
-        return promise;
-    }
-
+    // ===== Attachments ===========================================================
+    const inflight = new Set();
+    function track(p, onChange) { inflight.add(p); onChange?.(); p.finally(() => { inflight.delete(p); onChange?.(); }); return p; }
     function ensureStatusEl(container) {
         let st = container?.querySelector?.('.tt-attach-status');
-        if (!st && container) {
-            st = document.createElement('div');
-            st.className = 'tt-attach-status muted';
-            st.style.fontSize = '12px';
-            st.style.marginTop = '4px';
-            container.appendChild(st);
-        }
+        if (!st && container) { st = document.createElement('div'); st.className = 'tt-attach-status muted'; st.style.fontSize = '12px'; st.style.marginTop = '4px'; container.appendChild(st); }
         return st;
     }
-
     async function uploadSelected(uploadUrl, files, csrf, pending, renderList, onInflightChange) {
         if (!files || !files.length) return;
-
-        const fd = new FormData();
-        Array.from(files).forEach(f => fd.append("files", f, f.name));
-
+        const fd = new FormData(); Array.from(files).forEach(f => fd.append("files", f, f.name));
         const p = (async () => {
             let resp;
-            try {
-                resp = await fetch(uploadUrl, { method: "POST", body: fd, headers: { "RequestVerificationToken": csrf } });
-            } catch (e) {
-                console.error('upload fetch failed', e);
-                alert('Сеть недоступна или соединение оборвалось.');
-                return;
-            }
-            if (!resp.ok) {
-                const t = await safeJson(resp);
-                alert(`Ошибка загрузки: ${(t && (t.error || t.message)) || ('HTTP ' + resp.status)}`);
-                return;
-            }
+            try { resp = await fetch(uploadUrl, { method: "POST", body: fd, headers: { "RequestVerificationToken": csrf } }); }
+            catch (e) { console.error('upload fetch failed', e); alert('Сеть недоступна или соединение оборвалось.'); return; }
+            if (!resp.ok) { const t = await safeJson(resp); alert(`Ошибка загрузки: ${(t && (t.error || t.message)) || ('HTTP ' + resp.status)}`); return; }
             const data = await resp.json().catch(() => null);
-            if (data?.ok && Array.isArray(data.files)) {
-                for (const f of data.files) pending.push(f); // {id,name,size,contentType,url}
-                renderList();
-            }
+            if (data?.ok && Array.isArray(data.files)) { for (const f of data.files) pending.push(f); renderList(); }
         })();
-
         return track(p, onInflightChange);
     }
-
     async function bindAttachments(bindUrl, csrf, pending, messageId, onCleared) {
         if (!pending.length) return;
         const ids = pending.map(p => p.id);
         let resp;
         try {
-            resp = await fetch(bindUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "RequestVerificationToken": csrf },
-                body: JSON.stringify({ attachmentIds: ids, messageId })
-            });
-        } catch (e) {
-            console.warn('bind fetch failed', e);
-            return;
-        }
-        if (!resp.ok) {
-            const t = await safeJson(resp);
-            console.warn("bind failed", t);
-            return;
-        }
-        pending.length = 0;
-        onCleared?.();
+            resp = await fetch(bindUrl, { method: "POST", headers: { "Content-Type": "application/json", "RequestVerificationToken": csrf }, body: JSON.stringify({ attachmentIds: ids, messageId }) });
+        } catch (e) { console.warn('bind fetch failed', e); return; }
+        if (!resp.ok) { const t = await safeJson(resp); console.warn('bind failed', t); return; }
+        pending.length = 0; onCleared?.();
     }
 
     // ===== INIT ===================================================================
@@ -222,12 +168,8 @@
         const txt = root.querySelector('#tt_text');
         const btnSend = root.querySelector('#tt_send');
 
-        // ограничение на длину сообщения
         const MAX_LEN = 1500;
-        if (txt) {
-            txt.setAttribute('maxlength', String(MAX_LEN)); // нативный лимит
-            txt.placeholder = 'Напишите ответ… (Ctrl+Enter — отправить, ≤ 1500 символов)';
-        }
+        if (txt) { txt.setAttribute('maxlength', String(MAX_LEN)); txt.placeholder = 'Напишите ответ… (Ctrl+Enter — отправить, ≤ 1500 символов)'; }
 
         // attach UI
         const btnAttach = root.querySelector('#tt_attach');
@@ -237,27 +179,22 @@
         const csrf = anti();
         const uploadUrl = `/api/user/tickets/${encodeURIComponent(ticketId)}/files`;
         const bindUrl = `/api/user/tickets/${encodeURIComponent(ticketId)}/files/bind`;
-        const pending = []; // {id,name,size,contentType,url}
+        const pending = [];
 
-        function setSendDisabled(disabled, text) {
+        function setSendDisabled(disabled /*, text */) {
             if (!btnSend) return;
-            if (!btnSend.dataset.orig) btnSend.dataset.orig = btnSend.textContent || '';
-            btnSend.disabled = !!disabled;
-            btnSend.textContent = disabled && text ? text : btnSend.dataset.orig;
+            btnSend.disabled = !!disabled;     
         }
+
         function onInflightChange() {
             const n = inflight.size;
             if (statusEl) statusEl.textContent = n > 0 ? `Загрузка файлов… (${n})` : '';
             setSendDisabled(n > 0, 'Ждём файлы…');
         }
-
         function renderList() {
             if (!list) return;
-            list.innerHTML = pending.map(p =>
-                `<span class="tt-attach-pill"><b>${esc(p.name)}</b><small>${fmtSize(p.size)}</small>
-           <button title="Убрать" data-id="${p.id}">×</button></span>`
-            ).join("");
-            list.appendChild(statusEl); // держим статус внизу
+            list.innerHTML = pending.map(p => `<span class="tt-attach-pill"><b>${esc(p.name)}</b><small>${fmtSize(p.size)}</small><button title="Убрать" data-id="${p.id}">×</button></span>`).join("");
+            list.appendChild(statusEl);
             list.querySelectorAll("button[data-id]").forEach(btn => {
                 btn.addEventListener("click", () => {
                     const id = btn.dataset.id;
@@ -273,11 +210,11 @@
         });
 
         // header
-        titleId && (titleId.textContent = ticketId);
-        dupId && (dupId.textContent = ticketId);
-        subjEl && (subjEl.textContent = subject || '—');
+        if (titleId) titleId.textContent = ticketId;
+        if (dupId) dupId.textContent = ticketId;
+        if (subjEl) subjEl.textContent = subject || '—';
 
-        // 1) загрузка тикета
+        // load ticket
         let ticket, messages;
         try {
             const data = await getJson(`/api/support/tickets/${encodeURIComponent(ticketId)}`);
@@ -285,16 +222,17 @@
             messages = Array.isArray(data.messages) ? data.messages : [];
         } catch (e) {
             console.error('[user-ticket] load failed:', e);
-            msgBox && (msgBox.innerHTML = `<div class="muted" style="padding:8px">Ошибка загрузки данных заявки.</div>`);
+            if (msgBox) msgBox.innerHTML = `<div class="muted" style="padding:8px">Ошибка загрузки данных заявки.</div>`;
             return;
         }
 
         const statusRu = ticket.status === 'closed' ? 'Закрыта' : 'Открыта';
-        stEl && (stEl.textContent = statusRu);
+        if (stEl) stEl.textContent = statusRu;
         if (ticket.status === 'closed') stEl?.classList.add('tt-status-closed');
-        crEl && (crEl.textContent = ticket.createdAt ? fmtFull(ticket.createdAt) : '—');
-        upEl && (upEl.textContent = ticket.updatedAt ? fmtFull(ticket.updatedAt) : '—');
+        if (crEl) crEl.textContent = ticket.createdAt ? fmtFull(ticket.createdAt) : '—';
+        if (upEl) upEl.textContent = ticket.updatedAt ? fmtFull(ticket.updatedAt) : '—';
 
+        // render
         const seenIds = new Set(messages.map(m => m.id).filter(Boolean));
         function addMessageAndScroll(m, mine = false) {
             if (m && m.id && seenIds.has(m.id)) return;
@@ -302,9 +240,8 @@
             msgBox.insertAdjacentHTML('beforeend', renderMsg(m, mine));
             if (upEl && (m?.createdAt || m?.at)) upEl.textContent = fmtFull(m.createdAt ?? m.at);
             if (wrap) wrap.scrollTop = wrap.scrollHeight;
-
-            // живое сообщение ⇒ автора считаем online
-            if (m?.authorUserId) setPresenceFor(m.authorUserId, true);
+            const aid = authorIdFrom(m);
+            if (aid) setPresenceFor(aid, true);
         }
 
         if (msgBox) {
@@ -314,30 +251,23 @@
 
         applyClosedState(root, ticket.status === 'closed');
 
-        // участники тикета (для presence)
+        // participants for presence
         const participantIds = new Set();
-        (messages || []).forEach(m => { if (m?.authorUserId) participantIds.add(String(m.authorUserId)); });
+        (messages || []).forEach(m => { const aid = authorIdFrom(m); if (aid) participantIds.add(aid); });
         if (ticket?.ownerUserId) participantIds.add(String(ticket.ownerUserId));
 
-        // 2) отправка (со вложениями)
+        // send
         async function sendNow() {
             const v = (txt?.value || '').trim();
             if (ticket.status === 'closed') return;
 
             if (inflight.size) {
                 onInflightChange();
-                try { await Promise.all([...inflight]); } catch { }
-                finally { onInflightChange(); }
+                try { await Promise.all([...inflight]); } catch { } finally { onInflightChange(); }
             }
 
-            if (!v && !pending.length) {
-                alert('Добавьте текст или вложение.');
-                return;
-            }
-            if (v.length > MAX_LEN) {
-                alert(`Слишком длинное сообщение (${v.length}). Максимум ${MAX_LEN} символов.`);
-                return;
-            }
+            if (!v && !pending.length) { alert('Добавьте текст или вложение.'); return; }
+            if (v.length > 1500) { alert(`Слишком длинное сообщение (${v.length}). Максимум 1500 символов.`); return; }
 
             const localAtt = pending.map(p => ({ id: p.id, name: p.name }));
 
@@ -346,13 +276,12 @@
                 const newId = res?.id;
 
                 const mineMsg = {
-                    id: newId,
-                    role: 'user',
-                    body: v,
+                    id: newId, role: 'user', body: v,
                     createdAt: res?.at || new Date().toISOString(),
                     attachments: localAtt,
                     authorName: res?.authorName,
                     authorUserId: res?.authorUserId,
+                    authorAvatarUrl: res?.authorAvatarUrl,
                     authorOnline: true
                 };
                 addMessageAndScroll(mineMsg, true);
@@ -360,10 +289,8 @@
 
                 if (txt) txt.value = '';
 
-                if (mineMsg.authorUserId) {
-                    participantIds.add(String(mineMsg.authorUserId));
-                    setPresenceFor(mineMsg.authorUserId, true);
-                }
+                const aid = authorIdFrom(mineMsg);
+                if (aid) { participantIds.add(aid); setPresenceFor(aid, true); }
 
                 if (newId && pending.length) {
                     await bindAttachments(bindUrl, csrf, pending, newId, () => renderList());
@@ -380,45 +307,36 @@
         txt?.addEventListener('keydown', onKey);
         btnSend?.addEventListener('click', sendNow);
 
-        // 3) SignalR: живые сообщения
+        // SignalR: messages
         let ticketConn = null;
         try {
             ticketConn = await connectTicketHub(ticketId, (msg) => {
                 addMessageAndScroll(msg, !!msg.mine);
-                if (msg?.authorUserId) participantIds.add(String(msg.authorUserId));
+                const aid = authorIdFrom(msg); if (aid) participantIds.add(aid);
             });
-        } catch (e) {
-            console.warn('[user-ticket] signalr(ticket) disabled:', e?.message || e);
-        }
+        } catch (e) { console.warn('[user-ticket] signalr(ticket) disabled:', e?.message || e); }
 
-        // 4) SignalR: presence (подписка + снапшот)
+        // SignalR: presence (подписка + снимок)
         let presenceConn = null;
         try {
             if (participantIds.size > 0) {
-                presenceConn = await connectPresenceHub([...participantIds], (uid, online) => {
-                    setPresenceFor(uid, online);
-                });
+                presenceConn = await connectPresenceHub([...participantIds], (uid, online) => setPresenceFor(uid, online));
             }
-        } catch (e) {
-            console.warn('[user-ticket] signalr(presence) disabled:', e?.message || e);
-        }
+        } catch (e) { console.warn('[user-ticket] signalr(presence) disabled:', e?.message || e); }
 
-        // 5) Назад
+        // Back
         const btnBackEl = root.querySelector('#tt_back');
         function goBack() {
             const exists = id => !!document.querySelector(`.sidebar .sidebar-button[data-content="${id}"]`);
             const fromId = ds.from || '';
             const backup = (typeof window.__support_backTarget === 'string' && window.__support_backTarget) ? window.__support_backTarget : '';
             const target = (fromId && exists(fromId)) ? fromId : (backup && exists(backup)) ? backup : 'open_tickets';
-            if (typeof window.selectSidebarByContentId === 'function') {
-                window.selectSidebarByContentId(target);
-            } else {
-                history.back();
-            }
+            if (typeof window.selectSidebarByContentId === 'function') window.selectSidebarByContentId(target);
+            else history.back();
         }
         btnBackEl?.addEventListener('click', goBack);
 
-        // 6) dispose
+        // dispose
         panel.__dispose = async function () {
             try { txt?.removeEventListener('keydown', onKey); } catch { }
             try { btnSend?.removeEventListener('click', sendNow); } catch { }
@@ -427,10 +345,8 @@
             if (presenceConn) { try { await presenceConn.stop(); } catch { } presenceConn = null; }
         };
 
-        // экспорт (если понадобится триггерить статус извне)
-        window.TT_Presence = {
-            set: (authorUserId, online) => setPresenceFor(authorUserId, online)
-        };
+        // export
+        window.TT_Presence = { set: (authorUserId, online) => setPresenceFor(authorUserId, online) };
         window.TT_Attach = {
             bindTo: (messageId) => bindAttachments(bindUrl, csrf, pending, messageId, () => renderList()),
             getIds: () => pending.map(p => p.id),
@@ -459,7 +375,8 @@
 
         const msgIdAttr = m.id ? ` data-msg-id="${String(m.id)}"` : '';
         const roleCls = isOp ? ' op' : ' usr';
-        const authorIdAttr = m.authorUserId ? ` data-author-id="${esc(m.authorUserId)}"` : '';
+        const authorId = authorIdFrom(m);
+        const authorIdAttr = authorId ? ` data-author-id="${esc(authorId)}"` : '';
 
         return `
   <div class="tt-msg${roleCls}"${msgIdAttr}${authorIdAttr}>
@@ -501,11 +418,11 @@
         if (closed) {
             inputWrap?.classList.add('disabled');
             if (txt) { txt.disabled = true; txt.placeholder = 'Заявка закрыта. Отправка сообщений недоступна.'; }
-            if (btnSend) { btnSend.disabled = true; btnSend.classList.remove('primary'); }
+            if (btnSend) btnSend.disabled = true;
         } else {
             inputWrap?.classList.remove('disabled');
             if (txt) { txt.disabled = false; txt.placeholder = 'Напишите ответ… (Ctrl+Enter — отправить, ≤ 1500 символов)'; }
-            if (btnSend) { btnSend.disabled = false; btnSend.classList.add('primary'); }
+            if (btnSend) btnSend.disabled = false;
         }
     }
 })();

@@ -2,6 +2,12 @@
    Ticket thread (feed-like)
    ========================= */
 
+/* ===== Палитра ===== */
+:root {
+    --brand-blue: #3b82f6; /* фирменный синий */
+    --brand-green: #22c55e; /* можно оставить на будущее */
+}
+
 /* ===== Карточка / шапка ===== */
 #ticket-thread {
     display: flex;
@@ -32,10 +38,10 @@
         flex: 1 1 auto;
         overflow: auto;
         overflow-x: hidden;
-        margin: 0 6px 8px 6px;
+        margin: 0 6px 8px;
         padding: 10px;
         background: #fff;
-        border: 1px solid #e9ecef;
+        border: 1px solid #babec3;
         border-radius: 10px;
         box-shadow: 0 8px 24px rgba(0,0,0,.04);
     }
@@ -43,7 +49,7 @@
     /* Метаданные */
     #ticket-thread .tt-meta {
         display: grid;
-        grid-template-columns: repeat(4, minmax(140px, 1fr));
+        grid-template-columns: repeat(4, minmax(140px,1fr));
         gap: 6px 12px;
         margin: 4px 0 10px;
         font-size: 13px;
@@ -58,162 +64,83 @@
         padding: 6px 8px 12px;
     }
 
-/* ===== Сообщение: общий «бабл» вокруг всего ===== */
+/* ===== Сообщение (строка) ===== */
 .tt-msg {
     position: relative;
     display: flex;
     align-items: flex-start;
     gap: 10px;
-    padding: 10px 12px 10px 14px; /* запас слева под полоску */
-    border-radius: 16px;
-    overflow: hidden;
-    /* фон и бордер через переменные (перекрашиваем по ролям ниже) */
-    --bubble-bg: rgba(15,23,42,.04);
-    --bubble-br: rgba(15,23,42,.08);
-}
-
-    /* фон-пластина — именно её «увеличиваем» на hover (чтобы текст не мылится) */
-    .tt-msg::after {
-        content: "";
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        background: var(--bubble-bg);
-        border: 1px solid var(--bubble-br);
-        box-shadow: 0 1px 2px rgba(0,0,0,.06);
-        transform: scale(1);
-        transform-origin: center left;
-        transition: transform .12s ease, box-shadow .12s ease, background-color .12s ease, border-color .12s ease;
-        will-change: transform;
-        z-index: 0; /* под полоской и контентом */
-    }
-
-    /* тонкая цветная полоска слева */
-    .tt-msg::before {
-        content: "";
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        width: 4px;
-        background: linear-gradient(to bottom, rgba(15,23,42,.22), rgba(15,23,42,.28));
-        z-index: 1; /* поверх пластины, но под контентом */
-    }
-
-    /* контент поверх псевдоэлементов */
-    .tt-msg > * {
-        position: relative;
-        z-index: 2;
-    }
-
-    /* лёгкий эффект наведения — без тряски текста */
-    .tt-msg:hover::after {
-        transform: scale(1.01);
-        box-shadow: 0 4px 12px rgba(0,0,0,.12);
-    }
-
-    /* ===== Роли (меняем только переменные и полоску) ===== */
-    .tt-msg.op {
-        --bubble-bg: rgba(90,155,213,.12);
-        --bubble-br: rgba(90,155,213,.28);
-    }
-
-        .tt-msg.op::before {
-            background: linear-gradient(to bottom, #6eace0, #3d7bbf);
-        }
-
-    .tt-msg.usr {
-        --bubble-bg: rgba(15,23,42,.05);
-        --bubble-br: rgba(15,23,42,.10);
-    }
-
-        .tt-msg.usr::before {
-            background: linear-gradient(to bottom, rgba(100,116,139,.35), rgba(71,85,105,.45));
-        }
-
-/* ===== Аватар + индикатор присутствия ===== */
-.tt-avatar {
-    position: relative;
-    flex: 0 0 auto;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    display: grid;
-    place-items: center;
-    background: #eef2ff;
-    color: #3b82f6;
-    font-weight: 700;
-    user-select: none;
-    box-shadow: 0 2px 6px rgba(0,0,0,.08);
-}
-
-    /* содержимое аватара — скругляем, чтобы не вылазило за круг */
-    .tt-avatar img,
-    .tt-avatar .initials {
-        width: 100%;
-        height: 100%;
-        display: block;
-        border-radius: inherit;
-        object-fit: cover; /* для img */
-    }
-
-    .tt-avatar .initials {
-        font-size: 16px;
-        line-height: 1;
-    }
-
-/* маленькая точка статуса в правом-нижнем углу аватара */
-.tt-presence {
-    position: absolute;
-    right: -1px;
-    bottom: -1px;
-    width: 12px;
-    height: 12px;
-    border-radius: 999px;
-    background: #cbd5e1; /* offline по умолчанию */
-    box-shadow: 0 0 0 2px #fff; /* белое кольцо вокруг */
-    z-index: 3;
-}
-
-    .tt-presence.online {
-        background: #22c55e;
-    }
-    /* online — зелёный */
-    .tt-presence.away {
-        background: #f59e0b;
-    }
-    /* (если понадобится) */
-    .tt-presence.offline {
-        background: #cbd5e1;
-    }
-/* offline — серый */
-
-/* ===== Контент сообщения ===== */
-.tt-bubble {
-    flex: 1 1 auto;
-    max-width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    background: transparent;
-    border: 0;
-    box-shadow: none;
     padding: 0;
-    margin: 0;
+    border-radius: 0;
+    overflow: visible;
+    --bubble-bg: #ffffff;
+    --bubble-br: #e5e7eb;
 }
+    /* роли */
+    .tt-msg.op {
+        --bubble-bg: #ebfcdd;
+        --bubble-br: #78ae5c;
+    }
+    /* оператор */
+    .tt-msg.usr {
+        --bubble-bg: #ffffff;
+        --bubble-br: #8f8f91;
+    }
+/* пользователь */
 
-/* Заголовок (имя + время) */
+/* ===== Сам бабл ===== */
+.tt-bubble {
+    position: relative;
+    flex: 0 1 auto;
+    display: inline-flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 10px 12px;
+    background: var(--bubble-bg);
+    border: 1px solid var(--bubble-br);
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgba(0,0,0,.06);
+    max-width: clamp(220px,70%,760px);
+    width: fit-content;
+}
+    /* хвостик к аватарке */
+    .tt-bubble::before, .tt-bubble::after {
+        content: "";
+        position: absolute;
+        top: 18px;
+        left: -6px;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 6px 6px 6px 0;
+    }
+
+    .tt-bubble::before {
+        border-color: transparent var(--bubble-br) transparent transparent;
+    }
+
+    .tt-bubble::after {
+        left: -5px;
+        border-color: transparent var(--bubble-bg) transparent transparent;
+    }
+
+    .tt-bubble:hover {
+        box-shadow: 0 2px 10px rgba(0,0,0,.08);
+    }
+
+/* ===== Контент бабла ===== */
 .tt-msg-head {
     font-size: 14px;
     display: flex;
     align-items: baseline;
     gap: 10px;
+    margin-bottom: 2px;
 }
 
     .tt-msg-head .tt-name {
         font-weight: 700;
         color: #111827;
-        font-size: 17px;
+        font-size: 16px;
     }
 
     .tt-msg-head .tt-time {
@@ -221,22 +148,21 @@
         opacity: .6;
     }
 
-/* Текст */
 .tt-msg-text {
     font-size: 15px;
-    line-height: 1.35;
+    line-height: 1.4;
     color: #1f2937;
     white-space: pre-wrap;
     word-break: break-word;
     overflow-wrap: anywhere;
 }
 
-/* Файлы (чипы) */
+/* Файлы к сообщению */
 .tt-files {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
-    margin-top: 4px;
+    margin-top: 2px;
 }
 
 .tt-file {
@@ -255,44 +181,329 @@
         color: #0f172a;
     }
 
-/* ===== Блок ввода ===== */
+/* ===== Аватар + индикатор ===== */
+.tt-avatar {
+    position: relative;
+    flex: 0 0 48px;
+    width: 48px;
+    min-width: 48px;
+    height: 48px;
+    box-sizing: border-box;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #eef2ff;
+    color: #3b82f6;
+    font-weight: 700;
+    user-select: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,.08);
+    margin-top: 2px;
+}
+
+    .tt-avatar img, .tt-avatar .initials {
+        width: 100%;
+        height: 100%;
+        display: block;
+        border-radius: inherit;
+        object-fit: cover;
+        max-width: 100%;
+    }
+
+    .tt-avatar .initials {
+        font-size: 16px;
+        line-height: 1;
+    }
+
+.tt-presence {
+    position: absolute;
+    right: -1px;
+    bottom: -1px;
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    background: #cbd5e1;
+    box-shadow: 0 0 0 2px #fff;
+    z-index: 3;
+}
+
+    .tt-presence.online {
+        background: #22c55e;
+    }
+
+    .tt-presence.away {
+        background: #f59e0b;
+    }
+
+    .tt-presence.offline {
+        background: #cbd5e1;
+    }
+
+/* ===== НИЖНИЙ КОМПОЗЕР (компактный) ===== */
 #ticket-thread .tt-input {
     display: flex;
-    gap: 10px;
-    align-items: flex-start;
-    margin-top: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin: 6px;
+    padding: 6px 8px;
     background: #fff;
-    border: 1px solid #e6e9f2;
+    border: 1px solid #b2b5bb;
     border-radius: 12px;
-    padding: 10px;
     box-shadow: 0 10px 30px rgba(0,0,0,.06);
 }
 
-    #ticket-thread .tt-input textarea {
+    /* Плюс — собственный стиль */
+    #ticket-thread .tt-input .tt-plus {
+        inline-size: 34px;
+        block-size: 34px;
+        flex: 0 0 34px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: 0;
+        border-radius: 8px;
+        cursor: pointer;
+        color: #94a3b8;
+        position: relative;
+        padding: 0;
+    }
+
+        #ticket-thread .tt-input .tt-plus::before {
+            content: "+";
+            font-size: 20px;
+            font-weight: 600;
+            line-height: 1;
+        }
+
+        #ticket-thread .tt-input .tt-plus:hover {
+            background: #f8fafc;
+        }
+
+        #ticket-thread .tt-input .tt-plus:active {
+            transform: translateY(1px);
+        }
+        /* разделитель */
+        #ticket-thread .tt-input .tt-plus::after {
+            content: "";
+            position: absolute;
+            right: -8px;
+            top: 6px;
+            bottom: 6px;
+            inline-size: 1px;
+            background: #e5e7eb;
+        }
+
+    /* скрытый input[type=file] */
+    #ticket-thread .tt-input #tt_files {
+        display: none;
+    }
+
+    /* textarea — невысокая, без «уха», со скроллом */
+    #ticket-thread .tt-input #tt_text {
+        order: 1;
         flex: 1 1 auto;
-        resize: vertical;
-        min-height: 52px;
-        max-height: 40vh;
+        block-size: 36px;
+        min-block-size: 36px;
+        max-block-size: 120px;
+        padding: 6px 10px;
+        border: 0;
+        outline: none;
+        resize: none;
+        overflow-y: auto;
+        background: transparent;
+        font-size: 14px;
+        line-height: 1.35;
+        color: #0f172a;
     }
 
-    #ticket-thread .tt-input .button-sliding {
+        #ticket-thread .tt-input #tt_text::placeholder {
+            color: #94a3b8;
+        }
+
+    /* ВАЖНО: старый стиль для #tt_send — только если это НЕ .btn-pill */
+    #ticket-thread .tt-input #tt_send:not(.btn-pill) {
+        order: 1;
         flex: 0 0 auto;
+        block-size: 34px;
+        padding: 0 14px;
+        border-radius: 8px;
+        border: 1px solid transparent;
+        background: #3b82f6;
+        color: #fff;
+        font-weight: 600;
+        cursor: pointer;
     }
 
-.tt-input.disabled {
-    opacity: .6;
-    pointer-events: none;
-}
+        #ticket-thread .tt-input #tt_send:not(.btn-pill):hover {
+            filter: brightness(.96);
+        }
 
-    .tt-input.disabled textarea::placeholder {
-        opacity: .95;
+        #ticket-thread .tt-input #tt_send:not(.btn-pill):active {
+            transform: translateY(1px);
+        }
+
+        #ticket-thread .tt-input #tt_send:not(.btn-pill):disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+    /* выбранные вложения — внизу композера */
+    #ticket-thread .tt-input .tt-attach-list {
+        order: 2;
+        flex: 1 1 100%;
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 4px;
     }
+
+    #ticket-thread .tt-input .tt-attach-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid #b2b5bb;
+        border-radius: 10px;
+        padding: 2px 6px;
+        background: #f8fafc;
+    }
+
+        #ticket-thread .tt-input .tt-attach-pill small {
+            color: #94a3b8;
+            margin-left: 4px;
+        }
+
+        #ticket-thread .tt-input .tt-attach-pill button {
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+    /* disabled */
+    #ticket-thread .tt-input.disabled {
+        opacity: .6;
+        pointer-events: none;
+    }
+
+        #ticket-thread .tt-input.disabled #tt_text::placeholder {
+            opacity: .95;
+        }
 
 /* Статус */
 .tt-status-closed {
     color: #d9534f;
     font-weight: 600;
 }
+
+/* ===== Кнопки «пилюли» (универсальный стиль со слайдингом) ===== */
+.btn-pill {
+    --btn-color: var(--brand-blue);
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    height: 36px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: 1px solid var(--btn-color);
+    color: var(--btn-color);
+    background: #fff;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    overflow: hidden;
+    transition: color .2s ease, border-color .2s ease, transform .08s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+    .btn-pill:active {
+        transform: translateY(1px);
+    }
+    /* sliding fill */
+    .btn-pill::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: var(--btn-color);
+        transform: translateX(-100%);
+        transition: transform .28s ease;
+        z-index: 0;
+    }
+
+    .btn-pill:hover::before, .btn-pill:focus-visible::before {
+        transform: translateX(0);
+    }
+
+    .btn-pill > * {
+        position: relative;
+        z-index: 1;
+    }
+
+    .btn-pill:hover, .btn-pill:focus-visible {
+        color: #fff;
+    }
+
+    .btn-pill:disabled {
+        opacity: .55;
+        cursor: not-allowed;
+    }
+
+/* Варианты */
+.btn-back {
+    --btn-color: var(--brand-blue);
+}
+
+.btn-send {
+    --btn-color: var(--brand-blue);
+}
+
+    .btn-send .ico-plane {
+        width: 16px;
+        height: 16px;
+    }
+
+/* ——— Back: ghost-пилюля без заливки ——— */
+.btn-back-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 36px;
+    padding: 0 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(59,130,246,.35);
+    background: transparent;
+    color: var(--brand-blue);
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transition: background .2s ease, color .2s ease, border-color .2s ease, transform .08s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+    .btn-back-ghost .chev {
+        font-size: 18px;
+        line-height: 1;
+    }
+
+    .btn-back-ghost:hover {
+        background: rgba(59,130,246,.08);
+        border-color: rgba(59,130,246,.5);
+    }
+
+    .btn-back-ghost:active {
+        transform: translateY(1px);
+    }
+
+    .btn-back-ghost:focus-visible {
+        outline: 2px solid color-mix(in srgb, var(--brand-blue) 40%, #ffffff);
+        outline-offset: 2px;
+    }
+
+    .btn-back-ghost.btn-sm {
+        height: 32px;
+        padding: 0 12px;
+    }
 
 /* ===== Тёмная тема ===== */
 .profile_background.is-dark #ticket-thread .tt-wrap {
@@ -307,33 +518,22 @@
     box-shadow: 0 10px 30px rgba(0,0,0,.25);
 }
 
-/* сами сообщения — через переменные */
 .profile_background.is-dark .tt-msg {
-    --bubble-bg: rgba(255,255,255,.04);
-    --bubble-br: rgba(255,255,255,.08);
+    --bubble-br: #243056;
 }
 
-    .profile_background.is-dark .tt-msg::after {
-        box-shadow: 0 1px 2px rgba(0,0,0,.30);
+    .profile_background.is-dark .tt-msg.usr {
+        --bubble-bg: #121a34;
     }
 
     .profile_background.is-dark .tt-msg.op {
-        --bubble-bg: rgba(90,155,213,.18);
-        --bubble-br: rgba(90,155,213,.35);
+        --bubble-bg: #1e2b18;
+        --bubble-br: #2a3a22;
     }
 
-    .profile_background.is-dark .tt-msg.usr {
-        --bubble-bg: rgba(255,255,255,.05);
-        --bubble-br: rgba(255,255,255,.10);
-    }
-
-    .profile_background.is-dark .tt-msg.op::before {
-        background: linear-gradient(to bottom, #86c2ee, #4c8ed1);
-    }
-
-    .profile_background.is-dark .tt-msg.usr::before {
-        background: linear-gradient(to bottom, rgba(148,163,184,.50), rgba(100,116,139,.55));
-    }
+.profile_background.is-dark .tt-bubble {
+    box-shadow: 0 1px 2px rgba(0,0,0,.30);
+}
 
 .profile_background.is-dark .tt-msg-text {
     color: #e7ecff;
@@ -355,15 +555,43 @@
         color: #fff;
     }
 
+.profile_background.is-dark #ticket-thread .tt-input .tt-plus {
+    color: #9aa3bd;
+}
+
+    .profile_background.is-dark #ticket-thread .tt-input .tt-plus::after {
+        background: #263156;
+    }
+/* пилюли */
+.profile_background.is-dark .btn-pill {
+    background: #10152a;
+    color: var(--brand-blue);
+    border-color: color-mix(in srgb, var(--brand-blue) 55%, #0b1433);
+}
+
+    .profile_background.is-dark .btn-pill:hover,
+    .profile_background.is-dark .btn-pill:focus-visible {
+        color: #fff;
+    }
+
+.profile_background.is-dark .btn-back-ghost {
+    border-color: rgba(59,130,246,.45);
+    color: color-mix(in srgb, var(--brand-blue) 85%, #ffffff);
+}
+
+    .profile_background.is-dark .btn-back-ghost:hover {
+        background: color-mix(in srgb, var(--brand-blue) 18%, transparent);
+    }
+
 /* ===== Адаптив ===== */
-@media (max-width: 700px) {
-    .tt-msg {
-        padding: 8px 10px 8px 12px;
-        border-radius: 14px;
+@media (max-width:700px) {
+    .tt-bubble {
+        max-width: 84%;
     }
 
     .tt-avatar {
         width: 42px;
+        min-width: 42px;
         height: 42px;
     }
 
@@ -371,4 +599,24 @@
         width: 10px;
         height: 10px;
     }
+
+    #ticket-thread .tt-input .tt-plus {
+        inline-size: 32px;
+        block-size: 32px;
+    }
+
+    #ticket-thread .tt-input #tt_text {
+        block-size: 34px;
+    }
+
+    #ticket-thread .tt-input #tt_send:not(.btn-pill) {
+        block-size: 32px;
+        padding: 0 12px;
+    }
+}
+
+#ticket-thread .tt-input #tt_send {
+    order: 1; /* остаётся на первой строке */
+    margin-inline-start: auto;
+    flex: 0 0 auto; /* не сжимать текст/иконку */
 }
