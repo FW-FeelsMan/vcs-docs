@@ -109,9 +109,13 @@ async function ensureContentScripts(contentId, panelEl) {
         await loadScriptOnce("/js/operator/ticket_thread.js", "ticket-thread-js");
         try { await waitForElm("#ticket-thread", 3000, panelEl); } catch { }
         if (!panelEl.isConnected) return;
-        if (typeof window.initTicketThread === "function") {
-            await window.initTicketThread(panelEl);
-        }
+        if (typeof window.initOpTicketThread === "function") {
+               await window.initOpTicketThread(panelEl);
+             } else if (typeof window.initTicketThread === "function") {
+                   await window.initTicketThread(panelEl); // бэкап-алиас
+                 } else {
+               console.warn("[sidebar] operator ticket init not found");
+             }
         return;
     }
 

@@ -1,57 +1,16 @@
 ﻿@page "/Content/Users/uticket/{id}"
+<!--D:\Unity\VCS-DOCs\VCS-DOCs.Support\Pages\Content\Users\uticket.cshtml-->
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "SupportDeskAccess")]
 @model VCS_DOCs.Support.Pages.Content.Users.UserTicketThreadModel
 @inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 @{
     Layout = null;
 }
+
 <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(HttpContext).RequestToken" />
 <link rel="stylesheet" href="~/css/sub_css/support_accountsStyle.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/sub_css/operator_tickets_css/ticket_thread.css" asp-append-version="true" />
 
-<style>
-    .tt-attach {
-        margin-right: 8px;
-    }
-
-    .tt-attach-list {
-        display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
-        margin: 6px 0 0;
-    }
-
-    .tt-attach-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        padding: 2px 6px;
-        background: #f7f7f7;
-    }
-
-        .tt-attach-pill small {
-            color: #888;
-            margin-left: 4px;
-        }
-
-        .tt-attach-pill button {
-            border: 0;
-            background: transparent;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-    .tt-files {
-        margin-top: 6px;
-    }
-
-        .tt-files .tt-file {
-            display: inline-block;
-            margin-right: 8px;
-        }
-</style>
 
 <div id="ticket-thread"
      class="profile_background accounts-page tickets-page"
@@ -85,7 +44,7 @@
 
     <div class="tt-input">
         <button id="tt_attach" class="tt-plus" aria-label="Прикрепить файл"></button>
-        <input id="tt_files" type="file" multiple>
+        <input id="tt_files" type="file" multiple class="tt-file-input" />
         <div id="tt_attach_list" class="tt-attach-list"></div>
 
         <textarea id="tt_text" rows="3"

@@ -14,17 +14,27 @@
      data-ticket-id="@Model.Id"
      data-subject="@Request?.Query["subject"]"
      data-from="@(Request?.Query["from"].ToString() ?? "user_tickets")">
-    <!-- from: user_tickets | closed_tickets -->
 
     <div class="button-container tt-header">
-        <button id="tt_back" class="button-sliding small">← Вернуться</button>
+        <!-- Назад (ghost) -->
+        <button id="tt_back" class="btn-back-ghost btn-sm" type="button">
+            <span class="chev" aria-hidden="true">‹</span>
+            <span>Вернуться</span>
+        </button>
+
         <h2 id="tt_title">
             Заявка <span id="tt_id">@Model.Id</span>
             <span class="tt-subject muted">Тема: <span id="tt_subject">—</span></span>
         </h2>
-        <button id="tt_close" class="button-sliding danger small" style="margin-left:auto">Закрыть заявку</button>
+
+        <!-- Закрыть заявку -->
+        <button id="tt_close" class="btn-pill btn-danger btn-sm" type="button">
+            Закрыть заявку
+        </button>
     </div>
-    <hr class="solid">
+
+    <hr class="solid" />
+
     <!-- Скролл ТОЛЬКО тут -->
     <div class="content-scrollable tt-wrap">
         <div class="tt-meta">
@@ -37,17 +47,30 @@
         <div id="tt_messages" class="tt-messages"></div>
     </div>
 
+    <!-- Композер как у пользователя -->
     <div class="tt-input">
-        <div class="tt-attach">
-            <button id="tt_attach" class="button-sliding small">📎 Прикрепить</button>
-            <input id="tt_file" type="file" multiple style="display:none" />
-            <div id="tt_files" class="tt-files"></div>
-        </div>
+        <button id="tt_attach" class="tt-plus" type="button" aria-label="Прикрепить файл"></button>
+
+        <!-- ВАЖНО: #tt_files — это input[type=file], он спрятан off-screen (не display:none) -->
+        <input id="tt_files" type="file" multiple class="tt-file-input" />
+        <!-- Контейнер для "чипов" выбранных файлов -->
+        <div id="tt_attach_list" class="tt-attach-list"></div>
 
         <textarea id="tt_text" rows="3"
-                  placeholder="Напишите ответ… (Ctrl+Enter — отправить)"></textarea>
-        <button id="tt_send" class="button-sliding primary">Отправить</button>
-    </div>
+                  placeholder="Напишите ответ… (Ctrl+Enter — отправить)"
+                  maxlength="1500"></textarea>
 
-    <script src="~/js/operator/ticket_thread.attach.js" asp-append-version="true" defer></script>
+        <button id="tt_send" type="button" class="btn-pill btn-send">
+            <svg class="ico-plane" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="currentColor" d="M2.2 11.4c-.4.2-.4.9 0 1l6.7 2.7c.2.1.4.3.5.5l2.7 6.7c.2.4.9.4 1 0l8.4-19.1c.2-.5-.3-1-.8-.8L2.2 11.4Zm7.5.9 7.4-6.2-5.8 8.3c-.1.1-.1.3 0 .4l1.6 3.9-3.2-6.4c0-.1 0-.1 0-.2Z" />
+            </svg>
+            <span>Отправить</span>
+        </button>
+    </div>
 </div>
+
+<!-- Только ОДИН операторский скрипт -->
+<script src="~/js/operator/ticket_thread.js" asp-append-version="true" defer></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => window.initOpTicketThread?.(document));
+</script>

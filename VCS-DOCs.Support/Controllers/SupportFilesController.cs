@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.StaticFiles;
@@ -24,6 +25,7 @@ public sealed class SupportFilesController : ControllerBase
     private readonly ApplicationDbContext _db;
     private readonly IWebHostEnvironment _env;
     private readonly IOptionsSnapshot<UploadsOptions> _opts;
+    private static readonly FileExtensionContentTypeProvider _types = new();
 
     public SupportFilesController(ApplicationDbContext db, IWebHostEnvironment env, IOptionsSnapshot<UploadsOptions> opts)
     {
@@ -66,13 +68,14 @@ public sealed class SupportFilesController : ControllerBase
 
     [HttpGet("support/files/{id:long}")]
     [Authorize(Policy = "SupportDeskAccess")]
-    public async Task<IActionResult> Download(long id)
+    public async Task<IActionResult> Download(long id, [FromQuery] bool inline = false, CancellationToken ct = default)
     {
-        var att = await _db.SupportTicketAttachments.AsNoTracking().FirstOrDefaultAsync(a => a.Id == id);
+        var att = await _db.SupportTicketAttachments.AsNoTracking()
+            .FirstOrDefaultAsync(a => a.Id == id, ct);
         if (att == null) return NotFound();
 
-        // проверка доступа к тикету
-        var t = await _db.SupportTickets.AsNoTracking().FirstOrDefaultAsync(x => x.Id == att.TicketId);
+        var t = await _db.SupportTickets.AsNoTracking()
+            .FirstOrDefaultAsync(x => x.Id == att.TicketId, ct);
         if (t == null) return NotFound();
 
         var isSupport = User.IsInRole(Roles.SupportAgent) || User.IsInRole(Roles.SupportAdmin);
@@ -90,12 +93,43 @@ public sealed class SupportFilesController : ControllerBase
             ? Path.Combine(_env.ContentRootPath, "App_Data", "SupportFiles")
             : set.Root;
 
-        var full = Path.Combine(root, att.StorageKey.Replace('/', Path.DirectorySeparatorChar));
-        if (!System.IO.File.Exists(full)) return NotFound();
+        // Ищем файл по двум схемам
+        string? path = null;
 
-        var ct = string.IsNullOrWhiteSpace(att.ContentType) ? GetContentType(att.FileName) : att.ContentType!;
-        var fs = System.IO.File.OpenRead(full);
-        return File(fs, ct, fileDownloadName: att.FileName);
+        if (!string.IsNullOrWhiteSpace(att.StorageKey))
+        {
+            var p = CombineSafe(root, att.StorageKey!);
+            if (p != null && System.IO.File.Exists(p)) path = p;
+        }
+
+        if (path == null)
+        {
+            var compat = CombineSafe(root, $"{att.TicketId}/{att.Id}");
+            if (compat != null && System.IO.File.Exists(compat)) path = compat;
+        }
+
+        if (path == null) return NotFound();
+
+        // Тип содержимого
+        string contentType =
+            !string.IsNullOrWhiteSpace(att.ContentType) ? att.ContentType! :
+            (_types.TryGetContentType(att.FileName ?? string.Empty, out var ctGuessed) ? ctGuessed : "application/octet-stream");
+
+        // Заголовки кеширования/безопасности
+        var fi = new FileInfo(path);
+        Response.Headers["Last-Modified"] = fi.LastWriteTimeUtc.ToString("R");
+        Response.Headers["Cache-Control"] = "private, max-age=0, must-revalidate";
+        Response.Headers["X-Content-Type-Options"] = "nosniff";
+
+        // Корректное имя файла (RFC 5987 для Unicode)
+        var fileName = att.FileName ?? Path.GetFileName(path);
+        var ascii = AsciiFallback(fileName);
+        var utf8 = Uri.EscapeDataString(fileName);
+        var dispType = inline ? "inline" : "attachment";
+        Response.Headers["Content-Disposition"] = $"{dispType}; filename=\"{ascii}\"; filename*=UTF-8''{utf8}";
+
+        // Возвращаем физический файл (с докачкой)
+        return PhysicalFile(path, contentType, enableRangeProcessing: true);
     }
 
     // ===================== INTERNALS =====================
@@ -155,12 +189,13 @@ public sealed class SupportFilesController : ControllerBase
             var safeName = SanitizeFileName(f.FileName);
             var ext = Path.GetExtension(safeName).ToLowerInvariant();
             if (allowed.Count > 0 && !allowed.Contains(ext))
-                return BadRequest(new { ok = false, error = "Не поддерживаемое расширение файла.\nДоступно к загрузке: \".png\", \".jpg\", \".jpeg\", \".pdf\", \".docx\", \".xlsx\", \".txt\", \".zip\", \".7z\" ", ext, allowed });
+                return BadRequest(new { ok = false, error = "Не поддерживаемое расширение файла.\nДоступно к загрузке: \".png\", \".jpg\", \".jpeg\", \".pdf\", \".docx\", \".xlsx\", \".txt\", \".zip\", \".7z\" " });
 
             var key = $"{ticketId}/{Guid.NewGuid():N}-{safeName}";
-            var full = Path.Combine(root, key.Replace('/', Path.DirectorySeparatorChar));
-            Directory.CreateDirectory(Path.GetDirectoryName(full)!);
+            var full = CombineSafe(root, key);
+            if (full == null) return BadRequest(new { ok = false, error = "bad_path" });
 
+            Directory.CreateDirectory(Path.GetDirectoryName(full)!);
             await using (var fs = System.IO.File.Create(full))
             {
                 await f.CopyToAsync(fs);
@@ -189,7 +224,7 @@ public sealed class SupportFilesController : ControllerBase
                 url = Url.ActionLink(nameof(Download), values: new
                 {
                     id = att.Id
-                })
+                }) // теперь скачивает с верным именем
             });
         }
 
@@ -234,7 +269,25 @@ public sealed class SupportFilesController : ControllerBase
 
     private static string GetContentType(string fileName)
     {
-        var prov = new FileExtensionContentTypeProvider();
-        return prov.TryGetContentType(fileName, out var ct) ? ct : "application/octet-stream";
+        return _types.TryGetContentType(fileName, out var ct) ? ct : "application/octet-stream";
+    }
+
+    private static string? CombineSafe(string root, string relative)
+    {
+        var normRel = (relative ?? string.Empty).Replace('\\', '/').TrimStart('/');
+        var full = Path.GetFullPath(Path.Combine(root, normRel.Replace('/', Path.DirectorySeparatorChar)));
+        var rootFull = Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        if (!full.StartsWith(rootFull, StringComparison.OrdinalIgnoreCase)) return null;
+        return full;
+    }
+
+    // ASCII-фоллбек для filename="..."
+    private static string AsciiFallback(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return "file";
+        var sb = new StringBuilder(s.Length);
+        foreach (var ch in s)
+            sb.Append(ch <= 0x7F && ch != '"' ? ch : '_');
+        return sb.ToString();
     }
 }

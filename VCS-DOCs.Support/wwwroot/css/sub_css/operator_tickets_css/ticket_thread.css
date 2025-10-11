@@ -4,8 +4,8 @@
 
 /* ===== Палитра ===== */
 :root {
-    --brand-blue: #3b82f6; /* фирменный синий */
-    --brand-green: #22c55e; /* можно оставить на будущее */
+    --brand-blue: #3b82f6;
+    --brand-green: #22c55e;
 }
 
 /* ===== Карточка / шапка ===== */
@@ -33,7 +33,12 @@
             font-size: 13px;
         }
 
-    /* Зона переписки */
+        /* Закрыть заявку всегда вправо, если что-то переопределяет flex */
+        #ticket-thread .tt-header #tt_close {
+            margin-left: auto;
+        }
+
+    /* ===== Зона переписки ===== */
     #ticket-thread .tt-wrap {
         flex: 1 1 auto;
         overflow: auto;
@@ -64,19 +69,17 @@
         padding: 6px 8px 12px;
     }
 
-/* ===== Сообщение (строка) ===== */
+/* ===== Сообщение ===== */
 .tt-msg {
     position: relative;
     display: flex;
     align-items: flex-start;
     gap: 10px;
-    padding: 0;
-    border-radius: 0;
-    overflow: visible;
     --bubble-bg: #ffffff;
     --bubble-br: #e5e7eb;
 }
-    /* роли */
+
+    /* роли (цвета) */
     .tt-msg.op {
         --bubble-bg: #ebfcdd;
         --bubble-br: #78ae5c;
@@ -88,7 +91,7 @@
     }
 /* пользователь */
 
-/* ===== Сам бабл ===== */
+/* ===== Бабл ===== */
 .tt-bubble {
     position: relative;
     flex: 0 1 auto;
@@ -100,11 +103,13 @@
     border: 1px solid var(--bubble-br);
     border-radius: 14px;
     box-shadow: 0 1px 2px rgba(0,0,0,.06);
-    max-width: clamp(220px,70%,760px);
+    max-width: clamp(220px, 70%, 760px);
     width: fit-content;
 }
-    /* хвостик к аватарке */
-    .tt-bubble::before, .tt-bubble::after {
+
+    /* хвостик к аватарке (слева) */
+    .tt-bubble::before,
+    .tt-bubble::after {
         content: "";
         position: absolute;
         top: 18px;
@@ -157,7 +162,7 @@
     overflow-wrap: anywhere;
 }
 
-/* Файлы к сообщению */
+/* ===== Файлы ===== */
 .tt-files {
     display: flex;
     gap: 8px;
@@ -238,7 +243,7 @@
         background: #cbd5e1;
     }
 
-/* ===== НИЖНИЙ КОМПОЗЕР (компактный) ===== */
+/* ===== Композер ===== */
 #ticket-thread .tt-input {
     display: flex;
     flex-wrap: wrap;
@@ -252,7 +257,7 @@
     box-shadow: 0 10px 30px rgba(0,0,0,.06);
 }
 
-    /* Плюс — собственный стиль */
+    /* Плюс */
     #ticket-thread .tt-input .tt-plus {
         inline-size: 34px;
         block-size: 34px;
@@ -283,7 +288,7 @@
         #ticket-thread .tt-input .tt-plus:active {
             transform: translateY(1px);
         }
-        /* разделитель */
+        /* разделитель после плюса */
         #ticket-thread .tt-input .tt-plus::after {
             content: "";
             position: absolute;
@@ -294,12 +299,17 @@
             background: #e5e7eb;
         }
 
-    /* скрытый input[type=file] */
-    #ticket-thread .tt-input #tt_files {
-        display: none;
+    /* Прячем file-input «мягко», чтобы работали click()/showPicker() */
+    #ticket-thread .tt-input .tt-file-input {
+        position: fixed;
+        left: -9999px;
+        top: 0;
+        opacity: 0;
+        width: 1px;
+        height: 1px;
     }
 
-    /* textarea — невысокая, без «уха», со скроллом */
+    /* textarea */
     #ticket-thread .tt-input #tt_text {
         order: 1;
         flex: 1 1 auto;
@@ -321,32 +331,12 @@
             color: #94a3b8;
         }
 
-    /* ВАЖНО: старый стиль для #tt_send — только если это НЕ .btn-pill */
-    #ticket-thread .tt-input #tt_send:not(.btn-pill) {
+    /* Кнопка отправки — справа */
+    #ticket-thread .tt-input #tt_send {
         order: 1;
+        margin-inline-start: auto;
         flex: 0 0 auto;
-        block-size: 34px;
-        padding: 0 14px;
-        border-radius: 8px;
-        border: 1px solid transparent;
-        background: #3b82f6;
-        color: #fff;
-        font-weight: 600;
-        cursor: pointer;
     }
-
-        #ticket-thread .tt-input #tt_send:not(.btn-pill):hover {
-            filter: brightness(.96);
-        }
-
-        #ticket-thread .tt-input #tt_send:not(.btn-pill):active {
-            transform: translateY(1px);
-        }
-
-        #ticket-thread .tt-input #tt_send:not(.btn-pill):disabled {
-            opacity: .6;
-            cursor: not-allowed;
-        }
 
     /* выбранные вложения — внизу композера */
     #ticket-thread .tt-input .tt-attach-list {
@@ -396,7 +386,7 @@
     font-weight: 600;
 }
 
-/* ===== Кнопки «пилюли» (универсальный стиль со слайдингом) ===== */
+/* ===== Кнопки-пилюли (универсальные) ===== */
 .btn-pill {
     --btn-color: var(--brand-blue);
     position: relative;
@@ -420,7 +410,7 @@
     .btn-pill:active {
         transform: translateY(1px);
     }
-    /* sliding fill */
+
     .btn-pill::before {
         content: "";
         position: absolute;
@@ -431,7 +421,8 @@
         z-index: 0;
     }
 
-    .btn-pill:hover::before, .btn-pill:focus-visible::before {
+    .btn-pill:hover::before,
+    .btn-pill:focus-visible::before {
         transform: translateX(0);
     }
 
@@ -440,7 +431,8 @@
         z-index: 1;
     }
 
-    .btn-pill:hover, .btn-pill:focus-visible {
+    .btn-pill:hover,
+    .btn-pill:focus-visible {
         color: #fff;
     }
 
@@ -448,11 +440,6 @@
         opacity: .55;
         cursor: not-allowed;
     }
-
-/* Варианты */
-.btn-back {
-    --btn-color: var(--brand-blue);
-}
 
 .btn-send {
     --btn-color: var(--brand-blue);
@@ -463,7 +450,12 @@
         height: 16px;
     }
 
-/* ——— Back: ghost-пилюля без заливки ——— */
+/* Опасная (закрыть) */
+.btn-danger {
+    --btn-color: #ef4444;
+}
+
+/* ——— Back: ghost ——— */
 .btn-back-ghost {
     display: inline-flex;
     align-items: center;
@@ -562,7 +554,7 @@
     .profile_background.is-dark #ticket-thread .tt-input .tt-plus::after {
         background: #263156;
     }
-/* пилюли */
+
 .profile_background.is-dark .btn-pill {
     background: #10152a;
     color: var(--brand-blue);
@@ -582,6 +574,10 @@
     .profile_background.is-dark .btn-back-ghost:hover {
         background: color-mix(in srgb, var(--brand-blue) 18%, transparent);
     }
+
+.profile_background.is-dark .btn-danger {
+    border-color: color-mix(in srgb, #ef4444 55%, #0b1433);
+}
 
 /* ===== Адаптив ===== */
 @media (max-width:700px) {
@@ -608,15 +604,13 @@
     #ticket-thread .tt-input #tt_text {
         block-size: 34px;
     }
-
-    #ticket-thread .tt-input #tt_send:not(.btn-pill) {
-        block-size: 32px;
-        padding: 0 12px;
-    }
 }
 
-#ticket-thread .tt-input #tt_send {
-    order: 1; /* остаётся на первой строке */
-    margin-inline-start: auto;
-    flex: 0 0 auto; /* не сжимать текст/иконку */
+#ticket-thread .tt-input input[type="file"] {
+    position: fixed;
+    left: -9999px;
+    top: 0;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
 }
