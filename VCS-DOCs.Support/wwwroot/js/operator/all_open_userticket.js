@@ -1,13 +1,24 @@
-// wwwroot/js/operator/all_open_userticket.js
 (() => {
     const USE_MOCK = /[?&]mock=1\b/i.test(location.search);
 
+    // --- role info ---
+    let IS_ADMIN = false;
+    let SELF_ID = null;
     const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     async function getJson(url) {
         const r = await fetch(url, { credentials: 'same-origin', cache: 'no-store' });
         if (!r.ok) { const e = new Error('HTTP ' + r.status); e.status = r.status; throw e; }
         return r.json();
     }
+    async function safeJson(resp) { try { return await resp.json(); } catch { return null; } }
+    async function loadMe() {
+        try {
+            const me = await getJson('/api/ops/accounts/me');
+            IS_ADMIN = !!me.isAdmin;
+            SELF_ID = me.id || null;
+        } catch { IS_ADMIN = false; SELF_ID = null; }
+    }
+    const csrf = () => document.querySelector('meta[name="csrf-token"]')?.content || '';
 
     // ---- SignalR (реалтайм для списка) ----
     const HUB_URL = '/hubs/ticket';
@@ -28,13 +39,14 @@
         }
         throw new Error('SignalR client not found');
     }
-    async function ensureConn(onMessage, onStatus) {
+    async function ensureConn(onMessage, onStatus, onAssigned) {
         if (conn && (conn.state === 'Connected' || conn.state === 1)) return conn;
         const signalR = await loadSignalR();
         conn = new signalR.HubConnectionBuilder()
             .withUrl(HUB_URL, { withCredentials: true })
             .withAutomaticReconnect()
             .build();
+
         conn.on('message', payload => {
             try {
                 const id = payload?.ticketId; const msg = payload?.message || {};
@@ -50,6 +62,15 @@
                 document.dispatchEvent(new CustomEvent('SupportTicketStatus', { detail: { ticketId: payload.ticketId, status: payload.status, updatedAt: payload.updatedAt } }));
             } catch { }
         });
+        // новое: пуш назначения
+        conn.on('assigned', payload => {
+            try {
+                const id = payload?.ticketId;
+                if (!id) return;
+                onAssigned?.(id, payload.assignedUserId || null, payload.assignmentMode || null, payload.assignedAt || null);
+            } catch { }
+        });
+
         try { await conn.start(); } catch { /* ок, попробуем без реалтайма */ }
         return conn;
     }
@@ -68,6 +89,59 @@
         }
     }
 
+    // ---------- COMMON ----------
+    function waitText(who) { return who === 'user' ? 'Пользователь ответил' : 'Оператор ответил'; }
+    function waitCls(who) { return who === 'user' ? 'wait-user' : 'wait-operator'; }
+
+    // для рендера “Обслуживает”
+    let AGENTS = [];
+    async function loadAgents() {
+        try {
+            const r = await fetch('/api/ops/accounts/agents', { credentials: 'same-origin' });
+            const j = await r.json().catch(() => ({}));
+            AGENTS = Array.isArray(j.items) ? j.items : [];
+        } catch {
+            AGENTS = [];
+        }
+    }
+    function agentLabelById(idOrLogin) {
+        if (!idOrLogin) return '—';
+        const a = AGENTS.find(x => String(x.id) === String(idOrLogin) || String(x.login) === String(idOrLogin));
+        return a ? (a.login || a.name || a.id) : idOrLogin;
+    }
+    function buildAssignSelect(currentId) {
+        const s = document.createElement('select');
+        s.className = 'assign-pick small';
+        const optNone = document.createElement('option');
+        optNone.value = '';
+        optNone.textContent = '— не назначен —';
+        s.appendChild(optNone);
+        for (const a of AGENTS) {
+            const o = document.createElement('option');
+            o.value = a.id;
+            o.textContent = a.login || a.name || a.id;
+            s.appendChild(o);
+        }
+        s.value = currentId || '';
+        return s;
+    }
+    async function assign(ticketId, userIdOrEmpty, tr, cell) {
+        const body = JSON.stringify({ userId: userIdOrEmpty || null, mode: 'manual' });
+        const r = await fetch(`/api/ops/tickets/${encodeURIComponent(ticketId)}/assign`, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Content-Type': 'application/json; charset=utf-8', ...(csrf() ? { 'RequestVerificationToken': csrf() } : {}) },
+            body
+        });
+        const j = await safeJson(r);
+        if (!r.ok || !j?.ok) {
+            const msg = (j && (j.error || j.message)) || ('HTTP ' + r.status);
+            throw new Error(msg);
+        }
+        tr.dataset.operator = j.assignedUserId || '';
+        cell.dataset.assigned = tr.dataset.operator;
+    }
+
     // ---------- MOCKS ----------
     function mockOpenTickets() {
         const orgs = ['ООО «Орг 1»', 'ООО «Орг 2»', 'ООО «Орг 3»', 'АО «Корпорация»'];
@@ -82,26 +156,26 @@
                 userLogin: `user${(300 + i).toString().padStart(3, '0')}`,
                 organization: orgs[i % orgs.length],
                 wait,
+                assignedUserId: assigned ? '2825' : null,
                 operatorLogin: assigned ? '2825' : ''
             });
         }
         return { rows, orgs: Array.from(new Set(orgs)) };
     }
 
-    function waitText(who) { return who === 'user' ? 'Пользователь ответил' : 'Оператор ответил'; }
-    function waitCls(who) { return who === 'user' ? 'wait-user' : 'wait-operator'; }
-
+    // ---------- RENDER ----------
     function rowHtml(t) {
         const w = (t.wait === 'user') ? 'user' : 'operator';
-        const operatorText = (t.operatorLogin || '').trim() ? t.operatorLogin : '—';
+        const operatorText = agentLabelById(t.assignedUserId || t.operatorLogin || '');
+        const assignedData = t.assignedUserId || t.operatorLogin || '';
         return `
-          <tr data-id="${t.id}" data-wait="${w}" data-operator="${t.operatorLogin || ''}" data-subject="${esc(t.subject)}">
+          <tr data-id="${t.id}" data-wait="${w}" data-operator="${esc(assignedData)}" data-subject="${esc(t.subject)}">
             <td>${t.id}</td>
             <td class="tt-auto" title="${esc(t.subject)}">${esc(t.subject)}</td>
             <td>${esc(t.userLogin || '')}</td>
             <td>${esc(t.organization || '')}</td>
             <td><span class="status-badge ${waitCls(w)}">${waitText(w)}</span></td>
-            <td>${esc(operatorText)}</td>
+            <td class="assign-cell" data-assigned="${esc(assignedData)}">${esc(operatorText || '—')}</td>
             <td><button class="button-sliding primary small btn-open">Открыть</button></td>
           </tr>`;
     }
@@ -114,6 +188,41 @@
         badge.classList.remove('wait-user', 'wait-operator');
         badge.classList.add(waitCls(who));
         badge.textContent = waitText(who);
+    }
+
+    // после отрисовки таблицы превращаем колонку “Обслуживает” в селекты
+    function upgradeAssigneeColumn(tbody) {
+        tbody.querySelectorAll('tr').forEach(tr => {
+            const cell = tr.querySelector('.assign-cell');
+            if (!cell) return;
+            const current = cell.dataset.assigned || tr.dataset.operator || '';
+
+            const select = buildAssignSelect(current);
+            const prev = current;
+            cell.replaceChildren(select);
+
+            // не-админ — только просмотр
+            if (!IS_ADMIN) {
+                select.disabled = true;
+                select.title = 'Переназначение доступно только администратору';
+                select.classList.add('is-readonly');
+                return;
+            }
+
+            // админ — может менять
+            select.addEventListener('change', async () => {
+                const val = select.value || '';
+                select.disabled = true;
+                try {
+                    await assign(tr.dataset.id, val, tr, cell);
+                } catch (e) {
+                    alert('Не удалось назначить: ' + (e.message || 'ошибка'));
+                    select.value = prev;
+                } finally {
+                    select.disabled = false;
+                }
+            });
+        });
     }
 
     // ---------- INIT ----------
@@ -147,27 +256,45 @@
             }
         }
 
+        function normalizeRow(r) {
+            return {
+                id: r.id,
+                subject: r.subject,
+                userLogin: r.userLogin,
+                organization: r.organization,
+                wait: r.wait,
+                assignedUserId: r.assignedUserId ?? null,
+                operatorLogin: r.operatorLogin ?? ''
+            };
+        }
+
         // ---- Tickets ----
         async function loadTickets() {
             if (!tbody) return;
             tbody.innerHTML = `<tr><td>Загрузка…</td></tr>`;
+
+            await loadAgents();
+
             try {
-                let list;
+                let raw;
                 if (!USE_MOCK) {
                     const url = new URL('/api/support/tickets/open', location.origin);
                     url.searchParams.set('scope', currentScope);
                     if (currentOrg) url.searchParams.set('org', currentOrg);
                     if (currentQuery) url.searchParams.set('q', currentQuery);
-                    list = await getJson(url.toString());
+                    raw = await getJson(url.toString());
                 } else { throw { status: 404 }; }
 
-                if (!Array.isArray(list) || list.length === 0) {
+                if (!Array.isArray(raw) || raw.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="7">Нет данных</td></tr>`;
                     return;
                 }
-                tbody.innerHTML = list.map(rowHtml).join('');
 
-                // Реалтайм: подписываемся на все тикеты из списка
+                const list = raw.map(normalizeRow);
+                tbody.innerHTML = list.map(rowHtml).join('');
+                upgradeAssigneeColumn(tbody);
+
+                // Реалтайм
                 try {
                     await ensureConn(
                         (ticketId, msg) => {
@@ -181,27 +308,48 @@
                                 const tr = tbody.querySelector(`tr[data-id="${ticketId}"]`);
                                 tr?.remove();
                             }
+                        },
+                        (ticketId, assignedUserId /*, mode, at*/) => {
+                            const tr = tbody.querySelector(`tr[data-id="${ticketId}"]`);
+                            if (!tr) return;
+                            tr.dataset.operator = assignedUserId || '';
+                            const td = tr.querySelector('.assign-cell');
+                            if (!td) return;
+
+                            const inCellSelect = td.firstElementChild && td.firstElementChild.tagName === 'SELECT';
+                            if (inCellSelect) {
+                                td.firstElementChild.value = assignedUserId || '';
+                            } else {
+                                td.textContent = agentLabelById(assignedUserId || '');
+                            }
+                            td.dataset.assigned = assignedUserId || '';
                         }
                     );
                     const ids = list.map(x => x.id).filter(Boolean);
                     await joinMany(ids);
                 } catch { /* ок, без realtime */ }
+
             } catch {
-                // fallback to mocks with фильтрами
+                // fallback to mocks с фильтрами
                 const { rows } = mockOpenTickets();
+                const data = rows.map(normalizeRow);
+
                 const q = currentQuery.toLowerCase();
-                const filtered = rows.filter(r => {
+                const filtered = data.filter(r => {
                     if (q && !(r.id + ' ' + r.subject + ' ' + r.userLogin + ' ' + r.organization).toLowerCase().includes(q)) return false;
                     if (currentOrg && r.organization !== currentOrg) return false;
-                    if (currentScope === 'mine' && !r.operatorLogin) return false;
-                    if (currentScope === 'unassigned' && r.operatorLogin) return false;
+                    const isAssigned = !!(r.assignedUserId || r.operatorLogin);
+                    if (currentScope === 'mine') return isAssigned;
+                    if (currentScope === 'unassigned') return !isAssigned;
                     return true;
                 });
+
                 tbody.innerHTML = filtered.length ? filtered.map(rowHtml).join('') : `<tr><td colspan="7">Нет данных</td></tr>`;
+                upgradeAssigneeColumn(tbody);
             }
         }
 
-        // Локальные события из карточки (если открыта в этой же вкладке)
+        // Локальные события
         document.addEventListener('SupportTicketMessage', (e) => {
             try {
                 const { ticketId, message } = e.detail || {};
@@ -230,10 +378,11 @@
         });
         orgSel?.addEventListener('change', () => { currentOrg = orgSel.value || ''; loadTickets(); });
         btnSearch?.addEventListener('click', () => { currentQuery = (searchBox.value || '').trim(); loadTickets(); });
-        searchBox?.addEventListener('input', () => {
+        const onType = () => {
             clearTimeout(debounce);
             debounce = setTimeout(() => { currentQuery = (searchBox.value || '').trim(); loadTickets(); }, 250);
-        });
+        };
+        searchBox?.addEventListener('input', onType);
 
         // открыть тикет
         table?.addEventListener('click', (e) => {
@@ -246,12 +395,15 @@
             }
         });
 
-        // ---- init ----
-        loadOrgs().finally(loadTickets);
+        // ---- boot ----
+        (async () => {
+            await loadMe();
+            await loadOrgs();
+            await loadTickets();
+        })();
 
         panel.__dispose = function () {
             try { clearTimeout(debounce); } catch { }
-            // соединение общее на приложение — не гасим
         };
     };
 })();

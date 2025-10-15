@@ -4,6 +4,8 @@
     --row-tint-alpha: .08;
 }
 
+/* ======= Верхняя панель фильтров ======= */
+
 .filters-row {
     display: flex;
     gap: 16px;
@@ -16,6 +18,7 @@
     display: flex;
     gap: 12px;
     align-items: center;
+    flex-wrap: wrap; /* чтобы ничего не налезало при узкой ширине */
 }
 
 .segmented {
@@ -48,6 +51,14 @@
         color: #fff;
     }
 
+#op_orgFilter.assign-pick {
+    margin-left: 8px; /* небольшой зазор после сегментов */
+    min-width: 220px; /* чтобы не прыгал при коротком тексте */
+    width: auto; /* не растягиваемся */
+    flex: 0 0 auto; /* не пытаемся занять лишнее место */
+    z-index: 0;
+}
+
 #op_searchBox {
     flex: 0 1 360px;
     padding: 0 12px;
@@ -70,6 +81,8 @@
     gap: 12px;
     align-items: center;
 }
+
+/* ======= Легенда ======= */
 
 .tickets-legend {
     display: flex;
@@ -102,6 +115,8 @@
         background: var(--tickets-green);
     }
 
+/* ======= Список (скролл-область) ======= */
+
 #op-open-tickets .content-scrollable {
     margin: 24px 24px 8px;
     padding: 0 6px 24px 0;
@@ -116,6 +131,8 @@
         height: 24px;
     }
 
+/* ======= Таблица ======= */
+
 #opTicketsTable {
     table-layout: fixed;
     width: calc(100% - 12px);
@@ -123,7 +140,8 @@
     box-sizing: border-box;
 }
 
-    #opTicketsTable th, #opTicketsTable td {
+    #opTicketsTable th,
+    #opTicketsTable td {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -174,6 +192,8 @@
     background: transparent;
 }
 
+/* ======= Контент-контейнер ======= */
+
 #content.content-field {
     overflow: visible !important;
 }
@@ -199,7 +219,7 @@
     }
 }
 
-/* ====== Ticket thread ====== */
+/* ======= Тикет-тред ======= */
 
 #ticket-thread {
     display: flex;
@@ -225,7 +245,6 @@
             font-size: 14px;
         }
 
-        /* Вариант Б: разделительная линия внутри шапки */
         #ticket-thread .tt-header hr {
             order: 3;
             flex-basis: 100%;
@@ -291,3 +310,104 @@
         flex-direction: column;
         gap: 10px;
     }
+
+/* ======= Обслуживает: «кнопка»-выпадашка без смены цветов на hover ======= */
+
+/* в таблице — селект занимает всю ячейку */
+#opTicketsTable .assign-cell {
+    min-width: 170px;
+}
+
+    #opTicketsTable .assign-cell select.assign-pick {
+        width: 100%;
+    }
+
+/* базовый вид (когда селект вне таблицы — авто-ширина, как у «кнопки») */
+select.assign-pick {
+    display: inline-flex;
+    align-items: center;
+    width: auto; /* базово авто, специфично расширяем в таблице */
+    height: 32px;
+    padding: 0 30px 0 10px; /* справа — место под стрелку */
+    border: 1px solid #d4d7dc;
+    border-radius: 8px;
+    background: #fff;
+    color: #333;
+    font-weight: 600;
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    /* рисуем свою стрелку */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 4.5l3 3 3-3' stroke='%239aa4b2' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 12px 12px;
+    transition: box-shadow .15s, border-color .15s;
+}
+
+    /* модификатор small (если пригодится где-то отдельно) */
+    select.assign-pick.small {
+        height: 32px;
+        font-size: 13px;
+        padding-right: 30px;
+    }
+
+    /* hover — НЕ меняем цвета */
+    select.assign-pick:hover {
+        background-color: #fff;
+        border-color: #d4d7dc;
+        box-shadow: 0 1px 0 rgba(0,0,0,.03);
+    }
+
+    /* focus — мягкое свечение */
+    select.assign-pick:focus,
+    select.assign-pick:focus-visible {
+        outline: none;
+        border-color: var(--tickets-blue, #5a9bd5);
+        box-shadow: 0 0 0 3px rgba(90,155,213,.15);
+    }
+
+    /* active клик */
+    select.assign-pick:active {
+        transform: translateY(1px);
+    }
+
+    /* disabled */
+    select.assign-pick:disabled {
+        opacity: .6;
+        cursor: default;
+    }
+
+    /* скрыть старую стрелку IE/Edge Legacy */
+    select.assign-pick::-ms-expand {
+        display: none;
+    }
+
+    /* — «облагородили» выпадаемый список там, где браузер позволяет — */
+    select.assign-pick option,
+    select.assign-pick optgroup {
+        font-size: 13px;
+        line-height: 1.3;
+        padding: 6px 10px; /* может игнорироваться некоторыми браузерами */
+    }
+
+        select.assign-pick option:checked {
+            background: #e9f1fb linear-gradient(0deg, #e9f1fb, #e9f1fb);
+            color: #1d2a3b;
+        }
+
+        select.assign-pick option:hover {
+            background: #f4f8fe;
+        }
+
+    select.assign-pick optgroup {
+        font-weight: 700;
+        color: #445;
+    }
+
+        select.assign-pick optgroup option {
+            font-weight: 600;
+        }

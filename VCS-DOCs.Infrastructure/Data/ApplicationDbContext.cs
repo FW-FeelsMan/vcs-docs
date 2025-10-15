@@ -53,7 +53,7 @@ namespace VCS_DOCs.Infrastructure.Data
                 e.ToTable("FileUploadSessions");
                 e.HasKey(x => x.FileId);
 
-                e.Property(x => x.FileId).ValueGeneratedNever(); // у тебя Guid приходит извне
+                e.Property(x => x.FileId).ValueGeneratedNever(); // Guid извне
                 e.Property(x => x.UserId).HasMaxLength(64);
                 e.Property(x => x.OriginalFileName).HasMaxLength(260);
                 e.Property(x => x.FileHash).HasMaxLength(128);
@@ -62,7 +62,6 @@ namespace VCS_DOCs.Infrastructure.Data
 
                 e.Property(x => x.FileGroupId);
 
-                // полезные индексы
                 e.HasIndex(x => new { x.UserId, x.UpdatedAt });
                 e.HasIndex(x => new { x.FileGroupId, x.Version });
             });
@@ -89,27 +88,45 @@ namespace VCS_DOCs.Infrastructure.Data
             {
                 e.ToTable("SupportTickets");
                 e.HasKey(x => x.Id);
+
                 e.Property(x => x.Id).HasMaxLength(32);
                 e.Property(x => x.Status).HasMaxLength(16).HasDefaultValue("open");
+                e.Property(x => x.EmailNotifyEnabled).HasDefaultValue(true);
+
+                // индексы под выборки
                 e.HasIndex(x => x.Status);
                 e.HasIndex(x => new { x.OwnerUserId, x.OwnerLogin });
-                e.Property(t => t.EmailNotifyEnabled).HasDefaultValue(true);
+
+                // Назначение оператора (новые поля)
+                e.HasIndex(x => x.AssignedUserId);
+                e.HasIndex(x => new { x.Status, x.AssignedUserId });
+                e.Property(x => x.AssignmentMode).HasMaxLength(16);
+
+                // Мягкая FK на AspNetUsers (User) — удобно для навигации/валидации
+                e.HasOne<User>()
+                 .WithMany()
+                 .HasForeignKey(x => x.AssignedUserId)
+                 .OnDelete(DeleteBehavior.SetNull);
             });
 
             b.Entity<SupportTicketMessage>(e =>
             {
                 e.ToTable("SupportTicketMessages");
                 e.HasKey(x => x.Id);
+
                 e.Property(x => x.TicketId).HasMaxLength(32).IsRequired();
                 e.Property(x => x.AuthorRole).HasMaxLength(16);
+
                 e.HasIndex(x => x.TicketId);
+                e.HasIndex(m => new { m.TicketId, m.CreatedAt });
+
                 e.HasOne(x => x.Ticket)
                  .WithMany(t => t.Messages)
                  .HasForeignKey(x => x.TicketId)
                  .OnDelete(DeleteBehavior.Cascade);
-                e.HasIndex(m => new { m.TicketId, m.CreatedAt });
             });
 
+            // ------- Projects -------
             b.Entity<SupportProject>(e =>
             {
                 e.ToTable("SupportProjects");
@@ -128,7 +145,7 @@ namespace VCS_DOCs.Infrastructure.Data
                 e.Property(x => x.MetadataJson).HasColumnType("TEXT");
             });
 
-            // ------- Attachments (под твою модель) -------
+            // ------- Attachments -------
             b.Entity<SupportTicketAttachment>(e =>
             {
                 e.ToTable("SupportTicketAttachments");
@@ -150,13 +167,11 @@ namespace VCS_DOCs.Infrastructure.Data
                 e.HasIndex(x => x.TicketId);
                 e.HasIndex(x => new { x.TicketId, x.MessageId });
 
-                // FK на тикет (без нав.свойств)
                 e.HasOne<SupportTicket>()
                  .WithMany()
                  .HasForeignKey(x => x.TicketId)
                  .OnDelete(DeleteBehavior.Cascade);
 
-                // FK на сообщение опционален — при удалении сообщения обнуляем ссылку
                 e.HasOne<SupportTicketMessage>()
                  .WithMany()
                  .HasForeignKey(x => x.MessageId)

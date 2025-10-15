@@ -118,7 +118,11 @@ namespace VCS_DOCs.Support.Controllers
                     t.CreatedAt,
                     t.UpdatedAt,
                     t.OwnerUserId,
-                    t.OwnerLogin
+                    t.OwnerLogin,
+                    t.AssignedUserId,   
+                    t.AssignedByUserId,  
+                    t.AssignedAt,         
+                    t.AssignmentMode     
                 })
                 .FirstOrDefaultAsync();
 

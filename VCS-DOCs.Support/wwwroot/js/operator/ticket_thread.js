@@ -29,12 +29,12 @@
     // ===== API ================================================================
     const API = {
         async getTicket(ticketId) {
-            // берём сразу пользовательский эндпоинт, он есть всегда
             return await getJson(`/api/support/tickets/${encodeURIComponent(ticketId)}`);
         },
         async uploadFiles(ticketId, fd) {
             const hdr = anti() ? { 'RequestVerificationToken': anti() } : {};
-            const url = `/api/user/tickets/${encodeURIComponent(ticketId)}/files`;
+            // операторский эндпоинт
+            const url = `/api/ops/tickets/${encodeURIComponent(ticketId)}/files`;
             const resp = await fetch(url, {
                 method: 'POST',
                 credentials: 'same-origin',
@@ -53,12 +53,10 @@
         },
         async postReply(ticketId, text, attIds) {
             const headers = { 'Content-Type': 'application/json; charset=utf-8', ...(anti() ? { 'RequestVerificationToken': anti() } : {}) };
-            // основной операторский эндпоинт
             let resp = await fetch(`/api/ops/tickets/${encodeURIComponent(ticketId)}/reply`, {
                 method: 'POST', credentials: 'same-origin', headers,
                 body: JSON.stringify({ text, attachmentIds: attIds, attachments: attIds })
             });
-            // fallback на пользовательский, если вдруг отключили ops-reply
             if (resp.status === 404) {
                 resp = await fetch(`/api/support/tickets/${encodeURIComponent(ticketId)}/messages`, {
                     method: 'POST', credentials: 'same-origin', headers,
@@ -76,8 +74,16 @@
         }
     };
 
-    // ===== self (текущий оператор) ============================================
+    // ===== self / role ========================================================
     let SELF = null;
+    let IS_ADMIN = false;
+    async function loadMe() {
+        try {
+            const me = await getJson('/api/ops/accounts/me');
+            IS_ADMIN = !!me.isAdmin;
+            return { id: me.id || null, name: null, avatar: null };
+        } catch { IS_ADMIN = false; return { id: null, name: null, avatar: null }; }
+    }
     function detectSelf(msgBox) {
         if (SELF) return SELF;
         const nm = document.querySelector('meta[name="current-user-name"]')?.content || '';
@@ -131,7 +137,6 @@
         const handle = (payload) => {
             try {
                 if (!payload) return;
-                // ожидаемый формат: { ticketId, message: {...} }
                 const tId = String(payload.ticketId ?? payload.TicketId ?? payload?.message?.ticketId ?? payload?.Message?.TicketId ?? '');
                 if (tId !== String(ticketId)) return;
                 const msg = payload.message || payload.Message;
@@ -139,10 +144,7 @@
             } catch { }
         };
 
-        // Подписываемся только на один корректный эвент
         conn.on('message', handle);
-
-        // Доп. эвент статуса
         conn.on('status', p => {
             try {
                 const tId = String(p?.ticketId ?? p?.TicketId ?? '');
@@ -308,9 +310,7 @@
             if (!m) return;
             const key = msgKey(m);
             if (!key) return;
-            // если уже видели — выходим
             if (seenIds.has(key)) return;
-            // если уже есть в DOM — тоже считаем увиденным
             if (msgBox.querySelector(`.tt-msg[data-msg-id="${cssEsc(key)}"]`)) {
                 seenIds.add(key);
                 return;
@@ -334,14 +334,44 @@
                 if (txt) { txt.disabled = true; txt.placeholder = 'Заявка закрыта. Отправка сообщений недоступна.'; }
                 if (btnSend) btnSend.disabled = true;
                 if (btnClose) btnClose.disabled = true;
+                if (btnAttach) btnAttach.disabled = true;
+                if (inpFiles) inpFiles.disabled = true;
             } else {
                 inputWrap?.classList.remove('disabled');
                 if (txt) { txt.disabled = false; txt.placeholder = 'Напишите ответ… (Ctrl+Enter — отправить)'; }
                 if (btnSend) btnSend.disabled = false;
                 if (btnClose) btnClose.disabled = false;
+                if (btnAttach) btnAttach.disabled = false;
+                if (inpFiles) inpFiles.disabled = false;
             }
         }
         applyClosedState(ticket.status === 'closed');
+
+        // self/role и «замок» по назначению
+        const meInfo = await loadMe();
+        const selfMeta = detectSelf(msgBox);
+        const MY_ID = selfMeta?.id || meInfo.id || null;
+
+        function applyAssignmentLock() {
+            if (ticket.status === 'closed') return; // уже закрыта — оставляем как есть
+            const assignedTo = ticket.assignedUserId || ticket.AssignedUserId || null;
+            const locked = !IS_ADMIN && assignedTo && String(assignedTo) !== String(MY_ID || '');
+            const inputWrap = root.querySelector('.tt-input');
+            if (locked) {
+                inputWrap?.classList.add('disabled');
+                if (txt) { txt.disabled = true; txt.placeholder = 'Тикет назначен на другого оператора'; }
+                if (btnSend) btnSend.disabled = true;
+                if (btnAttach) btnAttach.disabled = true;
+                if (inpFiles) inpFiles.disabled = true;
+            } else {
+                inputWrap?.classList.remove('disabled');
+                if (txt) { txt.disabled = false; txt.placeholder = 'Напишите ответ… (Ctrl+Enter — отправить)'; }
+                if (btnSend) btnSend.disabled = false;
+                if (btnAttach) btnAttach.disabled = false;
+                if (inpFiles) inpFiles.disabled = false;
+            }
+        }
+        applyAssignmentLock();
 
         // presence
         const participantIds = new Set();
@@ -367,7 +397,7 @@
         function onInflightChange() {
             const n = inflight.size;
             if (statusEl) statusEl.textContent = n > 0 ? `Загрузка файлов… (${n})` : '';
-            if (btnSend) btnSend.disabled = n > 0;
+            if (btnSend) btnSend.disabled = n > 0 || btnSend.disabled;
         }
         function renderList() {
             if (!list) return;
@@ -385,6 +415,11 @@
         }
 
         async function uploadSelected(files) {
+            // блокировать аплоад если замок
+            const assignedTo = ticket.assignedUserId || ticket.AssignedUserId || null;
+            const locked = !IS_ADMIN && assignedTo && String(assignedTo) !== String(MY_ID || '');
+            if (locked) { alert('Тикет назначен на другого оператора. Загрузка недоступна.'); return; }
+
             if (!files || !files.length) return;
             const fd = new FormData();
             Array.from(files).forEach(f => fd.append('files', f, f.name));
@@ -402,6 +437,10 @@
         }
 
         btnAttach?.addEventListener('click', () => {
+            const assignedTo = ticket.assignedUserId || ticket.AssignedUserId || null;
+            const locked = !IS_ADMIN && assignedTo && String(assignedTo) !== String(MY_ID || '');
+            if (locked) { alert('Тикет назначен на другого оператора. Загрузка недоступна.'); return; }
+
             if (inpFiles && typeof inpFiles.showPicker === 'function') { try { inpFiles.showPicker(); return; } catch { } }
             if (inpFiles) { try { inpFiles.click(); return; } catch { } }
             const tmp = document.createElement('input');
@@ -417,7 +456,7 @@
             tmp.click();
         });
         inpFiles?.addEventListener('change', async () => {
-            const files = Array.from(inpFiles.files || []); // ← снимаем копию
+            const files = Array.from(inpFiles.files || []);
             if (files.length) await uploadSelected(files);
             inpFiles.value = '';
         });
@@ -434,6 +473,11 @@
             const v = (txt?.value || '').trim();
             if (ticket.status === 'closed') return;
 
+            // проверка «замка»
+            const assignedTo = ticket.assignedUserId || ticket.AssignedUserId || null;
+            const locked = !IS_ADMIN && assignedTo && String(assignedTo) !== String(MY_ID || '');
+            if (locked) { alert('Тикет назначен на другого оператора. Отправка недоступна.'); return; }
+
             if (inflight.size) { try { await Promise.all([...inflight]); } catch { } }
             if (!v && pending.length === 0) { alert('Добавьте текст или вложение.'); return; }
             if (v.length > 1500) { alert(`Слишком длинное сообщение (${v.length}). Максимум 1500 символов.`); return; }
@@ -446,9 +490,7 @@
                 const me = detectSelf(msgBox);
                 const key = String(reply.id ?? '');
 
-                // Если уже пришло по SignalR — ничего не рисуем локально
                 if (key && (seenIds.has(key) || msgBox.querySelector(`.tt-msg[data-msg-id="${cssEsc(key)}"]`))) {
-                    // Только подчистим состояние ввода
                     if (txt) txt.value = '';
                     pending.splice(0, pending.length); renderList();
                     upEl && (upEl.textContent = fmtFull(reply.at || new Date().toISOString()));
@@ -465,7 +507,6 @@
                     authorAvatarUrl: reply.authorAvatarUrl || me.avatar || undefined
                 };
 
-                // анти-дубль: запомним id перед локальным рендером
                 const k = msgKey(mineMsg);
                 if (k) seenIds.add(k);
 
@@ -545,6 +586,15 @@
                     }
                 }
             );
+            // ловим переназначение — переключаем «замок»
+            conn?.on?.('assigned', (p) => {
+                try {
+                    const tId = String(p?.ticketId ?? p?.TicketId ?? '');
+                    if (tId !== String(ticketId)) return;
+                    ticket.assignedUserId = p?.assignedUserId || p?.AssignedUserId || null;
+                    applyAssignmentLock();
+                } catch { }
+            });
         } catch (e) { console.warn('[op-ticket] realtime off:', e?.message || e); }
 
         try {

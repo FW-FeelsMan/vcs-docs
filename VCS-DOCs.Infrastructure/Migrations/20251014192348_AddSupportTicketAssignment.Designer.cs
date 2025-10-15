@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using VCS_DOCs.Infrastructure.Data;
 
@@ -10,9 +11,11 @@ using VCS_DOCs.Infrastructure.Data;
 namespace VCS_DOCs.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251014192348_AddSupportTicketAssignment")]
+    partial class AddSupportTicketAssignment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.9");
@@ -312,7 +315,6 @@ namespace VCS_DOCs.Infrastructure.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("AssignmentMode")
-                        .HasMaxLength(16)
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
@@ -350,13 +352,9 @@ namespace VCS_DOCs.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AssignedUserId");
-
                     b.HasIndex("Status");
 
                     b.HasIndex("OwnerUserId", "OwnerLogin");
-
-                    b.HasIndex("Status", "AssignedUserId");
 
                     b.ToTable("SupportTickets", (string)null);
                 });
@@ -655,14 +653,6 @@ namespace VCS_DOCs.Infrastructure.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("VCS_DOCs.Models.Entities.SupportTicket", b =>
-                {
-                    b.HasOne("VCS_DOCs.Models.Entities.User", null)
-                        .WithMany()
-                        .HasForeignKey("AssignedUserId")
-                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("VCS_DOCs.Models.Entities.SupportTicketAttachment", b =>

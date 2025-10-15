@@ -1,203 +1,136 @@
-﻿// VCS-DOCs.Support/Controllers/SupportTicketsBrowseController.cs
-using System.Linq;
+﻿// Support/Controllers/SupportTicketsBrowseController.cs
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using VCS_DOCs.Infrastructure.Data;
+using System.Security.Claims;
 using VCS_DOCs.Infrastructure.Data;
 
-namespace VCS_DOCs.Support.Controllers
+namespace VCS_DOCs.Support.Controllers;
+
+[ApiController]
+[Route("api/support/tickets")]
+[Authorize(Policy = "SupportOnly")]
+public sealed class SupportTicketsBrowseController : ControllerBase
 {
-    /// <summary>
-    /// Выдаёт списки заявок для операторов:
-    /// - /open — открытые (с фильтрами mine/unassigned/all, поиск, организация)
-    /// - /closed — закрытые
-    /// - /orgs — справочник организаций по открытым тикетам
-    /// </summary>
-    [ApiController]
-    [Route("api/support/tickets")]
-    [Authorize(Policy = "SupportOnly")]
-    public sealed class SupportTicketsBrowseController : ControllerBase
+    private readonly ApplicationDbContext _db;
+
+    public SupportTicketsBrowseController(ApplicationDbContext db)
     {
-        private readonly ApplicationDbContext _db;
-        private readonly ILogger<SupportTicketsBrowseController> _log;
+        _db = db;
+    }
 
-        public SupportTicketsBrowseController(ApplicationDbContext db, ILogger<SupportTicketsBrowseController> log)
-        {
-            _db = db;
-            _log = log;
-        }
+    private string? CurrentUserId() =>
+        User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        /// <summary>Строчка списка открытых заявок.</summary>
-        public sealed record OpenTicketRowDto(
-            string Id,
-            string Subject,
-            string UserLogin,
-            string? Organization,
-            string Wait,          // "user" | "operator" (кто писал последним)
-            string OperatorLogin  // "" — если ещё нет ответа оператора
-        );
+    private static string WhoWaits(string? lastRole) =>
+        string.Equals(lastRole, "user", StringComparison.OrdinalIgnoreCase) ? "user" : "operator";
 
-        /// <summary>Строчка списка закрытых заявок.</summary>
-        public sealed record ClosedTicketRowDto(
-            string Id,
-            string Subject,
-            string UserLogin,
-            string? Organization,
-            DateTime CreatedAt,
-            DateTime UpdatedAt
-        );
+    /// <summary>
+    /// Открытые заявки для операторов.
+    /// Параметры:
+    ///   scope: all | mine | unassigned
+    ///   org: точное совпадение организации
+    ///   q: поиск по Id/Subject/UserLogin/Organization
+    /// </summary>
+    [HttpGet("open")]
+    public async Task<IActionResult> Open([FromQuery] string? scope = "all",
+                                          [FromQuery] string? org = null,
+                                          [FromQuery] string? q = null)
+    {
+        var me = CurrentUserId();
 
-        /// <summary>
-        /// Открытые заявки.
-        /// Фильтры:
-        /// scope: all|mine|unassigned,
-        /// org: точное совпадение,
-        /// q: поисковая строка (id/subject/login/org).
-        /// </summary>
-        [HttpGet("open")]
-        public async Task<IActionResult> Open([FromQuery] string? scope, [FromQuery] string? org, [FromQuery] string? q)
-        {
-            scope = (scope ?? "all").Trim().ToLowerInvariant();
-            org = (org ?? "").Trim();
-            q = (q ?? "").Trim();
-            var currentOpLogin = User?.Identity?.Name ?? string.Empty;
-            var qLower = q.ToLowerInvariant();
-
-            var baseQ =
-                from t in _db.SupportTickets.AsNoTracking()
-                where t.Status != "closed"
-                join uById in _db.Users.AsNoTracking() on t.OwnerUserId equals uById.Id into uJoin
-                from u in uJoin.DefaultIfEmpty()
-                let ownerLogin = (t.OwnerLogin ?? u.UserName) ?? ""
-                let ownerOrg = u.Organization
-                let lastRole = _db.SupportTicketMessages
-                                   .AsNoTracking()
-                                   .Where(m => m.TicketId == t.Id)
-                                   .OrderByDescending(m => m.CreatedAt)
-                                   .Select(m => m.AuthorRole)
-                                   .FirstOrDefault()
-                let lastAgentUserId = _db.SupportTicketMessages
-                                         .AsNoTracking()
-                                         .Where(m => m.TicketId == t.Id && m.AuthorRole != "user")
-                                         .OrderByDescending(m => m.CreatedAt)
-                                         .Select(m => m.AuthorUserId)
-                                         .FirstOrDefault()
-                let opLogin = _db.Users.AsNoTracking()
-                                       .Where(x => x.Id == lastAgentUserId)
-                                       .Select(x => x.UserName)
-                                       .FirstOrDefault()
-                select new
-                {
-                    t.Id,
-                    t.Subject,
-                    OwnerLogin = ownerLogin,
-                    Organization = ownerOrg,
-                    Wait = (lastRole == "user") ? "user" : "operator",
-                    OperatorLogin = opLogin ?? "",
-                    t.UpdatedAt
-                };
-
-            if (!string.IsNullOrEmpty(org))
-                baseQ = baseQ.Where(x => x.Organization == org);
-
-            if (!string.IsNullOrEmpty(qLower))
-                baseQ = baseQ.Where(x =>
-                    (x.Id ?? "").ToLower().Contains(qLower) ||
-                    ((x.Subject ?? "").ToLower().Contains(qLower)) ||
-                    ((x.OwnerLogin ?? "").ToLower().Contains(qLower)) ||
-                    ((x.Organization ?? "").ToLower().Contains(qLower)));
-
-            baseQ = scope switch
+        // Базовый запрос по открытым тикетам
+        var qBase =
+            from t in _db.SupportTickets.AsNoTracking()
+            where t.Status != "closed"
+            join u in _db.Users.AsNoTracking() on t.OwnerUserId equals u.Id into uJoin
+            from u in uJoin.DefaultIfEmpty()
+            select new
             {
-                "mine" => baseQ.Where(x => (x.OperatorLogin ?? "") == currentOpLogin),
-                "unassigned" => baseQ.Where(x => string.IsNullOrEmpty(x.OperatorLogin)),
-                _ => baseQ
+                t.Id,
+                t.Subject,
+                t.CreatedAt,
+                t.UpdatedAt,
+                OwnerLogin = t.OwnerLogin ?? u.UserName,
+                Organization = u.Organization, // колонка у ваших пользователей
+                t.AssignedUserId,
+
+                Last = _db.SupportTicketMessages
+                    .AsNoTracking()
+                    .Where(m => m.TicketId == t.Id)
+                    .OrderByDescending(m => m.CreatedAt)
+                    .Select(m => new { m.AuthorRole, m.CreatedAt, m.AuthorUserId })
+                    .FirstOrDefault(),
+
+                // логин последнего оператора в переписке — чисто как fallback
+                LastOpLogin = (
+                    from m in _db.SupportTicketMessages.AsNoTracking()
+                    join op in _db.Users.AsNoTracking() on m.AuthorUserId equals op.Id into opj
+                    from op in opj.DefaultIfEmpty()
+                    where m.TicketId == t.Id && m.AuthorRole != "user"
+                    orderby m.CreatedAt descending
+                    select op.UserName
+                ).FirstOrDefault()
             };
 
-            baseQ = baseQ.OrderByDescending(x => x.UpdatedAt);
+        // Фильтры
+        if (!string.IsNullOrWhiteSpace(org))
+            qBase = qBase.Where(x => x.Organization == org);
 
-            var rowsRaw = await baseQ.ToListAsync();
-
-            var rows = rowsRaw.Select(x => new OpenTicketRowDto(
-                Id: x.Id,
-                Subject: x.Subject ?? "(без темы)",
-                UserLogin: x.OwnerLogin,
-                Organization: string.IsNullOrWhiteSpace(x.Organization) || x.Organization == "Не установлено" ? null : x.Organization,
-                Wait: x.Wait,
-                OperatorLogin: x.OperatorLogin ?? ""
-            )).ToArray();
-
-            return Ok(rows);
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var s = q.Trim().ToLowerInvariant();
+            qBase = qBase.Where(x =>
+                (x.Id + " " + (x.Subject ?? "") + " " + (x.OwnerLogin ?? "") + " " + (x.Organization ?? ""))
+                    .ToLower()
+                    .Contains(s));
         }
 
-        /// <summary>Закрытые заявки (с фильтром по org и поиском q).</summary>
-        [HttpGet("closed")]
-        public async Task<IActionResult> Closed([FromQuery] string? org, [FromQuery] string? q)
-        {
-            org = (org ?? "").Trim();
-            q = (q ?? "").Trim();
-            var qLower = q.ToLowerInvariant();
+        scope = (scope ?? "all").Trim().ToLowerInvariant();
+        if (scope == "mine" && !string.IsNullOrWhiteSpace(me))
+            qBase = qBase.Where(x => x.AssignedUserId == me);
+        else if (scope == "unassigned")
+            qBase = qBase.Where(x => x.AssignedUserId == null);
 
-            var baseQ =
+        var rows = await qBase
+            .OrderByDescending(x => x.UpdatedAt ?? x.CreatedAt)
+            .ToListAsync();
+
+        var result = rows.Select(x => new
+        {
+            id = x.Id,
+            subject = x.Subject ?? "(без темы)",
+            userLogin = x.OwnerLogin ?? "",
+            organization = x.Organization ?? "",
+            wait = WhoWaits(x.Last?.AuthorRole),
+            assignedUserId = x.AssignedUserId,
+            // для совместимости со старым фронтом: покажем логин назначенного, иначе последнего оператора
+            operatorLogin = x.AssignedUserId != null
+                ? _db.Users.AsNoTracking().Where(u => u.Id == x.AssignedUserId).Select(u => u.UserName).FirstOrDefault()
+                : x.LastOpLogin
+        }).ToArray();
+
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Справочник организаций из открытых тикетов.
+    /// </summary>
+    [HttpGet("orgs")]
+    public async Task<IActionResult> Orgs()
+    {
+        var orgs = await (
                 from t in _db.SupportTickets.AsNoTracking()
-                where t.Status == "closed"
-                join uById in _db.Users.AsNoTracking() on t.OwnerUserId equals uById.Id into uJoin
+                where t.Status != "closed"
+                join u in _db.Users.AsNoTracking() on t.OwnerUserId equals u.Id into uJoin
                 from u in uJoin.DefaultIfEmpty()
-                let ownerLogin = (t.OwnerLogin ?? u.UserName) ?? ""
-                let ownerOrg = u.Organization
-                select new
-                {
-                    t.Id,
-                    t.Subject,
-                    OwnerLogin = ownerLogin,
-                    Organization = ownerOrg,
-                    t.CreatedAt,
-                    t.UpdatedAt
-                };
+                select u.Organization
+            )
+            .Where(o => !string.IsNullOrWhiteSpace(o) && o != "Не установлено")
+            .Distinct()
+            .OrderBy(o => o)
+            .ToListAsync();
 
-            if (!string.IsNullOrEmpty(org))
-                baseQ = baseQ.Where(x => x.Organization == org);
-
-            if (!string.IsNullOrEmpty(qLower))
-                baseQ = baseQ.Where(x =>
-                    (x.Id ?? "").ToLower().Contains(qLower) ||
-                    ((x.Subject ?? "").ToLower().Contains(qLower)) ||
-                    ((x.OwnerLogin ?? "").ToLower().Contains(qLower)) ||
-                    ((x.Organization ?? "").ToLower().Contains(qLower)));
-
-            baseQ = baseQ.OrderByDescending(x => x.UpdatedAt);
-
-            var rowsRaw = await baseQ.ToListAsync();
-
-            var rows = rowsRaw.Select(x => new ClosedTicketRowDto(
-                 Id: x.Id,
-                 Subject: x.Subject ?? "(без темы)",
-                 UserLogin: x.OwnerLogin,
-                 Organization: string.IsNullOrWhiteSpace(x.Organization) || x.Organization == "Не установлено" ? null : x.Organization,
-                 CreatedAt: ((DateTime?)x.CreatedAt ?? (DateTime?)x.UpdatedAt ?? DateTime.UtcNow),
-                 UpdatedAt: ((DateTime?)x.UpdatedAt ?? (DateTime?)x.CreatedAt ?? DateTime.UtcNow)
-             )).ToArray();
-
-            return Ok(rows);
-        }
-
-        /// <summary>Справочник организаций по открытым тикетам.</summary>
-        [HttpGet("orgs")]
-        public async Task<IActionResult> Orgs()
-        {
-            var orgs =
-                await (from t in _db.SupportTickets.AsNoTracking()
-                       where t.Status != "closed"
-                       join u in _db.Users.AsNoTracking() on t.OwnerUserId equals u.Id into uJoin
-                       from u in uJoin.DefaultIfEmpty()
-                       select u.Organization)
-                    .Where(o => !string.IsNullOrWhiteSpace(o) && o != "Не установлено")
-                    .Distinct()
-                    .OrderBy(o => o)
-                    .ToListAsync();
-
-            return Ok(orgs);
-        }
+        return Ok(orgs);
     }
 }
