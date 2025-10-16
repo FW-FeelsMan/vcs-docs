@@ -33,6 +33,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DevTools.Smtp4devLauncher",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VCS-DOCs.TaskModule.EmailReminder", "VCS-DOCs.TaskModule.EmailReminder\VCS-DOCs.TaskModule.EmailReminder.csproj", "{91EF0B6A-5756-4CB1-A636-4241CB479F9E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "VCS-DOCs.TaskModules", "VCS-DOCs.TaskModules", "{B23E4304-8AEC-45F7-B03C-C7C60C0C7D2A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VCS-DOCs.Tickets.AutoAssign", "VCS-DOCs.TaskModules\VCS-DOCs.Tickets.AutoAssign\VCS-DOCs.Tickets.AutoAssign.csproj", "{8608235A-0F09-45D7-856B-EED4CE55412E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -87,8 +91,16 @@ Global
 		{91EF0B6A-5756-4CB1-A636-4241CB479F9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{91EF0B6A-5756-4CB1-A636-4241CB479F9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{91EF0B6A-5756-4CB1-A636-4241CB479F9E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8608235A-0F09-45D7-856B-EED4CE55412E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8608235A-0F09-45D7-856B-EED4CE55412E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8608235A-0F09-45D7-856B-EED4CE55412E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8608235A-0F09-45D7-856B-EED4CE55412E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{91EF0B6A-5756-4CB1-A636-4241CB479F9E} = {B23E4304-8AEC-45F7-B03C-C7C60C0C7D2A}
+		{8608235A-0F09-45D7-856B-EED4CE55412E} = {B23E4304-8AEC-45F7-B03C-C7C60C0C7D2A}
 	EndGlobalSection
 EndGlobal

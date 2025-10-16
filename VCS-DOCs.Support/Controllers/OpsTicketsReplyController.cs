@@ -30,6 +30,7 @@ public sealed class OpsTicketsReplyController : ControllerBase
         {
             get; set;
         }
+
         // поддерживаем оба поля для совместимости фронтов
         public long[]? AttachmentIds
         {

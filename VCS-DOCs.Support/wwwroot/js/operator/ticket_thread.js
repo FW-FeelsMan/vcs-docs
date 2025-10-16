@@ -18,6 +18,14 @@
         const id = (m && (m.id ?? m.Id ?? m.messageId ?? m.MessageId));
         return id == null ? '' : String(id);
     };
+    function setCloseDisabled(disabled, title) {
+        const btn = document.getElementById('tt_close');
+        if (!btn) return;
+        btn.disabled = !!disabled;
+        btn.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+        btn.classList.toggle('is-disabled', !!disabled);
+        if (title !== undefined) btn.title = title || '';
+    }
 
     async function getJson(url) {
         const r = await fetch(url, { credentials: 'same-origin', cache: 'no-store', headers: { 'X-Requested-With': 'fetch' } });
@@ -340,21 +348,32 @@
                 inputWrap?.classList.remove('disabled');
                 if (txt) { txt.disabled = false; txt.placeholder = 'Напишите ответ… (Ctrl+Enter — отправить)'; }
                 if (btnSend) btnSend.disabled = false;
-                if (btnClose) btnClose.disabled = false;
+                // ВАЖНО: кнопку закрытия не включаем здесь «всегда», её состояние задаст applyAssignmentLock()
                 if (btnAttach) btnAttach.disabled = false;
                 if (inpFiles) inpFiles.disabled = false;
             }
         }
         applyClosedState(ticket.status === 'closed');
 
-        // self/role и «замок» по назначению
+        // self/role и «замок» по назначению + право закрывать
         const meInfo = await loadMe();
         const selfMeta = detectSelf(msgBox);
         const MY_ID = selfMeta?.id || meInfo.id || null;
 
         function applyAssignmentLock() {
-            if (ticket.status === 'closed') return; // уже закрыта — оставляем как есть
+            const isClosed = ticket.status === 'closed';
             const assignedTo = ticket.assignedUserId || ticket.AssignedUserId || null;
+
+            // право закрывать: админ всегда; оператор — только если назначен на него
+            const canClose = !!(IS_ADMIN || (assignedTo && String(assignedTo) === String(MY_ID || '')));
+            if (isClosed) {
+                setCloseDisabled(true, 'Заявка уже закрыта');
+            } else {
+                setCloseDisabled(!canClose, !canClose ? 'Только назначенный оператор или админ может закрыть заявку' : '');
+            }
+
+            // «замок» на ввод (отправка/загрузка)
+            if (isClosed) return; // уже закрыта — вход запрещён выше
             const locked = !IS_ADMIN && assignedTo && String(assignedTo) !== String(MY_ID || '');
             const inputWrap = root.querySelector('.tt-input');
             if (locked) {
@@ -543,6 +562,12 @@
         const onCloseClick = async () => {
             if (ticket.status === 'closed') { goBack(); return; }
             if (!confirm('Закрыть эту заявку?')) return;
+
+            // фронт-проверка права (сервер всё равно проверит)
+            const assignedTo = ticket.assignedUserId || ticket.AssignedUserId || null;
+            const canClose = !!(IS_ADMIN || (assignedTo && String(assignedTo) === String(MY_ID || '')));
+            if (!canClose) { alert('Только назначенный оператор или админ может закрыть заявку.'); return; }
+
             btnClose.disabled = true;
             try {
                 const r = await fetch(`/api/support/tickets/${encodeURIComponent(ticketId)}/close`, {
@@ -583,10 +608,11 @@
                         applyClosedState(true);
                         upEl && (upEl.textContent = fmtFull(payload.updatedAt || new Date().toISOString()));
                         ticket.status = 'closed';
+                        setCloseDisabled(true, 'Заявка уже закрыта');
                     }
                 }
             );
-            // ловим переназначение — переключаем «замок»
+            // ловим переназначение — переключаем «замок» и право закрывать
             conn?.on?.('assigned', (p) => {
                 try {
                     const tId = String(p?.ticketId ?? p?.TicketId ?? '');
@@ -598,6 +624,9 @@
         } catch (e) { console.warn('[op-ticket] realtime off:', e?.message || e); }
 
         try {
+            const participantIds = new Set();
+            (messages || []).forEach(m => { const uid = authorIdFrom(m); if (uid) participantIds.add(uid); });
+            if (ticket?.ownerUserId) participantIds.add(String(ticket.ownerUserId));
             if (participantIds.size > 0) {
                 presenceConn = await connectPresenceHub([...participantIds], (uid, online) => setPresence(uid, online));
             }

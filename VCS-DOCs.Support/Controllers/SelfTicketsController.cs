@@ -3,10 +3,10 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using VCS_DOCs.Infrastructure.Data;
+using Microsoft.AspNetCore.SignalR;
 using VCS_DOCs.Infrastructure.Data;
 using VCS_DOCs.Models.Entities;
+using VCS_DOCs.Support.Hubs;
 
 namespace VCS_DOCs.Support.Controllers;
 
@@ -15,15 +15,21 @@ namespace VCS_DOCs.Support.Controllers;
 [Authorize(Policy = "SupportDeskAccess")]
 public sealed class SelfTicketsController : ControllerBase
 {
+    private readonly IHubContext<TicketHub> _hub;
     private readonly ApplicationDbContext _db;
     private readonly ILogger<SelfTicketsController> _log;
     private readonly IConfiguration _cfg;
 
-    public SelfTicketsController(ApplicationDbContext db, ILogger<SelfTicketsController> log, IConfiguration cfg)
+    public SelfTicketsController(
+        ApplicationDbContext db,
+        ILogger<SelfTicketsController> log,
+        IConfiguration cfg,
+        IHubContext<TicketHub> hub)
     {
         _db = db;
         _log = log;
         _cfg = cfg;
+        _hub = hub;
     }
 
     public sealed class NotifyToggleDto
@@ -106,12 +112,6 @@ public sealed class SelfTicketsController : ControllerBase
         var (uid, login) = await GetCurrentUserAsync();
         if (uid is null && login is null) return Ok(Array.Empty<UserOpenTicketDto>());
 
-        //// конфиг автозакрытия
-        //var autoCloseEnabled = _cfg.GetValue<bool?>("Modules:EmailReminder:AutoCloseEnabled") ?? false;
-        //var autoCloseHours = _cfg.GetValue<int?>("Modules:EmailReminder:AutoCloseAfterHours") ?? 72;
-        //var autoCloseAfter = TimeSpan.FromHours(Math.Max(1, autoCloseHours));
-        //var now = DateTime.UtcNow;
-        
         // тест-конфиг автозакрытия
         var autoCloseEnabled = _cfg.GetValue<bool?>("Modules:EmailReminder:AutoCloseEnabled") ?? false;
         var autoCloseHours = _cfg.GetValue<int?>("Modules:EmailReminder:AutoCloseAfterHours") ?? 72;
@@ -292,12 +292,39 @@ public sealed class SelfTicketsController : ControllerBase
             _db.SupportTickets.Add(t);
             _db.SupportTicketMessages.Add(first);
             await _db.SaveChangesAsync();
+
+            // ==== realtime: оповещаем операторов о новой заявке ====
+            try
+            {
+                await _hub.Clients.All.SendAsync("created", new
+                {
+                    id = ticketId,
+                    subject = t.Subject,
+                    userLogin = ownerLogin,
+                    organization = (string?)null, // подставь, если знаешь организацию
+                    wait = "user",
+                    assignedUserId = (string?)null
+                });
+            }
+            catch (Exception ex)
+            {
+                _log.LogWarning(ex, "SignalR 'created' push failed for ticket {TicketId}", ticketId);
+            }
         }
         catch (Exception ex)
         {
             _log.LogError(ex, "Failed to create self-ticket for {OwnerId}/{OwnerLogin}", ownerId, ownerLogin);
             return StatusCode(500, new { ok = false, error = "save_failed" });
         }
+        await _hub.Clients.All.SendAsync("created", new
+        {
+            id = ticketId,
+            subject = t.Subject,
+            userLogin = ownerLogin ?? "",
+            organization = "",            
+            wait = "user",                
+            assignedUserId = t.AssignedUserId 
+        }, HttpContext.RequestAborted);
 
         return Ok(new
         {

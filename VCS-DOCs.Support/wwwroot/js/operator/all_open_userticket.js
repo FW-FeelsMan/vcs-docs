@@ -39,7 +39,9 @@
         }
         throw new Error('SignalR client not found');
     }
-    async function ensureConn(onMessage, onStatus, onAssigned) {
+
+    // ДОБАВЛЕНО: onCreated — 4-й колбэк
+    async function ensureConn(onMessage, onStatus, onAssigned, onCreated) {
         if (conn && (conn.state === 'Connected' || conn.state === 1)) return conn;
         const signalR = await loadSignalR();
         conn = new signalR.HubConnectionBuilder()
@@ -62,13 +64,16 @@
                 document.dispatchEvent(new CustomEvent('SupportTicketStatus', { detail: { ticketId: payload.ticketId, status: payload.status, updatedAt: payload.updatedAt } }));
             } catch { }
         });
-        // новое: пуш назначения
         conn.on('assigned', payload => {
             try {
                 const id = payload?.ticketId;
                 if (!id) return;
                 onAssigned?.(id, payload.assignedUserId || null, payload.assignmentMode || null, payload.assignedAt || null);
             } catch { }
+        });
+        // НОВОЕ: пуш создания тикета
+        conn.on('created', payload => {
+            try { onCreated?.(payload || {}); } catch { }
         });
 
         try { await conn.start(); } catch { /* ок, попробуем без реалтайма */ }
@@ -323,6 +328,55 @@
                                 td.textContent = agentLabelById(assignedUserId || '');
                             }
                             td.dataset.assigned = assignedUserId || '';
+                        },
+                        // НОВОЕ: обработка создания тикета
+                        (payload) => {
+                            const id = String(payload?.id || payload?.ticketId || '');
+                            if (!id) return;
+
+                            // уже есть? выходим
+                            if (tbody.querySelector(`tr[data-id="${id}"]`)) return;
+
+                            const r = normalizeRow({
+                                id,
+                                subject: payload?.subject || '(без темы)',
+                                userLogin: payload?.userLogin || '',
+                                organization: payload?.organization || '',
+                                wait: payload?.wait || 'user',
+                                assignedUserId: payload?.assignedUserId ?? null,
+                                operatorLogin: ''
+                            });
+
+                            // применим текущие фильтры UI
+                            const q = (currentQuery || '').toLowerCase();
+                            if (q) {
+                                const hay = (r.id + ' ' + (r.subject || '') + ' ' + (r.userLogin || '') + ' ' + (r.organization || '')).toLowerCase();
+                                if (!hay.includes(q)) return;
+                            }
+                            if (currentOrg && r.organization !== currentOrg) return;
+                            const isAssigned = !!(r.assignedUserId || r.operatorLogin);
+                            if (currentScope === 'mine' && !isAssigned) return;
+                            if (currentScope === 'unassigned' && isAssigned) return;
+
+                            const html = rowHtml(r);
+
+                            // убираем "Нет данных" если он был
+                            const onlyRow = tbody.children.length === 1 ? tbody.children[0] : null;
+                            const onlyCell = onlyRow?.querySelector?.('td');
+                            const isPlaceholder = onlyCell && onlyCell.getAttribute('colspan') === '7';
+                            if (isPlaceholder) {
+                                tbody.innerHTML = html;
+                            } else if (tbody.firstElementChild) {
+                                tbody.firstElementChild.insertAdjacentHTML('beforebegin', html);
+                            } else {
+                                tbody.innerHTML = html;
+                            }
+
+                            // превратить ячейку в селект (для новой строки)
+                            upgradeAssigneeColumn(tbody);
+
+                            // подписка на этот тикет в хабе
+                            joinMany([id]).catch(() => { });
                         }
                     );
                     const ids = list.map(x => x.id).filter(Boolean);

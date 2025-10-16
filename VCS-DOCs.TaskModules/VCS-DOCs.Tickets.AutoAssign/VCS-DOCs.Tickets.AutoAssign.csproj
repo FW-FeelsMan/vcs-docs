@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- Имя сборки как у проекта -->
+    <AssemblyName>VCS-DOCs.Tickets.AutoAssign</AssemblyName>
+
+    <!-- Бэкап на случай сборки не из .sln -->
+    <SolutionDir Condition="'$(SolutionDir)'==''">$(MSBuildThisFileDirectory)..\..\</SolutionDir>
+    <SupportModulesDir>$(SolutionDir)VCS-DOCs.Support\Modules\</SupportModulesDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Контракты таск-движка -->
+    <ProjectReference Include="..\..\VCS-DOCs.TaskEngine\VCS-DOCs.TaskEngine.csproj" />
+    <!-- Доступ к ApplicationDbContext и моделям -->
+    <ProjectReference Include="..\..\VCS-DOCs.Infrastructure\VCS-DOCs.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\VCS-DOCs.Support\VCS-DOCs.Support.csproj" />
+  </ItemGroup>
+
+  <!-- После сборки копируем ТОЛЬКО DLL модуля в Support/Modules -->
+  <Target Name="CopyToSupportModules" AfterTargets="Build">
+    <MakeDir Directories="$(SupportModulesDir)" />
+    <Copy SourceFiles="$(TargetDir)$(TargetFileName)" DestinationFolder="$(SupportModulesDir)" SkipUnchangedFiles="true" />
+  </Target>
+</Project>

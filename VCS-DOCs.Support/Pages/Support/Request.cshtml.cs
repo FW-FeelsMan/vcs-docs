@@ -8,7 +8,8 @@ using VCS_DOCs.Infrastructure.Data;
 using VCS_DOCs.Models.Entities;
 using VCS_DOCs.Support.Infrastructure.Provision;
 using VCS_DOCs.Core.Notifications;
-using VCS_DOCs.Infrastructure.Data;
+using Microsoft.AspNetCore.SignalR;
+using VCS_DOCs.Support.Hubs;
 
 namespace VCS_DOCs.Support.Pages.Support
 {
@@ -19,6 +20,7 @@ namespace VCS_DOCs.Support.Pages.Support
         private readonly ILogger<RequestModel> _log;
         private readonly ApplicationDbContext _db;
         private readonly IMailSender _mailer;
+        private readonly IHubContext<TicketHub> _hub;
 
         private readonly long _defaultStorageLimitBytes;
 
@@ -27,13 +29,15 @@ namespace VCS_DOCs.Support.Pages.Support
             ISupportUserProvisioning provisioning,
             ILogger<RequestModel> log,
             ApplicationDbContext db,
-            IMailSender mailer)
+            IMailSender mailer,
+            IHubContext<TicketHub> hub)
         {
             _cfg = cfg;
             _provisioning = provisioning;
             _log = log;
             _db = db;
             _mailer = mailer;
+            _hub = hub;
 
             _defaultStorageLimitBytes =
                 _cfg.GetValue<long?>("Storage:DefaultLimitBytes")
@@ -95,14 +99,12 @@ namespace VCS_DOCs.Support.Pages.Support
                 get; set;
             }
 
-            // токен reCAPTCHA; ограничим разумно
             [MaxLength(4000)]
             public string? CaptchaToken
             {
                 get; set;
             }
 
-            // Флаг подтверждения создания нового аккаунта
             public bool? ConfirmCreate
             {
                 get; set;
@@ -117,7 +119,7 @@ namespace VCS_DOCs.Support.Pages.Support
         {
             try
             {
-                // Нормализация (триммим все строковые поля)
+                // Нормализация
                 Input.FullName = (Input.FullName ?? string.Empty).Trim();
                 Input.Login = (Input.Login ?? string.Empty).Trim();
                 Input.ReplyTo = (Input.ReplyTo ?? string.Empty).Trim();
@@ -126,7 +128,7 @@ namespace VCS_DOCs.Support.Pages.Support
                 Input.CaptchaAnswer = (Input.CaptchaAnswer ?? string.Empty).Trim();
                 Input.CaptchaToken = (Input.CaptchaToken ?? string.Empty).Trim();
 
-                // Пере-валидация после нормализации
+                // Пере-валидация
                 ModelState.Clear();
                 if (!TryValidateModel(Input))
                 {
@@ -152,13 +154,13 @@ namespace VCS_DOCs.Support.Pages.Support
                 var email = Input.ReplyTo!;
                 var loginRaw = Input.Login!;
 
-                // если логина нет — сгенерируем от e-mail (ограничения Identity: [a-z0-9._-], без пробелов)
+                // Если логина нет — сгенерируем от e-mail
                 if (string.IsNullOrWhiteSpace(loginRaw) && !string.IsNullOrWhiteSpace(email) && email.Contains('@'))
                 {
                     var (local, domainRoot) = SplitEmail(email);
                     var baseLogin = SanitizeLoginBase(local);
                     if (string.IsNullOrWhiteSpace(baseLogin)) baseLogin = "user";
-                    loginRaw = await BuildUniqueLoginAsync(baseLogin, domainRoot, maxLen: 20); // <= 20 символов
+                    loginRaw = await BuildUniqueLoginAsync(baseLogin, domainRoot, maxLen: 20);
                 }
 
                 if (string.IsNullOrWhiteSpace(loginRaw))
@@ -179,7 +181,6 @@ namespace VCS_DOCs.Support.Pages.Support
 
                 if (!exists && Input.ConfirmCreate != true)
                 {
-                    // просим подтверждение (фронт покажет диалог и повторит запрос с ConfirmCreate=true)
                     return new JsonResult(new
                     {
                         success = false,
@@ -204,7 +205,7 @@ namespace VCS_DOCs.Support.Pages.Support
 
                 _log.LogInformation("PROVISION done: id={Id} login={Login} created={Created}", user.Id, user.UserName, created);
 
-                // Гарантируем StorageLimitBytes
+                // StorageLimitBytes по умолчанию
                 var dbUser = await _db.Users.FirstOrDefaultAsync(u => u.Id == user.Id);
                 if (dbUser != null && (dbUser.StorageLimitBytes == null || dbUser.StorageLimitBytes <= 0))
                 {
@@ -242,6 +243,17 @@ namespace VCS_DOCs.Support.Pages.Support
                 _db.SupportTicketMessages.Add(first);
                 await _db.SaveChangesAsync();
 
+                // ?? Realtime: сообщаем всем операторам о создании тикета
+                await _hub.Clients.All.SendAsync("created", new
+                {
+                    id = ticketId,
+                    subject = t.Subject ?? "(без темы)",
+                    userLogin = t.OwnerLogin ?? "",
+                    organization = "",              // если у тебя есть поле организации — подставь здесь
+                    wait = "user",
+                    assignedUserId = t.AssignedUserId // обычно null при создании
+                }, HttpContext.RequestAborted);
+
                 // Письмо пользователю (если указан email)
                 if (!string.IsNullOrWhiteSpace(email))
                 {
@@ -275,8 +287,8 @@ namespace VCS_DOCs.Support.Pages.Support
                 return new JsonResult(new
                 {
                     success = true,
-                    created,               // был ли создан аккаунт
-                    ticketId,              // № тикета
+                    created,
+                    ticketId,
                     userId = user.Id,
                     login = user.UserName,
                     email = string.IsNullOrWhiteSpace(email) ? user.Email : email,
@@ -382,7 +394,7 @@ namespace VCS_DOCs.Support.Pages.Support
         private static string BuildEmailHtml(string ticketId, string ticketSubject,
                             string ticketUrl, string userLogin,
                             bool wasCreated, string? tempPassword,
-                            string portalUrl) 
+                            string portalUrl)
         {
             var intro = wasCreated
                 ? "<p>Для вас создана учётная запись в системе поддержки.</p>"
@@ -398,28 +410,27 @@ namespace VCS_DOCs.Support.Pages.Support
                 : "";
 
             return $@"
-                    <!doctype html>
-                    <html lang=""ru"">
-                    <head>
-                      <meta charset=""utf-8"">
-                      <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
-                      <title>Заявка № {Html(ticketId)}</title>
-                    </head>
-                    <body style=""font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#ffffff;color:#111827;margin:0;padding:16px"">
-                      <div style=""max-width:640px;margin:0 auto"">
-                        <h2 style=""margin:0 0 8px 0"">Заявка № {Html(ticketId)} создана</h2>
-                        <div style=""color:#6b7280;margin-bottom:12px"">{Html(ticketSubject)}</div>
-                        {intro}
-                        <p>Откройте заявку по ссылке (может потребоваться вход в портал поддержки):<br>
-                           <a href=""{Html(ticketUrl)}"">{Html(ticketUrl)}</a></p>
-                        <p>Портал поддержки: <a href=""{Html(portalUrl)}"">{Html(portalUrl)}</a></p>
-                        {creds}
-                        <hr style=""border:none;border-top:1px solid #e5e7eb;margin:16px 0"">
-                        <div style=""color:#6b7280;font-size:.9rem"">Это автоматическое письмо. Пожалуйста, не отвечайте на него.</div>
-                      </div>
-                    </body>
-                    </html>";
+                <!doctype html>
+                <html lang=""ru"">
+                <head>
+                  <meta charset=""utf-8"">
+                  <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
+                  <title>Заявка № {Html(ticketId)}</title>
+                </head>
+                <body style=""font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#ffffff;color:#111827;margin:0;padding:16px"">
+                  <div style=""max-width:640px;margin:0 auto"">
+                    <h2 style=""margin:0 0 8px 0"">Заявка № {Html(ticketId)} создана</h2>
+                    <div style=""color:#6b7280;margin-bottom:12px"">{Html(ticketSubject)}</div>
+                    {intro}
+                    <p>Откройте заявку по ссылке (может потребоваться вход в портал поддержки):<br>
+                       <a href=""{Html(ticketUrl)}"">{Html(ticketUrl)}</a></p>
+                    <p>Портал поддержки: <a href=""{Html(portalUrl)}"">{Html(portalUrl)}</a></p>
+                    {creds}
+                    <hr style=""border:none;border-top:1px solid #e5e7eb;margin:16px 0"">
+                    <div style=""color:#6b7280;font-size:.9rem"">Это автоматическое письмо. Пожалуйста, не отвечайте на него.</div>
+                  </div>
+                </body>
+                </html>";
         }
-
     }
 }

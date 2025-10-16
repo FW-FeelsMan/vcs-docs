@@ -27,8 +27,12 @@
             <span class="tt-subject muted">Тема: <span id="tt_subject">—</span></span>
         </h2>
 
-        <!-- Закрыть заявку -->
-        <button id="tt_close" class="btn-pill btn-danger btn-sm" type="button">
+        <button id="tt_close"
+                class="btn-pill btn-danger btn-sm"
+                type="button"
+                disabled
+                aria-disabled="true"
+                title="Только назначенный оператор или админ может закрыть заявку">
             Закрыть заявку
         </button>
     </div>
