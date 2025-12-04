@@ -316,15 +316,15 @@ public sealed class SelfTicketsController : ControllerBase
             _log.LogError(ex, "Failed to create self-ticket for {OwnerId}/{OwnerLogin}", ownerId, ownerLogin);
             return StatusCode(500, new { ok = false, error = "save_failed" });
         }
-        await _hub.Clients.All.SendAsync("created", new
-        {
-            id = ticketId,
-            subject = t.Subject,
-            userLogin = ownerLogin ?? "",
-            organization = "",            
-            wait = "user",                
-            assignedUserId = t.AssignedUserId 
-        }, HttpContext.RequestAborted);
+        //await _hub.Clients.All.SendAsync("created", new
+        //{
+        //    id = ticketId,
+        //    subject = t.Subject,
+        //    userLogin = ownerLogin ?? "",
+        //    organization = "",            
+        //    wait = "user",                
+        //    assignedUserId = t.AssignedUserId 
+        //}, HttpContext.RequestAborted);
 
         return Ok(new
         {

@@ -1,27 +1,50 @@
-﻿:root {
+﻿/* wwwroot/css/sub_css/operator_tickets_css/op_open_tickets.css */
+
+:root {
     --tickets-blue: #5a9bd5;
     --tickets-green: #4CAF50;
+    --tickets-gray: #9aa3af;
     --row-tint-alpha: .08;
+    --grid-line: #e6e9f2;
+    --grid-line-strong: #d7def0;
 }
 
-/* ======= Верхняя панель фильтров ======= */
+#op-open-tickets.tickets-page {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
 
-.filters-row {
+#op-open-tickets .button-container h2 {
+    margin: 0 0 10px 0;
+    padding: 0;
+    line-height: 1.2;
+}
+
+#op-open-tickets .filters-row {
     display: flex;
     gap: 16px;
     align-items: center;
     justify-content: space-between;
     margin-top: 12px;
+    min-height: 42px;
 }
 
-.filters-left {
+#op-open-tickets .filters-left {
     display: flex;
     gap: 12px;
     align-items: center;
-    flex-wrap: wrap; /* чтобы ничего не налезало при узкой ширине */
+    flex-wrap: nowrap;
 }
 
-.segmented {
+@media (max-width: 1100px) {
+    #op-open-tickets .filters-left {
+        flex-wrap: wrap;
+    }
+}
+
+#op-open-tickets .segmented {
     display: inline-flex;
     background: #f3f6fa;
     border: 1px solid #d9e2ef;
@@ -29,9 +52,9 @@
     overflow: hidden;
 }
 
-.seg-btn {
+#op-open-tickets .seg-btn {
     padding: 0 12px;
-    height: 32px;
+    height: 42px;
     line-height: 30px;
     border: 0;
     background: transparent;
@@ -42,33 +65,72 @@
     transition: background .15s, color .15s;
 }
 
-    .seg-btn:hover {
+    #op-open-tickets .seg-btn:hover {
         background: #e9f1fb;
     }
 
-    .seg-btn.is-active {
-        background: #5a9bd5;
+    #op-open-tickets .seg-btn.is-active {
+        background: var(--tickets-blue);
         color: #fff;
     }
 
-#op_orgFilter.assign-pick {
-    margin-left: 8px; /* небольшой зазор после сегментов */
-    min-width: 220px; /* чтобы не прыгал при коротком тексте */
-    width: auto; /* не растягиваемся */
-    flex: 0 0 auto; /* не пытаемся занять лишнее место */
-    z-index: 0;
+#op_orgFilter {
+    height: 42px;
+    padding: 0 42px 0 14px;
+    border-radius: 10px;
+    border: 1px solid #d4d7dc;
+    background: #fff;
+    color: #111827;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    min-width: 220px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 4.5l3 3 3-3' stroke='%239aa4b2' stroke-width='1.7' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 12px 12px;
+    transition: box-shadow .15s, border-color .15s;
+}
+
+    #op_orgFilter:focus {
+        outline: none;
+        border-color: var(--tickets-blue);
+        box-shadow: 0 0 0 3px rgba(90,155,213,.15);
+    }
+
+#op-open-tickets .inline-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    min-width: 520px;
+}
+
+@media (max-width: 1100px) {
+    #op-open-tickets .inline-controls {
+        min-width: 0;
+        flex: 1 1 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
 }
 
 #op_searchBox {
     flex: 0 1 360px;
+    width: 360px;
+    height: 42px;
     padding: 0 12px;
     border: 1px solid #d4d7dc;
-    border-radius: 8px;
+    border-radius: 10px;
     background: #fff;
     color: #333;
     outline: none;
     transition: box-shadow .15s, border-color .15s;
-    height: 42px;
 }
 
     #op_searchBox:focus {
@@ -76,15 +138,20 @@
         box-shadow: 0 0 0 3px rgba(90,155,213,.15);
     }
 
-.inline-controls {
-    display: flex;
-    gap: 12px;
+#btn-op-search.button-sliding,
+#btn-op-search.button-sliding.small,
+#btn-op-search {
+    height: 42px;
+    min-width: 160px;
+    padding: 0 22px;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
+    white-space: nowrap;
 }
 
-/* ======= Легенда ======= */
-
-.tickets-legend {
+/* legend */
+#op-open-tickets .tickets-legend {
     display: flex;
     gap: 16px;
     align-items: center;
@@ -93,35 +160,34 @@
     font-size: 13px;
 }
 
-.legend-item {
+#op-open-tickets .legend-item {
     display: inline-flex;
     align-items: center;
     gap: 8px;
 }
 
-.legend-dot {
+#op-open-tickets .legend-dot {
     width: 10px;
     height: 10px;
     border-radius: 999px;
-    box-shadow: 0 0 0 3px rgba(0,0,0,0.04) inset;
+    box-shadow: 0 0 0 3px rgba(0,0,0,.04) inset;
     display: inline-block;
 }
 
-    .legend-dot.op {
+    #op-open-tickets .legend-dot.op {
         background: var(--tickets-blue);
     }
 
-    .legend-dot.usr {
+    #op-open-tickets .legend-dot.usr {
         background: var(--tickets-green);
     }
 
-/* ======= Список (скролл-область) ======= */
-
+/* scroll area */
 #op-open-tickets .content-scrollable {
     margin: 24px 24px 8px;
     padding: 0 6px 24px 0;
-    overflow: auto;
-    overflow-x: hidden;
+    overflow-y: auto;
+    overflow-x: auto;
     max-height: calc(100vh - 180px);
 }
 
@@ -131,20 +197,50 @@
         height: 24px;
     }
 
-/* ======= Таблица ======= */
+/* ===================== TABLE (new stable behavior) ===================== */
 
 #opTicketsTable {
     table-layout: fixed;
-    width: calc(100% - 12px);
-    margin-right: 12px;
+    width: auto; /* JS sets px width = sum(cols) */
+    min-width: 0; /* do not force stretch */
     box-sizing: border-box;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
+    /* default ellipsis for text columns */
     #opTicketsTable th,
     #opTicketsTable td {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        min-width: 0;
+        /* IMPORTANT: no max-width:0 here */
+    }
+
+        /* don't clip interactive cells */
+        #opTicketsTable td.assign-cell,
+        #opTicketsTable td:last-child {
+            overflow: visible;
+            text-overflow: clip;
+        }
+
+    /* grid lines */
+    #opTicketsTable thead th,
+    #opTicketsTable tbody td {
+        border-right: 1px solid var(--grid-line);
+    }
+
+        #opTicketsTable thead th:last-child,
+        #opTicketsTable tbody td:last-child {
+            border-right: none;
+        }
+
+    #opTicketsTable thead th {
+        border-bottom: 1px solid var(--grid-line-strong);
+        position: relative;
+        user-select: none;
+        padding-right: 12px;
     }
 
     #opTicketsTable tbody tr:nth-child(even) td {
@@ -155,6 +251,20 @@
         filter: brightness(.99);
     }
 
+    #opTicketsTable tbody::after {
+        content: "";
+        display: block;
+        height: 16px;
+    }
+
+    #opTicketsTable tfoot.table-spacer td {
+        padding: 0;
+        border: 0;
+        height: 24px;
+        background: transparent;
+    }
+
+/* status badge */
 .status-badge {
     display: inline-block;
     padding: 4px 10px;
@@ -175,25 +285,54 @@
         border-color: var(--tickets-green);
     }
 
-#op-open-tickets .file-table td:last-child {
-    min-width: 150px;
+/* assignment cell */
+#opTicketsTable .assign-cell {
+    min-width: 170px;
 }
 
-#opTicketsTable tbody::after {
-    content: "";
-    display: block;
-    height: 16px;
+    #opTicketsTable .assign-cell select.assign-pick {
+        width: 100%;
+        height: 38px;
+        border-radius: 10px;
+    }
+
+/* buttons in last column (compact) */
+#opTicketsTable td:last-child .button-sliding,
+#opTicketsTable td:last-child button {
+    min-width: 0 !important;
+    padding: 8px 14px;
 }
 
-#opTicketsTable tfoot.table-spacer td {
-    padding: 0;
-    border: 0;
-    height: 24px;
-    background: transparent;
+/* keep your colgroup clamps (JS will snapshot to px on init) */
+#opTicketsTable colgroup col:nth-child(1) {
+    width: clamp(72px, 5vw, 110px);
 }
 
-/* ======= Контент-контейнер ======= */
+#opTicketsTable colgroup col:nth-child(2) {
+    width: clamp(220px, 26vw, 520px);
+}
 
+#opTicketsTable colgroup col:nth-child(3) {
+    width: clamp(140px, 12vw, 220px);
+}
+
+#opTicketsTable colgroup col:nth-child(4) {
+    width: clamp(160px, 14vw, 260px);
+}
+
+#opTicketsTable colgroup col:nth-child(5) {
+    width: clamp(170px, 14vw, 260px);
+}
+
+#opTicketsTable colgroup col:nth-child(6) {
+    width: clamp(170px, 14vw, 240px);
+}
+
+#opTicketsTable colgroup col:nth-child(7) {
+    width: clamp(80px, 9vw, 100px);
+}
+
+/* layout container safety (как было) */
 #content.content-field {
     overflow: visible !important;
 }
@@ -205,209 +344,3 @@
     min-height: 0;
     overflow: visible !important;
 }
-
-#op-open-tickets.tickets-page {
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 auto;
-    min-height: 0;
-}
-
-@media (max-width:1100px) {
-    #op-open-tickets .file-table td:last-child {
-        min-width: 130px;
-    }
-}
-
-/* ======= Тикет-тред ======= */
-
-#ticket-thread {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-}
-
-    #ticket-thread .tt-header {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 12px;
-        margin: 16px 16px 8px 16px;
-    }
-
-        #ticket-thread .tt-header h2 {
-            margin: 0;
-            font-size: 22px;
-        }
-
-        #ticket-thread .tt-header .tt-subject {
-            margin-left: 12px;
-            font-size: 14px;
-        }
-
-        #ticket-thread .tt-header hr {
-            order: 3;
-            flex-basis: 100%;
-            height: 0;
-            border: 0;
-            border-top: 1px solid #e6e9f2;
-            margin: 8px 0 0;
-        }
-
-    #ticket-thread .content-scrollable.tt-wrap {
-        flex: 1 1 auto;
-        max-height: none;
-        margin: 0 6px 6px 6px;
-        padding: 8px;
-        overflow: auto;
-        overflow-x: hidden;
-        background: #f6f7fb;
-        border-radius: 12px;
-    }
-
-    #ticket-thread .tt-input {
-        display: flex;
-        gap: 8px;
-        align-items: flex-start;
-        margin: 0 6px 8px 6px;
-        padding: 10px;
-        background: #fff;
-        border: 1px solid #e9ecef;
-        border-radius: 10px;
-        box-shadow: 0 8px 24px rgba(0,0,0,.06);
-    }
-
-        #ticket-thread .tt-input textarea {
-            flex: 1 1 auto;
-            resize: vertical;
-            min-height: 54px;
-            max-height: 40vh;
-            border: 1px solid #d4d7dc;
-            border-radius: 8px;
-            padding: 8px 10px;
-            outline: none;
-            font-size: 14px;
-        }
-
-            #ticket-thread .tt-input textarea:focus {
-                border-color: #5a9bd5;
-                box-shadow: 0 0 0 3px rgba(90,155,213,.15);
-            }
-
-    #ticket-thread .tt-meta {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(140px, 1fr));
-        gap: 8px 12px;
-        background: #fff;
-        border: 1px solid #e9ecef;
-        border-radius: 10px;
-        padding: 10px 12px;
-        margin-bottom: 10px;
-    }
-
-    #ticket-thread .tt-messages {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-/* ======= Обслуживает: «кнопка»-выпадашка без смены цветов на hover ======= */
-
-/* в таблице — селект занимает всю ячейку */
-#opTicketsTable .assign-cell {
-    min-width: 170px;
-}
-
-    #opTicketsTable .assign-cell select.assign-pick {
-        width: 100%;
-    }
-
-/* базовый вид (когда селект вне таблицы — авто-ширина, как у «кнопки») */
-select.assign-pick {
-    display: inline-flex;
-    align-items: center;
-    width: auto; /* базово авто, специфично расширяем в таблице */
-    height: 32px;
-    padding: 0 30px 0 10px; /* справа — место под стрелку */
-    border: 1px solid #d4d7dc;
-    border-radius: 8px;
-    background: #fff;
-    color: #333;
-    font-weight: 600;
-    font-size: 13px;
-    line-height: 1;
-    cursor: pointer;
-    /* рисуем свою стрелку */
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 4.5l3 3 3-3' stroke='%239aa4b2' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    background-size: 12px 12px;
-    transition: box-shadow .15s, border-color .15s;
-}
-
-    /* модификатор small (если пригодится где-то отдельно) */
-    select.assign-pick.small {
-        height: 32px;
-        font-size: 13px;
-        padding-right: 30px;
-    }
-
-    /* hover — НЕ меняем цвета */
-    select.assign-pick:hover {
-        background-color: #fff;
-        border-color: #d4d7dc;
-        box-shadow: 0 1px 0 rgba(0,0,0,.03);
-    }
-
-    /* focus — мягкое свечение */
-    select.assign-pick:focus,
-    select.assign-pick:focus-visible {
-        outline: none;
-        border-color: var(--tickets-blue, #5a9bd5);
-        box-shadow: 0 0 0 3px rgba(90,155,213,.15);
-    }
-
-    /* active клик */
-    select.assign-pick:active {
-        transform: translateY(1px);
-    }
-
-    /* disabled */
-    select.assign-pick:disabled {
-        opacity: .6;
-        cursor: default;
-    }
-
-    /* скрыть старую стрелку IE/Edge Legacy */
-    select.assign-pick::-ms-expand {
-        display: none;
-    }
-
-    /* — «облагородили» выпадаемый список там, где браузер позволяет — */
-    select.assign-pick option,
-    select.assign-pick optgroup {
-        font-size: 13px;
-        line-height: 1.3;
-        padding: 6px 10px; /* может игнорироваться некоторыми браузерами */
-    }
-
-        select.assign-pick option:checked {
-            background: #e9f1fb linear-gradient(0deg, #e9f1fb, #e9f1fb);
-            color: #1d2a3b;
-        }
-
-        select.assign-pick option:hover {
-            background: #f4f8fe;
-        }
-
-    select.assign-pick optgroup {
-        font-weight: 700;
-        color: #445;
-    }
-
-        select.assign-pick optgroup option {
-            font-weight: 600;
-        }

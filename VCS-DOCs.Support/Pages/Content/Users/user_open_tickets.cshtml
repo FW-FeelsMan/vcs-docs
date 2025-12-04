@@ -9,7 +9,7 @@
     var acHours = Cfg.GetValue<int?>("Modules:EmailReminder:AutoCloseAfterHours") ?? 72;
     var acSec = Cfg.GetValue<int?>("Modules:EmailReminder:AutoCloseAfterSeconds") ?? 0; // тест-режим
 }
-<link rel="stylesheet" href="~/css/sub_css/support_accountsStyle.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/sub_css/support_common_table.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/sub_css/user_opentickets_css/user_opentickets.css" asp-append-version="true" />
 <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(HttpContext).RequestToken" />
 <script>

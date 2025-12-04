@@ -3,6 +3,7 @@
 @{
     Layout = null;
 }
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -23,12 +24,14 @@
 
         <div class="error-description">
             @Model.Description
+
             @if (!string.IsNullOrWhiteSpace(Model.OriginalPath))
             {
                 <div style="margin-top:8px; opacity:.7; font-size:.9em;">
                     Запрошенный адрес: <code>@Model.OriginalPath</code>
                 </div>
             }
+
             @if (!string.IsNullOrWhiteSpace(Model.TraceId))
             {
                 <div style="opacity:.7; font-size:.9em;">
@@ -39,11 +42,10 @@
 
         <div class="error-actions">
             <a class="button-sliding" href="/">На главную</a>
-            <button id="btnSupport" class="button-sliding" type="button">Написать в поддержку</button>
+            <button class="button-sliding" id="btnSupport" type="button">Написать в поддержку</button>
         </div>
     </div>
 
-    <!-- Modal: Обращение в поддержку -->
     <div id="supportModal"
          class="modal"
          aria-hidden="true"

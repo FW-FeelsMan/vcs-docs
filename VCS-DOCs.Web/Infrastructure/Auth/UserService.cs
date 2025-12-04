@@ -1,40 +1,50 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Infrastructure.Data;
 
-namespace VCS_DOCs.Infrastructure.Auth
+namespace VCS_DOCs.Infrastructure.Auth;
+
+public sealed class UserService : IUserService
 {
-	public class UserService : IUserService
+	private readonly ApplicationDbContext _context;
+	private readonly ILogger<UserService> _log;
+
+	public UserService(ApplicationDbContext context, ILogger<UserService> log)
 	{
-		private readonly ApplicationDbContext _context;
+		_context = context;
+		_log = log;
+	}
 
-		public UserService(ApplicationDbContext context)
+	public async Task UpdateUserStatusAsync(string userId, bool isOnline)
+	{
+		if (string.IsNullOrWhiteSpace(userId))
+			return;
+
+		var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+		if (user is null)
 		{
-			_context = context;
+			_log.LogWarning("UpdateUserStatusAsync: user not found. Id={UserId}", userId);
+			return;
 		}
 
-		public async Task UpdateUserStatusAsync(string userId, bool isOnline)
+		user.StatusOnline = isOnline ? 1 : 0;
+		user.LastEntry = DateTime.UtcNow;
+
+		await _context.SaveChangesAsync();
+	}
+
+	public async Task ClearUserJwtIdAsync(string userId)
+	{
+		if (string.IsNullOrWhiteSpace(userId))
+			return;
+
+		var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+		if (user is null)
 		{
-			var user = await _context.Users.FindAsync(userId);
-			if (user != null)
-			{
-				user.StatusOnline = isOnline ? 1 : 0;
-				user.LastEntry = DateTime.Now;
-				await _context.SaveChangesAsync();
-			}
+			_log.LogWarning("ClearUserJwtIdAsync: user not found. Id={UserId}", userId);
+			return;
 		}
 
-		public async Task ClearUserJwtIdAsync(string userId)
-		{
-			var user = await _context.Users.FindAsync(userId);
-			if (user != null)
-			{
-				user.JwtId = null;
-				await _context.SaveChangesAsync();
-			}
-			else
-			{
-				Console.WriteLine($"Пользователь с Id='{userId}' не найден.");
-			}
-		}
+		user.JwtId = null;
+		await _context.SaveChangesAsync();
 	}
 }

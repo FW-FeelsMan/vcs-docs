@@ -6,58 +6,71 @@
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/main_css/loginStyle.css">
+    <link rel="stylesheet" href="~/css/main_css/loginStyle.css" />
 }
 
 <div id="loader" class="loader-overlay hidden">
     <div class="loader"></div>
 </div>
+
 <div class="background"></div>
 
-<div class="container" id="container">
+<div id="container" class="container">
     <div class="form-container sign-in-container">
-        <form method="post" asp-antiforgery="true" asp-page-handler="Login">
+        <form method="post" asp-page-handler="Login" asp-antiforgery="true">
             @Html.AntiForgeryToken()
+
             <input type="hidden" name="action" value="Login" />
             <input type="hidden" name="hardwareId" id="hardwareId" />
+
             <h1>Вход</h1>
             <p>Введите Ваши данные для входа в систему</p>
-            <input type="text" name="Username" placeholder="Ваш логин" value="@Model.Username"
-                   required maxlength="20" data-maxlen="20" />
-            <small class="field-hint" data-hint-for="Username" style="display:none;">Не более 20 символов</small>            
 
-            <input type="password" name="Password" autocomplete="on" placeholder="Пароль"
-                   required maxlength="100" data-maxlen="100" />
+            <input type="text"
+                   name="Username"
+                   placeholder="Ваш логин"
+                   value="@Model.Username"
+                   required
+                   maxlength="20"
+                   data-maxlen="20" />
+            <small class="field-hint" data-hint-for="Username" style="display:none;">Не более 20 символов</small>
+
+            <input type="password"
+                   name="Password"
+                   placeholder="Пароль"
+                   autocomplete="on"
+                   required
+                   maxlength="100"
+                   data-maxlen="100" />
             <small class="field-hint" data-hint-for="Password" style="display:none;">Не более 100 символов</small>
-
 
             <div class="error-message" style="display:none;"></div>
 
             <button type="submit">Войти</button>
+
             <div class="checkbox">
-                <input class="custom-checkbox"
-                       type="checkbox"
-                       id="forceLogin"
-                       name="ForceLogin"
-                       value="true">
+                <input class="custom-checkbox" type="checkbox" id="forceLogin" name="ForceLogin" value="true" />
                 <label for="forceLogin">Войти принудительно</label>
             </div>
         </form>
     </div>
 
     <div class="form-container sign-up-container">
-        <form asp-page-handler="Register" asp-antiforgery="true" method="post">
+        <form method="post" asp-page-handler="Register" asp-antiforgery="true">
             @Html.AntiForgeryToken()
+
             <input type="hidden" name="action" value="Register" />
             <input type="hidden" name="hardwareId" id="hardwareIdRegister" />
+
             <h1>Регистрация</h1>
 
-            <!-- ЛОГИН -->
-            <input type="text" name="Username" placeholder="Ваш логин"
-                   required maxlength="20" data-maxlen="20" />
-            <small class="field-hint" data-hint-for="Username" style="display:none;">
-                Не более 20 символов
-            </small>
+            <input type="text"
+                   name="Username"
+                   placeholder="Ваш логин"
+                   required
+                   maxlength="20"
+                   data-maxlen="20" />
+            <small class="field-hint" data-hint-for="Username" style="display:none;">Не более 20 символов</small>
 
             <select name="speciality" required>
                 <option value="" disabled selected>Выберите тип учетной записи</option>
@@ -67,12 +80,14 @@
                 }
             </select>
 
-            <!-- ПАРОЛЬ -->
-            <input type="password" name="Password" autocomplete="on" placeholder="Пароль"
-                   required maxlength="100" data-maxlen="100" />
-            <small class="field-hint" data-hint-for="Password" style="display:none;">
-                Не более 100 символов
-            </small>
+            <input type="password"
+                   name="Password"
+                   placeholder="Пароль"
+                   autocomplete="on"
+                   required
+                   maxlength="100"
+                   data-maxlen="100" />
+            <small class="field-hint" data-hint-for="Password" style="display:none;">Не более 100 символов</small>
 
             @if (Model.RegistrationErrors.Any())
             {
@@ -83,12 +98,14 @@
                     }
                 </div>
             }
+
             <div class="error-message-registration" style="display:none;"></div>
+
             <div class="successful-message" style="display:none;">
                 <p>Регистрация прошла успешно! Вы сможете войти в систему как только учетная запись будет активированна администрацией.</p>
             </div>
 
-            <button type="submit" @(Model.IsRegistrationSuccessful ? "disabled" : "")>Зарегистрировать</button>
+            <button type="submit" @(Model.IsRegistrationSuccessful ? "disabled" : null)>Зарегистрировать</button>
         </form>
     </div>
 
@@ -97,12 +114,13 @@
             <div class="overlay-panel overlay-left">
                 <h1>Регистрация пользователя</h1>
                 <p>Введите Ваши данные и нажмите кнопку "Зарегистрировать"</p>
-                <button class="ghost" id="signIn" data-click="throttle:800">Вернуться</button>
+                <button class="ghost" id="signIn" data-click="throttle:800" type="button">Вернуться</button>
             </div>
+
             <div class="overlay-panel overlay-right">
                 <h1>VCS-DOCs</h1>
                 <p>Еще не зарегистрированы в системе?</p>
-                <button class="ghost" id="signUp" data-click="throttle:800">Зарегистрироваться</button>
+                <button class="ghost" id="signUp" data-click="throttle:800" type="button">Зарегистрироваться</button>
             </div>
         </div>
     </div>
@@ -111,5 +129,5 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/fingerprintjs@3.3.0/dist/fp.min.js"></script>
     <script src="~/js/auth/auth-login.js" asp-append-version="true" defer></script>
-    <script src="~/js/ui/support_modal.js"></script>
+    <script src="~/js/ui/support_modal.js" defer></script>
 }

@@ -1,0 +1,264 @@
+﻿/* wwwroot/css/sub_css/support_accounts.css
+   Accounts page ONLY.
+   Scope is locked to #op-accounts to avoid affecting tickets pages.
+*/
+
+:root {
+    --primary-color: #5a9bd5;
+    --primary-hover: #3d7bbf;
+    --text-dark: #111827;
+    --menu-shadow: 0 8px 24px rgba(16,24,40,.12);
+    --filter-h: 42px;
+    --split-h-compact: 32px;
+    --radius-ctl: 10px;
+    /* actions col */
+    --accounts-actions-min: 270px;
+}
+
+/* ===================== Controls (accounts only) ===================== */
+
+#op-accounts #roleFilter.button-sliding.small,
+#op-accounts #orgFilter.button-sliding.small {
+    height: var(--filter-h);
+    padding: 0 42px 0 14px;
+    border-radius: var(--radius-ctl) !important;
+    border: 1px solid #d4d7dc !important;
+    background: #fff !important;
+    color: var(--text-dark) !important;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    min-width: 220px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 4.5l3 3 3-3' stroke='%239aa4b2' stroke-width='1.7' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 12px 12px;
+    transition: box-shadow .15s, border-color .15s;
+}
+
+#op-accounts #roleFilter:focus,
+#op-accounts #orgFilter:focus,
+#op-accounts #searchBox:focus {
+    outline: none;
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 3px rgba(90,155,213,.15);
+}
+
+#op-accounts #searchBox {
+    flex: 0 1 360px;
+    width: 360px;
+    height: var(--filter-h);
+    padding: 0 12px;
+    border: 1px solid #d4d7dc;
+    border-radius: var(--radius-ctl);
+    background: #fff;
+    color: #333;
+    transition: box-shadow .15s, border-color .15s;
+}
+
+#op-accounts #btn-add-project.button-sliding,
+#op-accounts #btn-add-project.button-sliding.small,
+#op-accounts #btn-add-project {
+    height: var(--filter-h);
+    min-width: 180px;
+    padding: 0 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+/* ===================== Accounts table behavior ===================== */
+
+/* ВАЖНО:
+   - common css может задавать width:100% для .file-table
+   - наш JS синхронизирует table.style.width = sum(col widths)
+   => здесь нужно позволить width быть авто/px и не растягивать таблицу до контейнера
+*/
+#op-accounts #accountsTable,
+#op-accounts #accountsTable.file-table {
+    table-layout: fixed;
+    width: auto; /* common css may set width:100% — убиваем это */
+    min-width: 0; /* не растягиваемся до контейнера */
+    box-sizing: border-box;
+}
+
+    /* default ellipsis (safe for text columns) */
+    #op-accounts #accountsTable th,
+    #op-accounts #accountsTable td {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+        /* НЕ ставим max-width:0 здесь, иначе min-width у actions ломается */
+    }
+
+        /* do NOT clip interactive columns */
+        #op-accounts #accountsTable td:nth-child(4), /* Роли */
+        #op-accounts #accountsTable td:nth-child(7), /* Доступ */
+        #op-accounts #accountsTable td:nth-child(8) /* Действия */ {
+            overflow: visible;
+            text-overflow: clip;
+        }
+
+        /* actions column: allow real growth and keep buttons visible */
+        #op-accounts #accountsTable th:last-child,
+        #op-accounts #accountsTable td:last-child {
+            white-space: nowrap;
+            min-width: var(--accounts-actions-min);
+            max-width: none !important; /* важное: иначе некоторые общие правила могут сжимать */
+            overflow: visible;
+            text-overflow: clip;
+        }
+
+            /* slightly tighten buttons in actions to fit nicer */
+            #op-accounts #accountsTable td:last-child .button-sliding,
+            #op-accounts #accountsTable td:last-child button {
+                min-width: 0 !important;
+                padding: 8px 14px;
+            }
+
+/* ===================== Pills / Badges (accounts only) ===================== */
+
+#op-accounts .user-status {
+    display: inline-block;
+    border-radius: 999px;
+    font-size: .85rem;
+    font-weight: 700;
+    line-height: 1.5;
+    padding: 2px 8px;
+    border: 1px solid transparent;
+}
+
+    #op-accounts .user-status.online {
+        background: #e9f9ef;
+        color: #148d36;
+        border-color: #ccefd8;
+    }
+
+    #op-accounts .user-status.offline {
+        background: #f6f7f9;
+        color: #697386;
+        border-color: #e2e6eb;
+    }
+
+#op-accounts .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: .85rem;
+    font-weight: 700;
+    border: 1px solid transparent;
+    vertical-align: middle;
+    max-width: 100%;
+}
+
+#op-accounts .badge--ok {
+    background: #e9f7ff;
+    color: #1967d2;
+    border-color: #d6ebff;
+}
+
+#op-accounts .badge--blocked {
+    background: #fff2f2;
+    color: #b42318;
+    border-color: #ffdada;
+}
+
+/* ===================== Action multibutton (accounts only) ===================== */
+
+#op-accounts .multi-button.action-multibutton.compact {
+    height: var(--split-h-compact);
+    position: relative;
+    display: inline-flex;
+    align-items: stretch;
+    background: #fff;
+    border: 1px solid #d9e2ef;
+    border-radius: 8px;
+    overflow: visible; /* dropdown must not be clipped */
+}
+
+    #op-accounts .multi-button.action-multibutton.compact .button-sliding.compact {
+        --btn-color: var(--primary-color);
+        --btn-border: transparent;
+        min-width: 160px;
+        height: 100%;
+        border: 0;
+        border-radius: 8px 0 0 8px;
+        font-weight: 700;
+        padding: 0 14px;
+        background: #fff;
+        color: var(--primary-color);
+        transition: background .18s, color .18s;
+    }
+
+        #op-accounts .multi-button.action-multibutton.compact .button-sliding.compact:hover {
+            background: #f5f9ff;
+            color: var(--primary-hover);
+        }
+
+#op-accounts .dropdown-arrow.compact {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: var(--split-h-compact);
+    font-size: 14px;
+    line-height: 1;
+    background: var(--primary-color);
+    color: #fff;
+    border: 0;
+    border-left: 1px solid #d9e2ef;
+    border-radius: 0 8px 8px 0;
+    cursor: pointer;
+    user-select: none;
+    transition: background .15s;
+}
+
+    #op-accounts .dropdown-arrow.compact:hover {
+        background: var(--primary-hover);
+    }
+
+/* ===================== Floating menu (created by JS) ===================== */
+
+#accounts-action-floating-menu {
+    position: fixed;
+    z-index: 2147483647;
+    display: none;
+    min-width: 200px;
+    border: 1px solid #d9e2ef;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: var(--menu-shadow);
+    overflow: hidden;
+    font-size: 13px;
+    color: var(--text-dark);
+    box-sizing: border-box;
+}
+
+    #accounts-action-floating-menu .dropdown-item {
+        padding: 10px 12px;
+        cursor: pointer;
+        transition: background .16s, color .16s;
+        white-space: nowrap;
+        background: #fff;
+        color: var(--text-dark);
+    }
+
+        #accounts-action-floating-menu .dropdown-item:hover,
+        #accounts-action-floating-menu .dropdown-item:focus {
+            background: var(--primary-color);
+            color: #fff;
+            outline: none;
+        }
+
+        #accounts-action-floating-menu .dropdown-item.sep {
+            padding: 0;
+            height: 1px;
+            background: #eef2f7;
+            pointer-events: none;
+        }

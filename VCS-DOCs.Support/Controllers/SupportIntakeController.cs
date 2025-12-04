@@ -1,5 +1,4 @@
 ﻿// VCS-DOCs.Support/Controllers/SupportIntakeController.cs
-using System.Net.Http.Json;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -12,18 +11,19 @@ using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Core.Notifications;
 using VCS_DOCs.Infrastructure.Data;
 using VCS_DOCs.Infrastructure.Auth;
-using VCS_DOCs.Infrastructure.Data;
 using VCS_DOCs.Models.Entities;
+using Microsoft.AspNetCore.SignalR;
+using VCS_DOCs.Support.Hubs;
 
 namespace VCS_DOCs.Support.Controllers
 {
-    /// <summary>
-    /// Принимает обращения с публичной формы /Support/Request:
-    /// - Создаёт тикет (через web-сервис и локальный upsert на всякий случай)
-    /// - При необходимости создаёт аккаунт пользователю и отправляет письмо
-    /// - Возвращает номер тикета и краткую квитанцию
-    /// </summary>
-    [EnableRateLimiting("api-burst")]
+	/// <summary>
+	/// Принимает обращения с публичной формы /Support/Request:
+	/// - Создаёт тикет (через web-сервис и локальный upsert на всякий случай)
+	/// - При необходимости создаёт аккаунт пользователю и отправляет письмо
+	/// - Возвращает номер тикета и краткую квитанцию
+	/// </summary>
+	[EnableRateLimiting("api-burst")]
     [ApiController]
     [Route("api/Support")] // сохраняем текущий маршрут, чтобы ничего не ломалось
     public class SupportIntakeController : ControllerBase
@@ -35,14 +35,16 @@ namespace VCS_DOCs.Support.Controllers
         private readonly ILogger<SupportIntakeController> _log;
         private readonly IMailSender _mail;
         private readonly IConfiguration _cfg;
+		private readonly IHubContext<TicketHub> _hub;
 
-        public SupportIntakeController(
+		public SupportIntakeController(
             IHttpClientFactory http,
             ApplicationDbContext db,
             UserManager<User> userMgr,
             RoleManager<IdentityRole> roleMgr,
             IMailSender mail,
             IConfiguration cfg,
+			IHubContext<TicketHub> hub,
             ILogger<SupportIntakeController> log)
         {
             _vdocs = http.CreateClient("VDocsBridge");
@@ -52,7 +54,8 @@ namespace VCS_DOCs.Support.Controllers
             _mail = mail;
             _cfg = cfg;
             _log = log;
-        }
+			_hub = hub;
+		}
 
         /// <summary>
         /// Входящая модель обращения с формы.
@@ -153,9 +156,29 @@ namespace VCS_DOCs.Support.Controllers
 
             // 2) автопровижининг пользователя (если передан login)
             var createdUser = await EnsureUserAndSetPasswordAsync(dto.login, dto.replyTo, dto.fullName, ct);
+			// ==== realtime: оповещаем операторов о новой заявке ====
+			if (!string.IsNullOrEmpty(ticketId))
+			{
+				try
+				{
+					await _hub.Clients.All.SendAsync("created", new
+					{
+						id = ticketId,
+						subject = dto.subject ?? "(без темы)",
+						userLogin = ((dto.login ?? createdUser.login) ?? "").Trim(),
+						organization = "",
+						wait = "user",
+						assignedUserId = (string?)null
+					}, ct);
+				}
+				catch (Exception ex)
+				{
+					_log.LogWarning(ex, "SignalR 'created' push failed for ticket {TicketId}", ticketId);
+				}
+			}
 
-            // 3) письмо пользователю
-            var ticketUrl = BuildTicketUrl(ticketId);
+			// 3) письмо пользователю
+			var ticketUrl = BuildTicketUrl(ticketId);
             if (!string.IsNullOrWhiteSpace(createdUser.email))
             {
                 string subject, html;
@@ -203,9 +226,9 @@ namespace VCS_DOCs.Support.Controllers
                     _log.LogWarning(ex, "Failed to send mail to {Email}", createdUser.email);
                 }
             }
-
-            // 4) ответ фронту (без пароля!)
-            return Ok(new
+			
+			// 4) ответ фронту (без пароля!)
+			return Ok(new
             {
                 success = true,
                 ticketId,

@@ -1,175 +1,179 @@
-﻿//profile-edit-info.js скрипт редактирования личных данных пользователя
-function applyDateMask(el) {
-    el.removeAttribute('disabled');
-    el.setAttribute('maxlength', '10');
-    el.setAttribute('inputmode', 'numeric');
+﻿(() => {
+    // защита от повторной инициализации (важно при AJAX/iframe/SPA-подгрузке)
+    if (window.__profileEditInfoInit) return;
+    window.__profileEditInfoInit = true;
 
-    el.addEventListener('input', function (e) {
-        let v = e.target.value.replace(/[^\d]/g, '');
-        if (v.length > 2) v = v.slice(0, 2) + '.' + v.slice(2);
-        if (v.length > 5) v = v.slice(0, 5) + '.' + v.slice(5, 9);
-        e.target.value = v;
-    });
-}
+    const PLACEHOLDER = "Не установлено";
 
-function createEditButton() {
-    const button = document.createElement("button");
-    button.className = "edit-button";
-    button.innerHTML = '<img src="/images/edit_icon.png" alt="Edit">';
-    button.title = "Редактировать";
-    button.addEventListener("click", handleEditClick);
-    return button;
-}
+    const getCsrfToken = () =>
+        document.querySelector('input[name="__RequestVerificationToken"]')?.value || "";
 
-function handleEditClick(event) {
-    const button = event.target.closest(".edit-button");
-    if (!button) return;
+    function applyDateMask(el) {
+        el.removeAttribute("disabled");
+        el.setAttribute("maxlength", "10");
+        el.setAttribute("inputmode", "numeric");
 
-    const card = button.closest(".info-card");
-    if (!card) return;
-
-    // Сброс других редактируемых карточек
-    document.querySelectorAll(".info-card").forEach(otherCard => {
-        if (otherCard === card) return;
-
-        const input = otherCard.querySelector("input[data-field]");
-        const saveBtn = otherCard.querySelector(".edit-button img[src*='save_icon']");
-
-        if (input && saveBtn) {
-            const value = input.dataset.originalValue || input.value;
-            const field = input.dataset.field;
-
-            const revertedText = document.createElement("p");
-            revertedText.dataset.field = field;
-            revertedText.textContent = value;
-
-            input.replaceWith(revertedText);
-
-            const revertButton = createEditButton();
-            saveBtn.closest("button").replaceWith(revertButton);
-        }
-    });
-
-    const textElement = card.querySelector("p[data-field]");
-    const inputElement = card.querySelector("input[data-field]");
-    let fieldName, currentValue;
-
-    if (textElement) {
-        fieldName = textElement.dataset.field;
-        currentValue = textElement.textContent.trim();
-    } else if (inputElement) {
-        fieldName = inputElement.dataset.field;
-        currentValue = inputElement.value.trim();
-    } else {
-        return;
+        el.addEventListener("input", function (e) {
+            let v = (e.target.value || "").replace(/[^\d]/g, "");
+            if (v.length > 2) v = v.slice(0, 2) + "." + v.slice(2);
+            if (v.length > 5) v = v.slice(0, 5) + "." + v.slice(5, 9);
+            e.target.value = v;
+        });
     }
 
-    const isDate = inputElement?.classList.contains("date-input")
-        || fieldName.toLowerCase().includes("birth");
+    function isDateField(fieldName, inputEl) {
+        if (inputEl?.classList?.contains("date-input")) return true;
+        return (fieldName || "").toLowerCase().includes("birth");
+    }
 
-    const input = document.createElement("input");
-    input.type = "text";
-    input.className = isDate ? "date-input" : "edit-input";
-    input.value = currentValue;
-    input.dataset.field = fieldName;
-    input.dataset.originalValue = currentValue;
+    function isEmailField(fieldName) {
+        const f = (fieldName || "").toLowerCase();
+        return f === "email" || f.includes("email");
+    }
 
-    if (isDate) applyDateMask(input);
+    function createEditButton() {
+        const btn = document.createElement("button");
+        btn.className = "edit-button";
+        btn.setAttribute("data-action", "edit");
+        btn.innerHTML = '<img src="/images/edit_icon.png" alt="Edit">';
+        btn.title = "Редактировать";
+        return btn;
+    }
 
-    if (textElement) textElement.replaceWith(input);
-    else inputElement.replaceWith(input);
+    function createSaveButton() {
+        const btn = document.createElement("button");
+        btn.className = "edit-button";
+        btn.setAttribute("data-action", "save");
+        btn.innerHTML = '<img src="/images/save_icon.png" alt="Save">';
+        btn.title = "Сохранить";
+        return btn;
+    }
 
-    input.focus();
+    function revertCard(card) {
+        const input = card.querySelector("input[data-field]");
+        const saveIcon = card.querySelector('.edit-button img[src*="save_icon"]');
+        if (!input || !saveIcon) return;
 
-    const editButton = card.querySelector(".edit-button");
-    const saveButton = document.createElement("button");
-    saveButton.className = "edit-button";
-    saveButton.innerHTML = '<img src="/images/save_icon.png" alt="Save">';
-    saveButton.title = "Сохранить";
+        const field = (input.dataset.field || "").trim();
+        const value = (input.dataset.originalValue ?? input.value ?? "").trim();
 
-    editButton.replaceWith(saveButton);
+        const reverted = document.createElement("p");
+        reverted.dataset.field = field;
+        reverted.textContent = value || PLACEHOLDER;
 
-    saveButton.addEventListener("click", () => {
-        const newValue = input.value.trim();
-        const tokenElement = document.querySelector('meta[name="csrf-token"]');
-        if (!tokenElement) {
-            alert("Ошибка безопасности. Перезагрузите страницу.");
-            return;
-        }
-        const token = tokenElement.getAttribute("content");
+        input.replaceWith(reverted);
+        saveIcon.closest("button")?.replaceWith(createEditButton());
+    }
 
-        fetch("/Content/profile_page?handler=UpdateUserData", {
+    function revertOtherCards(currentCard) {
+        document.querySelectorAll(".info-card").forEach((card) => {
+            if (card !== currentCard) revertCard(card);
+        });
+    }
+
+    async function updateField(fieldName, value) {
+        const token = getCsrfToken();
+        if (!token) throw new Error("Ошибка безопасности. Перезагрузите страницу.");
+
+        const res = await fetch("/Content/profile_page?handler=UpdateUserData", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "RequestVerificationToken": token,
                 "X-CSRF-TOKEN": token
             },
-            body: JSON.stringify({ Field: fieldName, Value: newValue })
-        })
-            .then(response => {
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                return response.json();
-            })
-            .then(data => {
-                if (!data.success) throw new Error(data.error || "Ошибка обновления");
+            body: JSON.stringify({ Field: fieldName, Value: value }),
+        });
 
-                const newText = document.createElement("p");
-                newText.dataset.field = fieldName;
-                newText.textContent = newValue;
-
-                const currentInput = card.querySelector("input[data-field]");
-                if (currentInput) {
-                    currentInput.replaceWith(newText);
-                }
-
-                const newEditButton = createEditButton();
-                const currentButton = card.querySelector(".edit-button");
-                if (currentButton) {
-                    currentButton.replaceWith(newEditButton);
-                } else {
-                    const h4 = card.querySelector("h4");
-                    if (h4) h4.appendChild(newEditButton);
-                }
-            })
-            .catch(err => {
-                alert(err.message);
-
-                const fallbackText = document.createElement("p");
-                fallbackText.dataset.field = fieldName;
-                fallbackText.textContent = input.dataset.originalValue || input.value;
-
-                input.replaceWith(fallbackText);
-
-                const fallbackButton = createEditButton();
-                saveButton.replaceWith(fallbackButton);
-            });
-    });
-}
-
-document.addEventListener("click", function (e) {
-    const button = e.target.closest(".edit-button");
-    if (!button) return;
-    handleEditClick(e);
-});
-document.addEventListener("click", function (e) {
-    const deleteButton = e.target.closest(".info-card .button-sliding.primary");
-    if (deleteButton && deleteButton.textContent.includes("Удалить")) {
-        if (!confirm("Вы уверены, что хотите удалить аккаунт?")) return;
-
-        fetch("/Content/profile_page?handler=DeleteAccount", {
-            method: "POST",
-            headers: {
-                "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content
-            }
-        })
-            .then(res => {
-                if (!res.ok) throw new Error("Ошибка при удалении аккаунта.");
-                return res.text();
-            })
-            .then(() => {
-                alert("Аккаунт удалён.");
-                location.href = "/Login";
-            })
-            .catch(err => alert(err.message));
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json().catch(() => null);
+        if (!data?.success) throw new Error(data?.error || "Ошибка обновления");
+        return data;
     }
-});
+
+    function startEdit(card) {
+        const textEl = card.querySelector("p[data-field]");
+        const oldInputEl = card.querySelector("input[data-field]");
+
+        const fieldName = (textEl?.dataset.field || oldInputEl?.dataset.field || "").trim();
+        if (!fieldName) return;
+
+        revertOtherCards(card);
+
+        let currentValue = (textEl?.textContent || oldInputEl?.value || "").trim();
+        if (currentValue === PLACEHOLDER) currentValue = "";
+
+        const dateMode = isDateField(fieldName, oldInputEl);
+        const emailMode = isEmailField(fieldName);
+
+        const input = document.createElement("input");
+        input.type = emailMode ? "email" : "text";
+        input.className = dateMode ? "date-input" : "edit-input";
+        input.value = currentValue;
+        input.dataset.field = fieldName;
+        input.dataset.originalValue = currentValue;
+
+        if (emailMode) {
+            input.setAttribute("maxlength", "254");
+            input.setAttribute("autocomplete", "email");
+            input.setAttribute("placeholder", "name@example.com");
+        }
+
+        if (dateMode) applyDateMask(input);
+
+        if (textEl) textEl.replaceWith(input);
+        else oldInputEl?.replaceWith(input);
+
+        input.focus();
+
+        const editBtn = card.querySelector(".edit-button");
+        const saveBtn = createSaveButton();
+        editBtn?.replaceWith(saveBtn);
+
+        saveBtn.addEventListener(
+            "click",
+            async () => {
+                const newValue = (input.value || "").trim();
+
+                try {
+                    await updateField(fieldName, newValue);
+
+                    const newText = document.createElement("p");
+                    newText.dataset.field = fieldName;
+                    newText.textContent = newValue || PLACEHOLDER;
+
+                    input.replaceWith(newText);
+                    saveBtn.replaceWith(createEditButton());
+                } catch (err) {
+                    alert(err?.message || "Ошибка");
+
+                    const fallback = document.createElement("p");
+                    fallback.dataset.field = fieldName;
+                    fallback.textContent = (input.dataset.originalValue || "").trim() || PLACEHOLDER;
+
+                    input.replaceWith(fallback);
+                    saveBtn.replaceWith(createEditButton());
+                }
+            },
+            { once: true }
+        );
+    }    
+
+    document.addEventListener("click", (e) => {
+        const btn = e.target.closest(".info-card .edit-button");
+        if (btn) {
+            const action = (btn.getAttribute("data-action") || "").toLowerCase();
+            const imgSrc = btn.querySelector("img")?.getAttribute("src") || "";
+            if (action === "save" || imgSrc.includes("save_icon")) return;
+
+            const card = btn.closest(".info-card");
+            if (card) startEdit(card);
+            return;
+        }
+
+        const delBtn = e.target.closest(".info-card .button-sliding");
+        if (delBtn && (delBtn.textContent || "").includes("Удалить")) {
+            tryDeleteAccount().catch((err) => alert(err?.message || "Ошибка"));
+        }
+    });
+})();

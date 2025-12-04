@@ -1,11 +1,21 @@
 ﻿@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
-@using StackExchange.Profiling
 @using System.Security.Claims
+@using System.Text.Json
+
 @{
     var tokens = Antiforgery.GetAndStoreTokens(Context);
-    var csrfToken = tokens.RequestToken;
-    var userIdFromClaims = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "";
+    var csrfToken = tokens.RequestToken ?? string.Empty;
     var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var userIdFromClaims = Context.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
+
+    var userStorageBasePath = (ViewData["UserStorageBasePath"] as string) ?? string.Empty;
+
+    var currentUserJson = JsonSerializer.Serialize(new
+    {
+        fullName = (ViewData["FullName"] as string) ?? string.Empty,
+        login = (ViewData["Login"] as string) ?? (User.Identity?.Name ?? string.Empty),
+        email = (ViewData["Email"] as string) ?? string.Empty
+    });
 }
 
 <!DOCTYPE html>
@@ -16,6 +26,7 @@
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>@ViewData["Title"] - VCS-DOCs</title>
 
     @await Html.PartialAsync("~/Pages/Shared/Styles/Styles_Layout.cshtml")
@@ -29,35 +40,26 @@
         @Html.AntiForgeryToken()
     </div>
 
+    <script>
+        window.userIsAuthenticated = @(isAuthenticated ? "true" : "false");
+        window.userStorageBasePath = @Html.Raw(JsonSerializer.Serialize(userStorageBasePath));
+        window.userIdFromClaims = @Html.Raw(JsonSerializer.Serialize(userIdFromClaims));
+        window.currentUser = @Html.Raw(currentUserJson);
+    </script>
+
     @if (isAuthenticated)
     {
-        @await Html.PartialAsync("~/Pages/Content/chat_popup.cshtml")
-    }
-
-    @RenderBody()
-
-    @if (isAuthenticated)
-    {
-        <!-- SignalR only for authenticated -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.9/signalr.min.js"></script>
-        <script>
-            window.userIsAuthenticated = true;
-            window.userStorageBasePath = "@((ViewData["UserStorageBasePath"] as string)?.Replace("\\", "\\\\") ?? "")";
-            window.userIdFromClaims = "@userIdFromClaims";
-        </script>
         <script src="~/js/chat/chat.js" defer></script>
         <script src="~/js/vdocs-presence.js" defer></script>
     }
-    else
-    {
-        <script>window.userIsAuthenticated = false;</script>
-    }
+
+    @RenderBody()
 
     @await RenderSectionAsync("Scripts", required: false)
     <mini-profiler />
 
     <script>
-        // если вернулись "Назад" — перерисуем страницу (важно для logout-флоу)
         window.addEventListener('pageshow', function (e) {
             if (e.persisted) location.reload();
         });

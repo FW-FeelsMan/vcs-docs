@@ -1,22 +1,19 @@
-﻿using Microsoft.AspNetCore.SignalR;
-using System.Security.Claims;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.SignalR;
 
-namespace VCS_DOCs.Hubs
+namespace VCS_DOCs.Hubs;
+
+public sealed class TaskHub : Hub
 {
-	public class TaskHub : Hub
+	public override Task OnConnectedAsync()
 	{
-		public override async Task OnConnectedAsync()
-		{
-			var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-			if (!string.IsNullOrEmpty(userId))
-			{
-				Console.WriteLine($"userId найден: {userId}");
-			}
-			else
-			{
-				Console.WriteLine("Context.User пустой! Печаль.");
-			}
-			await base.OnConnectedAsync();
-		}
+		var userId = Context.User?.FindFirstValue(ClaimTypes.NameIdentifier);
+
+		if (!string.IsNullOrWhiteSpace(userId))
+			Console.WriteLine($"TaskHub connected: userId={userId}");
+		else
+			Console.WriteLine("TaskHub connected: unauthenticated (Context.User is null or has no NameIdentifier).");
+
+		return base.OnConnectedAsync();
 	}
 }

@@ -3,18 +3,14 @@
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      "environmentVariables": { "ASPNETCORE_ENVIRONMENT": "Development" }
     },
     "VCS_DOCs": {
       "commandName": "Project",
       "launchBrowser": true,
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      },
+      "environmentVariables": { "ASPNETCORE_ENVIRONMENT": "Development" },
       "dotnetRunMessages": true,
-      "applicationUrl": "https://vcs-docs.local:7120/"
+      "applicationUrl": "https://vcs-docs.local:7120;http://127.0.0.1:5120"
     }
   },
   "iisSettings": {

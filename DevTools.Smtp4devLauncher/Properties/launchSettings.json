@@ -1,0 +1,7 @@
+{
+  "profiles": {
+    "DevTools.Smtp4devLauncher": {
+      "commandName": "Project"
+    }
+  }
+}

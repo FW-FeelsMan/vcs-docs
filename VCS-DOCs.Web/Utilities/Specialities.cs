@@ -1,8 +1,7 @@
-﻿namespace VCS_DOCs.Utilities
+﻿namespace VCS_DOCs.Utilities;
+
+public sealed class Speciality
 {
-	public class Speciality
-	{
-		public int Id { get; set; }
-		public string Name { get; set; }
-	}
+	public int Id { get; set; }
+	public string Name { get; set; } = string.Empty;
 }

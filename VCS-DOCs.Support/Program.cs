@@ -6,6 +6,7 @@ using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using VCS_DOCs.Configuration;
@@ -24,353 +25,393 @@ using VCS_DOCs.Support.Infrastructure.Auth;
 
 internal class Program
 {
-    private static async Task Main(string[] args)
-    {
-        var builder = WebApplication.CreateBuilder(args);
+	private static async Task Main(string[] args)
+	{
+		var builder = WebApplication.CreateBuilder(args);
 
-        // ---------- EF Core ----------
-        builder.Services.AddDbContext<ApplicationDbContext>(o =>
-        {
-            var cs = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=VCSDocs.db";
-            if (!cs.Contains("Cache=", StringComparison.OrdinalIgnoreCase)) cs += ";Cache=Shared";
-            if (!cs.Contains("Pooling=", StringComparison.OrdinalIgnoreCase)) cs += ";Pooling=True";
-            if (!cs.Contains("Default Timeout=", StringComparison.OrdinalIgnoreCase)) cs += ";Default Timeout=60";
-            o.UseSqlite(cs, x => x.MigrationsAssembly("VCS-DOCs.Infrastructure"));
-        });
+		// ---------- EF Core ----------
+		builder.Services.AddDbContext<ApplicationDbContext>(o =>
+		{
+			var cs = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=VCSDocs.db";
+			if (!cs.Contains("Cache=", StringComparison.OrdinalIgnoreCase)) cs += ";Cache=Shared";
+			if (!cs.Contains("Pooling=", StringComparison.OrdinalIgnoreCase)) cs += ";Pooling=True";
+			if (!cs.Contains("Default Timeout=", StringComparison.OrdinalIgnoreCase)) cs += ";Default Timeout=60";
+			o.UseSqlite(cs, x => x.MigrationsAssembly("VCS-DOCs.Infrastructure"));
+		});
 
-        // ---------- MVC/Controllers ----------
-        builder.Services.AddControllers().ConfigureApplicationPartManager(apm =>
-        {
-            var dead = apm.ApplicationParts.Where(p => p.Name == "VCS-DOCs.Web").ToList();
-            foreach (var part in dead) apm.ApplicationParts.Remove(part);
-        });
+		// ---------- MVC/Controllers ----------
+		builder.Services.AddControllers().ConfigureApplicationPartManager(apm =>
+		{
+			var dead = apm.ApplicationParts.Where(p => p.Name == "VCS-DOCs.Web").ToList();
+			foreach (var part in dead) apm.ApplicationParts.Remove(part);
+		});
 
-        // ---------- Identity ----------
-        builder.Services
-            .AddIdentity<User, IdentityRole>()
-            .AddEntityFrameworkStores<ApplicationDbContext>()
-            .AddDefaultTokenProviders()
-            .AddErrorDescriber<RussianIdentityErrorDescriber>();
+		// ---------- Identity ----------
+		builder.Services
+			.AddIdentity<User, IdentityRole>()
+			.AddEntityFrameworkStores<ApplicationDbContext>()
+			.AddDefaultTokenProviders()
+			.AddErrorDescriber<RussianIdentityErrorDescriber>();
 
-        builder.Services.AddScoped<IPasswordHasher<User>>(_ =>
-            new PasswordHasher<User>(Microsoft.Extensions.Options.Options.Create(new PasswordHasherOptions
-            {
-                CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV3
-            })));
+		builder.Services.AddScoped<IPasswordHasher<User>>(_ =>
+			new PasswordHasher<User>(Microsoft.Extensions.Options.Options.Create(new PasswordHasherOptions
+			{
+				CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV3
+			})));
 
-        builder.Services.Configure<IdentityOptions>(opt =>
-        {
-            opt.Password.RequireDigit = true;
-            opt.Password.RequireLowercase = true;
-            opt.Password.RequireUppercase = true;
-            opt.Password.RequireNonAlphanumeric = false;
-            opt.Password.RequiredLength = 6;
-            opt.Password.RequiredUniqueChars = 1;
-        });
-        builder.Services.Configure<PasswordHasherOptions>(o =>
-        {
-            o.CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV3;
-        });
+		builder.Services.AddAntiforgery(o =>
+		{
+			o.HeaderName = "RequestVerificationToken";
 
-        builder.Services.AddSignalR(o => { o.EnableDetailedErrors = true; });
+			o.Cookie.Name = "__Host-VcsDocs.Support.AntiForgery";
+			o.Cookie.SameSite = SameSiteMode.None;
+			o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+			o.Cookie.HttpOnly = true;
+			o.Cookie.IsEssential = true;
+		});
 
-        builder.Services.ConfigureApplicationCookie(o =>
-        {
-            o.Cookie.Name = ".VcsDocs.Support.Auth";
-            o.LoginPath = "/Account/LoginSupport";
-            o.AccessDeniedPath = "/Errors/403";
-            o.Cookie.HttpOnly = true;
-            o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-            o.Cookie.SameSite = SameSiteMode.None;
-            o.Events = new CookieAuthenticationEvents
-            {
-                OnValidatePrincipal = async ctx =>
-                {
-                    var userId = ctx.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    var sid = ctx.Principal.FindFirst("support_sid")?.Value;
-                    if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(sid))
-                    {
-                        ctx.RejectPrincipal();
-                        await ctx.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
-                        return;
-                    }
-                }
-            };
-        });
+		builder.Services.Configure<CookiePolicyOptions>(o =>
+		{
+			o.MinimumSameSitePolicy = SameSiteMode.None;
+			o.Secure = CookieSecurePolicy.Always;
+		});
 
-        builder.Services.Configure<UserDataPathOptions>(builder.Configuration.GetSection("UserDataPath"));
+		builder.Services.Configure<IdentityOptions>(opt =>
+		{
+			opt.Password.RequireDigit = true;
+			opt.Password.RequireLowercase = true;
+			opt.Password.RequireUppercase = true;
+			opt.Password.RequireNonAlphanumeric = false;
+			opt.Password.RequiredLength = 6;
+			opt.Password.RequiredUniqueChars = 1;
+		});
 
-        builder.Services.AddAuthorization(o =>
-        {
-            o.AddPolicy("SupportOnly", p => p.RequireRole(Roles.SupportAdmin, Roles.SupportAgent));
-            o.AddPolicy("SupportDeskAccess", p => p.RequireRole(Roles.SupportAdmin, Roles.SupportAgent, Roles.BaseUser));
-        });
+		builder.Services.Configure<PasswordHasherOptions>(o =>
+		{
+			o.CompatibilityMode = PasswordHasherCompatibilityMode.IdentityV3;
+		});
 
-        // ---------- Rate limiting ----------
-        builder.Services.AddRateLimiter(options =>
-        {
-            options.AddPolicy("api-burst", http =>
-            {
-                string partitionKey =
-                    http.User?.Identity?.IsAuthenticated == true
-                        ? http.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "anon"
-                        : http.Connection.RemoteIpAddress?.ToString() ?? "anon";
+		builder.Services.AddSignalR(o => { o.EnableDetailedErrors = true; });
 
-                return RateLimitPartition.GetTokenBucketLimiter(partitionKey, _ => new TokenBucketRateLimiterOptions
-                {
-                    TokenLimit = 10,
-                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                    QueueLimit = 100,
-                    ReplenishmentPeriod = TimeSpan.FromSeconds(2),
-                    TokensPerPeriod = 10,
-                    AutoReplenishment = true
-                });
-            });
-        });
+		builder.Services.ConfigureApplicationCookie(o =>
+		{
+			o.Cookie.Name = ".VcsDocs.Support.Auth";
+			o.LoginPath = "/Account/LoginSupport";
+			o.AccessDeniedPath = "/Errors/403";
+			o.Cookie.HttpOnly = true;
+			o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+			o.Cookie.SameSite = SameSiteMode.None;
 
-        // ---------- Razor Pages ----------
-        builder.Services.AddRazorPages(o =>
-        {
-            o.Conventions.AuthorizeFolder("/", "SupportDeskAccess");
-            o.Conventions.AuthorizeFolder("/Content/Users", "SupportDeskAccess");
-            o.Conventions.AuthorizeFolder("/Content/Operators", "SupportOnly");
-            o.Conventions.AllowAnonymousToPage("/Account/LoginSupport");
-            o.Conventions.AllowAnonymousToPage("/Errors/404");
-            o.Conventions.AllowAnonymousToPage("/Errors/500");
-        });
+			o.Events = new CookieAuthenticationEvents
+			{
+				OnValidatePrincipal = async ctx =>
+				{
+					var userId = ctx.Principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+					var sid = ctx.Principal.FindFirst("support_sid")?.Value;
+					if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(sid))
+					{
+						ctx.RejectPrincipal();
+						await ctx.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+						return;
+					}
+				}
+			};
+		});
 
-        builder.Services.AddDistributedMemoryCache();
-        builder.Services.AddSession(o =>
-        {
-            o.IdleTimeout = TimeSpan.FromMinutes(30);
-            o.Cookie.HttpOnly = true;
-            o.Cookie.IsEssential = true;
-            o.Cookie.SameSite = SameSiteMode.None;
-            o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        });
-        builder.Services.AddMemoryCache();
+		builder.Services.Configure<UserDataPathOptions>(builder.Configuration.GetSection("UserDataPath"));
 
-        // ---------- HTTP clients ----------
-        builder.Services.AddHttpClient("VDocsBridge", (sp, c) =>
-        {
-            var cfg = sp.GetRequiredService<IConfiguration>();
-            var baseUrl = cfg["VDocs:BaseUrl"];
-            if (string.IsNullOrWhiteSpace(baseUrl))
-                throw new InvalidOperationException("VDocs:BaseUrl is missing in Support/appsettings*.json");
+		builder.Services.AddAuthorization(o =>
+		{
+			o.AddPolicy("SupportOnly", p => p.RequireRole(Roles.SupportAdmin, Roles.SupportAgent));
+			o.AddPolicy("SupportDeskAccess", p => p.RequireRole(Roles.SupportAdmin, Roles.SupportAgent, Roles.BaseUser));
+		});
 
-            c.BaseAddress = new Uri(baseUrl, UriKind.Absolute);
+		// ---------- Rate limiting ----------
+		builder.Services.AddRateLimiter(options =>
+		{
+			options.AddPolicy("api-burst", http =>
+			{
+				string partitionKey =
+					http.User?.Identity?.IsAuthenticated == true
+						? http.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "anon"
+						: http.Connection.RemoteIpAddress?.ToString() ?? "anon";
 
-            var apiKey = cfg["VDocs:SupportApiKey"];
-            if (!string.IsNullOrWhiteSpace(apiKey))
-                c.DefaultRequestHeaders.Add("X-Support-ApiKey", apiKey);
-        })
-        .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
-        {
-            ServerCertificateCustomValidationCallback = (req, cert, chain, errors) =>
-            {
-                if (errors == SslPolicyErrors.None) return true;
-                var tp = (cert as X509Certificate2)?.Thumbprint?.Replace(" ", "");
-                if (tp is null) return false;
-                return tp.Equals("1F1F09F62B5C4C450CA76CA1FDF2264276DFBF57", StringComparison.OrdinalIgnoreCase)
-                    || tp.Equals("1179E6B4C27C5247ADB525DE245D65D7E3D73C8C", StringComparison.OrdinalIgnoreCase);
-            }
-        });
+				return RateLimitPartition.GetTokenBucketLimiter(partitionKey, _ => new TokenBucketRateLimiterOptions
+				{
+					TokenLimit = 10,
+					QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+					QueueLimit = 100,
+					ReplenishmentPeriod = TimeSpan.FromSeconds(2),
+					TokensPerPeriod = 10,
+					AutoReplenishment = true
+				});
+			});
+		});
 
-        // лёгкий клиент для health-пингов из WorkloadStore
-        builder.Services.AddHttpClient("workload", c =>
-        {
-            c.Timeout = TimeSpan.FromSeconds(1.5);
-        });
+		// ---------- Razor Pages ----------
+		builder.Services.AddRazorPages(o =>
+		{
+			o.Conventions.AuthorizeFolder("/", "SupportDeskAccess");
+			o.Conventions.AuthorizeFolder("/Content/Users", "SupportDeskAccess");
+			o.Conventions.AuthorizeFolder("/Content/Operators", "SupportOnly");
+			o.Conventions.AllowAnonymousToPage("/Account/LoginSupport");
+			o.Conventions.AllowAnonymousToPage("/Errors/404");
+			o.Conventions.AllowAnonymousToPage("/Errors/500");
+		});
 
-        // ---------- доменные сервисы ----------
-        builder.Services.AddScoped<PresenceOrchestrator>();
-        builder.Services.AddScoped<IUserService, SupportUserService>();
-        builder.Services.AddScoped<ISupportUserProvisioning, SupportUserProvisioning>();
+		builder.Services.AddDistributedMemoryCache();
+		builder.Services.AddSession(o =>
+		{
+			o.IdleTimeout = TimeSpan.FromMinutes(30);
+			o.Cookie.HttpOnly = true;
+			o.Cookie.IsEssential = true;
+			o.Cookie.SameSite = SameSiteMode.None;
+			o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+		});
+		builder.Services.AddMemoryCache();
 
-        builder.Services.AddSingleton<IExternalProjectAdapter>(sp =>
-            new SqliteVDocsAdapter(
-                builder.Configuration.GetConnectionString("VDocsDb")
-                ?? builder.Configuration.GetConnectionString("DefaultConnection")
-            ));
+		// ---------- HTTP clients ----------
+		builder.Services.AddHttpClient("VDocsBridge", (sp, c) =>
+		{
+			var cfg = sp.GetRequiredService<IConfiguration>();
+			var baseUrl = cfg["VDocs:BaseUrl"];
+			if (string.IsNullOrWhiteSpace(baseUrl))
+				throw new InvalidOperationException("VDocs:BaseUrl is missing in Support/appsettings*.json");
 
-        builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Mail"));
-        builder.Services.AddSingleton<IMailSender, SmtpMailSender>();
+			c.BaseAddress = new Uri(baseUrl, UriKind.Absolute);
 
-        // ---------- Kestrel / TLS / Upload limits ----------
-        builder.WebHost.ConfigureKestrel((ctx, opts) =>
-        {
-            opts.ConfigureHttpsDefaults(https =>
-            {
-                var friendlyName = ctx.Configuration["Tls:DevCertFriendlyName"] ?? "VCS Dev SAN";
-                using var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
-                store.Open(OpenFlags.ReadOnly);
+			var apiKey = cfg["VDocs:SupportApiKey"];
+			if (!string.IsNullOrWhiteSpace(apiKey))
+				c.DefaultRequestHeaders.Add("X-Support-ApiKey", apiKey);
+		})
+		.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+		{
+			ServerCertificateCustomValidationCallback = (req, cert, chain, errors) =>
+			{
+				if (errors == SslPolicyErrors.None) return true;
+				var tp = (cert as X509Certificate2)?.Thumbprint?.Replace(" ", "");
+				if (tp is null) return false;
+				return tp.Equals("1F1F09F62B5C4C450CA76CA1FDF2264276DFBF57", StringComparison.OrdinalIgnoreCase)
+					|| tp.Equals("1179E6B4C27C5247ADB525DE245D65D7E3D73C8C", StringComparison.OrdinalIgnoreCase);
+			}
+		});
 
-                var cert = store.Certificates
-                    .OfType<X509Certificate2>()
-                    .Where(c => c.HasPrivateKey)
-                    .Where(c => string.Equals(c.FriendlyName, friendlyName, StringComparison.OrdinalIgnoreCase))
-                    .OrderByDescending(c => c.NotBefore)
-                    .FirstOrDefault()
-                    ?? throw new InvalidOperationException($"Dev cert '{friendlyName}' не найден.");
+		// лёгкий клиент для health-пингов из WorkloadStore
+		builder.Services.AddHttpClient("workload", c =>
+		{
+			c.Timeout = TimeSpan.FromSeconds(1.5);
+		});
 
-                https.ServerCertificate = cert;
-            });
+		// ---------- доменные сервисы ----------
+		builder.Services.AddScoped<PresenceOrchestrator>();
+		builder.Services.AddScoped<IUserService, SupportUserService>();
+		builder.Services.AddScoped<ISupportUserProvisioning, SupportUserProvisioning>();
 
-            // глобальный лимит тела (важно для HTTP/2)
-            opts.Limits.MaxRequestBodySize = 200L * 1024 * 1024; // 200 MB
-        });
+		builder.Services.AddSingleton<IExternalProjectAdapter>(sp =>
+			new SqliteVDocsAdapter(
+				builder.Configuration.GetConnectionString("VDocsDb")
+				?? builder.Configuration.GetConnectionString("DefaultConnection")
+			));
 
-        // IIS (если когда-то будет) — снять лимит
-        builder.Services.Configure<Microsoft.AspNetCore.Builder.IISServerOptions>(o =>
-        {
-            o.MaxRequestBodySize = null;
-        });
+		if (builder.Environment.IsDevelopment())
+		{
+			var mail = builder.Configuration.GetSection("Modules:Mail").Get<SmtpOptions>();
+			Console.WriteLine($"[MAIL] Host={mail?.Host} Port={mail?.Port} SSL={mail?.UseSsl} From={mail?.From}");
+		}
 
-        // Глобальный лимит multipart (должен быть ≥ MaxSizeMb в настройках Uploads:Support)
-        builder.Services.Configure<FormOptions>(o =>
-        {
-            o.MultipartBodyLengthLimit = 200L * 1024 * 1024; // 200 MB
-        });
+		builder.Services.AddSingleton<IMailSender, SmtpMailSender>();
 
-        // ---------- Task Engine ----------
-        if (builder.Configuration.GetValue("TaskEngine:Enabled", false))
-        {
-            builder.Services.AddTaskEngine(builder.Configuration);
-        }
+		// ---------- Kestrel / TLS / Upload limits ----------
+		builder.WebHost.ConfigureKestrel((ctx, opts) =>
+		{
+			opts.ConfigureHttpsDefaults(https =>
+			{
+				var friendlyName = ctx.Configuration["Tls:DevCertFriendlyName"] ?? "VCS Dev SAN";
+				using var store = new X509Store(StoreName.My, StoreLocation.CurrentUser);
+				store.Open(OpenFlags.ReadOnly);
 
-        // ---------- Мониторинг нагрузки ----------
-        builder.Services.AddSingleton<WorkloadStore>();
-        builder.Services.AddHostedService<WorkloadSampler>(); // тик каждые ~5с
+				var cert = store.Certificates
+					.OfType<X509Certificate2>()
+					.Where(c => c.HasPrivateKey)
+					.Where(c => string.Equals(c.FriendlyName, friendlyName, StringComparison.OrdinalIgnoreCase))
+					.OrderByDescending(c => c.NotBefore)
+					.FirstOrDefault()
+					?? throw new InvalidOperationException($"Dev cert '{friendlyName}' не найден.");
 
-        // Настройки upload’ов для саппорта
-        builder.Services.Configure<UploadsOptions>("Support", builder.Configuration.GetSection("Uploads:Support"));
+				https.ServerCertificate = cert;
+			});
 
-        var app = builder.Build();
+			// глобальный лимит тела (важно для HTTP/2)
+			opts.Limits.MaxRequestBodySize = 200L * 1024 * 1024; // 200 MB
+		});
 
-        // ---------- SQLite PRAGMA ----------
-        using (var scope = app.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
-            db.Database.ExecuteSqlRaw("PRAGMA synchronous=NORMAL;");
-            db.Database.ExecuteSqlRaw("PRAGMA busy_timeout=8000;");
-        }
+		// IIS (если когда-то будет) — снять лимит
+		builder.Services.Configure<Microsoft.AspNetCore.Builder.IISServerOptions>(o =>
+		{
+			o.MaxRequestBodySize = null;
+		});
 
-        // ---------- миграции/seed ----------
-        using (var scope = app.Services.CreateScope())
-        {
-            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-            var roleMgr = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-            var userMgr = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+		// Глобальный лимит multipart (должен быть ≥ MaxSizeMb в настройках Uploads:Support)
+		builder.Services.Configure<FormOptions>(o =>
+		{
+			o.MultipartBodyLengthLimit = 200L * 1024 * 1024; // 200 MB
+		});
 
-            await db.Database.MigrateAsync();
-            await AuthSeed.RunAsync(scope.ServiceProvider);
+		// ---------- Task Engine ----------
+		if (builder.Configuration.GetValue("TaskEngine:Enabled", false))
+		{
+			builder.Services.AddTaskEngine(builder.Configuration);
+		}
 
-            foreach (var role in new[] { Roles.BaseUser, Roles.SupportAgent, Roles.SupportAdmin })
-                if (!await roleMgr.RoleExistsAsync(role))
-                    await roleMgr.CreateAsync(new IdentityRole(role));
+		// ---------- Мониторинг нагрузки ----------
+		builder.Services.AddSingleton<WorkloadStore>();
+		builder.Services.AddHostedService<WorkloadSampler>(); // тик каждые ~5с
 
-            var sampleUserId = "6bbbcc2b-bcc8-4c20-b7ea-7993664339d2";
-            var u = await userMgr.FindByIdAsync(sampleUserId);
-            if (u != null && !await userMgr.IsInRoleAsync(u, Roles.SupportAgent))
-                await userMgr.AddToRoleAsync(u, Roles.SupportAgent);
-        }
+		// Настройки upload’ов для саппорта
+		builder.Services.Configure<UploadsOptions>("Support", builder.Configuration.GetSection("Uploads:Support"));
 
-        // ---------- pipeline ----------
-        app.UseHttpsRedirection();
+		var app = builder.Build();
 
-        // статика по-умолчанию (wwwroot)
-        app.UseStaticFiles();
+		// ---------- SQLite PRAGMA ----------
+		using (var scope = app.Services.CreateScope())
+		{
+			var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+			db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
+			db.Database.ExecuteSqlRaw("PRAGMA synchronous=NORMAL;");
+			db.Database.ExecuteSqlRaw("PRAGMA busy_timeout=8000;");
+		}
 
-        // --- Аватары пользователей из Web-проекта ---
-        // userId -> ..\VCS-DOCs.Web\storage\userData\u_{first8}\a\avatar.jpg
-        var webUserDataRoot = Path.GetFullPath(
-            Path.Combine(app.Environment.ContentRootPath, "..", "VCS-DOCs.Web", "storage", "userData"));
+		// ---------- миграции/seed ----------
+		using (var scope = app.Services.CreateScope())
+		{
+			var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+			var roleMgr = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+			var userMgr = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
 
-        // путь к дефолтной аве: ..\VCS-DOCs.Web\wwwroot\images\default_avatar.png
-        var defaultAvatarPath = Path.GetFullPath(
-            Path.Combine(app.Environment.ContentRootPath, "..", "VCS-DOCs.Web", "wwwroot", "images", "default_avatar.png"));
+			await db.Database.MigrateAsync();
+			await AuthSeed.RunAsync(scope.ServiceProvider);
 
-        app.MapGet("/avatars/{userId}.jpg", (HttpContext ctx, string userId) =>
-        {
-            string? actualPath = null;
-            string contentType = "image/jpeg";
+			foreach (var role in new[] { Roles.BaseUser, Roles.SupportAgent, Roles.SupportAdmin })
+				if (!await roleMgr.RoleExistsAsync(role))
+					await roleMgr.CreateAsync(new IdentityRole(role));
 
-            if (!string.IsNullOrWhiteSpace(userId) && !userId.Equals("none", StringComparison.OrdinalIgnoreCase))
-            {
-                var first8 = (userId.Length >= 8 ? userId[..8] : userId).ToLowerInvariant();
-                var candidate = Path.Combine(webUserDataRoot, $"u_{first8}", "a", "avatar.jpg");
-                if (System.IO.File.Exists(candidate))
-                    actualPath = candidate;
-            }
+			var sampleUserId = "6bbbcc2b-bcc8-4c20-b7ea-7993664339d2";
+			var u = await userMgr.FindByIdAsync(sampleUserId);
+			if (u != null && !await userMgr.IsInRoleAsync(u, Roles.SupportAgent))
+				await userMgr.AddToRoleAsync(u, Roles.SupportAgent);
+		}
 
-            if (actualPath == null)
-            {
-                if (!System.IO.File.Exists(defaultAvatarPath))
-                    return Results.NotFound();
+		// ---------- pipeline ----------
+		// ВАЖНО для tuna/ngrok/CF Tunnel: корректная схема/host/ip из reverse proxy
+		app.UseForwardedHeaders(new ForwardedHeadersOptions
+		{
+			ForwardedHeaders =
+				ForwardedHeaders.XForwardedFor |
+				ForwardedHeaders.XForwardedProto |
+				ForwardedHeaders.XForwardedHost,
+			ForwardLimit = null,
+			KnownNetworks = { },
+			KnownProxies = { }
+		});
 
-                actualPath = defaultAvatarPath;
-                contentType = "image/png";
-            }
+		//app.UseHttpsRedirection();
+		if (!app.Environment.IsDevelopment())
+		{
+			app.UseHttpsRedirection();
+		}
 
-            // лёгкое кэширование
-            ctx.Response.Headers["Cache-Control"] = "public,max-age=86400,immutable";
-            ctx.Response.Headers["Last-Modified"] = System.IO.File.GetLastWriteTimeUtc(actualPath).ToString("R");
+		// статика по-умолчанию (wwwroot)
+		app.UseStaticFiles();
 
-            return Results.File(actualPath, contentType);
-        });
+		// --- Аватары пользователей из Web-проекта ---
+		// userId -> ..\VCS-DOCs.Web\storage\userData\u_{first8}\a\avatar.jpg
+		var webUserDataRoot = Path.GetFullPath(
+			Path.Combine(app.Environment.ContentRootPath, "..", "VCS-DOCs.Web", "storage", "userData"));
 
-        app.UseWhen(ctx => !ctx.Request.Path.StartsWithSegments("/api"), branch =>
-        {
-            branch.UseExceptionHandler("/Errors/500");
-            branch.UseStatusCodePagesWithReExecute("/Errors/{0}");
-        });
+		// путь к дефолтной аве: ..\VCS-DOCs.Web\wwwroot\images\default_avatar.png
+		var defaultAvatarPath = Path.GetFullPath(
+			Path.Combine(app.Environment.ContentRootPath, "..", "VCS-DOCs.Web", "wwwroot", "images", "default_avatar.png"));
 
-        app.UseRouting();
+		app.MapGet("/avatars/{userId}.jpg", (HttpContext ctx, string userId) =>
+		{
+			string? actualPath = null;
+			string contentType = "image/jpeg";
 
-        app.UseRateLimiter();
-        app.UseSession();
-        app.UseAuthentication();
+			if (!string.IsNullOrWhiteSpace(userId) && !userId.Equals("none", StringComparison.OrdinalIgnoreCase))
+			{
+				var first8 = (userId.Length >= 8 ? userId[..8] : userId).ToLowerInvariant();
+				var candidate = Path.Combine(webUserDataRoot, $"u_{first8}", "a", "avatar.jpg");
+				if (System.IO.File.Exists(candidate))
+					actualPath = candidate;
+			}
 
-        app.UseMiddleware<IdempotencyMiddleware>();
+			if (actualPath == null)
+			{
+				if (!System.IO.File.Exists(defaultAvatarPath))
+					return Results.NotFound();
 
-        // метрики эндпоинтов (после аутентификации/сессии и после UseRouting)
-        app.UseMiddleware<EndpointStatsCollector>();
+				actualPath = defaultAvatarPath;
+				contentType = "image/png";
+			}
 
-        var allowedAncestors =
-            "https://vcs-docs.local:7120 https://localhost:7120 https://127.0.0.1:7120";
+			// лёгкое кэширование
+			ctx.Response.Headers["Cache-Control"] = "public,max-age=86400,immutable";
+			ctx.Response.Headers["Last-Modified"] = System.IO.File.GetLastWriteTimeUtc(actualPath).ToString("R");
 
-        app.Use(async (ctx, next) =>
-        {
-            bool needEmbedHeaders =
-                ctx.Request.Path.StartsWithSegments("/Support", StringComparison.OrdinalIgnoreCase) ||
-                ctx.Request.Path.StartsWithSegments("/Account/LoginSupport", StringComparison.OrdinalIgnoreCase);
+			return Results.File(actualPath, contentType);
+		});
 
-            if (needEmbedHeaders)
-            {
-                ctx.Response.OnStarting(() =>
-                {
-                    var h = ctx.Response.Headers;
-                    h.Remove("X-Frame-Options");
-                    h.Remove("Content-Security-Policy");
+		app.UseWhen(ctx => !ctx.Request.Path.StartsWithSegments("/api"), branch =>
+		{
+			branch.UseExceptionHandler("/Errors/500");
+			branch.UseStatusCodePagesWithReExecute("/Errors/{0}");
+		});
 
-                    h.Append("Content-Security-Policy",
-                        $"frame-ancestors 'self' {allowedAncestors}");
+		app.UseRouting();
+		app.UseCookiePolicy();
+		app.UseRateLimiter();
+		app.UseSession();
+		app.UseAuthentication();
 
-                    return Task.CompletedTask;
-                });
-            }
+		app.UseMiddleware<IdempotencyMiddleware>();
 
-            await next();
-        });
+		// метрики эндпоинтов (после аутентификации/сессии и после UseRouting)
+		app.UseMiddleware<EndpointStatsCollector>();
 
-        app.UseAuthorization();
+		var allowedAncestors =
+			"https://vcs-docs.local:7120 https://localhost:7120 https://127.0.0.1:7120";
 
-        app.MapRazorPages();
-        app.MapControllers();
-        app.MapHub<SupportPresenceHub>("/hubs/userStatus");
-        app.MapHub<TicketHub>("/hubs/ticket");
+		app.Use(async (ctx, next) =>
+		{
+			bool needEmbedHeaders =
+				ctx.Request.Path.StartsWithSegments("/Support", StringComparison.OrdinalIgnoreCase) ||
+				ctx.Request.Path.StartsWithSegments("/Account/LoginSupport", StringComparison.OrdinalIgnoreCase);
 
-        app.Run();
-    }
+			if (needEmbedHeaders)
+			{
+				ctx.Response.OnStarting(() =>
+				{
+					var h = ctx.Response.Headers;
+					h.Remove("X-Frame-Options");
+					h.Remove("Content-Security-Policy");
+
+					h.Append("Content-Security-Policy",
+						$"frame-ancestors 'self' {allowedAncestors}");
+
+					return Task.CompletedTask;
+				});
+			}
+
+			await next();
+		});
+
+		app.UseAuthorization();
+
+		app.MapRazorPages();
+		app.MapControllers();
+		app.MapHub<SupportPresenceHub>("/hubs/userStatus");
+		app.MapHub<TicketHub>("/hubs/ticket");
+
+		app.Run();
+	}
 }

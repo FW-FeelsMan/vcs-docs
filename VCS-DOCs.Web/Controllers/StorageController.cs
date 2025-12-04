@@ -1,47 +1,51 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 using VCS_DOCs.Infrastructure.Data;
 using VCS_DOCs.Upload.Core.Services;
 
-namespace VCS_DOCs.Controllers
+namespace VCS_DOCs.Controllers;
+
+[ApiController]
+[Route("api/storage")]
+[Authorize]
+public sealed class StorageController : ControllerBase
 {
-	[ApiController]
-	[Route("api/storage")]
-	[Authorize]
-	public class StorageController : ControllerBase
+	private const long DefaultLimitBytes = 10L * 1024 * 1024 * 1024;
+
+	private readonly IUserFileService _fileService;
+	private readonly ApplicationDbContext _db;
+
+	public StorageController(IUserFileService fileService, ApplicationDbContext db)
 	{
-		private readonly IUserFileService _fileService;
-		private readonly ApplicationDbContext _db;
+		_fileService = fileService;
+		_db = db;
+	}
 
-		public StorageController(IUserFileService fileService, ApplicationDbContext db)
+	[HttpGet("files")]
+	public async Task<IActionResult> GetFiles(CancellationToken ct)
+	{
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+		if (string.IsNullOrWhiteSpace(userId))
+			return Unauthorized();
+
+		var files = await _fileService.GetFilesForUserAsync(userId);
+
+		var usedBytes = files.Sum(f => f.FileSize);
+		var tempBytes = 0L;
+
+		var limitBytes = await _db.Users
+			.Where(u => u.Id == userId)
+			.Select(u => (long?)u.StorageLimitBytes)
+			.FirstOrDefaultAsync(ct) ?? DefaultLimitBytes;
+
+		return Ok(new
 		{
-			_fileService = fileService;
-			_db = db;
-		}
-
-		[HttpGet("files")]
-		public async Task<IActionResult> GetFiles()
-		{
-			var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-			if (string.IsNullOrEmpty(userId))
-				return Unauthorized();
-
-			var files = await _fileService.GetFilesForUserAsync(userId);
-
-			var usedBytes = files.Sum(f => f.FileSize);
-			var tempBytes = 0L;
-			var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == userId);
-			var limitBytes = user?.StorageLimitBytes ?? 10L * 1024 * 1024 * 1024;
-
-			return Ok(new
-			{
-				files,
-				usedBytes,
-				tempBytes,
-				limitBytes	
-			});
-		}
+			files,
+			usedBytes,
+			tempBytes,
+			limitBytes
+		});
 	}
 }

@@ -1,8 +1,10 @@
 ﻿using System.Globalization;
+using System.Net.Mail;
 using System.Security.Claims;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -11,201 +13,279 @@ using VCS_DOCs.Configuration;
 using VCS_DOCs.Infrastructure.Data;
 using VCS_DOCs.Models.Entities;
 
-namespace VCS_DOCs.Pages.Content
+namespace VCS_DOCs.Pages.Content;
+
+public sealed class profile_pageModel : PageModel
 {
-	public class profile_pageModel : PageModel
+	private const long StorageLimitBytes = 10L * 1024 * 1024 * 1024;
+
+	private readonly ApplicationDbContext _context;
+	private readonly IAntiforgery _antiforgery;
+	private readonly UserManager<User> _userManager;
+	private readonly UserDataPathOptions _options;
+	private readonly UserStoragePaths _userPaths;
+
+	public string AvatarPath { get; private set; } = "/images/default_avatar.png";
+	public double UsedGb { get; private set; }
+	public double FreeGb { get; private set; }
+	public User? CurrentUser { get; private set; }
+
+	private static readonly Regex ValidInputRegex =
+		new(@"^[a-zA-Zа-яА-Я0-9@'""\-\s]{1,30}$", RegexOptions.Compiled);
+
+	public profile_pageModel(
+		ApplicationDbContext context,
+		IAntiforgery antiforgery,
+		UserManager<User> userManager,
+		IOptions<UserDataPathOptions> options,
+		UserStoragePaths userPaths)
 	{
-		private readonly ApplicationDbContext _context;
-		private readonly IAntiforgery _antiforgery;
-		private readonly UserDataPathOptions _options;
-		private readonly UserStoragePaths _userPaths;
-		public string AvatarPath { get; private set; } = "/images/default_avatar.png";
-		public double UsedGb { get; private set; }
-		public double FreeGb { get; private set; }
-		public User? CurrentUser { get; private set; }
-		private static readonly Regex ValidInputRegex = new(@"^[a-zA-Zа-яА-Я0-9@'""\-\s]{1,30}$", RegexOptions.Compiled);
+		_context = context;
+		_antiforgery = antiforgery;
+		_userManager = userManager;
+		_options = options.Value;
+		_userPaths = userPaths;
+	}
 
-		public profile_pageModel(
-			ApplicationDbContext context,
-			IAntiforgery antiforgery,
-			IOptions<UserDataPathOptions> options
-			,
-			UserStoragePaths userPaths)
+	public async Task OnGetAsync(CancellationToken ct)
+	{
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+		if (string.IsNullOrWhiteSpace(userId)) return;
+
+		CurrentUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId, ct);
+		if (CurrentUser is null) return;
+
+		var shortUserId = ToShortId(userId);
+		var userDir = Path.Combine(_options.BasePath, $"u_{shortUserId}");
+
+		var usedBytes = Directory.Exists(userDir)
+			? Directory.GetFiles(userDir, "*", SearchOption.AllDirectories).Sum(f => new FileInfo(f).Length)
+			: 0L;
+
+		var freeBytes = Math.Max(0L, StorageLimitBytes - usedBytes);
+
+		UsedGb = Math.Round(usedBytes / (1024d * 1024 * 1024), 2);
+		FreeGb = Math.Round(freeBytes / (1024d * 1024 * 1024), 2);
+
+		var avatarFsPath = _userPaths.GetAvatarPath(shortUserId);
+		if (System.IO.File.Exists(avatarFsPath))
 		{
-			_context = context;
-			_antiforgery = antiforgery;
-			_options = options.Value;
-			_userPaths = userPaths;
+			var ts = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+			AvatarPath = $"/userdata/u_{shortUserId}/a/avatar.jpg?v={ts}";
 		}
-
-		public async Task OnGetAsync()
+		else
 		{
-			string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-			if (!string.IsNullOrWhiteSpace(userId))
-			{
-				CurrentUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
-				string shortUserId = userId.Replace("-", "").Substring(0, 8);
-				string userDir = Path.Combine(_options.BasePath, $"u_{shortUserId}");
-
-				long used = Directory.Exists(userDir)
-					? Directory.GetFiles(userDir, "*", SearchOption.AllDirectories).Sum(f => new FileInfo(f).Length)
-					: 0;
-
-				long free = 10L * 1024 * 1024 * 1024 - used;
-				UsedGb = Math.Round(used / 1024.0 / 1024, 2);
-				FreeGb = Math.Round(free / 1024.0 / 1024, 2);
-
-				string avatarFolder = Path.Combine(userDir, "a");
-				string avatarPath = Path.Combine(avatarFolder, "avatar.jpg");
-
-				if (System.IO.File.Exists(avatarPath))
-				{
-					long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-					AvatarPath = $"/userdata/u_{shortUserId}/a/avatar.jpg?v={timestamp}";
-				}
-				else
-				{
-					AvatarPath = "/images/default_avatar.png";
-				}
-			}
-		}
-		/*public async Task<IActionResult> OnPostDeleteFileAsync(string fileName)
-		{
-			string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-			if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(fileName))
-				return new JsonResult(new { success = false, error = "Неверные параметры" });
-
-			string filePath = Path.Combine(_options.BasePath, $"userData_{userId}", fileName);
-			if (!System.IO.File.Exists(filePath)) return new JsonResult(new { success = false, error = "Файл не найден" });
-
-			try
-			{
-				System.IO.File.Delete(filePath);
-				return new JsonResult(new { success = true });
-			}
-			catch (Exception ex)
-			{
-				return new JsonResult(new { success = false, error = ex.Message });
-			}
-		}
-		*/
-		public async Task<IActionResult> OnPostUpdateUserDataAsync([FromBody] UpdateUserRequest request)
-		{
-			try { await _antiforgery.ValidateRequestAsync(HttpContext); }
-			catch (AntiforgeryValidationException)
-			{
-				return new JsonResult(new { success = false, error = "Неверный токен безопасности" });
-			}
-
-			if (!User.Identity?.IsAuthenticated ?? true)
-				return new JsonResult(new { success = false, error = "Пользователь не аутентифицирован" });
-
-			if (!ModelState.IsValid || string.IsNullOrWhiteSpace(request.Value) || request.Value.Length > 30)
-				return new JsonResult(new { success = false, error = "Некорректные данные" });
-
-			string? username = User.Identity?.Name;
-			var user = await _context.Users.FirstOrDefaultAsync(u => u.UserName == username);
-			if (user == null) return new JsonResult(new { success = false, error = "Пользователь не найден" });
-
-			switch (request.Field)
-			{
-				case "DateOfBirth":
-					if (!DateTime.TryParseExact(request.Value!, "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
-						return new JsonResult(new { success = false, error = "Неверный формат даты" });
-					user.DateOfBirth = parsedDate.ToString("dd.MM.yyyy");
-					break;
-				case "FullName":
-					if (!ValidInputRegex.IsMatch(request.Value!)) return new JsonResult(new { success = false, error = "Недопустимые символы" });
-					user.FullName = request.Value;
-					break;
-				case "Organization":
-					if (!ValidInputRegex.IsMatch(request.Value!)) return new JsonResult(new { success = false, error = "Недопустимые символы" });
-					user.Organization = request.Value;
-					break;
-				case "Department":
-					if (!ValidInputRegex.IsMatch(request.Value!)) return new JsonResult(new { success = false, error = "Недопустимые символы" });
-					user.Department = request.Value;
-					break;
-				case "Speciality":
-					if (!ValidInputRegex.IsMatch(request.Value!)) return new JsonResult(new { success = false, error = "Недопустимые символы" });
-					user.Speciality = request.Value;
-					break;
-				default:
-					return new JsonResult(new { success = false, error = "Недопустимое поле" });
-			}
-
-			try
-			{
-				user.UpdatedAt = DateTime.Now;
-				await _context.SaveChangesAsync();
-				return new JsonResult(new { success = true });
-			}
-			catch (DbUpdateException ex)
-			{
-				return new JsonResult(new { success = false, error = ex.InnerException?.Message ?? ex.Message });
-			}
-		}
-
-		public async Task<IActionResult> OnPostDeleteAccountAsync()
-		{
-			string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-			var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
-			if (user == null) return new JsonResult(new { success = false, error = "Пользователь не найден" });
-			user.IsDeleted = true;
-			user.UpdatedAt = DateTime.Now;
-			try
-			{
-				await _context.SaveChangesAsync();
-				await HttpContext.SignOutAsync();
-				return new JsonResult(new { success = true });
-			}
-			catch (Exception ex)
-			{
-				return new JsonResult(new { success = false, error = ex.Message });
-			}
-		}
-		public async Task<IActionResult> OnPostUploadAvatarAsync()
-		{
-			string? userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-			if (string.IsNullOrEmpty(userId))
-				return new JsonResult(new { success = false, error = "Пользователь не найден" });
-
-			var file = Request.Form.Files["avatar"];
-			if (file == null || file.Length == 0)
-				return new JsonResult(new { success = false, error = "Файл не получен" });
-
-			var shortUserId = userId.Replace("-", "").Substring(0, 8);
-			string avatarPath = _userPaths.GetAvatarPath(shortUserId);
-			string avatarDir = Path.GetDirectoryName(avatarPath)!;
-			Directory.CreateDirectory(avatarDir);
-
-			string ext = Path.GetExtension(file.FileName).ToLower();
-			if (ext != ".jpg" && ext != ".jpeg" && ext != ".png")
-				return new JsonResult(new { success = false, error = "Неверный формат файла" });
-
-			long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-
-			try
-			{
-				using var stream = new FileStream(avatarPath, FileMode.Create);
-				await file.CopyToAsync(stream);
-				return new JsonResult(new
-				{
-					success = true,
-					userId = shortUserId,
-					timestamp
-				});
-			}
-			catch (Exception ex)
-			{
-				return new JsonResult(new { success = false, error = ex.Message });
-			}
+			AvatarPath = "/images/default_avatar.png";
 		}
 	}
 
-	public class UpdateUserRequest
+	public async Task<IActionResult> OnPostUpdateUserDataAsync([FromBody] UpdateUserRequest request, CancellationToken ct)
 	{
-		public string? Field { get; set; }
-		public string? Value { get; set; }
+		if (!await TryValidateAntiforgeryAsync())
+			return new JsonResult(new { success = false, error = "Неверный токен безопасности" });
+
+		if (User.Identity?.IsAuthenticated != true)
+			return new JsonResult(new { success = false, error = "Пользователь не аутентифицирован" });
+
+		if (request is null || string.IsNullOrWhiteSpace(request.Field))
+			return new JsonResult(new { success = false, error = "Некорректные данные" });
+
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+		if (string.IsNullOrWhiteSpace(userId))
+			return new JsonResult(new { success = false, error = "Пользователь не найден" });
+
+		var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId, ct);
+		if (user is null)
+			return new JsonResult(new { success = false, error = "Пользователь не найден" });
+
+		var field = request.Field.Trim();
+		var value = (request.Value ?? string.Empty).Trim();
+
+		if (string.Equals(value, "Не установлено", StringComparison.OrdinalIgnoreCase))
+			value = string.Empty;
+
+		var error = ApplyUserField(user, field, value);
+		if (error is not null)
+			return new JsonResult(new { success = false, error });
+
+		user.UpdatedAt = DateTime.UtcNow;
+
+		try
+		{
+			await _context.SaveChangesAsync(ct);
+			return new JsonResult(new { success = true });
+		}
+		catch (DbUpdateException ex)
+		{
+			return new JsonResult(new { success = false, error = ex.InnerException?.Message ?? ex.Message });
+		}
 	}
+
+	public async Task<IActionResult> OnPostDeleteAccountAsync([FromForm] DeleteAccountRequest request, CancellationToken ct)
+	{
+		if (!await TryValidateAntiforgeryAsync())
+			return new JsonResult(new { success = false, error = "Неверный токен безопасности" });
+
+		if (User.Identity?.IsAuthenticated != true)
+			return new JsonResult(new { success = false, error = "Пользователь не аутентифицирован" });
+
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+		if (string.IsNullOrWhiteSpace(userId))
+			return new JsonResult(new { success = false, error = "Пользователь не найден" });
+
+		var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId, ct);
+		if (user is null)
+			return new JsonResult(new { success = false, error = "Пользователь не найден" });
+
+		var password = (request?.Password ?? string.Empty).Trim();
+		if (string.IsNullOrWhiteSpace(password))
+			return new JsonResult(new { success = false, error = "Введите пароль" });
+
+		var passwordOk = await _userManager.CheckPasswordAsync(user, password);
+		if (!passwordOk)
+			return new JsonResult(new { success = false, error = "Неверный пароль" });
+
+		user.IsDeleted = true;
+		user.UpdatedAt = DateTime.UtcNow;
+
+		await _userManager.UpdateSecurityStampAsync(user);
+
+		try
+		{
+			await _context.SaveChangesAsync(ct);
+			await HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
+			return new JsonResult(new { success = true });
+		}
+		catch (Exception ex)
+		{
+			return new JsonResult(new { success = false, error = ex.Message });
+		}
+	}
+
+	public async Task<IActionResult> OnPostUploadAvatarAsync(CancellationToken ct)
+	{
+		var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+		if (string.IsNullOrWhiteSpace(userId))
+			return new JsonResult(new { success = false, error = "Пользователь не найден" });
+
+		var file = Request.Form.Files["avatar"];
+		if (file is null || file.Length == 0)
+			return new JsonResult(new { success = false, error = "Файл не получен" });
+
+		var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+		if (ext is not (".jpg" or ".jpeg" or ".png"))
+			return new JsonResult(new { success = false, error = "Неверный формат файла" });
+
+		var shortUserId = ToShortId(userId);
+		var avatarPath = _userPaths.GetAvatarPath(shortUserId);
+
+		Directory.CreateDirectory(Path.GetDirectoryName(avatarPath)!);
+
+		var timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+		try
+		{
+			await using var stream = new FileStream(avatarPath, FileMode.Create, FileAccess.Write, FileShare.None);
+			await file.CopyToAsync(stream, ct);
+
+			return new JsonResult(new { success = true, userId = shortUserId, timestamp });
+		}
+		catch (Exception ex)
+		{
+			return new JsonResult(new { success = false, error = ex.Message });
+		}
+	}
+
+	private async Task<bool> TryValidateAntiforgeryAsync()
+	{
+		try
+		{
+			await _antiforgery.ValidateRequestAsync(HttpContext);
+			return true;
+		}
+		catch (AntiforgeryValidationException)
+		{
+			return false;
+		}
+	}
+
+	private static string? ApplyUserField(User user, string field, string value)
+	{
+		switch (field)
+		{
+			case "DateOfBirth":
+				if (string.IsNullOrWhiteSpace(value))
+					return "Дата не указана";
+
+				if (!DateTime.TryParseExact(value, "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsedDate))
+					return "Неверный формат даты";
+
+				user.DateOfBirth = parsedDate.ToString("dd.MM.yyyy");
+				return null;
+
+			case "FullName":
+				return TrySetText(value, 30, v => user.FullName = v);
+
+			case "Organization":
+				return TrySetText(value, 30, v => user.Organization = v);
+
+			case "Department":
+				return TrySetText(value, 30, v => user.Department = v);
+
+			case "Speciality":
+				return TrySetText(value, 30, v => user.Speciality = v);
+
+			case "Email":
+				if (value.Length > 254)
+					return "Слишком длинный e-mail";
+
+				if (string.IsNullOrWhiteSpace(value))
+				{
+					user.Email = null;
+					user.NormalizedEmail = null;
+					user.EmailConfirmed = false;
+					return null;
+				}
+
+				try { _ = new MailAddress(value); }
+				catch { return "Почта указана неверно"; }
+
+				user.Email = value;
+				user.NormalizedEmail = value.ToUpperInvariant();
+				user.EmailConfirmed = false;
+				return null;
+
+			default:
+				return "Недопустимое поле";
+		}
+	}
+
+	private static string? TrySetText(string value, int maxLen, Action<string> setter)
+	{
+		if (string.IsNullOrWhiteSpace(value) || value.Length > maxLen)
+			return "Некорректные данные";
+
+		if (!ValidInputRegex.IsMatch(value))
+			return "Недопустимые символы";
+
+		setter(value);
+		return null;
+	}
+
+	private static string ToShortId(string userId)
+	{
+		var cleaned = userId.Replace("-", "");
+		return cleaned.Length >= 8 ? cleaned[..8] : cleaned;
+	}
+}
+
+public sealed class UpdateUserRequest
+{
+	public string? Field { get; set; }
+	public string? Value { get; set; }
+}
+
+public sealed class DeleteAccountRequest
+{
+	public string? Password { get; set; }
 }

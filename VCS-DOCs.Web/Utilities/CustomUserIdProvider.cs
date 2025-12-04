@@ -1,11 +1,10 @@
-﻿using Microsoft.AspNetCore.SignalR;
-using System.Security.Claims;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.SignalR;
 
-namespace VCS_DOCs.Utilities
+namespace VCS_DOCs.Utilities;
+
+public sealed class CustomUserIdProvider : IUserIdProvider
 {
-	public class CustomUserIdProvider : IUserIdProvider
-	{
-        public string? GetUserId(HubConnectionContext connection)
-        => connection.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-    }
+	public string? GetUserId(HubConnectionContext connection) =>
+		connection.User?.FindFirstValue(ClaimTypes.NameIdentifier);
 }

@@ -6,7 +6,7 @@
     Layout = null;
 }
 <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(HttpContext).RequestToken" />
-<link rel="stylesheet" href="~/css/sub_css/support_accountsStyle.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/sub_css/support_common_table.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/sub_css/operator_tickets_css/ticket_thread.css" asp-append-version="true" />
 
 <div id="ticket-thread"
@@ -73,7 +73,6 @@
     </div>
 </div>
 
-<!-- Только ОДИН операторский скрипт -->
 <script src="~/js/operator/ticket_thread.js" asp-append-version="true" defer></script>
 <script>
     document.addEventListener('DOMContentLoaded', () => window.initOpTicketThread?.(document));

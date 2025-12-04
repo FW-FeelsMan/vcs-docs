@@ -6,29 +6,36 @@
 @{
     Layout = null;
 }
-<link rel="stylesheet" href="~/css/sub_css/support_accountsStyle.css" asp-append-version="true" />
+
+<link rel="stylesheet" href="~/css/sub_css/support_common_table.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/sub_css/support_accounts.css" asp-append-version="true" />
+
 <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(HttpContext).RequestToken" />
 
-<div class="profile_background accounts-page">
+<div id="op-accounts" class="profile_background accounts-page">
     <div class="button-container">
         <h2>Учетные записи</h2>
-        <div style="display:flex; gap:12px; align-items:center;">
-            <div class="filters">
+
+        <div class="filters-row">
+            <div class="filters-left">
                 <select id="roleFilter" class="button-sliding small">
                     <option value="">Все роли</option>
                     <option value="@Roles.BaseUser">Пользователи</option>
                     <option value="@Roles.SupportAgent">Саппорт</option>
                     <option value="@Roles.SupportAdmin">Админы</option>
                 </select>
+
                 <select id="orgFilter" class="button-sliding small">
                     <option value="">Все организации</option>
                 </select>
-                <input id="searchBox" type="text" placeholder="Поиск (логин/ФИО)" />
             </div>
 
-            <button id="btn-add-project" class="button-sliding primary small" style="margin-left:auto;">
-                Добавить проект
-            </button>
+            <div class="inline-controls">
+                <input id="searchBox" class="user_searchBox" type="text" placeholder="Поиск (логин/ФИО)" />
+                <button id="btn-add-project" class="button-sliding primary small">
+                    Добавить проект
+                </button>
+            </div>
         </div>
     </div>
 
@@ -38,17 +45,22 @@
         <table class="file-table" id="accountsTable">
             <colgroup>
                 <col style="width:110px" />
-                <col style="width:200px"/>
-                <col style="width:150px"/>
-                <col style="width:100px"/>
+                <col style="width:200px" />
+                <col style="width:150px" />
+                <col style="width:100px" />
                 <col style="width:120px" />
                 <col style="width:100px" />
                 <col style="width:160px" />
+                <col style="width:350px" />
             </colgroup>
+
             <thead id="accountsHead"></thead>
+
             <tbody id="accountsBody">
-                <tr><td>Загрузка…</td></tr>
+                <tr><td colspan="8">Загрузка…</td></tr>
             </tbody>
+
+            <tfoot class="table-spacer"><tr><td colspan="8"></td></tr></tfoot>
         </table>
     </div>
 </div>
@@ -64,8 +76,8 @@
                 <option value="External">External</option>
                 <option value="InternalVSupport">InternalVSupport</option>
                 <option value="SignalR">SignalR</option>
-                <option value="Http">HTTP</option>
-                <option value="Sql">SQL</option>
+                <option value="Http">Http</option>
+                <option value="Sql">Sql</option>
             </select>
             <label>BaseUrl/HubUrl</label><input id="ap-url" type="text" placeholder="https://host/..." />
             <label>Включен</label><input id="ap-enabled" type="checkbox" checked />
@@ -83,4 +95,3 @@
     </div>
 </div>
 
-<script src="~/js/support/accountsRender.js" asp-append-version="true"></script>

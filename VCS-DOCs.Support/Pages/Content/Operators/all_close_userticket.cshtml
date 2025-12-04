@@ -8,7 +8,7 @@
 
 <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(HttpContext).RequestToken" />
 
-<link rel="stylesheet" href="~/css/sub_css/support_accountsStyle.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/sub_css/support_common_table.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/sub_css/operator_tickets_css/op_close_tickets.css" asp-append-version="true" />
 
 <div id="op-close-tickets" class="profile_background accounts-page tickets-page">
@@ -23,7 +23,7 @@
                     <button class="seg-btn" role="tab" aria-selected="false" data-scope="unassigned">Неназначенные</button>
                 </div>
 
-                <select id="op_close_orgFilter" class="button-sliding small">
+                <select id="op_close_orgFilter">
                     <option value="">Все организации</option>
                 </select>
             </div>
@@ -44,14 +44,15 @@
     <div class="content-scrollable">
         <table class="file-table" id="opCloseTicketsTable">
             <colgroup>
-                <col style="width:100px" />   <!-- № -->
-                <col style="width:240px" />   <!-- Тема -->
-                <col style="width:150px" />   <!-- Пользователь -->
-                <col style="width:160px" />   <!-- Организация -->
-                <col style="width:140px" />   <!-- Статус -->
-                <col style="width:140px" />   <!-- Обслуживает -->
-                <col style="width:220px" />   <!-- Действие -->
+                <col />
+                <col />
+                <col />
+                <col />
+                <col />
+                <col />
+                <col />
             </colgroup>
+
             <thead>
                 <tr>
                     <th>№</th>
@@ -64,9 +65,7 @@
                 </tr>
             </thead>
 
-            <tbody id="opCloseTicketsBody">
-               
-            </tbody>
+            <tbody id="opCloseTicketsBody"></tbody>
 
             <tfoot class="table-spacer">
                 <tr><td colspan="7"></td></tr>

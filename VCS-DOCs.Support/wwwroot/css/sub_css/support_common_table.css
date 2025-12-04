@@ -1,0 +1,168 @@
+﻿/* wwwroot/css/sub_css/support_common_table.css
+   Common (safe) UI shell for Support pages:
+   - card container (.accounts-page) used across operator/user pages
+   - filters row (.filters-row/.filters-left/.inline-controls)
+   - scroll area (.content-scrollable)
+   - table shell (.file-table) with sticky header + zebra + hover
+   - hr.solid
+   IMPORTANT: no per-page IDs here (no #accountsTable, no #ticketsTable),
+   so it won't leak/override per-page specifics.
+*/
+
+:root {
+    --primary-color: #5a9bd5;
+    --primary-hover: #3d7bbf;
+    --text-dark: #111827;
+    --muted: #6b7280;
+    --card-border: #e9ecef;
+    --row-border: #eef2f7;
+    --grid-line: #e6e9f2;
+    --grid-line-strong: #d7def0;
+    --shadow-soft: 0 8px 24px rgba(0,0,0,.08);
+    --filter-h: 42px;
+    --radius-card: 12px;
+}
+
+/* ===================== Card container (shared) ===================== */
+
+.accounts-page {
+    background: #fff;
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-soft);
+    color: var(--text-dark);
+    height: 98%;
+    margin: 6px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+    .accounts-page .button-container {
+        margin: 24px;
+    }
+
+        .accounts-page .button-container h2 {
+            margin: 0 0 10px 0;
+            padding: 0;
+            line-height: 1.2;
+            font-size: 24px;
+        }
+
+    /* ===================== Filters row shell (shared) ===================== */
+
+    .accounts-page .filters-row {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 12px;
+        min-height: var(--filter-h);
+    }
+
+    .accounts-page .filters-left {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: nowrap;
+    }
+
+    .accounts-page .inline-controls {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        justify-content: flex-end;
+        flex-wrap: nowrap;
+    }
+
+/* ===================== Separator (shared) ===================== */
+
+hr.solid {
+    border: 0;
+    border-top: 1px solid var(--grid-line-strong);
+    margin: 0 24px 16px;
+}
+
+/* ===================== Scroll area (shared) ===================== */
+
+.accounts-page .content-scrollable {
+    margin: 24px;
+    padding: 0 6px 24px 0;
+    overflow: auto;
+    max-height: calc(100vh - 180px);
+    min-height: 0;
+}
+
+/* ===================== Table shell (shared) ===================== */
+
+.accounts-page .file-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #fff;
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+    .accounts-page .file-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #fff;
+        border-bottom: 1px solid var(--grid-line-strong);
+        user-select: none;
+        text-align: left;
+        padding: 12px 14px;
+        font-weight: 800;
+        color: #2b2b2b;
+    }
+
+    .accounts-page .file-table tbody td {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--row-border);
+        color: #333;
+        vertical-align: middle;
+        font-size: 14px;
+    }
+
+    .accounts-page .file-table tbody tr:nth-child(even) td {
+        background: #fafbfc;
+    }
+
+    .accounts-page .file-table tbody tr:hover td {
+        background: #f3f7ff;
+    }
+
+    .accounts-page .file-table tfoot.table-spacer td {
+        padding: 0;
+        border: 0;
+        height: 24px;
+        background: transparent;
+    }
+
+/* ===================== Responsive (shared) ===================== */
+
+@media (max-width: 1100px) {
+    .accounts-page .button-container {
+        margin: 18px;
+    }
+
+    .accounts-page .content-scrollable {
+        margin: 18px;
+    }
+
+    .accounts-page .file-table td,
+    .accounts-page .file-table th {
+        padding: 10px 12px;
+    }
+
+    .accounts-page .filters-left {
+        flex-wrap: wrap;
+    }
+
+    .accounts-page .inline-controls {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+}

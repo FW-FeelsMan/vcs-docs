@@ -57,13 +57,24 @@ async function ensureContentScripts(contentId, panelEl) {
         await loadScriptOnce("/js/operator/all_open_userticket.js", "open-ticket-js");
         try { await waitForElm("#op-open-tickets", 3000, panelEl); } catch { }
         if (!panelEl.isConnected) return;
+
         if (typeof window.initAllOpenUserTickets === "function") {
             await window.initAllOpenUserTickets(panelEl);
         } else {
             console.warn("[sidebar] initAllOpenUserTickets not found");
         }
+
+        if (typeof window.initOpTicketsColResize === "function") {
+            try {
+                window.initOpTicketsColResize();
+                setTimeout(() => window.initOpTicketsColResize?.(), 50);
+            } catch (e) {
+                console.warn("[sidebar] open col resize init failed:", e);
+            }
+        }
         return;
     }
+
     if (contentId === "uticket") {
         await loadScriptOnce("/js/user/user_ticket_thread.js", "user-ticket-thread-js");
         try { await waitForElm("#ticket-thread", 3000, panelEl); } catch { }
@@ -75,7 +86,6 @@ async function ensureContentScripts(contentId, panelEl) {
     }
 
     if (contentId === "closed_tickets") {
-        // Поддержка двух вариантов страницы: операторская и пользовательская
         if (panelEl.querySelector("#user-closed-tickets")) {
             await loadScriptOnce("/js/user/user_closed_tickets.js", "user-closed-tickets-js");
             try { await waitForElm("#user-closed-tickets", 3000, panelEl); } catch { }
@@ -85,17 +95,31 @@ async function ensureContentScripts(contentId, panelEl) {
             }
             return;
         }
-        // операторская
+
         await loadScriptOnce("/js/operator/all_close_usertickets.js", "closed-tickets-js");
         try { await waitForElm("#op-close-tickets", 3000, panelEl); } catch { }
         if (!panelEl.isConnected) return;
+
         if (typeof window.initAllCloseUserTickets === "function") {
             await window.initAllCloseUserTickets(panelEl);
         } else {
             console.warn("[sidebar] initAllCloseUserTickets not found");
         }
+
+        if (typeof window.initOpCloseTicketsColResize === "function") {
+            try {
+                window.initOpCloseTicketsColResize();
+                setTimeout(() => window.initOpCloseTicketsColResize?.(), 50);
+            } catch (e) {
+                console.warn("[sidebar] close col resize init failed:", e);
+            }
+        } else {
+            console.warn("[sidebar] initOpCloseTicketsColResize not found");
+        }
+
         return;
     }
+
 
     if (contentId === "open_tickets") {
         await loadScriptOnce("/js/user/user_open_tickets.js", "user-open-tickets-js");

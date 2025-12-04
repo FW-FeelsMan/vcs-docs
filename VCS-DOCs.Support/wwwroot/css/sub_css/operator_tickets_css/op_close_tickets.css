@@ -1,26 +1,50 @@
-﻿:root {
+﻿/* wwwroot/css/sub_css/operator_tickets_css/op_close_tickets.css */
+
+:root {
     --tickets-blue: #5a9bd5;
     --tickets-green: #4CAF50;
-    --tickets-gray: #9aa3af; /* закрыто */
+    --tickets-gray: #9aa3af;
     --row-tint-alpha: .08;
+    --grid-line: #e6e9f2;
+    --grid-line-strong: #d7def0;
 }
 
-/* верхняя панель с фильтрами */
-.filters-row {
+#op-close-tickets.tickets-page {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+#op-close-tickets .button-container h2 {
+    margin: 0 0 10px 0;
+    padding: 0;
+    line-height: 1.2;
+}
+
+#op-close-tickets .filters-row {
     display: flex;
     gap: 16px;
     align-items: center;
     justify-content: space-between;
     margin-top: 12px;
+    min-height: 42px;
 }
 
-.filters-left {
+#op-close-tickets .filters-left {
     display: flex;
     gap: 12px;
     align-items: center;
+    flex-wrap: nowrap;
 }
 
-.segmented {
+@media (max-width: 1100px) {
+    #op-close-tickets .filters-left {
+        flex-wrap: wrap;
+    }
+}
+
+#op-close-tickets .segmented {
     display: inline-flex;
     background: #f3f6fa;
     border: 1px solid #d9e2ef;
@@ -28,9 +52,9 @@
     overflow: hidden;
 }
 
-.seg-btn {
+#op-close-tickets .seg-btn {
     padding: 0 12px;
-    height: 32px;
+    height: 42px;
     line-height: 30px;
     border: 0;
     background: transparent;
@@ -38,29 +62,75 @@
     font-weight: 600;
     font-size: 13px;
     color: #445;
-    transition: background .15s,color .15s;
+    transition: background .15s, color .15s;
 }
 
-    .seg-btn:hover {
+    #op-close-tickets .seg-btn:hover {
         background: #e9f1fb;
     }
 
-    .seg-btn.is-active {
-        background: #5a9bd5;
+    #op-close-tickets .seg-btn.is-active {
+        background: var(--tickets-blue);
         color: #fff;
     }
 
-/* поиск */
+#op_close_orgFilter {
+    height: 42px;
+    padding: 0 42px 0 14px;
+    border-radius: 10px;
+    border: 1px solid #d4d7dc;
+    background: #fff;
+    color: #111827;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    min-width: 220px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='12' viewBox='0 0 12 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 4.5l3 3 3-3' stroke='%239aa4b2' stroke-width='1.7' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 12px 12px;
+    transition: box-shadow .15s, border-color .15s;
+}
+
+    #op_close_orgFilter:focus {
+        outline: none;
+        border-color: var(--tickets-blue);
+        box-shadow: 0 0 0 3px rgba(90,155,213,.15);
+    }
+
+#op-close-tickets .inline-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    min-width: 520px;
+}
+
+@media (max-width: 1100px) {
+    #op-close-tickets .inline-controls {
+        min-width: 0;
+        flex: 1 1 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+}
+
 #op_close_searchBox {
     flex: 0 1 360px;
+    width: 360px;
+    height: 42px;
     padding: 0 12px;
     border: 1px solid #d4d7dc;
-    border-radius: 8px;
+    border-radius: 10px;
     background: #fff;
     color: #333;
     outline: none;
-    transition: box-shadow .15s,border-color .15s;
-    height: 42px;
+    transition: box-shadow .15s, border-color .15s;
 }
 
     #op_close_searchBox:focus {
@@ -68,14 +138,20 @@
         box-shadow: 0 0 0 3px rgba(90,155,213,.15);
     }
 
-.inline-controls {
-    display: flex;
-    gap: 12px;
+#btn-op-close-search.button-sliding,
+#btn-op-close-search.button-sliding.small,
+#btn-op-close-search {
+    height: 42px;
+    min-width: 160px;
+    padding: 0 22px;
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
+    white-space: nowrap;
 }
 
-/* легенда */
-.tickets-legend {
+/* legend */
+#op-close-tickets .tickets-legend {
     display: flex;
     gap: 16px;
     align-items: center;
@@ -84,13 +160,13 @@
     font-size: 13px;
 }
 
-.legend-item {
+#op-close-tickets .legend-item {
     display: inline-flex;
     align-items: center;
     gap: 8px;
 }
 
-.legend-dot {
+#op-close-tickets .legend-dot {
     width: 10px;
     height: 10px;
     border-radius: 999px;
@@ -98,37 +174,67 @@
     display: inline-block;
 }
 
-    .legend-dot.closed {
+    #op-close-tickets .legend-dot.closed {
         background: var(--tickets-gray);
     }
 
-/* ====== СКРОЛЛ-ОБЛАСТЬ ====== */
+/* scroll area */
 #op-close-tickets .content-scrollable {
     margin: 24px 24px 8px;
-    padding: 0 6px 24px 0; /* важный нижний отступ */
-    overflow: auto;
-    overflow-x: hidden;
+    padding: 0 6px 24px 0;
+    overflow-y: auto;
+    overflow-x: auto;
     max-height: calc(100vh - 180px);
 }
-    /* дополнительный «воздух», даже если таблица пик-в-пик */
+
     #op-close-tickets .content-scrollable::after {
         content: "";
         display: block;
         height: 24px;
     }
 
-/* ====== ТАБЛИЦА ====== */
+/* ===================== TABLE (new stable behavior) ===================== */
+
 #opCloseTicketsTable {
     table-layout: fixed;
-    width: calc(100% - 12px);
-    margin-right: 12px;
+    width: auto; /* JS sets px width = sum(cols) */
+    min-width: 0;
     box-sizing: border-box;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
-    #opCloseTicketsTable th, #opCloseTicketsTable td {
+    #opCloseTicketsTable th,
+    #opCloseTicketsTable td {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        min-width: 0;
+        /* IMPORTANT: no max-width:0 here */
+    }
+
+        /* last column contains actions -> don't clip */
+        #opCloseTicketsTable td:last-child {
+            overflow: visible;
+            text-overflow: clip;
+        }
+
+    /* grid lines */
+    #opCloseTicketsTable thead th,
+    #opCloseTicketsTable tbody td {
+        border-right: 1px solid var(--grid-line);
+    }
+
+        #opCloseTicketsTable thead th:last-child,
+        #opCloseTicketsTable tbody td:last-child {
+            border-right: none;
+        }
+
+    #opCloseTicketsTable thead th {
+        border-bottom: 1px solid var(--grid-line-strong);
+        position: relative;
+        user-select: none;
+        padding-right: 12px;
     }
 
     #opCloseTicketsTable tbody tr:nth-child(even) td {
@@ -139,7 +245,20 @@
         filter: brightness(.99);
     }
 
-/* бейджи статуса */
+    #opCloseTicketsTable tbody::after {
+        content: "";
+        display: block;
+        height: 16px;
+    }
+
+    #opCloseTicketsTable tfoot.table-spacer td {
+        padding: 0;
+        border: 0;
+        height: 24px;
+        background: transparent;
+    }
+
+/* status badge */
 .status-badge {
     display: inline-block;
     padding: 4px 10px;
@@ -157,27 +276,43 @@
         color: #444;
     }
 
-/* действия поуже */
-#op-close-tickets .file-table td:last-child {
-    min-width: 150px;
+/* buttons in last column (compact) */
+#opCloseTicketsTable td:last-child .button-sliding,
+#opCloseTicketsTable td:last-child button {
+    min-width: 0 !important;
+    padding: 8px 14px;
 }
 
-/* доп. хвост у tbody (не обязателен, но приятно) */
-#opCloseTicketsTable tbody::after {
-    content: "";
-    display: block;
-    height: 16px;
+/* keep your colgroup clamps (JS will snapshot to px on init) */
+#opCloseTicketsTable colgroup col:nth-child(1) {
+    width: clamp(72px, 5vw, 110px);
 }
 
-/* spacer в tfoot */
-#opCloseTicketsTable tfoot.table-spacer td {
-    padding: 0;
-    border: 0;
-    height: 24px;
-    background: transparent;
+#opCloseTicketsTable colgroup col:nth-child(2) {
+    width: clamp(220px, 26vw, 520px);
 }
 
-/* хост-контейнеры */
+#opCloseTicketsTable colgroup col:nth-child(3) {
+    width: clamp(140px, 12vw, 220px);
+}
+
+#opCloseTicketsTable colgroup col:nth-child(4) {
+    width: clamp(160px, 14vw, 260px);
+}
+
+#opCloseTicketsTable colgroup col:nth-child(5) {
+    width: clamp(170px, 14vw, 260px);
+}
+
+#opCloseTicketsTable colgroup col:nth-child(6) {
+    width: clamp(170px, 14vw, 240px);
+}
+
+#opCloseTicketsTable colgroup col:nth-child(7) {
+    width: clamp(80px, 9vw, 140px);
+}
+
+/* layout container safety (как было) */
 #content.content-field {
     overflow: visible !important;
 }
@@ -188,24 +323,4 @@
     height: 100%;
     min-height: 0;
     overflow: visible !important;
-}
-
-#op-close-tickets.tickets-page {
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 auto;
-    min-height: 0;
-}
-
-/* если понадобится растягивать по высоте контейнера — как альтернатива max-height */
-/* 
-#op-close-tickets.accounts-page .content-scrollable{
-    max-height:none;height:auto;flex:1 1 auto;min-height:0;overflow:auto;padding-right:6px;
-}
-*/
-
-@media (max-width:1100px) {
-    #op-close-tickets .file-table td:last-child {
-        min-width: 130px;
-    }
 }

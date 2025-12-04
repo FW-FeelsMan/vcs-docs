@@ -5,10 +5,9 @@
 @{
     Layout = null;
 }
-
 <meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(HttpContext).RequestToken" />
 
-<link rel="stylesheet" href="~/css/sub_css/support_accountsStyle.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/sub_css/support_common_table.css" asp-append-version="true" />
 <link rel="stylesheet" href="~/css/sub_css/operator_tickets_css/op_open_tickets.css" asp-append-version="true" />
 
 <div id="op-open-tickets" class="profile_background accounts-page tickets-page">
@@ -45,14 +44,15 @@
     <div class="content-scrollable">
         <table class="file-table" id="opTicketsTable">
             <colgroup>
-                <col style="width:100px" />    <!-- № -->
-                <col style="width:120px" />    <!-- Тема -->
-                <col style="width:150px" />    <!-- Пользователь -->
-                <col style="width:150px" />    <!-- Организация -->
-                <col style="width:210px" />    <!-- Статус -->
-                <col style="width:190px" />    <!-- Обслуживает -->
-                <col style="width:250px" />    <!-- Действие -->
+                <col />
+                <col />
+                <col />
+                <col />
+                <col />
+                <col />
+                <col />
             </colgroup>
+
             <thead>
                 <tr>
                     <th>№</th>
@@ -63,14 +63,10 @@
                     <th>Обслуживает</th>
                     <th>Действие</th>
                 </tr>
-            </thead>            
-            <tbody id="opTicketsBody">
-                <!-- динамичное заполнение заявками -->
-            </tbody>
-
-            <tfoot class="table-spacer">
-                <tr><td colspan="7"></td></tr>
-            </tfoot>
+            </thead>
+            <tbody id="opTicketsBody"></tbody>
+            <tfoot class="table-spacer"><tr><td colspan="7"></td></tr></tfoot>
         </table>
     </div>
 </div>
+

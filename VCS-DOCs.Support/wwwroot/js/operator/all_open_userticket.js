@@ -76,7 +76,14 @@
             try { onCreated?.(payload || {}); } catch { }
         });
 
-        try { await conn.start(); } catch { /* ок, попробуем без реалтайма */ }
+        try {
+            await conn.start();
+            console.info('[TicketHub] connected');
+        } catch (e) {
+            console.error('[TicketHub] start failed', e);
+            throw e; 
+        }
+
         return conn;
     }
     async function joinMany(ids) {
@@ -252,7 +259,10 @@
         async function loadOrgs() {
             try {
                 if (USE_MOCK) throw { status: 404 };
-                const list = await getJson('/api/support/tickets/orgs'); // ожидаем string[]
+                const url = new URL('/api/support/tickets/orgs', location.origin);
+                url.searchParams.set('status', 'closed');
+                const list = await getJson(url.toString());
+
                 const uniq = Array.isArray(list) ? Array.from(new Set(list)).filter(Boolean).sort((a, b) => a.localeCompare(b, 'ru')) : [];
                 orgSel.innerHTML = `<option value="">Все организации</option>` + uniq.map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join('');
             } catch {

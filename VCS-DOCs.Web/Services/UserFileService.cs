@@ -1,38 +1,48 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using VCS_DOCs.Infrastructure.Data;
 using VCS_DOCs.Upload.Core.Models;
 using VCS_DOCs.Upload.Core.Services;
-using VCS_DOCs.Infrastructure.Data;
 
-namespace VCS_DOCs.Services
+namespace VCS_DOCs.Services;
+
+public sealed class UserFileService : IUserFileService
 {
-	public class UserFileService : IUserFileService
+	private const string CompleteStatus = "complete";
+
+	private readonly ApplicationDbContext _db;
+
+	public UserFileService(ApplicationDbContext db) => _db = db;
+
+	public Task<List<UserFileDto>> GetFilesForUserAsync(string userId)
 	{
-		private readonly ApplicationDbContext _db;
+		if (string.IsNullOrWhiteSpace(userId))
+			return Task.FromResult(new List<UserFileDto>());
 
-		public UserFileService(ApplicationDbContext db)
-		{
-			_db = db;
-		}
-
-		public async Task<List<UserFileDto>> GetFilesForUserAsync(string userId)
-		{
-			return await _db.FileUploadSessions
-				.Where(s => s.UserId == userId && s.Status == "complete")
-				.GroupBy(s => s.FileId)
-				.Select(g => new UserFileDto
+		return _db.FileUploadSessions
+			.AsNoTracking()
+			.Where(s => s.UserId == userId && s.Status == CompleteStatus)
+			.GroupBy(s => s.FileId)
+			.Select(g => new
+			{
+				FileId = g.Key,
+				Latest = g.OrderByDescending(x => x.UpdatedAt).FirstOrDefault(),
+				LatestVersion = g.Max(x => x.Version),
+				Versions = g.Select(x => new VersionDto
 				{
-					FileId = g.Key,
-					FileName = g.OrderByDescending(s => s.UpdatedAt).First().OriginalFileName,
-					FileSize = g.OrderByDescending(s => s.UpdatedAt).First().FileSize,
-					UpdatedAt = g.OrderByDescending(s => s.UpdatedAt).First().UpdatedAt,
-					LatestVersion = g.Max(s => s.Version),
-					Versions = g.Select(s => new VersionDto
-					{
-						Version = s.Version,
-						UploadedAt = s.UpdatedAt
-					}).ToList()
+					Version = x.Version,
+					UploadedAt = x.UpdatedAt
 				})
-				.ToListAsync();
-		}
+			})
+			.Where(x => x.Latest != null)
+			.Select(x => new UserFileDto
+			{
+				FileId = x.FileId,
+				FileName = x.Latest!.OriginalFileName,
+				FileSize = x.Latest!.FileSize,
+				UpdatedAt = x.Latest!.UpdatedAt,
+				LatestVersion = x.LatestVersion,
+				Versions = x.Versions.OrderByDescending(v => v.Version).ToList()
+			})
+			.ToListAsync();
 	}
 }
