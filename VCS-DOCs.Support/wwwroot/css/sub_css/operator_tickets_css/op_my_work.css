@@ -1,0 +1,284 @@
+﻿/* wwwroot/css/sub_css/operator_tickets_css/op_my_work.css */
+
+:root {
+    --tickets-blue: #5a9bd5;
+    --tickets-green: #4CAF50;
+    --tickets-gray: #9aa3af;
+    --row-tint-alpha: .08;
+    --grid-line: #e6e9f2;
+    --grid-line-strong: #d7def0;
+}
+
+/* layout */
+
+#op-my-work.tickets-page {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+#op-my-work .button-container h2 {
+    margin: 0 0 10px 0;
+    padding: 0;
+    line-height: 1.2;
+}
+
+/* фильтры над таблицей */
+
+#op-my-work .filters-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+    min-height: 42px;
+    flex-wrap: wrap;
+}
+
+#op-my-work .filters-left {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+@media (max-width: 1100px) {
+    #op-my-work .filters-left {
+        flex-wrap: wrap;
+    }
+}
+
+#op-my-work .inline-label {
+    color: #6b7280;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+/* date inputs */
+
+#op_mywork_from,
+#op_mywork_to {
+    height: 42px;
+    padding: 0 10px;
+    border-radius: 10px;
+    border: 1px solid #d4d7dc;
+    background: #fff;
+    color: #111827;
+    font-size: 14px;
+    line-height: 1;
+    outline: none;
+    transition: box-shadow .15s, border-color .15s;
+}
+
+    #op_mywork_from:focus,
+    #op_mywork_to:focus {
+        border-color: var(--tickets-blue);
+        box-shadow: 0 0 0 3px rgba(90,155,213,.15);
+    }
+
+/* поиск + кнопка */
+
+#op-my-work .inline-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: nowrap;
+    min-width: 420px;
+}
+
+@media (max-width: 1100px) {
+    #op-my-work .inline-controls {
+        min-width: 0;
+        flex: 1 1 100%;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+}
+
+#op_mywork_search.user_searchBox {
+    flex: 0 1 280px;
+    width: 280px;
+    height: 42px;
+    padding: 0 12px;
+    border: 1px solid #d4d7dc;
+    border-radius: 10px;
+    background: #fff;
+    color: #333;
+    outline: none;
+    transition: box-shadow .15s, border-color .15s;
+}
+
+#op_mywork_search:focus {
+    border-color: var(--tickets-blue) !important;
+    box-shadow: 0 0 0 3px rgba(90,155,213,.15);
+}
+
+#btn-op-mywork-search.button-sliding,
+#btn-op-mywork-search.button-sliding.small,
+#btn-op-mywork-search {
+    height: 42px;
+    min-width: 140px;
+    padding: 0 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+}
+
+/* зона прокрутки */
+
+#op-my-work .content-scrollable {
+    margin: 24px 24px 8px;
+    padding: 0 6px 24px 0;
+    overflow-y: auto;
+    overflow-x: auto;
+    max-height: calc(100vh - 180px);
+}
+
+    #op-my-work .content-scrollable::after {
+        content: "";
+        display: block;
+        height: 24px;
+    }
+
+/* таблица */
+#opMyWorkTable {
+    table-layout: fixed;
+    width: auto;
+    min-width: 0;
+    box-sizing: border-box;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+    #opMyWorkTable th,
+    #opMyWorkTable td {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-width: 0;
+    }
+
+        #opMyWorkTable td:last-child {
+            overflow: visible;
+            text-overflow: clip;
+        }
+
+    /* линии сетки */
+
+    #opMyWorkTable thead th,
+    #opMyWorkTable tbody td {
+        border-right: 1px solid var(--grid-line);
+    }
+
+        #opMyWorkTable thead th:last-child,
+        #opMyWorkTable tbody td:last-child {
+            border-right: none;
+        }
+
+    #opMyWorkTable thead th {
+        border-bottom: 1px solid var(--grid-line-strong);
+        position: relative;
+        user-select: none;
+        padding-right: 12px;
+    }
+
+    /* зебра + hover */
+
+    #opMyWorkTable tbody tr:nth-child(even) td {
+        background: #fafbfc;
+    }
+
+    #opMyWorkTable tbody tr:hover > td {
+        filter: brightness(.99);
+    }
+
+    #opMyWorkTable tbody::after {
+        content: "";
+        display: block;
+        height: 16px;
+    }
+
+    #opMyWorkTable tfoot.table-spacer td {
+        padding: 0;
+        border: 0;
+        height: 24px;
+        background: transparent;
+    }
+
+
+    #opMyWorkTable colgroup col:nth-child(1) {
+        width: clamp(72px, 7vw, 110px); /* № */
+    }
+
+    #opMyWorkTable colgroup col:nth-child(2) {
+        width: clamp(220px, 26vw, 520px); /* Тема */
+    }
+
+    #opMyWorkTable colgroup col:nth-child(3) {
+        width: clamp(160px, 16vw, 260px); /* Организация */
+    }
+
+    #opMyWorkTable colgroup col:nth-child(4) {
+        width: clamp(150px, 14vw, 220px); /* Закрыта */
+    }
+
+    #opMyWorkTable colgroup col:nth-child(5) {
+        width: clamp(160px, 14vw, 240px); /* Время решения */
+    }
+
+    #opMyWorkTable colgroup col:nth-child(6) {
+        width: clamp(130px, 12vw, 200px); /* Ответы */
+    }
+
+    #opMyWorkTable colgroup col:nth-child(7) {
+        width: clamp(100px, 10vw, 150px); /* Действие */
+    }
+
+
+    #opMyWorkTable td:last-child .button-sliding,
+    #opMyWorkTable td:last-child button {
+        min-width: 0 !important;
+        padding: 8px 14px;
+    }
+
+
+    #opMyWorkTable td .reply-tags {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+    }
+    .status-badge.closed {
+    border-color: var(--tickets-gray);
+    color: #444;
+}
+.status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: .85rem;
+    line-height: 1;
+    font-weight: 700;
+    white-space: nowrap;
+    border: 2px solid transparent;
+    background: #fff;
+}
+
+#op-my-work .mywork-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 20px 0px 0px 0px;
+    font-size: 13px;
+}
+
+    #op-my-work .mywork-summary .chip {
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #5a9bd5;
+        border: 1px solid #d9e2ef;
+        color: #ffff;
+        font-weight: 500;
+    }
