@@ -1,4 +1,4 @@
-/*гланвый стиль веба*/
+/*РіР»Р°РЅРІС‹Р№ СЃС‚РёР»СЊ РІРµР±Р°*/
 body, html {
     margin: 0;
     padding: 0;
@@ -8,7 +8,7 @@ body, html {
 }
 
 .background {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     width: 100%;
@@ -16,6 +16,22 @@ body, html {
     background: radial-gradient(circle, #2e2e2e, #4b4b4b, #353535, #2a2a3a, #4f4848, #2e2e2e);
     background-size: 400% 400%;
     animation: gradientAnimation 60s ease infinite;
+    z-index: 0;
+}
+
+.app-shell {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+.layout-shell {
+    position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 1;
 }
 
 @keyframes gradientAnimation {
@@ -67,25 +83,47 @@ body, html {
     }
 
 
-/* Основное поле */
+/* РћСЃРЅРѕРІРЅРѕРµ РїРѕР»Рµ */
+.main-layout {
+    display: flex;
+    gap: 12px;
+    padding: 0 15px 15px;
+    flex: 1;
+    min-height: 0;
+}
+
 .content-field {
-    position: absolute;
-    top: 7px;
-    right: 7px;
-    bottom: 7px;
-    left: 245px;
+    position: relative;
+    flex: 1;
     background-color: rgba(20, 20, 20, 1);
     border-radius: 6px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    padding: 12px;
+    overflow: auto;
+    min-height: 0;
 }
 
-/* Заголовок программы */
+.content-field table {
+    width: 100%;
+    border-collapse: collapse;
+    display: block;
+    overflow-x: auto;
+}
+
+    .content-field table th,
+    .content-field table td {
+        white-space: nowrap;
+    }
+
+/* Р—Р°РіРѕР»РѕРІРѕРє РїСЂРѕРіСЂР°РјРјС‹ */
 .header-container {
-    position: absolute;
-    top: 15px;
-    left: 15px;
+    position: sticky;
+    top: 0;
     display: flex;
     align-items: center;
+    gap: 12px;
+    padding: 15px;
+    z-index: 5;
 }
 
 .header-title {
@@ -95,6 +133,35 @@ body, html {
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
     font-family: 'GOST type A';
 }
+
+.burger-button {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 4px;
+    width: 42px;
+    height: 42px;
+    border-radius: 8px;
+    border: 1px solid #5a5a5a;
+    background-color: #2e2e2e;
+    cursor: pointer;
+    padding: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+    .burger-button span {
+        display: block;
+        height: 3px;
+        width: 100%;
+        background-color: rgba(240, 240, 240, 255);
+        border-radius: 2px;
+    }
+
+    .burger-button:hover {
+        background-color: #5a5a5a;
+        border-color: #666;
+    }
 
 .menu_divider {
     margin-left: 20px;
@@ -115,18 +182,37 @@ body, html {
 }
 
 .sidebar {
-    position: absolute;
-    top: 70px;
-    bottom: 5px;
-    left: -10px;
-    width: 220px;
+    position: relative;
+    width: 240px;
     padding: 1rem;
     height: auto;
     display: flex;
     flex-direction: column;
     gap: 2px;
     overflow-y: auto;
+    background-color: rgba(20, 20, 20, 0.95);
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+    flex: 0 1 240px;
+    z-index: 2;
+    transition: transform 0.3s ease;
 }
+
+.sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(2px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 1;
+}
+
+    .sidebar-overlay.visible {
+        opacity: 1;
+        pointer-events: auto;
+    }
 
 .sidebar-button {
     display: flex;
@@ -234,9 +320,10 @@ body, html {
         }
 
 .logout-form {
-    position: absolute;
-    left: 20px;
-    bottom: 5px;
+    position: static;
+    margin-top: 12px;
+    display: flex;
+    justify-content: flex-end;
 }
 
 .loader {
@@ -280,15 +367,15 @@ body, html {
 }
 
 .user-block {
-    position: absolute;
-    bottom: 5px;
-    width: 170px;
+    position: relative;
+    width: 100%;
     background-color: #626161;
     border-radius: 8px;
     display: flex;
     align-items: center;
     padding: 5px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    margin-top: auto;
 }
 
 .user-avatar {
@@ -314,33 +401,31 @@ body, html {
     transition: color 0.3s ease;
 }
 
-    /* Зеленый — подключен */
+    /* Р—РµР»РµРЅС‹Р№ вЂ” РїРѕРґРєР»СЋС‡РµРЅ */
     .user-status.online {
         color: #4CAF50;
     }
 
-    /* Серый — оффлайн */
+    /* РЎРµСЂС‹Р№ вЂ” РѕС„С„Р»Р°Р№РЅ */
     .user-status.offline {
         color: #9e9e9e;
     }
 
-    /* Желтый — переподключение */
+    /* Р–РµР»С‚С‹Р№ вЂ” РїРµСЂРµРїРѕРґРєР»СЋС‡РµРЅРёРµ */
     .user-status.connecting {
         color: #ff9800;
     }
 
-    /* Красный — ошибка */
+    /* РљСЂР°СЃРЅС‹Р№ вЂ” РѕС€РёР±РєР° */
     .user-status.error {
         color: #f44336;
     }
 
 
 .logout-button {
-    position: absolute;
-    margin-left: 187px;
+    position: relative;
     width: 45px;
     height: 50px;
-    bottom: 5px;
     background-color: #666;
     color: white;
     border: none;
@@ -364,6 +449,40 @@ body, html {
     width: 18px;
     height: 18px;
     filter: invert(1);
+}
+
+@media (max-width: 1280px) {
+    .layout-shell {
+        gap: 6px;
+    }
+
+    .main-layout {
+        padding: 0 10px 12px;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        max-width: 80%;
+        transform: translateX(-100%);
+        border-radius: 0 10px 10px 0;
+        padding-top: 90px;
+        z-index: 1001;
+    }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+    .sidebar-overlay {
+        z-index: 900;
+    }
+
+    .burger-button {
+        display: inline-flex;
+    }
 }
 /* === 404 Page Styling === */
 .error-container {
@@ -457,16 +576,16 @@ body, html {
 .contact-embed {
     position: absolute;
     inset: 0; /* = top:0; right:0; bottom:0; left:0 */
-    padding: 5px; /* внутренний отступ по желанию */
+    padding: 5px; /* РІРЅСѓС‚СЂРµРЅРЅРёР№ РѕС‚СЃС‚СѓРї РїРѕ Р¶РµР»Р°РЅРёСЋ */
     box-sizing: border-box;
 }
 
-/* сам фрейм заполняет контейнер */
+/* СЃР°Рј С„СЂРµР№Рј Р·Р°РїРѕР»РЅСЏРµС‚ РєРѕРЅС‚РµР№РЅРµСЂ */
 .contact-iframe {
     width: 100%;
     height: 100%;
     border: 0;
-    display: block; /* убирает нижний "inline"-зазор */
+    display: block; /* СѓР±РёСЂР°РµС‚ РЅРёР¶РЅРёР№ "inline"-Р·Р°Р·РѕСЂ */
     border-radius: 4px;
     background: transparent;
 }
@@ -474,7 +593,7 @@ body, html {
     position: relative;
     width: 100%;
     height: 100%;
-    transform-origin: 100% 100%; /* правый-нижний угол */
+    transform-origin: 100% 100%; /* РїСЂР°РІС‹Р№-РЅРёР¶РЅРёР№ СѓРіРѕР» */
 }
 .view-pre {
     opacity: 0;
