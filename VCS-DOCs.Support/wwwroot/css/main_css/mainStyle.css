@@ -1,4 +1,4 @@
-/*гланвый стиль веба*/
+/*РіР»Р°РЅРІС‹Р№ СЃС‚РёР»СЊ РІРµР±Р°*/
 body, html {
     margin: 0;
     padding: 0;
@@ -67,7 +67,7 @@ body, html {
     }
 
 
-/* Основное поле */
+/* РћСЃРЅРѕРІРЅРѕРµ РїРѕР»Рµ */
 .content-field {
     position: absolute;
     top: 7px;
@@ -79,7 +79,7 @@ body, html {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
-/* Заголовок программы */
+/* Р—Р°РіРѕР»РѕРІРѕРє РїСЂРѕРіСЂР°РјРјС‹ */
 .header-container {
     position: absolute;
     top: 24px;
@@ -196,10 +196,11 @@ body, html {
 .login-form {
     background-color: rgba(20, 20, 20, 1);
     border-radius: 6px;
-    padding: 20px;
+    padding: clamp(16px, 4vw, 24px);
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     color: white;
-    width: 300px;
+    width: clamp(260px, 80vw, 420px);
+    max-width: 92vw;
     position: absolute;
     top: 50%;
     left: 50%;
@@ -220,7 +221,7 @@ body, html {
     .login-form button {
         width: 100%;
         box-sizing: border-box;
-        padding: 10px;
+        padding: 10px 12px;
         margin: 5px 0;
         border: none;
         border-radius: 4px;
@@ -232,6 +233,38 @@ body, html {
         .login-form button:hover {
             background-color: #666;
         }
+
+@media (max-width: 992px) {
+    .login-form {
+        padding: clamp(14px, 5vw, 22px);
+    }
+
+    .login-form input,
+    .login-form button {
+        font-size: 16px;
+    }
+
+    .login-form button {
+        padding: 12px;
+    }
+}
+
+@media (max-width: 576px) {
+    .login-form {
+        width: clamp(240px, 90vw, 360px);
+        padding: clamp(12px, 6vw, 18px);
+    }
+
+    .login-form input,
+    .login-form button {
+        margin: 6px 0;
+        font-size: 15px;
+    }
+
+    .login-form button {
+        padding: 12px;
+    }
+}
 
 .logout-form {
     position: absolute;
@@ -314,22 +347,22 @@ body, html {
     transition: color 0.3s ease;
 }
 
-    /* Зеленый — подключен */
+    /* Р—РµР»РµРЅС‹Р№ вЂ” РїРѕРґРєР»СЋС‡РµРЅ */
     .main-user-status.online {
         color: #3bcd41;
     }
 
-    /* Серый — оффлайн */
+    /* РЎРµСЂС‹Р№ вЂ” РѕС„С„Р»Р°Р№РЅ */
     .main-user-status.offline {
         color: #9e9e9e;
     }
 
-    /* Желтый — переподключение */
+    /* Р–РµР»С‚С‹Р№ вЂ” РїРµСЂРµРїРѕРґРєР»СЋС‡РµРЅРёРµ */
     .main-user-status.connecting {
         color: #ff9800;
     }
 
-    /* Красный — ошибка */
+    /* РљСЂР°СЃРЅС‹Р№ вЂ” РѕС€РёР±РєР° */
     .main-user-status.error {
         color: #f44336;
     }
@@ -459,16 +492,16 @@ body, html {
 .contact-embed {
     position: absolute;
     inset: 0; /* = top:0; right:0; bottom:0; left:0 */
-    padding: 5px; /* внутренний отступ по желанию */
+    padding: 5px; /* РІРЅСѓС‚СЂРµРЅРЅРёР№ РѕС‚СЃС‚СѓРї РїРѕ Р¶РµР»Р°РЅРёСЋ */
     box-sizing: border-box;
 }
 
-/* сам фрейм заполняет контейнер */
+/* СЃР°Рј С„СЂРµР№Рј Р·Р°РїРѕР»РЅСЏРµС‚ РєРѕРЅС‚РµР№РЅРµСЂ */
 .contact-iframe {
     width: 100%;
     height: 100%;
     border: 0;
-    display: block; /* убирает нижний "inline"-зазор */
+    display: block; /* СѓР±РёСЂР°РµС‚ РЅРёР¶РЅРёР№ "inline"-Р·Р°Р·РѕСЂ */
     border-radius: 4px;
     background: transparent;
 }
@@ -477,7 +510,7 @@ body, html {
     position: relative;
     width: 100%;
     height: 100%;
-    transform-origin: 100% 100%; /* правый-нижний угол */
+    transform-origin: 100% 100%; /* РїСЂР°РІС‹Р№-РЅРёР¶РЅРёР№ СѓРіРѕР» */
 }
 
 .view-pre {
