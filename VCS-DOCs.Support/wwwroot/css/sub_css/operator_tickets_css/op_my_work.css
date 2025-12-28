@@ -1,0 +1,73 @@
+#op-my-work .filters-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+#op-my-work .filters-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+#op-my-work .inline-label {
+    color: #cfd7e3;
+    font-size: 14px;
+}
+
+#op-my-work .date-filter {
+    background: #0f1624;
+    color: #fff;
+    border: 1px solid #223357;
+    border-radius: 6px;
+    padding: 6px 10px;
+}
+
+#op-my-work .inline-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#opMyWorkTable td .reply-tags {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+}
+
+#opMyWorkTable .reply-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #16223a;
+    color: #cfd7e3;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.2;
+}
+
+#opMyWorkTable .reply-tag .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+#opMyWorkTable .reply-tag .dot.user {
+    background-color: #9fc3ff;
+}
+
+#opMyWorkTable .reply-tag .dot.op {
+    background-color: #ffc073;
+}
+
+#opMyWorkTable colgroup col:nth-child(1) { width: 110px; }
+#opMyWorkTable colgroup col:nth-child(3) { width: 200px; }
+#opMyWorkTable colgroup col:nth-child(4) { width: 170px; }
+#opMyWorkTable colgroup col:nth-child(5) { width: 170px; }
+#opMyWorkTable colgroup col:nth-child(6) { width: 140px; }
+#opMyWorkTable colgroup col:nth-child(7) { width: 140px; }

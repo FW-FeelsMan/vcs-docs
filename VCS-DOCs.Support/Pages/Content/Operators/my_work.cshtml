@@ -1,0 +1,65 @@
+@page "/Content/Operators/my_work"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Policy = "SupportOnly")]
+@model VCS_DOCs.Support.Pages.Content.Operators.MyWorkModel
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+@{
+    Layout = null;
+}
+
+<meta name="csrf-token" content="@Antiforgery.GetAndStoreTokens(HttpContext).RequestToken" />
+
+<link rel="stylesheet" href="~/css/sub_css/support_common_table.css" asp-append-version="true" />
+<link rel="stylesheet" href="~/css/sub_css/operator_tickets_css/op_my_work.css" asp-append-version="true" />
+
+<div id="op-my-work" class="profile_background accounts-page tickets-page">
+    <div class="button-container">
+        <h2>Мои закрытые/обработанные заявки</h2>
+
+        <div class="filters-row">
+            <div class="filters-left">
+                <label class="inline-label">Период</label>
+                <input id="op_mywork_from" type="date" class="date-filter" aria-label="Дата от" />
+                <input id="op_mywork_to" type="date" class="date-filter" aria-label="Дата до" />
+            </div>
+
+            <div class="inline-controls">
+                <input id="op_mywork_search" class="user_searchBox" type="text" placeholder="Поиск (№, тема, организация)" />
+                <button id="btn-op-mywork-search" class="button-sliding small">Найти</button>
+            </div>
+        </div>
+    </div>
+
+    <hr class="solid" />
+
+    <div class="content-scrollable">
+        <table class="file-table" id="opMyWorkTable">
+            <colgroup>
+                <col />
+                <col />
+                <col />
+                <col />
+                <col />
+                <col />
+                <col />
+            </colgroup>
+
+            <thead>
+                <tr>
+                    <th>№</th>
+                    <th>Тема</th>
+                    <th>Организация</th>
+                    <th>Закрыта</th>
+                    <th>Время решения</th>
+                    <th>Ответы</th>
+                    <th>Действие</th>
+                </tr>
+            </thead>
+
+            <tbody id="opMyWorkBody"></tbody>
+
+            <tfoot class="table-spacer">
+                <tr><td colspan="7"></td></tr>
+            </tfoot>
+        </table>
+    </div>
+</div>

@@ -53,6 +53,16 @@ async function ensureContentScripts(contentId, panelEl) {
         return;
     }
 
+    if (contentId === "my_work") {
+        await loadScriptOnce("/js/operator/my_work.js", "my-work-js");
+        try { await waitForElm("#op-my-work", 3000, panelEl); } catch { }
+        if (!panelEl.isConnected) return;
+        if (typeof window.initMyWork === "function") {
+            await window.initMyWork(panelEl);
+        }
+        return;
+    }
+
     if (contentId === "user_tickets") {
         await loadScriptOnce("/js/operator/all_open_userticket.js", "open-ticket-js");
         try { await waitForElm("#op-open-tickets", 3000, panelEl); } catch { }
@@ -172,12 +182,14 @@ async function ensureContentScripts(contentId, panelEl) {
         SupportAdmin: {
             user_tickets: "/Content/Operators/all_open_usertickets",
             closed_tickets: "/Content/Operators/all_close_userticket",
+            my_work: "/Content/Operators/my_work",
             accounts: "/Content/Operators/accounts",
             workload: "/Content/Operators/workload",
         },
         SupportAgent: {
             user_tickets: "/Content/Operators/all_open_usertickets",
             closed_tickets: "/Content/Operators/all_close_userticket",
+            my_work: "/Content/Operators/my_work",
             accounts: "/Content/Operators/accounts",
         },
         BaseUser: {
