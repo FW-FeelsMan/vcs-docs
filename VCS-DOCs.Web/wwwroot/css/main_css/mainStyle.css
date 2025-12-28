@@ -1,5 +1,6 @@
-/*гланвый стиль веба*/
-body, html {
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
     margin: 0;
     padding: 0;
     height: 100%;
@@ -67,7 +68,7 @@ body, html {
     }
 
 
-/* Основное поле */
+/* ГЋГ±Г­Г®ГўГ­Г®ГҐ ГЇГ®Г«ГҐ */
 .content-field {
     position: absolute;
     top: 7px;
@@ -79,7 +80,7 @@ body, html {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 }
 
-/* Заголовок программы */
+/* Г‡Г ГЈГ®Г«Г®ГўГ®ГЄ ГЇГ°Г®ГЈГ°Г Г¬Г¬Г» */
 .header-container {
     position: absolute;
     top: 15px;
@@ -314,22 +315,22 @@ body, html {
     transition: color 0.3s ease;
 }
 
-    /* Зеленый — подключен */
+    /* Г‡ГҐГ«ГҐГ­Г»Г© вЂ” ГЇГ®Г¤ГЄГ«ГѕГ·ГҐГ­ */
     .user-status.online {
         color: #4CAF50;
     }
 
-    /* Серый — оффлайн */
+    /* Г‘ГҐГ°Г»Г© вЂ” Г®ГґГґГ«Г Г©Г­ */
     .user-status.offline {
         color: #9e9e9e;
     }
 
-    /* Желтый — переподключение */
+    /* Г†ГҐГ«ГІГ»Г© вЂ” ГЇГҐГ°ГҐГЇГ®Г¤ГЄГ«ГѕГ·ГҐГ­ГЁГҐ */
     .user-status.connecting {
         color: #ff9800;
     }
 
-    /* Красный — ошибка */
+    /* ГЉГ°Г Г±Г­Г»Г© вЂ” Г®ГёГЁГЎГЄГ  */
     .user-status.error {
         color: #f44336;
     }
@@ -457,16 +458,16 @@ body, html {
 .contact-embed {
     position: absolute;
     inset: 0; /* = top:0; right:0; bottom:0; left:0 */
-    padding: 5px; /* внутренний отступ по желанию */
+    padding: 5px; /* ГўГ­ГіГІГ°ГҐГ­Г­ГЁГ© Г®ГІГ±ГІГіГЇ ГЇГ® Г¦ГҐГ«Г Г­ГЁГѕ */
     box-sizing: border-box;
 }
 
-/* сам фрейм заполняет контейнер */
+/* Г±Г Г¬ ГґГ°ГҐГ©Г¬ Г§Г ГЇГ®Г«Г­ГїГҐГІ ГЄГ®Г­ГІГҐГ©Г­ГҐГ° */
 .contact-iframe {
     width: 100%;
     height: 100%;
     border: 0;
-    display: block; /* убирает нижний "inline"-зазор */
+    display: block; /* ГіГЎГЁГ°Г ГҐГІ Г­ГЁГ¦Г­ГЁГ© "inline"-Г§Г Г§Г®Г° */
     border-radius: 4px;
     background: transparent;
 }
@@ -474,7 +475,7 @@ body, html {
     position: relative;
     width: 100%;
     height: 100%;
-    transform-origin: 100% 100%; /* правый-нижний угол */
+    transform-origin: 100% 100%; /* ГЇГ°Г ГўГ»Г©-Г­ГЁГ¦Г­ГЁГ© ГіГЈГ®Г« */
 }
 .view-pre {
     opacity: 0;
