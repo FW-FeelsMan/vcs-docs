@@ -1,4 +1,4 @@
-﻿/* profile_styles_fixed_v3.css — unified split-button typography & alignment, tighter label:value spacing */
+﻿/* profile_styles_fixed_v3.css — UPDATED only the layout pieces (copy-paste entire file if you want) */
 
 :root {
     --primary-color: #5a9bd5;
@@ -224,7 +224,6 @@ hr.solid {
     overflow: visible;
 }
 
-/* Base split-button */
 .split-button {
     border: 2px solid var(--primary-color);
     cursor: pointer;
@@ -356,6 +355,7 @@ hr.solid {
 }
 
 /* ---------- Profile & Layout ---------- */
+/* IMPORTANT: remove fixed heights; let it stretch inside view-panel */
 .profile_background {
     background-color: var(--background-dark);
     border-radius: 6px;
@@ -363,8 +363,12 @@ hr.solid {
     color: var(--text-dark);
     box-shadow: 0 4px 6px var(--shadow-dark);
     margin: 5px;
-    height: 93%;
+    /* was: height: 93%;  -> remove it */
+    min-height: 100%;
     animation: slideInRight 0.5s ease-out;
+    /* IMPORTANT for "container reaches bottom" */
+    display: flex;
+    flex-direction: column;
 }
 
     .profile_background h2 {
@@ -372,12 +376,22 @@ hr.solid {
         color: var(--text-dark);
         margin-bottom: 10px;
     }
+    .profile_background > hr.solid {
+        display: block;
+        width: 100%;
+        border: 0;
+        border-top: 2px solid #5a9bd5;
+        margin: 10px 0 14px;
+        height: 0;
+    }
 
+/* IMPORTANT: remove fixed height; make it fill remaining height with bottom gap */
 .profile-container {
     display: flex;
     gap: 20px;
-    margin-top: 20px;
-    height: 87%;
+    flex: 1 1 auto;
+    min-height: 0;
+
     animation: fadeInScale 0.5s ease-out;
 }
 
@@ -482,6 +496,7 @@ hr.solid {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    min-height: 0; /* important for inner scroll */
 }
 
 .content-section {
@@ -495,6 +510,7 @@ hr.solid {
         flex-direction: column;
         flex: 1 1 auto;
         overflow: hidden;
+        min-height: 0;
     }
 
 .content-scrollable {
@@ -503,6 +519,7 @@ hr.solid {
     overflow-x: hidden;
     max-height: 100%;
     padding-right: 10px;
+    min-height: 0;
 }
 
 .info-card {
@@ -581,6 +598,7 @@ hr.solid {
     flex: 1 1 auto;
     overflow-y: auto;
     padding-right: 10px;
+    min-height: 0;
 }
 
 .tasks-grid {
@@ -941,7 +959,8 @@ hr.solid {
         transition: background 0.16s, color 0.16s;
     }
 
-        .action-dropdown-menu .dropdown-item:hover, .action-dropdown-menu .dropdown-item:focus {
+        .action-dropdown-menu .dropdown-item:hover,
+        .action-dropdown-menu .dropdown-item:focus {
             background: var(--primary-color);
             color: #fff;
             outline: none;
@@ -1175,3 +1194,146 @@ th.desc::after {
         font-size: 14px;
     }
 
+/* === Personal data form-look (scoped) === */
+#personal-data .personal-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+#personal-data .info-card {
+    background: #ffffff;
+    border: 1px solid #e6e8ec;
+    border-radius: 14px;
+    padding: 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+    #personal-data .info-card:hover {
+        transform: none;
+        box-shadow: 0 10px 26px rgba(0,0,0,0.09);
+    }
+
+#personal-data .field-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b7280;
+    margin: 2px 2px 8px;
+    letter-spacing: 0.2px;
+}
+
+#personal-data .field-control {
+    position: relative;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    border-radius: 12px;
+    background: #f7f7f7;
+    border: 1px solid #e5e7eb;
+    padding: 10px 44px 10px 12px;
+    box-sizing: border-box;
+}
+
+    #personal-data .field-control p {
+        margin: 0;
+        color: var(--text-dark);
+        font-weight: 700;
+        line-height: 1.25;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        width: 100%;
+    }
+
+    #personal-data .field-control input.edit-input,
+    #personal-data .field-control input.date-input {
+        width: 100%;
+        border: 0;
+        outline: none;
+        background: transparent;
+        padding: 0;
+        margin: 0;
+        color: var(--text-dark);
+        font-weight: 700;
+        font-size: 14px;
+    }
+
+#personal-data .info-card .edit-button {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    cursor: pointer;
+}
+
+    #personal-data .info-card .edit-button img {
+        width: 16px;
+        height: 16px;
+    }
+
+    #personal-data .info-card .edit-button:hover {
+        background: rgba(90, 155, 213, 0.10);
+        border-color: rgba(90, 155, 213, 0.35);
+    }
+
+#personal-data .field-control.readonly {
+    padding-right: 12px;
+    background: #fafafa;
+}
+
+#personal-data .info-card.danger-card .danger-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 2px;
+}
+
+/* === Responsive === */
+@media (max-width: 980px) {
+    .profile_background {
+        min-height: 0;
+    }
+
+    .profile-container {
+        flex-direction: column;
+        flex: 0 0 auto;
+        margin-bottom: 0;
+    }
+
+    .profile-sidebar {
+        width: 100%;
+    }
+
+    .sidebar-menu {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 6px;
+    }
+
+        .sidebar-menu li {
+            flex: 0 0 auto;
+        }
+
+    #personal-data .personal-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 520px) {
+    #personal-data .field-control p {
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+    }
+}

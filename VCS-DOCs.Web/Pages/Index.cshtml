@@ -12,58 +12,79 @@
 <div id="loader" class="loader hidden"></div>
 <div class="background"></div>
 
-<div class="header-container">
-    <div class="header-title">VCS-DOCs</div>
-    <p class="menu_divider">Version<br>Control<br>System</p>
-</div>
+<input type="checkbox" id="sidebarToggle" class="sidebar-toggle" checked />
 
-<div class="sidebar">
-    <div class="sidebar-button" id="button1" data-content="project_page" data-style="projectsStyle">
-        <img class="button-icon" src="~/images/projectsIcon.png" alt="Icon" />
-        <span class="button-text">Проекты</span>
-        <span class="button-number">1</span>
-    </div>
+<aside class="sidebar" aria-label="Основное меню">
+    <div class="sidebar-header">
+        <div class="sidebar-brand">
+            <div class="header-title">VCS-DOCs</div>
+            <p class="menu_divider">Version<br>Control<br>System</p>
 
-    <div class="sidebar-button" id="button2" data-content="profile_page" data-style="profileStyle">
-        <img class="button-icon" src="~/images/personalIcon.png" alt="Icon" />
-        <span class="button-text">Профиль</span>
-        <span class="button-number">2</span>
-    </div>
+            <label class="sidebar-toggle-btn" for="sidebarToggle"
+                   title="Свернуть/развернуть меню"
+                   aria-label="Свернуть/развернуть меню"
+                   tabindex="0">
+                <svg class="toggle-icon toggle-open" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M3 6a1 1 0 0 1 1-1h16a1 1 0 1 1 0 2H4A1 1 0 0 1 3 6zm0 6a1 1 0 0 1 1-1h16a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1zm1 5a1 1 0 1 0 0 2h16a1 1 0 1 0 0-2H4z"></path>
+                </svg>
 
-    <div class="sidebar-button" id="button3" data-content="infographics_page" data-style="infographicsStyle">
-        <img class="button-icon" src="~/images/infographicIcon.png" alt="Icon" />
-        <span class="button-text">Инфографика</span>
-        <span class="button-number">3</span>
-    </div>
-
-    <div class="sidebar-button" id="button4" data-content="contact_page" data-style="contactStyle">
-        <img class="button-icon" src="~/images/helpIcon.png" alt="Icon" />
-        <span class="button-text">Обратная связь</span>
-        <span class="button-number">4</span>
-    </div>
-
-    <div class="sidebar-button" id="button5" data-content="extra_page" data-style="extraStyle">
-        <img class="button-icon" src="~/images/extra.png" alt="Icon" />
-        <span class="button-text">Дополнения</span>
-        <span class="button-number">5</span>
-    </div>
-
-    <div class="user-block">
-        <img id="sidebarAvatar" class="sidebar-avatar-img" src="@Model.AvatarUrl" alt="Avatar" />
-
-        <div class="user-info">
-            <div class="user-name">@Model.CurrentUser?.UserName</div>
-            <div class="user-status">Проверка статуса...</div>
+                <svg class="toggle-icon toggle-close" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M18.707 6.707a1 1 0 0 0-1.414-1.414L12 10.586 6.707 5.293a1 1 0 0 0-1.414 1.414L10.586 12l-5.293 5.293a1 1 0 1 0 1.414 1.414L12 13.414l5.293 5.293a1 1 0 0 0 1.414-1.414L13.414 12z"></path>
+                </svg>
+            </label>
         </div>
     </div>
 
-    <form method="post" asp-page-handler="Logout">
-        @Html.AntiForgeryToken()
-        <button type="submit" class="logout-button">
-            <img class="logout-icon" src="~/images/logout_icon.png" alt="Выход" />
-        </button>
-    </form>
-</div>
+    <nav class="sidebar-nav">
+        <div class="sidebar-button" id="button1" data-content="project_page" data-style="projectsStyle" title="Проекты">
+            <img class="button-icon" src="~/images/projectsIcon.png" alt="" />
+            <span class="button-text">Проекты</span>
+            <span class="button-number">1</span>
+        </div>
+
+        <div class="sidebar-button" id="button2" data-content="profile_page" data-style="profileStyle" title="Профиль">
+            <img class="button-icon" src="~/images/personalIcon.png" alt="" />
+            <span class="button-text">Профиль</span>
+            <span class="button-number">2</span>
+        </div>
+
+        <div class="sidebar-button" id="button3" data-content="infographics_page" data-style="infographicsStyle" title="Инфографика">
+            <img class="button-icon" src="~/images/infographicIcon.png" alt="" />
+            <span class="button-text">Инфографика</span>
+            <span class="button-number">3</span>
+        </div>
+
+        <div class="sidebar-button" id="button4" data-content="contact_page" data-style="contactStyle" title="Обратная связь">
+            <img class="button-icon" src="~/images/helpIcon.png" alt="" />
+            <span class="button-text">Обратная связь</span>
+            <span class="button-number">4</span>
+        </div>
+
+        <div class="sidebar-button" id="button5" data-content="extra_page" data-style="extraStyle" title="Дополнения">
+            <img class="button-icon" src="~/images/extra.png" alt="" />
+            <span class="button-text">Дополнения</span>
+            <span class="button-number">5</span>
+        </div>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="user-block" title="@Model.CurrentUser?.UserName">
+            <img id="sidebarAvatar" class="sidebar-avatar-img" src="@Model.AvatarUrl" alt="Avatar" />
+            <div class="user-info">
+                <div class="user-name">@Model.CurrentUser?.UserName</div>
+                <div class="user-status">Проверка статуса...</div>
+            </div>
+            <form method="post" asp-page-handler="Logout" class="logout-form-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="logout-button" title="Выход" aria-label="Выход">
+                    <img class="logout-icon" src="~/images/logout_icon.png" alt="Выход" />
+                </button>
+            </form>
+        </div>
+
+        
+    </div>
+</aside>
 
 <div id="content" class="content-field">
     @await Html.PartialAsync("_ContentProjects")

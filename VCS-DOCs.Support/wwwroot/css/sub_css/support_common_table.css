@@ -1,4 +1,4 @@
-﻿/* wwwroot/css/sub_css/support_common_table.css
+﻿/* wwwroot/css/sub_css/support_common_table.css VCS-DOCs.Support/wwwroot/css/sub_css/support_common_table.css
    Common (safe) UI shell for Support pages:
    - card container (.accounts-page) used across operator/user pages
    - filters row (.filters-row/.filters-left/.inline-controls)
@@ -142,6 +142,61 @@ hr.solid {
     }
 
 /* ===================== Responsive (shared) ===================== */
+/* ============================================================
+   Крупные мониторы операторов (2K / 4K, ширина окна ≥ 2560px)
+   Делаем текст и элементы крупнее и чуть более «воздушными».
+   ============================================================ */
+
+@media (min-width: 2560px) {
+
+    /* Базовый размер текста на всех карточках саппорта */
+    .accounts-page,
+    .tickets-page {
+        font-size: 1.05rem; /* ~17px при базовых 16px */
+    }
+
+        /* Заголовки панелей ("Открытые заявки", "Закрытые заявки", ...) */
+        .accounts-page h2,
+        .tickets-page h2 {
+            font-size: clamp(1.7rem, 1.2vw, 2rem);
+            /* чуть больше, но с ограничением сверху */
+        }
+
+        /* Таблицы – основные рабочие элементы */
+        .accounts-page .file-table th,
+        .accounts-page .file-table td,
+        .tickets-page .file-table th,
+        .tickets-page .file-table td {
+            padding: 14px 20px;
+            font-size: 1.05rem; /* чтобы строки читались комфортно */
+        }
+
+        /* Инпут поиска и фильтры сверху */
+        .accounts-page .user_searchBox,
+        .tickets-page .user_searchBox {
+            max-width: 360px;
+            font-size: 1.05rem;
+        }
+
+        .accounts-page .filters-row,
+        .tickets-page .filters-row {
+            gap: 16px;
+        }
+
+        /* Кнопки действий (Найти, Открыть, и т.п.) */
+        .accounts-page .button-sliding,
+        .tickets-page .button-sliding {
+            font-size: 1rem;
+            padding: 10px 20px;
+        }
+
+        /* Бэйджи статуса в таблицах */
+        .accounts-page .status-badge,
+        .tickets-page .status-badge {
+            font-size: 0.95rem;
+            padding: 4px 10px;
+        }
+}
 
 @media (max-width: 1100px) {
     .accounts-page .button-container {
@@ -165,4 +220,30 @@ hr.solid {
         flex-wrap: wrap;
         justify-content: flex-start;
     }
+}
+
+/* Крупнее таблицы на больших экранах (от 1920px по ширине) */
+@media (min-width: 1920px) {
+    .tickets-page .file-table th,
+    .tickets-page .file-table td,
+    .accounts-page .file-table th,
+    .accounts-page .file-table td {
+        font-size: 15px;
+        padding: 14px 12px;
+    }
+
+    .tickets-toolbar,
+    .accounts-toolbar {
+        gap: 12px;
+    }
+
+        .tickets-toolbar button,
+        .tickets-toolbar select,
+        .tickets-toolbar input,
+        .accounts-toolbar button,
+        .accounts-toolbar select,
+        .accounts-toolbar input {
+            font-size: 14px;
+            min-height: 38px;
+        }
 }

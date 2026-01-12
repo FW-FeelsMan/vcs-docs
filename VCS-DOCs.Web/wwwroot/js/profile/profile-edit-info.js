@@ -160,6 +160,8 @@
     }    
 
     document.addEventListener("click", (e) => {
+        if (e.target.closest("#deleteAccountButton")) return;
+
         const btn = e.target.closest(".info-card .edit-button");
         if (btn) {
             const action = (btn.getAttribute("data-action") || "").toLowerCase();
@@ -171,9 +173,9 @@
             return;
         }
 
-        const delBtn = e.target.closest(".info-card .button-sliding");
-        if (delBtn && (delBtn.textContent || "").includes("Удалить")) {
-            tryDeleteAccount().catch((err) => alert(err?.message || "Ошибка"));
-        }
+        //const delBtn = e.target.closest(".info-card .button-sliding");
+        //if (delBtn && (delBtn.textContent || "").includes("Удалить")) {
+        //    tryDeleteAccount().catch((err) => alert(err?.message || "Ошибка"));
+        //}
     });
 })();

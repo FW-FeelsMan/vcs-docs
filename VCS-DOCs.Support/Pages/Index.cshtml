@@ -12,116 +12,136 @@
 <meta name="csrf-token" content="@tokens.RequestToken" />
 
 @section Styles {
-    <!-- делаем этот css «постоянным» как в вебе -->
     <link id="supportMain" data-persistent="true" rel="stylesheet" href="~/css/main_css/mainStyle.css" asp-append-version="true" />
 }
 
 <div id="loader" class="loader hidden"></div>
 <div class="background"></div>
 
-<!-- Заголовок -->
-<div class="header-container">
-    <div class="header-title">VCS-DOCs</div>
-    <p class="menu_divider">SERVICE<br />DESK</p>
-</div>
+<input type="checkbox" id="sidebarToggle" class="sidebar-toggle" checked />
 
-<!-- Левое меню -->
-<div class="sidebar">
-    @* === SupportAdmin === *@
-    @if (User.IsInRole(Roles.SupportAdmin))
-    {
-        <div class="sidebar-button selected" data-content="user_tickets" data-style="supportMain" id="btn-tickets">
-            <img src="~/images/helpIcon.png" alt="Icon" class="button-icon" />
-            <span class="button-text">Заявки пользователей</span>
-            <span class="button-number">1</span>
-        </div>
-        <div class="sidebar-button" data-content="closed_tickets" data-style="supportMain" id="btn-closed">
-            <img src="~/images/projectsIcon.png" alt="Icon" class="button-icon" />
-            <span class="button-text">Закрытые заявки</span>
-            <span class="button-number">2</span>
-        </div>
-        <div class="sidebar-button" data-content="my_work" data-style="supportMain" id="btn-mywork">
-            <img src="~/images/projectsIcon.png" alt="Icon" class="button-icon" />
-            <span class="button-text">Мной закрытые заявки</span>
-            <span class="button-number">3</span>
-        </div>
-        <div class="sidebar-button" data-content="accounts" data-style="supportMain" id="btn-accounts">
-            <img src="~/images/extra.png" alt="Icon" class="button-icon" />
-            <span class="button-text">Учетные записи</span>
-            <span class="button-number">4</span>
-        </div>
-        <div class="sidebar-button" data-content="workload" data-style="supportMain" id="btn-workload">
-            <img src="~/images/infographicIcon.png" alt="Icon" class="button-icon" />
-            <span class="button-text">Нагрузка</span>
-            <span class="button-number">5</span>
-        </div>
-    }
-    @* === SupportAgent === *@
-    else if (User.IsInRole(Roles.SupportAgent))
-    {
-        <div class="sidebar-button selected" data-content="user_tickets" data-style="supportMain" id="btn-tickets">
-            <img src="~/images/helpIcon.png" alt="Icon" class="button-icon" />
-            <span class="button-text">Заявки пользователей</span>
-            <span class="button-number">1</span>
-        </div>
-        <div class="sidebar-button" data-content="closed_tickets" data-style="supportMain" id="btn-closed">
-            <img src="~/images/projectsIcon.png" alt="Icon" class="button-icon" />
-            <span class="button-text">Закрытые заявки</span>
-            <span class="button-number">2</span>
-        </div>
-        <div class="sidebar-button" data-content="my_work" data-style="supportMain" id="btn-mywork">
-            <img src="~/images/projectsIcon.png" alt="Icon" class="button-icon" />
-            <span class="button-text">Завершенные заявки</span>
-            <span class="button-number">3</span>
-        </div>
-        <div class="sidebar-button" data-content="accounts" data-style="supportMain" id="btn-accounts">
-            <img src="~/images/extra.png" alt="Icon" class="button-icon" />
-            <span class="button-text">Учетные записи</span>
-            <span class="button-number">4</span>
-        </div>
-    }
-    @* === fallback (BaseUser / гость), если нужно оставить доступ === *@
-    else
-    {
-        <div class="sidebar-button selected" data-content="open_tickets" data-style="supportMain" id="btn-open">
-            <img src="~/images/helpIcon.png" alt="Icon" class="button-icon" />
-            <span class="button-text">Открытые заявки</span>
-            <span class="button-number">1</span>
-        </div>
-        <div class="sidebar-button" data-content="closed_tickets" data-style="supportMain" id="btn-closed">
-            <img src="~/images/projectsIcon.png" alt="Icon" class="button-icon" />
-            <span class="button-text">Закрытые заявки</span>
-            <span class="button-number">2</span>
-        </div>
-        <div class="sidebar-button" data-content="faq" data-style="supportMain" id="btn-faq">
-            <img src="~/images/infographicIcon.png" alt="Icon" class="button-icon" />
-            <span class="button-text">FAQ по системе</span>
-            <span class="button-number">3</span>
-        </div>
-    }
+<aside class="sidebar" aria-label="Основное меню">
+    <div class="sidebar-header">
+        <div class="sidebar-brand">
+            <div class="header-title">VCS-DOCs</div>
+            <p class="menu_divider">SERVICE<br />DESK</p>
 
-    <div class="user-block">
-        <img id="sidebarAvatar" src="@Model.AvatarUrl" alt="Avatar" class="sidebar-avatar-img" />
-        <div class="user-info">
-            <div class="user-name">@((Model.CurrentUser?.UserName ?? User?.Identity?.Name) ?? "Пользователь")</div>
-            <div class="main-user-status connecting">Подключение…</div>
+            <label class="sidebar-toggle-btn" for="sidebarToggle"
+                   title="Свернуть/развернуть меню"
+                   aria-label="Свернуть/развернуть меню"
+                   tabindex="0">
+                <svg class="toggle-icon toggle-open" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M3 6a1 1 0 0 1 1-1h16a1 1 0 1 1 0 2H4A1 1 0 0 1 3 6zm0 6a1 1 0 0 1 1-1h16a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1zm1 5a1 1 0 1 0 0 2h16a1 1 0 1 0 0-2H4z"></path>
+                </svg>
+
+                <svg class="toggle-icon toggle-close" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M18.707 6.707a1 1 0 0 0-1.414-1.414L12 10.586 6.707 5.293a1 1 0 0 0-1.414 1.414L10.586 12l-5.293 5.293a1 1 0 1 0 1.414 1.414L12 13.414l5.293 5.293a1 1 0 0 0 1.414-1.414L13.414 12z"></path>
+                </svg>
+            </label>
         </div>
     </div>
 
-    <form method="post" asp-page-handler="Logout">
-        @Html.AntiForgeryToken()
-        <button type="submit" class="logout-button" title="Выйти">
-            <img src="~/images/logout_icon.png" alt="Выход" class="logout-icon" />
-        </button>
-    </form>
-</div>
+    <nav class="sidebar-nav">
+        @if (User.IsInRole(Roles.SupportAdmin))
+        {
+            <div class="sidebar-button selected" data-content="user_tickets" data-style="supportMain" id="btn-tickets" title="Заявки пользователей">
+                <img src="~/images/helpIcon.png" alt="" class="button-icon" />
+                <span class="button-text">Заявки пользователей</span>
+                <span class="button-number">1</span>
+            </div>
 
-<!-- Контент -->
-<div id="content" class="content-field">
-    <!-- JS сам подменит содержимое панелью с анимацией -->
-</div>
+            <div class="sidebar-button" data-content="closed_tickets" data-style="supportMain" id="btn-closed" title="Закрытые заявки">
+                <img src="~/images/projectsIcon.png" alt="" class="button-icon" />
+                <span class="button-text">Закрытые заявки</span>
+                <span class="button-number">2</span>
+            </div>
 
-<!-- контекстное меню (пока без JS) -->
+            <div class="sidebar-button" data-content="my_work" data-style="supportMain" id="btn-mywork" title="Мной закрытые заявки">
+                <img src="~/images/projectsIcon.png" alt="" class="button-icon" />
+                <span class="button-text">Мной закрытые заявки</span>
+                <span class="button-number">3</span>
+            </div>
+
+            <div class="sidebar-button" data-content="accounts" data-style="supportMain" id="btn-accounts" title="Учетные записи">
+                <img src="~/images/extra.png" alt="" class="button-icon" />
+                <span class="button-text">Учетные записи</span>
+                <span class="button-number">4</span>
+            </div>
+
+            <div class="sidebar-button" data-content="workload" data-style="supportMain" id="btn-workload" title="Нагрузка">
+                <img src="~/images/infographicIcon.png" alt="" class="button-icon" />
+                <span class="button-text">Нагрузка</span>
+                <span class="button-number">5</span>
+            </div>
+        }
+        else if (User.IsInRole(Roles.SupportAgent))
+        {
+            <div class="sidebar-button selected" data-content="user_tickets" data-style="supportMain" id="btn-tickets" title="Заявки пользователей">
+                <img src="~/images/helpIcon.png" alt="" class="button-icon" />
+                <span class="button-text">Заявки пользователей</span>
+                <span class="button-number">1</span>
+            </div>
+
+            <div class="sidebar-button" data-content="closed_tickets" data-style="supportMain" id="btn-closed" title="Закрытые заявки">
+                <img src="~/images/projectsIcon.png" alt="" class="button-icon" />
+                <span class="button-text">Закрытые заявки</span>
+                <span class="button-number">2</span>
+            </div>
+
+            <div class="sidebar-button" data-content="my_work" data-style="supportMain" id="btn-mywork" title="Завершенные заявки">
+                <img src="~/images/projectsIcon.png" alt="" class="button-icon" />
+                <span class="button-text">Завершенные заявки</span>
+                <span class="button-number">3</span>
+            </div>
+
+            <div class="sidebar-button" data-content="accounts" data-style="supportMain" id="btn-accounts" title="Учетные записи">
+                <img src="~/images/extra.png" alt="" class="button-icon" />
+                <span class="button-text">Учетные записи</span>
+                <span class="button-number">4</span>
+            </div>
+        }
+        else
+        {
+            <div class="sidebar-button selected" data-content="open_tickets" data-style="supportMain" id="btn-open" title="Открытые заявки">
+                <img src="~/images/helpIcon.png" alt="" class="button-icon" />
+                <span class="button-text">Открытые заявки</span>
+                <span class="button-number">1</span>
+            </div>
+
+            <div class="sidebar-button" data-content="closed_tickets" data-style="supportMain" id="btn-closed" title="Закрытые заявки">
+                <img src="~/images/projectsIcon.png" alt="" class="button-icon" />
+                <span class="button-text">Закрытые заявки</span>
+                <span class="button-number">2</span>
+            </div>
+
+            <div class="sidebar-button" data-content="faq" data-style="supportMain" id="btn-faq" title="FAQ по системе">
+                <img src="~/images/infographicIcon.png" alt="" class="button-icon" />
+                <span class="button-text">FAQ по системе</span>
+                <span class="button-number">3</span>
+            </div>
+        }
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="user-block" title="@((Model.CurrentUser?.UserName ?? User?.Identity?.Name) ?? "Пользователь")">
+            <img id="sidebarAvatar" src="@Model.AvatarUrl" alt="Avatar" class="sidebar-avatar-img" />
+            <div class="user-info">
+                <div class="user-name">@((Model.CurrentUser?.UserName ?? User?.Identity?.Name) ?? "Пользователь")</div>
+                <div class="main-user-status connecting">Подключение…</div>
+            </div>
+        </div>
+
+        <form method="post" asp-page-handler="Logout" class="logout-form-inline">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="logout-button" title="Выйти" aria-label="Выйти">
+                <img src="~/images/logout_icon.png" alt="Выход" class="logout-icon" />
+            </button>
+        </form>
+    </div>
+</aside>
+
+<div id="content" class="content-field"></div>
+
 <div class="context-menu" id="ctx-menu">
     <ul>
         <li>Открыть</li>
@@ -131,6 +151,7 @@
         <li>Обновить</li>
     </ul>
 </div>
+
 @section Scripts {
     <script src="~/js/support/support-sidebar.js" asp-append-version="true" defer></script>
 }

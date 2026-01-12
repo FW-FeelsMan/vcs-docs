@@ -1,6 +1,5 @@
 ﻿// wwwroot/js/profile/profile-delete-account.js
 (() => {
-    // guard для SPA/динамической подгрузки
     if (window.__profileDeleteAccountInit) return;
     window.__profileDeleteAccountInit = true;
 
@@ -9,8 +8,6 @@
 
     // === utils ===
     const getCsrfToken = () => {
-        // ВАЖНО: ты убрал meta csrf-token (Antiforgery в .cshtml не доступен),
-        // поэтому берем токен из скрытого input, который рендерит @Html.AntiForgeryToken()
         const el = document.querySelector('input[name="__RequestVerificationToken"]');
         return el?.value || "";
     };
@@ -60,7 +57,6 @@
 
         document.body.appendChild(modal);
 
-        // закрытие по клику вне контента
         modal.addEventListener("click", (e) => {
             if (e.target === modal) hideDeleteModal();
         });
@@ -86,7 +82,6 @@
         if (pass) pass.value = "";
 
         modal.style.display = "block";
-        // фокус чуть позже, чтобы модалка успела отрисоваться
         setTimeout(() => pass?.focus(), 0);
     }
 
@@ -101,7 +96,7 @@
         const err = modal?.querySelector("#delete-account-error");
         if (!err) return;
 
-        err.className = "upload-busy-message"; // если у тебя этот класс красивый — переиспользуем
+        err.className = "upload-busy-message";
         err.textContent = message;
         err.style.display = "block";
     }
@@ -125,7 +120,7 @@
         if (!token) throw new Error("Ошибка безопасности: нет CSRF токена. Перезагрузите страницу.");
 
         const body = new URLSearchParams();
-        body.set("Password", password || "");   // ВАЖНО: имя поля = Password (как в DeleteAccountRequest)
+        body.set("Password", password || "");  
 
         const res = await fetch(ENDPOINT, {
             method: "POST",
@@ -133,7 +128,7 @@
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
                 "RequestVerificationToken": token,
-                "X-CSRF-TOKEN": token,             // на всякий случай, у тебя местами используется
+                "X-CSRF-TOKEN": token,           
             },
             body: body.toString(),
         });
@@ -151,7 +146,6 @@
 
     // === wiring ===
     function isDeleteButton(el) {
-        // Рекомендуется в верстке: <button id="deleteAccountButton" ...>
         return !!el?.closest?.("#deleteAccountButton");
     }
 
@@ -160,11 +154,9 @@
 
         if (!isDeleteButton(target)) return;
 
-        // показываем модалку подтверждения
         showDeleteModal();
     });
 
-    // обработчики кнопок модалки (делаем через делегирование, чтобы не зависеть от момента создания)
     document.addEventListener("click", async (e) => {
         const modal = document.getElementById("delete-account-modal");
         if (!modal || modal.style.display === "none") return;
@@ -182,7 +174,6 @@
         const pass = modal.querySelector("#delete-account-password");
         const password = pass?.value || "";
 
-        // базовая проверка, чтобы не жать "удалить" пустым
         if (!password.trim()) {
             setError("Введите пароль для подтверждения.");
             pass?.focus();
@@ -195,7 +186,6 @@
             hideDeleteModal();
 
             alert("Аккаунт удалён.");
-            // после SignOut хорошо бы уйти на логин
             location.href = "/Login";
         } catch (err) {
             setError(err?.message || "Ошибка");

@@ -179,7 +179,7 @@ async function loadContent(contentId) {
 async function loadProfileScripts() {
     const scripts = [
         '/js/profile/profile.js',
-        '/js/profile/profile-edit-info.js',
+        '/js/profile/profile-edit-info.js?v=20260112a',
         '/js/profile/profile-delete-account.js',
         '/js/profile/storage/storage-sortable.js',
         '/js/profile/storage/upload-file.js?v=20250926a',
