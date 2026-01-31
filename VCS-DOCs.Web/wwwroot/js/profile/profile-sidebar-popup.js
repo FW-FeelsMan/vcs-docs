@@ -182,7 +182,7 @@ window.profileSidebarPopup = {
     connection.on("UploadAssemblyComplete", ({ fileName }) => {
         const key = fileName.toLowerCase().replace(/\W+/g, '-');
         const fileId = `upload-${key}`;
-        console.log(`[SignalR:userStorageHub] 🧩 Завершена сборка файла ${fileName}, обновляем UI`);
+       // console.log(`[SignalR:userStorageHub] 🧩 Завершена сборка файла ${fileName}, обновляем UI`);
 
         if (typeof window.completeFileUpload === 'function') {
             window.completeFileUpload(fileId);
@@ -220,10 +220,10 @@ window.profileSidebarPopup = {
 
     connection.start()
         .then(() => {
-            console.log("[SignalR:userStorageHub] ✅ Подключение установлено (popup)");
+           // console.log("[SignalR:userStorageHub] ✅ Подключение установлено (popup)");
             window.userStorageConnection = connection;
         })
         .catch(err => {
-            console.error("[SignalR:userStorageHub] Ошибка подключения:", err);
+           // console.error("[SignalR:userStorageHub] Ошибка подключения:", err);
         });
 })();

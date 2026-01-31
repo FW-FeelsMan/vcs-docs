@@ -28,7 +28,7 @@
             .build();
 
         connection.on("UserStatusUpdated", (userId, isOnline) => {
-            console.log(`Статус пользователя ${userId}: ${isOnline ? 'онлайн' : 'оффлайн'}`);
+          //  console.log(`Статус пользователя ${userId}: ${isOnline ? 'онлайн' : 'оффлайн'}`);
         });
 
         connection.on("ForceLogout", () => {
@@ -49,13 +49,13 @@
         });
 
         connection.onreconnected(() => {
-            console.log("[SignalR] Переподключение завершено");
+           // console.log("[SignalR] Переподключение завершено");
             setUserStatus("В сети", "online");
         });
 
         connection.start()
             .then(() => {
-                console.log("[SignalR] Подключено");
+              //  console.log("[SignalR] Подключено");
                 setUserStatus("В сети", "online");
             })
             .catch(err => {

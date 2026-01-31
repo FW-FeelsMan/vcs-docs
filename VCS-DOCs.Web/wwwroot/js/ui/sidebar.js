@@ -1,4 +1,5 @@
-﻿// sidebar.js
+﻿// wwwroot/js/sidebar.js
+
 const contentCache = new Map();
 let currentContentId = null;
 let clickLock = false;
@@ -7,25 +8,35 @@ let cleanupSupportPrefill = null;
 
 document.addEventListener('DOMContentLoaded', () => {
     const firstButton = document.querySelector('.sidebar-button');
+    if (!firstButton) {
+        console.warn('sidebar: .sidebar-button не найден');
+        return;
+    }
 
     document.querySelectorAll('.sidebar-button').forEach(button => {
         button.addEventListener('click', () => window.selectButton(button));
     });
 
-    if (firstButton) window.selectButton(firstButton);
+    window.selectButton(firstButton);
 });
 
 window.selectButton = function (button) {
+    if (!button) {
+        console.warn('sidebar: selectButton получил пустую кнопку');
+        return;
+    }
+
     if (clickLock) return;
     clickLock = true;
     setTimeout(() => (clickLock = false), 300);
 
     const contentId = button.getAttribute('data-content');
     const styleId = button.getAttribute('data-style');
+
     if (currentContentId === contentId) return;
 
     if (cleanupSupportPrefill) {
-        try { cleanupSupportPrefill(); } catch { }
+        try { cleanupSupportPrefill(); } catch { /* ignore */ }
         cleanupSupportPrefill = null;
     }
 
@@ -34,7 +45,7 @@ window.selectButton = function (button) {
         if (contentElement) {
             contentCache.set('extra_page', {
                 html: contentElement.innerHTML,
-                state: getPageState('extra_page'),
+                state: getPageState('extra_page')
             });
         }
     }
@@ -63,8 +74,11 @@ function setupSupportPrefill(iframe, startAnim) {
     let fallbackId = null;
 
     const getTargetOrigin = () => {
-        try { return new URL(iframe.src, location.href).origin; }
-        catch { return null; }
+        try {
+            return new URL(iframe.src, location.href).origin;
+        } catch {
+            return null;
+        }
     };
 
     const postPrefill = () => {
@@ -102,7 +116,10 @@ function setupSupportPrefill(iframe, startAnim) {
         if (disposed) return;
         startAnim();
         postPrefill();
-        if (fallbackId) { clearTimeout(fallbackId); fallbackId = null; }
+        if (fallbackId) {
+            clearTimeout(fallbackId);
+            fallbackId = null;
+        }
     };
 
     window.addEventListener('message', onMsg);
@@ -117,14 +134,20 @@ function setupSupportPrefill(iframe, startAnim) {
     return () => {
         disposed = true;
         window.removeEventListener('message', onMsg);
-        try { iframe.removeEventListener('load', onLoad); } catch { }
-        if (fallbackId) { clearTimeout(fallbackId); fallbackId = null; }
+        try { iframe.removeEventListener('load', onLoad); } catch { /* ignore */ }
+        if (fallbackId) {
+            clearTimeout(fallbackId);
+            fallbackId = null;
+        }
     };
 }
 
 async function loadContent(contentId) {
     const contentContainer = document.getElementById('content');
-    if (!contentContainer) return;
+    if (!contentContainer) {
+        console.warn('sidebar: #content не найден');
+        return;
+    }
 
     try {
         contentContainer.innerHTML = '';
@@ -133,8 +156,12 @@ async function loadContent(contentId) {
             ? `/Content/${contentId}?ts=${Date.now()}`
             : `/Content/${contentId}`;
 
-        const response = await fetch(url, { credentials: 'same-origin', cache: 'no-store' });
+        const response = await fetch(url, {
+            credentials: 'same-origin',
+            cache: 'no-store'
+        });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
         const html = await response.text();
 
         const panel = document.createElement('div');
@@ -167,10 +194,12 @@ async function loadContent(contentId) {
 
         if (contentId === 'profile_page') {
             await loadProfileScripts();
-            if (typeof window.initUploadFile === 'function') window.initUploadFile();
+            if (typeof window.initUploadFile === 'function') {
+                window.initUploadFile();
+            }
         }
     } catch (error) {
-        console.error('Ошибка загрузки:', error);
+        console.error('sidebar: ошибка загрузки контента', error);
         contentContainer.innerHTML = `<div class="error-message">Ошибка загрузки</div>`;
         hideLoader();
     }
@@ -181,11 +210,12 @@ async function loadProfileScripts() {
         '/js/profile/profile.js',
         '/js/profile/profile-edit-info.js?v=20260112a',
         '/js/profile/profile-delete-account.js',
-        '/js/profile/storage/storage-sortable.js',
-        '/js/profile/storage/upload-file.js?v=20250926a',
+        '/js/profile/storage/storage-sortable.js?v=20260131a',
+        '/js/profile/storage/upload-file.js',
         '/js/profile/storage/upload-conflict-modal.js',
-        '/js/profile/storage/storage-table.js',
-        '/js/profile/storage/share-link-modal.js',
+        '/js/profile/storage/userStorageObserver.js',
+        '/js/profile/storage/storage-table.js?v=20260125a',
+        '/js/profile/storage/share-link-modal.js'
     ];
 
     const loaders = scripts.map(src => new Promise((resolve, reject) => {
@@ -197,34 +227,23 @@ async function loadProfileScripts() {
         document.body.appendChild(s);
     }));
 
-    await Promise.all(loaders);
+    try {
+        await Promise.all(loaders);
+    } catch (err) {
+        console.error('sidebar: ошибка загрузки profile-скриптов', err);
+        return;
+    }
 
-    if (typeof window.initAvatarUpload === 'function') initAvatarUpload();
-    if (typeof window.initUserStorage === 'function') window.initUserStorage();
+    if (typeof window.initAvatarUpload === 'function') {
+        initAvatarUpload();
+    }
 
-    if (window.taskManager) {
-        try {
-            const response = await fetch('/api/tasks/active', { credentials: 'same-origin', cache: 'no-store' });
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const tasks = await response.json();
+    if (typeof window.initUserStorage === 'function') {
+        window.initUserStorage();
+    }
 
-            if (Array.isArray(tasks)) {
-                tasks.forEach(task => window.taskManager.addTask(task));
-
-                const observer = new MutationObserver((_, obs) => {
-                    const list = document.querySelector('#tasks .tasks-grid#taskCardList');
-                    if (list) {
-                        obs.disconnect();
-                        taskManager.render();
-                    }
-                });
-
-                observer.observe(document.getElementById('content'), { childList: true, subtree: true });
-                observer.observe(document.body, { childList: true, subtree: true });
-            }
-        } catch (err) {
-            console.error('Ошибка при получении задач с сервера:', err);
-        }
+    if (typeof window.initStorageSorting === 'function') {
+        window.initStorageSorting();
     }
 }
 
@@ -251,7 +270,9 @@ function showCachedContent(contentId) {
 
     if (contentId === 'extra_page') {
         initExtraPage();
-        if (cachedData.state?.model) restoreModel(cachedData.state.model);
+        if (cachedData.state?.model) {
+            restoreModel(cachedData.state.model);
+        }
     }
 }
 
@@ -260,14 +281,17 @@ function restoreModel(modelData) {
     if (!viewer) return;
 
     try {
-        viewer.innerHTML = `<iframe src="/ifcjs/index.html?model=${encodeURIComponent(modelData)}"></iframe>`;
+        viewer.innerHTML =
+            `<iframe src="/ifcjs/index.html?model=${encodeURIComponent(modelData)}"></iframe>`;
     } catch (error) {
-        console.error('Ошибка восстановления модели:', error);
+        console.error('sidebar: ошибка восстановления модели', error);
     }
 }
 
 function getPageState(contentId) {
-    if (contentId === 'extra_page') return { model: window.uploadedModel };
+    if (contentId === 'extra_page') {
+        return { model: window.uploadedModel };
+    }
     return null;
 }
 
@@ -290,7 +314,6 @@ function initExtraPage() {
     setTimeout(() => {
         const uploader = document.querySelector('#extra_page input[type="file"]');
         if (!uploader) return;
-
         uploader.addEventListener('change', handleFileUpload);
     }, 50);
 }

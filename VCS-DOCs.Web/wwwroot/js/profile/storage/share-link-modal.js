@@ -1,138 +1,182 @@
-﻿//share-link-modal.js
+﻿// wwwroot/js/profile/storage/share-link-modal.js
 (function () {
-    var $doc = $(document);
-    var $modal = $('#share-link-modal');
-    var ctx = { gid: null, version: null, filename: null };
+    'use strict';
 
-    function closeAllMenus() {
-        $modal.find('.action-dropdown-menu').hide();
-    }
-    function openMenu($wrap) {
-        closeAllMenus();
-        $wrap.find('.action-dropdown-menu').show();
-    }
-    function setSplitValue($wrap, text, value) {
-        $wrap.find('.value').text(text).attr('data-value', value);
-    }
-    function getSplitValue($wrap) {
-        return $wrap.find('.value').attr('data-value');
-    }
-
-    $modal.on('click', '#share-ttl .dropdown, #share-ttl .value', function (e) {
-        openMenu($('#share-ttl'));
-        e.stopPropagation();
-    });
-    $modal.on('click', '#share-limit .dropdown, #share-limit .value', function (e) {
-        openMenu($('#share-limit'));
-        e.stopPropagation();
-    });
-
-    $modal.on('click', '#share-ttl .action-dropdown-menu .dropdown-item', function () {
-        var v = $(this).attr('data-value');
-        var txt = $(this).text();
-        setSplitValue($('#share-ttl'), txt, v);
-        closeAllMenus();
-    });
-    $modal.on('click', '#share-limit .action-dropdown-menu .dropdown-item', function () {
-        var v = $(this).attr('data-value');
-        var txt = $(this).text();
-        setSplitValue($('#share-limit'), txt, v);
-        closeAllMenus();
-    });
-
-    $(document).on('click', function (e) {
-        if ($modal.is(':visible') && !$(e.target).closest('#share-link-modal .split-button').length) {
-            closeAllMenus();
-        }
-    });
-
-    $doc.off('click.shareOpen').on('click.shareOpen', '[data-action="share"]', function (e) {
-        if ($(this).closest('#share-link-modal').length) return;
-        e.preventDefault();
-
-        var $row = $(this).closest('tr');
-        var gid = $row.data('fileGroupId') || $row.attr('data-file-group-id');
-        var version = parseInt(($row.find('.version-button').attr('data-version') || $row.attr('data-current-version') || '1'), 10);
-        var fileName = $row.data('fileName') || $row.attr('data-file-name') || ($row.find('td:first .cell-content').text() || '').trim();
-
-        if (!gid || !version) { alert('Не удалось определить файл/версию для публикации.'); return; }
-
-        ctx = { gid: gid, version: version, filename: fileName };
-
-        setSplitValue($('#share-ttl'), '7 дней (168 ч)', '168');
-        setSplitValue($('#share-limit'), '10 скачиваний', '10');
-        $('#share-auth-only').prop('checked', true);
-        $('#share-link-url').hide().val('');
-
-        $modal.show();
-    });
-
-    window.openShareLinkModalFromRow = function (rowEl) {
-        var $row = $(rowEl);
-        var gid = $row.data('fileGroupId') || $row.attr('data-file-group-id');
-        var version = parseInt(($row.find('.version-button').attr('data-version') || $row.attr('data-current-version') || '1'), 10);
-        var fileName = $row.data('fileName') || $row.attr('data-file-name') || ($row.find('td:first .cell-content').text() || '').trim();
-
-        if (!gid || !version) { alert('Не удалось определить файл/версию для публикации.'); return; }
-
-        ctx = { gid: gid, version: version, filename: fileName };
-
-        setSplitValue($('#share-ttl'), '7 дней (168 ч)', '168');
-        setSplitValue($('#share-limit'), '10 скачиваний', '10');
-        $('#share-auth-only').prop('checked', true);
-        $('#share-link-url').hide().val('');
-
-        $modal.show();
+    let currentFileData = {
+        fileGroupId: null,
+        version: null,
+        fileName: null
     };
 
-    $modal.on('click', '#share-cancel', function () {
-        $modal.hide();
-    });
+    function getModal() {
+        return document.getElementById('shareModal');
+    }
 
-    $modal.on('click', '#share-generate-copy', async function () {
-        try {
-            var ttl = parseInt(getSplitValue($('#share-ttl')), 10);
-            var limitVal = getSplitValue($('#share-limit'));
-            var requireAuth = $('#share-auth-only').is(':checked');
-            if (!ttl || ttl <= 0) ttl = 168;
+    function getFileExtension(fileName) {
+        if (!fileName) return '';
 
-            var fd = new FormData();
-            fd.append('fileGroupId', ctx.gid);
-            fd.append('version', ctx.version);
-            fd.append('ttlHours', ttl);
-            if (String(limitVal) !== 'unlimited') fd.append('maxDownloads', limitVal);
-            fd.append('requireAuth', requireAuth ? 'true' : 'false');
+        const base = String(fileName).split(/[\\/]/).pop(); // если вдруг придёт путь
+        const dot = base.lastIndexOf('.');
+        if (dot <= 0 || dot >= base.length - 1) return '';
 
-            var btn = $(this);
-            btn.prop('disabled', true);
+        let ext = base.substring(dot + 1).trim();
+        ext = ext.replace(/[^a-zA-Z0-9]+/g, ''); // чистим мусор
+        if (!ext) return '';
 
-            var res = await fetch('/api/Upload/share-db', { method: 'POST', body: fd });
-            if (!res.ok) {
-                if (res.status === 404) alert('Файл/версия не найдены.');
-                else if (res.status === 401) alert('Требуется вход в систему.');
-                else alert('Не удалось создать ссылку. Код: ' + res.status);
-                btn.prop('disabled', false);
-                return;
-            }
+        if (ext.length > 10) ext = ext.slice(0, 10);
+        return ext.toUpperCase();
+    }
 
-            var data = await res.json();
-            var url = (data && data.url) ? data.url : '';
-            if (!url) { alert('Сервис вернул пустую ссылку.'); btn.prop('disabled', false); return; }
+    function resetGeneratedLinkUi(modal) {
+        const linkBox = modal.querySelector('#shareLinkBox');
+        const linkInput = modal.querySelector('#shareLinkUrl');
+        if (linkBox) linkBox.style.display = 'none';
+        if (linkInput) linkInput.value = '';
 
-            var $out = $('#share-link-url').val(url).show();
-            $out[0].focus(); $out[0].select();
-            try { document.execCommand('copy'); } catch { }
+        const hint = modal.querySelector('.share-link-hint');
+        if (hint) hint.style.display = 'none';
 
-            btn.text('Ссылка скопирована!');
-            setTimeout(function () {
-                btn.text('Скопировать ссылку');
-                btn.prop('disabled', false);
-                $modal.hide();
-            }, 800);
-        } catch (err) {
-            console.error(err);
-            alert('Ошибка при создании ссылки.');
-            $('#share-generate-copy').prop('disabled', false);
+        const genBtnLocal = modal.querySelector('#shareGenerateBtn');
+        if (genBtnLocal) {
+            genBtnLocal.disabled = false;
+            genBtnLocal.innerHTML = `
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+                Создать ссылку`;
         }
-    });
+    }
+
+    function fillFileCard(modal) {
+        const extLabel = modal.querySelector('[data-share-file-ext]');
+        const nameLabel = modal.querySelector('[data-share-file-name]');
+        const versionLabel = modal.querySelector('[data-share-file-version]');
+
+        if (nameLabel) nameLabel.textContent = currentFileData.fileName || 'Файл';
+        if (versionLabel) versionLabel.textContent = 'Версия ' + (currentFileData.version || '1');
+
+        if (extLabel) {
+            const ext = getFileExtension(currentFileData.fileName);
+            extLabel.textContent = ext || 'FILE';
+            extLabel.title = ext ? `Формат: ${ext}` : 'Формат: неизвестен';
+        }
+    }
+
+    function setModalOpen(modal, isOpen) {
+        if (isOpen) {
+            modal.classList.add('active');
+            modal.setAttribute('aria-hidden', 'false');
+        } else {
+            modal.classList.remove('active');
+            modal.setAttribute('aria-hidden', 'true');
+        }
+    }
+
+    // ✅ ВАЖНО: функция создаётся ВСЕГДА, независимо от наличия modal в DOM
+    window.openShareLinkModalFromRow = function (row) {
+        const modal = getModal();
+        if (!modal || !row) return;
+
+        currentFileData.fileGroupId = row.dataset.fileGroupId || null;
+        currentFileData.version = row.dataset.currentVersion || row.querySelector('.version-button')?.dataset.version || '1';
+        currentFileData.fileName = row.dataset.fileName || 'Файл';
+
+        fillFileCard(modal);
+        resetGeneratedLinkUi(modal);
+        setModalOpen(modal, true);
+    };
+
+    // Ленивая инициализация обработчиков закрытия/копирования/генерации:
+    // (чтобы не зависеть от того, когда modal появился)
+    function ensureHandlers() {
+        const modal = getModal();
+        if (!modal || modal.__shareHandlersBound) return;
+        modal.__shareHandlersBound = true;
+
+        // закрытие
+        modal.querySelectorAll('[data-share-close]').forEach(btn => {
+            btn.onclick = () => setModalOpen(modal, false);
+        });
+
+        // генерация
+        const genBtn = modal.querySelector('#shareGenerateBtn');
+        if (genBtn) {
+            genBtn.onclick = async function () {
+                const ttl = modal.querySelector('[data-share-expire]')?.value || 24;
+                const limit = modal.querySelector('[data-share-download-limit]')?.value || 'unlimited';
+                const authOnly = modal.querySelector('[data-share-auth-only]')?.checked || false;
+
+                genBtn.disabled = true;
+                genBtn.textContent = 'Генерация...';
+
+                try {
+                    const fd = new FormData();
+                    fd.append('fileGroupId', currentFileData.fileGroupId);
+                    fd.append('version', currentFileData.version);
+                    fd.append('ttlHours', ttl);
+                    if (limit !== 'unlimited') fd.append('maxDownloads', limit);
+                    fd.append('requireAuth', authOnly);
+
+                    const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                    const headers = {};
+                    if (token) headers['RequestVerificationToken'] = token;
+
+                    const response = await fetch('/api/Upload/share-db', {
+                        method: 'POST',
+                        body: fd,
+                        headers
+                    });
+
+                    if (!response.ok) throw new Error('Ошибка сервера');
+
+                    const data = await response.json();
+
+                    if (data.url) {
+                        const linkInput = modal.querySelector('#shareLinkUrl');
+                        const linkBox = modal.querySelector('#shareLinkBox');
+
+                        if (linkInput) linkInput.value = data.url;
+                        if (linkBox) linkBox.style.display = 'block';
+
+                        try { await navigator.clipboard.writeText(data.url); } catch { }
+
+                        genBtn.textContent = 'Готово!';
+                    } else {
+                        resetGeneratedLinkUi(modal);
+                    }
+                } catch {
+                    alert('Не удалось создать ссылку');
+                    resetGeneratedLinkUi(modal);
+                }
+            };
+        }
+
+        // копирование
+        const copyBtn = modal.querySelector('[data-share-copy]');
+        if (copyBtn) {
+            copyBtn.onclick = function () {
+                const input = modal.querySelector('#shareLinkUrl');
+                if (!input) return;
+
+                const url = input.value;
+                if (!url) return;
+
+                navigator.clipboard.writeText(url).catch(() => { });
+
+                const hint = modal.querySelector('.share-link-hint');
+                if (hint) {
+                    hint.style.display = 'flex';
+                    setTimeout(() => { hint.style.display = 'none'; }, 2000);
+                }
+            };
+        }
+    }
+
+    // попытка навесить хендлеры сразу + при появлении DOM
+    ensureHandlers();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', ensureHandlers);
+    }
+
 })();

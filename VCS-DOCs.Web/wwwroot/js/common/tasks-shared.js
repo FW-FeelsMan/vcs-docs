@@ -1,7 +1,7 @@
 ﻿// tasks-shared.js
 export function broadcastTaskToChat(task) {
     window.dispatchEvent(new CustomEvent("taskUpdate", { detail: task }));
-    console.log("[TaskManager] Отправка задачи в чат:", task);
+    //console.log("[TaskManager] Отправка задачи в чат:", task);
 }
 
 export function renderChatMiniTaskCard(task) {

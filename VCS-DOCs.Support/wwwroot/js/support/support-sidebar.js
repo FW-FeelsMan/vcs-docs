@@ -174,7 +174,7 @@ async function ensureContentScripts(contentId, panelEl) {
         return "BaseUser";
     }
     const ROLE = detectRole();
-    console.log("[sidebar] role:", ROLE);
+    //console.log("[sidebar] role:", ROLE);
 
     const routes = {
         SupportAdmin: {
@@ -231,7 +231,7 @@ async function ensureContentScripts(contentId, panelEl) {
     }
 
     async function fetchHtml(url) {
-        console.log("[sidebar] fetch:", url);
+       // console.log("[sidebar] fetch:", url);
         const res = await fetch(url, {
             credentials: "same-origin",
             cache: "no-store",
@@ -240,7 +240,7 @@ async function ensureContentScripts(contentId, panelEl) {
         });
         const ct = (res.headers.get("content-type") || "").toLowerCase();
         const txt = await res.text();
-        console.log("[sidebar] fetch resp:", { status: res.status, redirected: res.redirected, url: res.url, ct });
+        //console.log("[sidebar] fetch resp:", { status: res.status, redirected: res.redirected, url: res.url, ct });
 
         if (res.redirected || res.status === 401 || res.status === 403 || looksLikeLogin(txt)) {
             let to = res.url && /\/account\/loginsupport/i.test(res.url) ? res.url : "/Account/LoginSupport";
@@ -312,7 +312,7 @@ async function ensureContentScripts(contentId, panelEl) {
             currentContentId = contentId;
             window.__support_backTarget = contentId;
             document.dispatchEvent(new CustomEvent("SupportContentChanged", { detail: { contentId } }));
-            console.log("[sidebar] content loaded:", contentId);
+           // console.log("[sidebar] content loaded:", contentId);
         } catch (err) {
             if (String(err && err.message || "").includes("auth-redirect")) return;
             console.error("[sidebar] load error:", err);
@@ -324,7 +324,7 @@ async function ensureContentScripts(contentId, panelEl) {
 
     // ---- init ----
     document.addEventListener("DOMContentLoaded", () => {
-        console.log("[sidebar] DOMContentLoaded");
+      //  console.log("[sidebar] DOMContentLoaded");
         $$(".sidebar-button").forEach((btn) =>
             btn.addEventListener("click", () => window.selectButton(btn))
         );
@@ -354,7 +354,7 @@ document.addEventListener('click', (e) => {
     const backup = (typeof window.__support_backTarget === 'string' && window.__support_backTarget) ? window.__support_backTarget : '';
 
     const target = fromAttr || backup || 'user_tickets';
-    console.log('[sidebar] back via delegate →', target);
+   // console.log('[sidebar] back via delegate →', target);
 
     if (typeof window.selectSidebarByContentId === 'function') {
         window.selectSidebarByContentId(target);
@@ -417,7 +417,7 @@ window.openTicket = async function (arg) {
 
         window.__currentDispose = typeof panel.__dispose === "function" ? panel.__dispose : null;
         document.dispatchEvent(new CustomEvent("SupportContentChanged", { detail: { contentId: "ticket", ticketId: id } }));
-        console.log("[sidebar] ticket loaded:", id);
+      //  console.log("[sidebar] ticket loaded:", id);
     } catch (err) {
         console.error("[sidebar] openTicket error:", err);
         container.innerHTML = `<div style="padding:16px;color:#ddd">Ошибка загрузки заявки #${id}</div>`;
@@ -468,7 +468,7 @@ window.openUTicket = async function (arg) {
 
         window.__currentDispose = typeof panel.__dispose === "function" ? panel.__dispose : null;
         document.dispatchEvent(new CustomEvent("SupportContentChanged", { detail: { contentId: "uticket", ticketId: id } }));
-        console.log("[sidebar] user ticket loaded:", id);
+        //console.log("[sidebar] user ticket loaded:", id);
     } catch (err) {
         console.error("[sidebar] openUTicket error:", err);
         container.innerHTML = `<div style="padding:16px;color:#ddd">Ошибка загрузки заявки #${id}</div>`;

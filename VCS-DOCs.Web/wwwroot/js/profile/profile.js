@@ -104,11 +104,11 @@ document.getElementById('avatarFileInput')?.addEventListener('change', function 
                 const avatarImage = document.getElementById('avatarImage');
                 avatarImage.src = `/userdata/u_${result.userId}/a/avatar.jpg?v=${result.timestamp}`;
                 updateAvatarInSidebar(result.userId, result.timestamp);
-                console.log('Аватарка успешно загружена:', avatarImage.src);
+               // console.log('Аватарка успешно загружена:', avatarImage.src);
             }
         })
         .catch(err => {
-            console.error('Ошибка при отправке файла:', err);
+           // console.error('Ошибка при отправке файла:', err);
         });
 });
 

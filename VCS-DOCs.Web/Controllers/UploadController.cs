@@ -52,10 +52,20 @@ public sealed class UploadController : ControllerBase
 	{
 		var shortUserId = GetRequiredShortUserId();
 		var info = await _uploadManager.GetActiveUploadForUserAsync(shortUserId, ct);
-		if (info is null) return Ok(new { found = false });
+		if (info is null)
+		{
+			Console.WriteLine($"[ACTIVE] user={shortUserId} found=false");
+			return Ok(new { found = false });
+		}
 
 		var ageSec = (int)Math.Max(0, Math.Floor((DateTimeOffset.UtcNow - info.UpdatedAt).TotalSeconds));
 		var isFresh = ageSec <= FreshSeconds && !info.Stopped;
+
+		Console.WriteLine(
+			$"[ACTIVE] user={shortUserId} found=true stopped={info.Stopped} " +
+			$"ageSec={ageSec} isFresh={isFresh} " +
+			$"name={info.FileName} hash={(info.FileHash?.Length > 12 ? info.FileHash[..12] : info.FileHash)} " +
+			$"uploadedBytes={info.UploadedBytes}/{info.FileSize} uploadedCount={(info.Uploaded?.Count ?? 0)}");
 
 		return Ok(new
 		{
@@ -74,6 +84,7 @@ public sealed class UploadController : ControllerBase
 			updatedAt = info.UpdatedAt
 		});
 	}
+
 
 	[HttpPost("heartbeat")]
 	public async Task<IActionResult> Heartbeat([FromForm] string fileHash, CancellationToken ct)

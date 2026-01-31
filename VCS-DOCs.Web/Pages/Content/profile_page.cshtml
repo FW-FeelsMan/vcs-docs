@@ -43,88 +43,21 @@
             <div id="personal-data" class="content-section active">
                 <h2>Персональные данные</h2>
                 <h3>Раздел управления личными данными</h3>
-
-                @*<div class="content-scrollable profile-content-scroll">
-                        <div class="info-grid">
-                            <div class="info-card">
-                                <h4>
-                                    ФИО
-                                    <button class="edit-button" data-click="throttle:800" type="button">
-                                        <img src="~/images/edit_icon.png" alt="Edit" />
-                                    </button>
-                                </h4>
-                                <p data-field="FullName">@Model.CurrentUser?.FullName</p>
-                            </div>
-
-                            <div class="info-card">
-                                <h4>
-                                    Дата рождения
-                                    <button class="edit-button" data-click="throttle:800" type="button">
-                                        <img src="~/images/edit_icon.png" alt="Edit" />
-                                    </button>
-                                </h4>
-                                <input class="date-input"
-                                       type="text"
-                                       data-field="DateOfBirth"
-                                       value="@($"{Model.CurrentUser?.DateOfBirth:dd.MM.yyyy}")"
-                                       placeholder="ДД.ММ.ГГГГ"
-                                       pattern="\d{2}\.\d{2}\.\d{4}"
-                                       disabled />
-                            </div>
-
-                            <div class="info-card">
-                                <h4>
-                                    Организация
-                                    <button class="edit-button" data-click="throttle:800" type="button">
-                                        <img src="~/images/edit_icon.png" alt="Edit" />
-                                    </button>
-                                </h4>
-                                <p data-field="Organization">@Model.CurrentUser?.Organization</p>
-                            </div>
-
-                            <div class="info-card">
-                                <h4>
-                                    Подразделение
-                                    <button class="edit-button" data-click="throttle:800" type="button">
-                                        <img src="~/images/edit_icon.png" alt="Edit" />
-                                    </button>
-                                </h4>
-                                <p data-field="Department">@Model.CurrentUser?.Department</p>
-                            </div>
-
-                            <div class="info-card">
-                                <h4>Тип учетной записи</h4>
-                                <p data-field="Speciality">@Model.CurrentUser?.Speciality</p>
-                            </div>
-
-                            <div class="info-card">
-                                <h4>
-                                    E-mail
-                                    <button class="edit-button" data-click="throttle:800" type="button">
-                                        <img src="~/images/edit_icon.png" alt="Edit" />
-                                    </button>
-                                </h4>
-                                <p data-field="Email">
-                                    @(!string.IsNullOrWhiteSpace(Model.CurrentUser?.Email) ? Model.CurrentUser!.Email : "Не установлено")
-                                </p>
-                            </div>
-
-                            <div class="info-card">
-                                <h4>Удаление аккаунта</h4>
-                                <button id="deleteAccountButton" class="button-sliding danger" type="button">Удалить</button>
-                            </div>
-                        </div>
-                    </div>*@
                 <div class="content-scrollable profile-content-scroll">
                     <div class="info-grid personal-form-grid">
                         <div class="info-card">
                             <div class="field-label">ФИО</div>
                             <div class="field-control">
                                 <p data-field="FullName">
-                                    @(!string.IsNullOrWhiteSpace(Model.CurrentUser?.FullName) ? Model.CurrentUser!.FullName : "Не установлено")
+                                    @(!string.IsNullOrWhiteSpace(Model.CurrentUser?.FullName)
+                                        ? Model.CurrentUser!.FullName
+                                        : "Не установлено")
                                 </p>
 
-                                <button class="edit-button" data-click="throttle:800" type="button" title="Редактировать">
+                                <button class="edit-button"
+                                        data-click="throttle:800"
+                                        type="button"
+                                        title="Редактировать">
                                     <img src="~/images/edit_icon.png" alt="Edit" />
                                 </button>
                             </div>
@@ -134,10 +67,15 @@
                             <div class="field-label">Дата рождения</div>
                             <div class="field-control">
                                 <p data-field="DateOfBirth">
-                                    @(Model.CurrentUser?.DateOfBirth is null ? "Не установлено" : $"{Model.CurrentUser!.DateOfBirth:dd.MM.yyyy}")
+                                    @(Model.CurrentUser?.DateOfBirth is null
+                                        ? "Не установлено"
+                                        : $"{Model.CurrentUser!.DateOfBirth:dd.MM.yyyy}")
                                 </p>
 
-                                <button class="edit-button" data-click="throttle:800" type="button" title="Редактировать">
+                                <button class="edit-button"
+                                        data-click="throttle:800"
+                                        type="button"
+                                        title="Редактировать">
                                     <img src="~/images/edit_icon.png" alt="Edit" />
                                 </button>
                             </div>
@@ -147,10 +85,15 @@
                             <div class="field-label">Организация</div>
                             <div class="field-control">
                                 <p data-field="Organization">
-                                    @(!string.IsNullOrWhiteSpace(Model.CurrentUser?.Organization) ? Model.CurrentUser!.Organization : "Не установлено")
+                                    @(!string.IsNullOrWhiteSpace(Model.CurrentUser?.Organization)
+                                        ? Model.CurrentUser!.Organization
+                                        : "Не установлено")
                                 </p>
 
-                                <button class="edit-button" data-click="throttle:800" type="button" title="Редактировать">
+                                <button class="edit-button"
+                                        data-click="throttle:800"
+                                        type="button"
+                                        title="Редактировать">
                                     <img src="~/images/edit_icon.png" alt="Edit" />
                                 </button>
                             </div>
@@ -160,10 +103,15 @@
                             <div class="field-label">Подразделение</div>
                             <div class="field-control">
                                 <p data-field="Department">
-                                    @(!string.IsNullOrWhiteSpace(Model.CurrentUser?.Department) ? Model.CurrentUser!.Department : "Не установлено")
+                                    @(!string.IsNullOrWhiteSpace(Model.CurrentUser?.Department)
+                                        ? Model.CurrentUser!.Department
+                                        : "Не установлено")
                                 </p>
 
-                                <button class="edit-button" data-click="throttle:800" type="button" title="Редактировать">
+                                <button class="edit-button"
+                                        data-click="throttle:800"
+                                        type="button"
+                                        title="Редактировать">
                                     <img src="~/images/edit_icon.png" alt="Edit" />
                                 </button>
                             </div>
@@ -173,7 +121,9 @@
                             <div class="field-label">Тип учетной записи</div>
                             <div class="field-control readonly">
                                 <p data-field="Speciality">
-                                    @(!string.IsNullOrWhiteSpace(Model.CurrentUser?.Speciality) ? Model.CurrentUser!.Speciality : "Не установлено")
+                                    @(!string.IsNullOrWhiteSpace(Model.CurrentUser?.Speciality)
+                                        ? Model.CurrentUser!.Speciality
+                                        : "Не установлено")
                                 </p>
                             </div>
                         </div>
@@ -182,10 +132,15 @@
                             <div class="field-label">E-mail</div>
                             <div class="field-control">
                                 <p data-field="Email">
-                                    @(!string.IsNullOrWhiteSpace(Model.CurrentUser?.Email) ? Model.CurrentUser!.Email : "Не установлено")
+                                    @(!string.IsNullOrWhiteSpace(Model.CurrentUser?.Email)
+                                        ? Model.CurrentUser!.Email
+                                        : "Не установлено")
                                 </p>
 
-                                <button class="edit-button" data-click="throttle:800" type="button" title="Редактировать">
+                                <button class="edit-button"
+                                        data-click="throttle:800"
+                                        type="button"
+                                        title="Редактировать">
                                     <img src="~/images/edit_icon.png" alt="Edit" />
                                 </button>
                             </div>
@@ -194,14 +149,15 @@
                         <div class="info-card danger-card">
                             <div class="field-label">Удаление аккаунта</div>
                             <div class="danger-actions">
-                                <button id="deleteAccountButton" class="button-sliding danger" type="button">
+                                <button id="deleteAccountButton"
+                                        class="button-sliding danger"
+                                        type="button">
                                     Удалить
                                 </button>
                             </div>
                         </div>
                     </div>
                 </div>
-
             </div>
 
             <div id="storage" class="content-section">
@@ -223,18 +179,20 @@
                 </div>
 
                 <div class="content-scrollable">
-                    <table id="userFilesTable" class="file-table">
-                        <thead>
-                            <tr>
-                                <th data-type="string">Имя файла</th>
-                                <th>Версия</th>
-                                <th data-type="number">Размер</th>
-                                <th data-type="date">Загружен</th>
-                                <th>Действия</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                    <div class="files-table-wrap">
+                        <table id="userFilesTable" class="file-table">
+                            <thead>
+                                <tr>
+                                    <th data-type="string">Имя файла</th>
+                                    <th>Версия</th>
+                                    <th data-type="number">Размер</th>
+                                    <th data-type="date">Загружен</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -278,8 +236,16 @@
 
                 <div id="version-list" class="version-list" style="display:none;"></div>
 
-                <button id="conflict-new-version" class="button-sliding primary" type="button">Новая версия</button>
-                <button id="conflict-cancel" class="button-sliding primary" type="button">Отмена</button>
+                <button id="conflict-new-version"
+                        class="button-sliding primary"
+                        type="button">
+                    Новая версия
+                </button>
+                <button id="conflict-cancel"
+                        class="button-sliding primary"
+                        type="button">
+                    Отмена
+                </button>
             </div>
         </div>
     </div>
@@ -289,8 +255,16 @@
             <h3 id="warning-modal-title">Предупреждение</h3>
             <p id="warning-message">Подтверждение действия</p>
             <div class="modal-buttons">
-                <button id="warning-confirm" class="button-sliding danger" type="button">Удалить</button>
-                <button id="warning-cancel" class="button-sliding" type="button">Отмена</button>
+                <button id="warning-confirm"
+                        class="button-sliding danger"
+                        type="button">
+                    Удалить
+                </button>
+                <button id="warning-cancel"
+                        class="button-sliding"
+                        type="button">
+                    Отмена
+                </button>
             </div>
         </div>
     </div>
@@ -298,10 +272,20 @@
     <div id="upload-resume-modal" class="modal" style="display:none;">
         <div class="modal-content">
             <h3 id="resume-modal-title">Продолжить загрузку?</h3>
-            <p id="resume-modal-message">Файл уже загружался. Хотите продолжить?</p>
+            <p id="resume-modal-message">
+                Файл уже загружался. Хотите продолжить?
+            </p>
             <div class="modal-buttons">
-                <button id="resume-confirm" class="button-sliding" type="button">Продолжить</button>
-                <button id="resume-cancel" class="button-sliding" type="button">Начать заново</button>
+                <button id="resume-confirm"
+                        class="button-sliding"
+                        type="button">
+                    Продолжить
+                </button>
+                <button id="resume-cancel"
+                        class="button-sliding"
+                        type="button">
+                    Начать заново
+                </button>
             </div>
         </div>
     </div>
@@ -315,15 +299,27 @@
                 Отмена загрузки очистит прогресс.
             </p>
             <div class="modal-buttons">
-                <button id="upload-cancel-confirm" class="button-sliding danger" type="button">Да, отменить</button>
-                <button id="upload-cancel-close" class="button-sliding" type="button">Отмена</button>
+                <button id="upload-cancel-confirm"
+                        class="button-sliding danger"
+                        type="button">
+                    Да, отменить
+                </button>
+                <button id="upload-cancel-close"
+                        class="button-sliding"
+                        type="button">
+                    Отмена
+                </button>
             </div>
         </div>
     </div>
 
     <div id="upload-busy-modal" style="display:none;">
         <div class="upload-busy-message"></div>
-        <button class="upload-busy-ok" data-click="throttle:800" type="button">Ок</button>
+        <button class="upload-busy-ok"
+                data-click="throttle:800"
+                type="button">
+            Ок
+        </button>
     </div>
 
     <div id="delete-account-modal" class="modal" style="display:none;">
@@ -335,7 +331,8 @@
             </p>
 
             <div style="text-align:left; margin:10px 0 6px;">
-                <label for="delete-account-password" style="display:block; font-weight:700; margin-bottom:6px;">
+                <label for="delete-account-password"
+                       style="display:block; font-weight:700; margin-bottom:6px;">
                     Пароль
                 </label>
                 <input id="delete-account-password"
@@ -349,66 +346,145 @@
             </div>
 
             <div class="modal-buttons">
-                <button id="delete-account-confirm" class="button-sliding danger" type="button">Удалить</button>
-                <button id="delete-account-cancel" class="button-sliding" type="button">Отмена</button>
+                <button id="delete-account-confirm"
+                        class="button-sliding danger"
+                        type="button">
+                    Удалить
+                </button>
+                <button id="delete-account-cancel"
+                        class="button-sliding"
+                        type="button">
+                    Отмена
+                </button>
             </div>
         </div>
     </div>
 
-    <div id="share-link-modal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <h3>Поделиться файлом</h3>
+    <div id="shareModal" class="share-modal" aria-hidden="true">
+        <div class="share-modal-overlay" data-share-close="overlay"></div>
 
-            <div class="row" style="display:flex; gap:12px; align-items:center; justify-content:center; margin:12px 0 16px;">
-                <div id="share-ttl" class="multi-button split-button">
-                    <div class="button-part label">Срок:</div>
-                    <div class="button-part value" data-value="168">7 дней (168 ч)</div>
-                    <div class="button-part dropdown" aria-label="Открыть варианты">▾</div>
+        <div class="share-modal-dialog">
+            <div class="share-modal-content"> 
+                <button class="share-modal-close"
+                        type="button"
+                        aria-label="Закрыть"
+                        data-share-close="button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                    </svg>
+                </button>
 
-                    <div class="action-dropdown-menu compact" style="display:none; min-width:260px;">
-                        <div class="dropdown-item" data-value="12">12 часов</div>
-                        <div class="dropdown-item" data-value="24">1 день (24 ч)</div>
-                        <div class="dropdown-item" data-value="72">3 дня (72 ч)</div>
-                        <div class="dropdown-item" data-value="168">7 дней (168 ч)</div>
-                        <div class="dropdown-item" data-value="336">14 дней (336 ч)</div>
-                        <div class="dropdown-item" data-value="720">30 дней (720 ч)</div>
+                <div class="share-modal-header">
+                    <h2 class="share-modal-title">Поделиться файлом</h2>
+                    <p class="share-modal-subtitle">Создайте безопасную ссылку для обмена</p>
+                </div>
+
+                <div class="share-modal-body">
+                    <div class="share-file-card">
+                        <div class="share-file-icon" data-share-file-ext></div>
+                        <div class="share-file-info">
+                            <div class="share-file-name" data-share-file-name>
+                                Презентация_Проект.docx
+                            </div>
+                            <div class="share-file-meta">
+                                <span data-share-file-size>2.4 МБ</span>
+                                <span class="share-file-divider">•</span>
+                                <span data-share-file-version>Версия 3</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="share-settings-grid">
+                        <div class="share-setting">
+                            <label class="share-setting-label">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M12 6v6l4 2" />
+                                </svg>
+                                Срок действия
+                            </label>
+                            <select class="share-select" data-share-expire>
+                                <option value="12">12 часов</option>
+                                <option value="24">1 день</option>
+                                <option value="72">3 дня</option>
+                                <option value="168" selected>7 дней</option>
+                                <option value="336">14 дней</option>
+                                <option value="720">30 дней</option>
+                            </select>
+                        </div>
+
+                        <div class="share-setting">
+                            <label class="share-setting-label">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                    <circle cx="9" cy="7" r="4" />
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
+                                </svg>
+                                Лимит скачиваний
+                            </label>
+                            <select class="share-select" data-share-download-limit>
+                                <option value="1">1 скачивание</option>
+                                <option value="10" selected>10 скачиваний</option>
+                                <option value="50">50 скачиваний</option>
+                                <option value="100">100 скачиваний</option>
+                                <option value="unlimited">Без ограничений</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <label class="share-checkbox">
+                        <input type="checkbox" checked data-share-auth-only>
+                        <span class="share-checkbox-mark"></span>
+                        <span class="share-checkbox-label">Только для авторизованных пользователей</span>
+                    </label>
+
+                    <div id="shareLinkBox" class="share-link-box" style="display:none;">
+                        <label class="share-link-label">Ссылка готова</label>
+                        <div class="share-link-input-group">
+                            <input type="text"
+                                   id="shareLinkUrl"
+                                   class="share-link-input"
+                                   readonly />
+                            <button type="button"
+                                    class="share-link-copy"
+                                    title="Скопировать"
+                                    data-share-copy>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="share-link-hint">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10" />
+                                <path d="M12 16v-4M12 8h.01" />
+                            </svg>
+                            Ссылка автоматически скопирована в буфер обмена
+                        </div>
                     </div>
                 </div>
 
-                <div id="share-limit" class="multi-button split-button">
-                    <div class="button-part label">Лимит:</div>
-                    <div class="button-part value" data-value="10">10 скачиваний</div>
-                    <div class="button-part dropdown" aria-label="Открыть варианты">▾</div>
+                <div class="share-modal-footer">
+                    <button type="button"
+                            class="share-btn share-btn-secondary"
+                            data-share-close="button">
+                        Отмена
+                    </button>
 
-                    <div class="action-dropdown-menu compact" style="display:none; min-width:260px;">
-                        <div class="dropdown-item" data-value="1">1 скачивание</div>
-                        <div class="dropdown-item" data-value="10">10 скачиваний</div>
-                        <div class="dropdown-item" data-value="50">50 скачиваний</div>
-                        <div class="dropdown-item" data-value="100">100 скачиваний</div>
-                        <div class="dropdown-item" data-value="unlimited">Без ограничений</div>
-                    </div>
+                    <button type="button"
+                            class="share-btn share-btn-primary"
+                            id="shareGenerateBtn"
+                            data-share-generate>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                            <polyline points="22 4 12 14.01 9 11.01" />
+                        </svg>
+                        Создать ссылку
+                    </button>
                 </div>
-            </div>
-
-            <div class="row" style="margin:12px 0 16px;">
-                <label class="checkbox">
-                    <input id="share-auth-only" type="checkbox" checked />
-                    <span>Только для зарегистрированных пользователей</span>
-                </label>
-            </div>
-
-            <div class="row" style="margin-bottom:8px;">
-                <input id="share-link-url"
-                       type="text"
-                       readonly
-                       style="width:100%; box-sizing:border-box; display:none;"
-                       placeholder="Ссылка появится после создания" />
-            </div>
-
-            <div class="modal-buttons">
-                <button id="share-generate-copy" class="button-sliding primary" type="button">Скопировать ссылку</button>
-                <button id="share-cancel" class="button-sliding" type="button">Отмена</button>
             </div>
         </div>
     </div>
+
 </div>

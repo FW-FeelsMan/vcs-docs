@@ -115,6 +115,6 @@
         } catch { /* noop */ }
     });
 
-    console.log("[presence] init on page:", document.title || location.pathname);
+   // console.log("[presence] init on page:", document.title || location.pathname);
     startSafe();
 })();

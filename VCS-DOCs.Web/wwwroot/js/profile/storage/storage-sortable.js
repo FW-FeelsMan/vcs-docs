@@ -1,440 +1,450 @@
-﻿// storage-table.js — renders table & formats dates in MSK robustly
+﻿console.log('storage-sortable.js loaded!');
+
 (function () {
-    window.initStorageTable = function initStorageTable() {
-        const tableBody = document.querySelector('#userFilesTable tbody');
-        const counter = document.getElementById('storageCounter');
-        if (!tableBody) return;
+    'use strict';
 
-        function ensureIsoUtc(s) {
-            // Normalizes various SQL/ISO formats to strict ISO8601 UTC.
-            // Examples in: "2025-08-10 20:09:17.6131803", "2025-08-10T20:09:17Z", "2025-08-10T20:09:17.613Z"
-            const raw = String(s || '').trim();
-            if (!raw) return null;
-            // If has explicit TZ, return as-is
-            if (/Z$|[+\-]\d{2}:\d{2}$/.test(raw)) {
-                // replace space with 'T' if needed
-                return raw.replace(' ', 'T');
-            }
-            // No TZ part: treat it as UTC from server, append Z
-            const withT = raw.includes('T') ? raw : raw.replace(' ', 'T');
-            return withT + 'Z';
-        }
+    let savedColumnWidth = null;
 
-        function formatSize(bytes) {
-            const val = Number(bytes || 0);
-            return (val / 1024 / 1024).toFixed(2) + ' МБ';
-        }
+    function initSortingInternal() {
+        if (window.__storageSortingInitialized) return;
+        window.__storageSortingInitialized = true;
 
-        function formatDate(dateStr) {
-            const iso = ensureIsoUtc(dateStr);
-            if (!iso) return '';
-            // Try native IANA tz formatting first
-            try {
-                const d = new Date(iso);
-                if (isNaN(d.getTime())) throw new Error('bad date');
-                return d.toLocaleString('ru-RU', { timeZone: 'Europe/Moscow', hour12: false });
-            } catch {
-                // Fallback: manual +03:00 shift
-                try {
-                    const d = new Date(iso);
-                    if (isNaN(d.getTime())) return String(dateStr || '');
-                    const mskOffsetMin = 180; // MSK fixed offset
-                    const localOffsetMin = d.getTimezoneOffset() * -1; // minutes east of UTC
-                    // Convert UTC -> MSK
-                    const utcMs = d.getTime() + (0 - localOffsetMin) * 60000; // normalize to UTC
-                    const mskMs = utcMs + mskOffsetMin * 60000;
-                    const md = new Date(mskMs);
-                    const pad = n => String(n).padStart(2, '0');
-                    return `${pad(md.getDate())}.${pad(md.getMonth() + 1)}.${md.getFullYear()} ${pad(md.getHours())}:${pad(md.getMinutes())}:${pad(md.getSeconds())}`;
-                } catch { return String(dateStr || ''); }
-            }
-        }
+        const table = document.getElementById('userFilesTable');
+        if (!table) return;
 
-        function escapeHtml(str) {
-            const div = document.createElement('div');
-            div.textContent = String(str ?? '');
-            return div.innerHTML;
-        }
+        const tbody = table.querySelector('tbody');
+        const headers = table.querySelectorAll('th');
+        if (!tbody || !headers.length) return;
 
-        function wrapCell(text) {
-            const esc = escapeHtml(String(text ?? ''));
-            return `<div class="cell-content" title="${esc}">${esc}</div>`;
-        }
+        console.log('Storage sorting initialized, headers:', headers.length);
 
-        function normalizeFile(file) {
-            const normVersions = (file.Versions ?? file.versions ?? []).map(v => ({
-                Version: v.Version ?? v.version,
-                UploadedAt: v.UploadedAt ?? v.uploadedAt,
-                FileSize: v.FileSize ?? v.fileSize ?? 0
-            }));
-            return {
-                FileId: file.FileId ?? file.fileId,
-                FileGroupId: file.FileGroupId ?? file.fileGroupId,
-                FileName: file.FileName ?? file.fileName,
-                FileSize: file.FileSize ?? file.fileSize ?? 0,
-                UpdatedAt: file.UpdatedAt ?? file.updatedAt,
-                LatestVersion: file.LatestVersion ?? file.latestVersion ?? 1,
-                Versions: normVersions
-            };
-        }
+        let currentSort = {
+            index: 0,
+            ascending: true,
+            type: headers[0]?.dataset.type || 'string'
+        };
 
-        async function fetchFiles() {
-            try {
-                const res = await fetch('/api/Upload/user-files', { cache: 'no-store' });
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json();
+        headers.forEach((header, idx) => {
+            const type = header.dataset.type;
+            if (!type) return;
 
-                const files = Array.isArray(data.files) ? data.files.map(normalizeFile) : [];
-                renderTable(files);
-
-                if (counter) {
-                    const used = formatSize(data.usedBytes);
-                    const temp = formatSize(data.tempBytes);
-                    const limit = formatSize(data.limitBytes);
-                    const free = formatSize((data.limitBytes - data.usedBytes - data.tempBytes));
-                    counter.textContent = `Использовано: ${used} из ${limit} (временных: ${temp}); свободно: ${free}`;
+            header.style.cursor = 'pointer';
+            header.addEventListener('click', (e) => {
+                const t = e.target;
+                if (t && (t.classList?.contains('col-resizer') || t.classList?.contains('col-resizer-overlay') || t.classList?.contains('col-resizer-line'))) {
+                    return;
                 }
-            } catch (err) {
-                console.error('Не удалось загрузить список файлов', err);
-                if (counter) counter.textContent = 'Ошибка загрузки';
-            }
-        }
 
-        function renderTable(files) {
-            tableBody.innerHTML = '';
-
-            files.forEach(file => {
-                const row = document.createElement('tr');
-                row.dataset.fileGroupId = file.FileGroupId;
-                row.dataset.fileId = file.FileId;
-                row.dataset.fileName = file.FileName;
-                row.dataset.currentVersion = file.LatestVersion;
-                try { row.dataset.versions = JSON.stringify(file.Versions || []); } catch { row.dataset.versions = '[]'; }
-
-                const fileNameCell = document.createElement('td');
-                fileNameCell.innerHTML = wrapCell(file.FileName);
-
-                const versionCell = document.createElement('td');
-                versionCell.innerHTML = renderVersionDropdown(file);
-
-                const sizeCell = document.createElement('td');
-                sizeCell.className = 'size-cell';
-                sizeCell.innerHTML = wrapCell(formatSize(file.FileSize));
-
-                const dateCell = document.createElement('td');
-                dateCell.className = 'date-cell';
-                dateCell.innerHTML = wrapCell(formatDate(file.UpdatedAt));
-
-                const actionsCell = document.createElement('td');
-                actionsCell.innerHTML = renderActions();
-
-                row.append(fileNameCell, versionCell, sizeCell, dateCell, actionsCell);
-                tableBody.appendChild(row);
-
-                const versions = JSON.parse(row.dataset.versions || '[]');
-                updateRowByVersion(row, Number(row.dataset.currentVersion), versions);
+                if (currentSort.index === idx) {
+                    currentSort.ascending = !currentSort.ascending;
+                } else {
+                    currentSort = { index: idx, ascending: true, type: type };
+                }
+                applySorting();
             });
-
-            setupAllVersionDropdowns();
-            setupAllActionDropdowns();
-            if (typeof window.reapplyStorageSort === 'function') window.reapplyStorageSort();
-        }
-
-        function renderVersionDropdown(file) {
-            return `
-        <div class="multi-button compact version-multibutton"
-             data-current-version="${file.LatestVersion}">
-          <button class="button-sliding primary compact version-button"
-                  data-version="${file.LatestVersion}" data-click="throttle:800" >
-            v${file.LatestVersion}
-          </button>
-          <div class="dropdown-arrow compact">&#9662;</div>
-        </div>`;
-        }
-
-        function renderActions() {
-            return `
-        <div class="multi-button compact action-multibutton" style="position: relative;">
-          <button class="button-sliding primary compact action-button" data-action="download" data-click="throttle:800" >
-            Скачать
-          </button>
-          <div class="dropdown-arrow compact">&#9662;</div>
-          <div class="action-dropdown-menu compact"
-               style="display: none; position: absolute; min-width: 140px;">
-            <div class="dropdown-item" data-action="download">Скачать</div>
-            <div class="dropdown-item" data-action="view">Просмотр</div>
-            <div class="dropdown-item" data-action="share">Поделиться</div>
-            <div class="dropdown-item" data-action="delete">Удалить</div>
-          </div>
-        </div>`;
-        }
-
-        function updateRowByVersion(row, selectedVersion, versions) {
-            row.dataset.currentVersion = selectedVersion;
-
-            const versionBtn = row.querySelector('.version-button');
-            if (versionBtn) {
-                versionBtn.dataset.version = selectedVersion;
-                versionBtn.textContent = 'v' + selectedVersion;
-            }
-
-            const sizeCell = row.querySelector('.size-cell .cell-content') || row.querySelector('.size-cell');
-            const dateCell = row.querySelector('.date-cell .cell-content') || row.querySelector('.date-cell');
-
-            const meta = (versions || []).find(v => Number(v.Version ?? v.version) === Number(selectedVersion));
-            if (meta) {
-                if (sizeCell) sizeCell.textContent = formatSize(meta.FileSize ?? meta.fileSize ?? 0);
-                if (dateCell) dateCell.textContent = formatDate(meta.UploadedAt ?? meta.uploadedAt);
-            }
-        }
-
-        function setupAllVersionDropdowns() {
-            document.getElementById('version-dropdown-menu')?.remove();
-
-            document.querySelectorAll('.version-multibutton').forEach(wrapper => {
-                const arrow = wrapper.querySelector('.dropdown-arrow');
-                const button = wrapper.querySelector('.version-button');
-                const row = wrapper.closest('tr');
-                if (!row || !arrow || !button) return;
-
-                const versions = JSON.parse(row.dataset.versions || '[]');
-                let currentVersion = Number(wrapper.dataset.currentVersion);
-
-                arrow.onclick = e => {
-                    e.stopPropagation();
-                    document.getElementById('version-dropdown-menu')?.remove();
-
-                    const menu = document.createElement('div');
-                    menu.id = 'version-dropdown-menu';
-                    menu.className = 'compact';
-                    const rect = wrapper.getBoundingClientRect();
-                    menu.style.position = 'absolute';
-                    menu.style.left = rect.left + 'px';
-                    menu.style.top = rect.bottom + 'px';
-                    menu.style.width = rect.width + 'px';
-                    menu.style.zIndex = '9999';
-
-                    versions.slice().sort((a, b) => Number(b.Version ?? b.version) - Number(a.Version ?? a.version))
-                        .forEach(v => {
-                            const ver = Number(v.Version ?? v.version);
-                            const item = document.createElement('div');
-                            item.className = 'dropdown-item';
-                            item.textContent = 'v' + ver;
-                            if (ver === currentVersion) {
-                                item.style.background = '#e5f1fb';
-                                item.style.fontWeight = 'bold';
-                            }
-                            item.onclick = () => {
-                                button.textContent = 'v' + ver;
-                                wrapper.dataset.currentVersion = String(ver);
-                                currentVersion = ver;
-                                updateRowByVersion(row, ver, versions);
-                                menu.remove();
-                            };
-                            menu.appendChild(item);
-                        });
-
-                    document.body.appendChild(menu);
-                    setTimeout(() => {
-                        function closeOnOutside(e2) {
-                            if (!menu.contains(e2.target)) {
-                                menu.remove();
-                                document.removeEventListener('click', closeOnOutside);
-                            }
-                        }
-                        document.addEventListener('click', closeOnOutside);
-                    }, 0);
-                };
-            });
-        }
-
-        function setupAllActionDropdowns() {
-            document.querySelectorAll('.action-multibutton').forEach(dropdown => {
-                const btn = dropdown.querySelector('.action-button');
-                const arrow = dropdown.querySelector('.dropdown-arrow');
-                const menu = dropdown.querySelector('.action-dropdown-menu');
-                const items = menu ? menu.querySelectorAll('.dropdown-item') : [];
-                let selectedAction = btn?.dataset.action || 'download';
-                if (!btn || !arrow || !menu) return;
-
-                arrow.onclick = e => {
-                    e.stopPropagation();
-                    document.querySelectorAll('.action-dropdown-menu')
-                        .forEach(m => m !== menu && (m.style.display = 'none'));
-                    menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-                };
-
-                btn.onclick = () => {
-                    const row = dropdown.closest('tr');
-                    if (!row) return;
-                    const fileGroupId = row.dataset.fileGroupId;
-                    const version = row.querySelector('.version-button')?.dataset.version || row.dataset.currentVersion;
-
-                    if (selectedAction === 'share') {
-                        if (window.openShareLinkModalFromRow) {
-                            window.openShareLinkModalFromRow(row);
-                            return;
-                        }
-                    }
-                    handleActionClick(selectedAction, fileGroupId, version, row);
-                };
-
-                items.forEach(item => {
-                    item.onclick = () => {
-                        selectedAction = item.dataset.action;
-                        btn.textContent = item.textContent;
-                        btn.dataset.action = selectedAction;
-                        menu.style.display = 'none';
-                    };
-                });
-
-                document.addEventListener('click', e => {
-                    if (!dropdown.contains(e.target)) menu.style.display = 'none';
-                });
-            });
-        }
-
-        function handleActionClick(action, fileGroupId, version, row) {
-            const v = Number(version);
-            const downloadUrl = `/api/upload/download/${fileGroupId}/${v}`;
-
-            switch (action) {
-                case 'download':
-                    window.location.href = downloadUrl;
-                    break;
-                case 'view':
-                    window.open(downloadUrl, '_blank');
-                    break;
-                case 'share':
-                    if (window.openShareLinkModalFromRow && row) {
-                        window.openShareLinkModalFromRow(row);
-                        return;
-                    }
-                    const fd = new FormData();
-                    fd.append('fileGroupId', fileGroupId);
-                    fd.append('version', String(v));
-                    fetch('/api/upload/share-link', { method: 'POST', body: fd })
-                        .then(r => r.ok ? r.json() : Promise.reject(new Error('share-link failed')))
-                        .then(data => {
-                            const url = data && data.url;
-                            if (!url) throw new Error('no url');
-                            return navigator.clipboard.writeText(url)
-                                .then(() => alert('Публичная ссылка скопирована в буфер'))
-                                .catch(() => { prompt('Публичная ссылка (скопируйте вручную):', url); });
-                        })
-                        .catch(err => {
-                            console.error('share error', err);
-                            const ownLink = window.location.origin + downloadUrl;
-                            navigator.clipboard.writeText(ownLink)
-                                .then(() => alert('Скопирована ссылка для владельца (требуется авторизация)'))
-                                .catch(() => { prompt('Ссылка для владельца:', ownLink); });
-                        });
-                    break;
-                case 'delete':
-                    if (!confirm(`Удалить ${fileGroupId} v${v}?`)) return;
-                    fetch(`/api/upload/delete/${fileGroupId}/${v}`, { method: 'DELETE' })
-                        .then(r => {
-                            if (!r.ok) throw new Error('Ошибка удаления');
-                            return r.json();
-                        })
-                        .then(data => {
-                            if (data.status === 'deleted') {
-                                fetchFiles();
-                            } else {
-                                alert('Не удалось удалить файл');
-                            }
-                        })
-                        .catch(err => {
-                            console.error('Ошибка при удалении файла:', err);
-                            alert('Не удалось удалить файл');
-                        });
-                    break;
-            }
-        }
-
-        window.fetchFiles = fetchFiles;
-        fetchFiles();
-    };
-})();
-
-// Optional: sorting helper kept separate. If you already include your own, you may remove this.
-window.initStorageSorting = window.initStorageSorting || function () {
-    if (window.__storageSortingInitialized) return;
-    window.__storageSortingInitialized = true;
-    const table = document.getElementById("userFilesTable");
-    if (!table) return;
-    const tbody = table.querySelector("tbody");
-    const headers = table.querySelectorAll("th");
-
-    let currentSort = {
-        index: 0,
-        ascending: true,
-        type: headers[0]?.dataset.type || 'string'
-    };
-
-    headers.forEach((header, idx) => {
-        const type = header.dataset.type;
-        if (!type) return;
-
-        header.style.cursor = "pointer";
-        header.addEventListener("click", () => {
-            if (currentSort.index === idx) {
-                currentSort.ascending = !currentSort.ascending;
-            } else {
-                currentSort = { index: idx, ascending: true, type: type };
-            }
-            applySorting();
-        });
-    });
-
-    function parseCustomDate(dateStr) {
-        // expects "dd.MM.yyyy HH:mm:ss"
-        const parts = (dateStr || '').split(/[.\s:]/);
-        if (parts.length < 3) return new Date(0);
-        const [day, month, year] = parts;
-        return new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10));
-    }
-
-    function applySorting() {
-        const rows = Array.from(tbody.querySelectorAll("tr"));
-
-        rows.sort((a, b) => {
-            let x = a.children[currentSort.index]?.textContent.trim() || "";
-            let y = b.children[currentSort.index]?.textContent.trim() || "";
-
-            if (currentSort.type === "number") {
-                x = parseFloat(x.replace(",", ".")) || 0;
-                y = parseFloat(y.replace(",", ".")) || 0;
-            } else if (currentSort.type === "date") {
-                x = parseCustomDate(x);
-                y = parseCustomDate(y);
-            } else {
-                x = x.toLowerCase();
-                y = y.toLowerCase();
-            }
-
-            if (x === y) return 0;
-            return currentSort.ascending
-                ? (x > y ? -1 : 1)
-                : (x < y ? -1 : 1);
         });
 
-        headers.forEach(h => h.classList.remove("asc", "desc"));
-        headers[currentSort.index].classList.add(currentSort.ascending ? "asc" : "desc");
+        function parseCustomDate(dateStr) {
+            const parts = (dateStr || '').split(/[.\s:]/);
+            if (parts.length < 3) return new Date(0);
 
-        rows.forEach(row => tbody.appendChild(row));
-    }
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1;
+            const year = parseInt(parts[2], 10);
+            const hours = parts.length > 3 ? parseInt(parts[3], 10) : 0;
+            const minutes = parts.length > 4 ? parseInt(parts[4], 10) : 0;
+            const seconds = parts.length > 5 ? parseInt(parts[5], 10) : 0;
 
-    const initialIndex = Array.from(headers).findIndex(h => h.dataset.type === "date");
-    if (initialIndex !== -1) {
-        currentSort.index = initialIndex;
-        currentSort.type = headers[initialIndex].dataset.type;
-        currentSort.ascending = true;
-    }
+            return new Date(year, month, day, hours, minutes, seconds);
+        }
 
-    applySorting();
+        function applySorting() {
+            const rows = Array.from(tbody.querySelectorAll('tr'));
 
-    window.reapplyStorageSort = function () {
+            rows.sort((a, b) => {
+                let x = a.children[currentSort.index]?.textContent.trim() || '';
+                let y = b.children[currentSort.index]?.textContent.trim() || '';
+
+                if (currentSort.type === 'number') {
+                    x = parseFloat(x.replace(',', '.')) || 0;
+                    y = parseFloat(y.replace(',', '.')) || 0;
+                } else if (currentSort.type === 'date') {
+                    x = parseCustomDate(x);
+                    y = parseCustomDate(y);
+                } else {
+                    x = x.toLowerCase();
+                    y = y.toLowerCase();
+                }
+
+                if (x === y) return 0;
+
+                // Оставляю твою логику как была (по факту: "свежее/больше сверху")
+                return currentSort.ascending
+                    ? (x > y ? -1 : 1)
+                    : (x < y ? -1 : 1);
+            });
+
+            headers.forEach(h => h.classList.remove('asc', 'desc'));
+            headers[currentSort.index].classList.add(currentSort.ascending ? 'asc' : 'desc');
+
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        const initialIndex = Array.from(headers).findIndex(h => h.dataset.type === 'date');
+        if (initialIndex !== -1) {
+            currentSort.index = initialIndex;
+            currentSort.type = headers[initialIndex].dataset.type;
+            currentSort.ascending = true;
+        }
+
         applySorting();
+
+        window.reapplyStorageSort = function () {
+            applySorting();
+            if (savedColumnWidth) applyColumnWidth(table, savedColumnWidth);
+            // после сортировки часто меняется ширина/лейаут — дёрнем ресайзер
+            window.reinitResizer?.();
+        };
+
+        // Ресайзер: сразу + авто-догон на показ секции
+        setTimeout(() => {
+            initColumnResize(table, headers);
+            hookStorageSectionVisibilityAuto();
+        }, 0);
+    }
+
+    // -----------------------------
+    // Resizer cleanup
+    // -----------------------------
+    function cleanupResizerState() {
+        const st = window.__storageResizerState;
+        if (!st) return;
+
+        try { st.ro?.disconnect(); } catch { }
+        try { st.mo?.disconnect(); } catch { }
+        try { st.io?.disconnect(); } catch { }
+
+        try { window.removeEventListener('resize', st.onResize); } catch { }
+
+        try {
+            (st.scrollHosts || []).forEach(h => {
+                try { h.removeEventListener('scroll', st.onScroll); } catch { }
+            });
+        } catch { }
+
+        try {
+            (st.animHosts || []).forEach(h => {
+                try {
+                    h.removeEventListener('animationend', st.onAnimEnd);
+                    h.removeEventListener('transitionend', st.onAnimEnd);
+                } catch { }
+            });
+        } catch { }
+
+        try { st.resizer?.remove(); } catch { }
+
+        window.__storageResizerState = null;
+    }
+
+    // -----------------------------
+    // Resizer init (single active handle)
+    // -----------------------------
+    function initColumnResize(table, headers) {
+        const firstHeader = headers[0];
+        if (!firstHeader) return;
+
+        cleanupResizerState();
+
+        const wrapper = table.closest('.files-table-wrap');
+        if (!wrapper) {
+            console.error('Table wrapper not found');
+            return;
+        }
+
+        wrapper.style.position = 'relative';
+
+        const resizer = document.createElement('div');
+        resizer.className = 'col-resizer-overlay';
+        resizer.setAttribute('aria-hidden', 'true');
+
+        const line = document.createElement('div');
+        line.className = 'col-resizer-line';
+        resizer.appendChild(line);
+
+        wrapper.appendChild(resizer);
+
+        let rafId = 0;
+
+        // viewport по Y: у тебя часто скроллит .content-scrollable, а не wrapper
+        const viewport = wrapper.closest('.content-scrollable') || wrapper;
+
+        function computeVisibleSegment() {
+            const wrapperRect = wrapper.getBoundingClientRect();
+            const viewportRect = viewport.getBoundingClientRect();
+
+            const visibleTop = Math.max(wrapperRect.top, viewportRect.top);
+            const visibleBottom = Math.min(wrapperRect.bottom, viewportRect.bottom);
+
+            // clamp
+            const rawTopLocal = visibleTop - wrapperRect.top;
+            const topLocal = Math.max(0, Math.min(rawTopLocal, wrapperRect.height));
+
+            const rawHeight = visibleBottom - visibleTop;
+            const height = Math.max(0, Math.min(rawHeight, wrapperRect.height - topLocal));
+
+            return { height, topLocal };
+        }
+
+
+        // ВАЖНО: X считаем по layout-координатам (offsetLeft/offsetWidth),
+        // чтобы не зависеть от промежуточных transform/анимаций/подгрузок.
+        function calcLeftPx() {
+            const w = firstHeader.offsetWidth;
+            if (!w || w <= 0) return null;
+
+            // offsetLeft для TH в таблице нормальный (layout координаты)
+            const left = (firstHeader.offsetLeft + w) - 7;
+            if (!Number.isFinite(left) || left < 0) return null;
+
+            return left;
+        }
+
+        function updatePosition() {
+            // если секция скрыта/ещё не в лэйауте
+            if (wrapper.offsetWidth <= 0 || wrapper.offsetHeight <= 0) return false;
+
+            const leftPx = calcLeftPx();
+            if (leftPx === null) return false;
+
+            const { height, topLocal } = computeVisibleSegment();
+            if (height <= 4) return false;
+
+            resizer.style.position = 'absolute';
+            resizer.style.left = `${leftPx}px`;
+            resizer.style.top = `${topLocal}px`;
+            resizer.style.width = `14px`;
+            resizer.style.height = `${height}px`;
+            resizer.style.cursor = 'col-resize';
+            resizer.style.zIndex = '999';
+            resizer.style.userSelect = 'none';
+            resizer.style.pointerEvents = 'auto';
+            resizer.style.background = 'transparent';
+
+            line.style.position = 'absolute';
+            line.style.left = '50%';
+            line.style.top = '0';
+            line.style.transform = 'translateX(-50%)';
+            line.style.width = '2px';
+            line.style.height = '100%';
+            line.style.borderRadius = '999px';
+            line.style.background = window.__storageResizerState?.isResizing
+                ? 'rgba(90, 155, 213, 0.85)'
+                : 'rgba(17, 24, 39, 0.18)';
+
+            return true;
+        }
+
+        function scheduleUpdate() {
+            if (rafId) cancelAnimationFrame(rafId);
+            rafId = requestAnimationFrame(() => {
+                updatePosition();
+            });
+        }
+
+        // 1) Первый апдейт
+        scheduleUpdate();
+
+        // 2) “settle-loop” — первые ~1.1с поджимаем позицию,
+        // чтобы пережить анимации/подгрузку строк/шрифты.
+        const settleStart = performance.now();
+        const SETTLE_MS = 1100;
+
+        function settleTick() {
+            scheduleUpdate();
+            if (performance.now() - settleStart < SETTLE_MS) {
+                requestAnimationFrame(settleTick);
+            }
+        }
+        requestAnimationFrame(settleTick);
+
+        // 3) После полной загрузки страницы/шрифтов — ещё раз
+        window.addEventListener('load', scheduleUpdate, { once: true });
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(() => scheduleUpdate()).catch(() => { });
+        }
+
+        // hover
+        resizer.addEventListener('mouseenter', () => {
+            if (!window.__storageResizerState?.isResizing) {
+                line.style.background = 'rgba(90, 155, 213, 0.55)';
+            }
+        });
+        resizer.addEventListener('mouseleave', () => {
+            if (!window.__storageResizerState?.isResizing) {
+                line.style.background = 'rgba(17, 24, 39, 0.18)';
+            }
+        });
+
+        // scroll hosts: по X может быть wrapper, по Y часто viewport
+        const scrollHosts = [];
+        if (wrapper) scrollHosts.push(wrapper);
+        if (viewport && viewport !== wrapper) scrollHosts.push(viewport);
+
+        const onScroll = () => scheduleUpdate();
+        scrollHosts.forEach(h => h.addEventListener('scroll', onScroll, { passive: true }));
+
+        const onResize = () => scheduleUpdate();
+        window.addEventListener('resize', onResize);
+
+        // ResizeObserver: если меняется ширина/высота
+        const ro = new ResizeObserver(() => scheduleUpdate());
+        ro.observe(wrapper);
+        ro.observe(table);
+        ro.observe(firstHeader);
+        ro.observe(viewport);
+
+        // MutationObserver: наблюдаем ЗА ТАБЛИЦЕЙ ЦЕЛИКОМ (на случай пересоздания tbody)
+        const mo = new MutationObserver(() => scheduleUpdate());
+        mo.observe(table, { childList: true, subtree: true });
+
+        // IntersectionObserver: когда реально попали в viewport
+        const io = new IntersectionObserver((entries) => {
+            if (entries.some(e => e.isIntersecting)) scheduleUpdate();
+        }, { threshold: 0.01 });
+        io.observe(wrapper);
+
+        // Если вокруг есть анимации/переходы — после их завершения позиционируем снова
+        const storageSection = document.getElementById('storage');
+        const animHosts = [
+            document.querySelector('.profile_background'),
+            document.querySelector('.profile-container'),
+            storageSection
+        ].filter(Boolean);
+
+        const onAnimEnd = () => {
+            // небольшой таймаут, чтобы браузер успел применить финальный layout
+            setTimeout(() => scheduleUpdate(), 0);
+        };
+
+        animHosts.forEach(h => {
+            h.addEventListener('animationend', onAnimEnd);
+            h.addEventListener('transitionend', onAnimEnd);
+        });
+
+        // Drag
+        let startX = 0;
+        let startWidth = 0;
+
+        resizer.addEventListener('mousedown', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            window.__storageResizerState.isResizing = true;
+
+            startX = e.pageX;
+            startWidth = firstHeader.offsetWidth || 0;
+
+            document.body.classList.add('table-resizing');
+            line.style.background = 'rgba(90, 155, 213, 0.85)';
+
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp);
+        });
+
+        function handleMouseMove(e) {
+            if (!window.__storageResizerState?.isResizing) return;
+
+            const diff = e.pageX - startX;
+            const newWidth = Math.max(120, startWidth + diff);
+
+            savedColumnWidth = newWidth;
+            applyColumnWidth(table, newWidth);
+            table.classList.add('user-resized');
+
+            scheduleUpdate();
+        }
+
+        function handleMouseUp() {
+            if (!window.__storageResizerState?.isResizing) return;
+
+            window.__storageResizerState.isResizing = false;
+
+            document.body.classList.remove('table-resizing');
+            line.style.background = 'rgba(17, 24, 39, 0.18)';
+
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+
+            // финальная позиция
+            scheduleUpdate();
+        }
+
+        window.__storageResizerState = {
+            resizer,
+            ro,
+            mo,
+            io,
+            onScroll,
+            onResize,
+            scrollHosts,
+            animHosts,
+            onAnimEnd,
+            isResizing: false
+        };
+
+        console.log('Resizer overlay created (single active handle, settled)');
+    }
+
+    function applyColumnWidth(table, width) {
+        const firstHeader = table.querySelector('thead th:first-child');
+        if (firstHeader) {
+            firstHeader.style.width = width + 'px';
+            firstHeader.style.minWidth = width + 'px';
+            firstHeader.style.maxWidth = width + 'px';
+        }
+
+        const firstCells = table.querySelectorAll('tbody tr td:first-child');
+        firstCells.forEach(cell => {
+            cell.style.width = width + 'px';
+            cell.style.minWidth = width + 'px';
+            cell.style.maxWidth = width + 'px';
+        });
+    }
+
+    window.applyStorageColumnWidth = function () {
+        const table = document.getElementById('userFilesTable');
+        if (table && savedColumnWidth) applyColumnWidth(table, savedColumnWidth);
     };
-};
+
+    window.reinitResizer = function () {
+        const table = document.getElementById('userFilesTable');
+        const headers = table?.querySelectorAll('th');
+        if (table && headers && headers.length) {
+            initColumnResize(table, headers);
+            if (savedColumnWidth) applyColumnWidth(table, savedColumnWidth);
+        }
+    };
+
+    // авто: когда секция storage становится активной (SPA)
+    function hookStorageSectionVisibilityAuto() {
+        if (window.__storageResizerVisibilityHooked) return;
+        window.__storageResizerVisibilityHooked = true;
+
+        const storageSection = document.getElementById('storage');
+        if (!storageSection) return;
+
+        const mo = new MutationObserver(() => {
+            const isActive = storageSection.classList.contains('active') || storageSection.style.display !== 'none';
+            if (!isActive) return;
+
+            requestAnimationFrame(() => {
+                window.reinitResizer?.();
+            });
+        });
+
+        mo.observe(storageSection, { attributes: true, attributeFilter: ['class', 'style'] });
+    }
+
+    window.initStorageSorting = window.initStorageSorting || initSortingInternal;
+
+})();

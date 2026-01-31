@@ -1,0 +1,150 @@
+﻿/*upload-gate.css*/
+:root {
+    --ug-pad: 5px;
+    --ug-gap: 10px;
+    --ug-radius: 10px;
+    --ug-font: 14px;
+    --ug-shadow: 0 12px 32px rgba(0,0,0,.35);
+    --ug-w: min(420px, calc(100vw - 24px));
+}
+
+#upload-gate-dock.upload-gate-dock {
+    position: fixed;
+    right: 14px;
+    bottom: 14px;
+    width: var(--ug-w);
+    z-index: 99999;
+    background: rgba(28,28,28,.96);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: var(--ug-radius);
+    box-shadow: var(--ug-shadow);
+    display: none;
+    overflow: hidden;
+    font-size: var(--ug-font);
+    backdrop-filter: blur(6px);
+}
+
+#upload-gate-dock.is-open {
+    display: block;
+}
+
+#upload-gate-dock .upload-gate__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ug-gap);
+    padding: var(--ug-pad);
+    background: rgba(255,255,255,0.06);
+}
+
+#upload-gate-dock .upload-gate__title {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    min-width: 0;
+}
+
+#upload-gate-dock .upload-gate__status {
+    font-weight: 800;
+    letter-spacing: .2px;
+}
+
+#upload-gate-dock .upload-gate__percent {
+    opacity: .9;
+    font-weight: 700;
+}
+
+#upload-gate-dock .upload-gate__hdr-actions {
+    display: inline-flex;
+    gap: 8px;
+}
+
+#upload-gate-dock .upload-gate__iconbtn {
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.08);
+    color: #fff;
+    cursor: pointer;
+}
+
+#upload-gate-dock .upload-gate__body {
+    padding: var(--ug-pad);
+    display: flex;
+    flex-direction: column;
+    gap: var(--ug-gap);
+}
+
+#upload-gate-dock .upload-gate__filename {
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    opacity: .95;
+}
+
+#upload-gate-dock .upload-gate__bar {
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.14);
+    overflow: hidden;
+}
+
+#upload-gate-dock .upload-gate__barfill {
+    height: 100%;
+    width: 0%;
+    border-radius: inherit;
+    background: rgba(37, 99, 235, 0.95);
+    transition: width 160ms linear;
+}
+
+#upload-gate-dock.mode-paused .upload-gate__barfill {
+    background: rgba(245, 158, 11, 0.95);
+}
+
+#upload-gate-dock .upload-gate__meta {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--ug-gap);
+    opacity: .85;
+    font-size: 12px;
+}
+
+#upload-gate-dock .upload-gate__actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+#upload-gate-dock .upload-gate__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 0;
+    cursor: pointer;
+    font-weight: 800;
+    font-size: var(--ug-font);
+}
+
+#upload-gate-dock .upload-gate__btn--primary {
+    background: #2563eb;
+    color: #fff;
+}
+
+#upload-gate-dock .upload-gate__btn--danger {
+    background: #b91c1c;
+    color: #fff;
+}
+
+#upload-gate-dock.is-collapsed .upload-gate__body {
+    display: none;
+}
+
+#upload-gate-dock.is-collapsed {
+    width: min(220px, calc(100vw - 24px));
+}
