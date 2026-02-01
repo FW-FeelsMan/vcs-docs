@@ -1023,10 +1023,11 @@ th.desc::after {
     }
 
     #storage .files-table-wrap {
+        min-width: 100%;
+        display: inline-block;
+        overflow: visible;
         position: relative;
         margin-top: calc(20px * var(--ui-scale));
-        overflow-x: auto;
-        overflow-y: hidden;
         border-radius: calc(10px * var(--ui-scale));
         clip-path: inset(0 round calc(10px * var(--ui-scale)));
         contain: paint;
@@ -1041,7 +1042,7 @@ th.desc::after {
         background: #fff;
         border: calc(1px * var(--ui-scale)) solid var(--card-border);
         border-radius: calc(10px * var(--ui-scale));
-        overflow: hidden;
+        overflow: visible;
         margin-top: 0 !important;
     }
 
@@ -1066,10 +1067,10 @@ th.desc::after {
             }
 
         #storage table#userFilesTable.file-table thead th {
-            position: sticky;
-            top: 0;
+            position: sticky !important;
+            top: 0 !important;
             background: #fff;
-            z-index: 2;
+            z-index: 50 !important;
             border-bottom: 1px solid var(--grid-line-strong);
             user-select: none;
         }
@@ -1096,8 +1097,12 @@ th.desc::after {
             width: 250px;
             min-width: 120px;
             max-width: 200px;
+        }
+
+        #storage table#userFilesTable.file-table td:nth-child(1) {
             position: relative;
         }
+
 
         #storage table#userFilesTable.file-table.user-resized th:nth-child(1),
         #storage table#userFilesTable.file-table.user-resized td:nth-child(1) {
@@ -1618,3 +1623,26 @@ body.table-resizing {
         font-size: 1.25rem;
     }
 }
+
+/* === Storage table UX (prod) ===
+   - Horizontal scroll lives on the section scroller, not at the bottom of the table.
+   - Header stays visible while scrolling vertically.
+*/
+#storage .content-scrollable {
+    overflow-x: auto !important;
+}
+
+#storage .files-table-wrap {
+    overflow: visible !important; /* avoid a second horizontal scrollbar */
+}
+
+#storage table#userFilesTable.file-table {
+    overflow: visible !important; /* don't break sticky header */
+}
+
+    #storage table#userFilesTable.file-table thead th {
+        position: sticky !important; /* override column rules (e.g. nth-child) */
+        top: 0 !important;
+        z-index: 50 !important;
+        background: #fff;
+    }

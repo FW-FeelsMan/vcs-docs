@@ -3,6 +3,93 @@
 (function () {
     'use strict';
 
+    // External horizontal scrollbar (below the table, synced with .files-table-wrap)
+    const HSCROLL_ID = 'storageHScroll';
+
+    function ensureExternalHScroll() {
+        const storage = document.querySelector('#storage');
+        if (!storage) return null;
+
+        const wrap = storage.querySelector('.files-table-wrap');
+        const table = storage.querySelector('#userFilesTable');
+        if (!wrap || !table) return null;
+
+        let bar = storage.querySelector('#' + HSCROLL_ID);
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.id = HSCROLL_ID;
+            bar.className = 'files-hscroll';
+
+            const inner = document.createElement('div');
+            inner.className = 'files-hscroll-inner';
+            bar.appendChild(inner);
+
+            // Put it right under the table wrapper inside the scrollable area
+            wrap.insertAdjacentElement('afterend', bar);
+        }
+
+        return bar;
+    }
+
+    function updateExternalHScrollWidth() {
+        const storage = document.querySelector('#storage');
+        if (!storage) return;
+
+        const wrap = storage.querySelector('.files-table-wrap');
+        const table = storage.querySelector('#userFilesTable');
+        const bar = storage.querySelector('#' + HSCROLL_ID);
+        if (!wrap || !table || !bar) return;
+
+        const inner = bar.querySelector('.files-hscroll-inner');
+        if (!inner) return;
+
+        const w = Math.max(table.scrollWidth, wrap.clientWidth);
+        inner.style.width = w + 'px';
+
+        const fits = table.scrollWidth <= wrap.clientWidth + 1;
+        bar.style.opacity = fits ? '0.35' : '1';
+        bar.style.pointerEvents = fits ? 'none' : 'auto';
+    }
+
+    function bindExternalHScrollOnce() {
+        if (window.__storageHScrollBound) return;
+        window.__storageHScrollBound = true;
+
+        window.addEventListener('resize', () => {
+            updateExternalHScrollWidth();
+        }, { passive: true });
+    }
+
+    function syncExternalHScroll() {
+        const storage = document.querySelector('#storage');
+        if (!storage) return;
+
+        const wrap = storage.querySelector('.files-table-wrap');
+        const bar = storage.querySelector('#' + HSCROLL_ID);
+        if (!wrap || !bar) return;
+
+        if (bar.__hscrollBound) return;
+        bar.__hscrollBound = true;
+
+        let lock = 0;
+
+        wrap.addEventListener('scroll', () => {
+            if (lock === 1) return;
+            lock = 2;
+            bar.scrollLeft = wrap.scrollLeft;
+            requestAnimationFrame(() => { lock = 0; });
+        }, { passive: true });
+
+        bar.addEventListener('scroll', () => {
+            if (lock === 2) return;
+            lock = 1;
+            wrap.scrollLeft = bar.scrollLeft;
+            requestAnimationFrame(() => { lock = 0; });
+        }, { passive: true });
+    }
+
+
+
     const API_USER_FILES = '/api/Upload/user-files';
 
     const MENU_IDS = {
@@ -11,6 +98,7 @@
     };
 
     window.initStorageTable = function initStorageTable() {
+        bindExternalHScrollOnce();
         const tableBody = document.querySelector('#userFilesTable tbody');
         const counter = document.getElementById('storageCounter');
         if (!tableBody) return;
@@ -142,6 +230,11 @@
 
             if (typeof window.reapplyStorageSort === 'function') window.reapplyStorageSort();
             if (typeof window.applyStorageColumnWidth === 'function') window.applyStorageColumnWidth();
+
+            // External horizontal scrollbar (below the table)
+            ensureExternalHScroll();
+            updateExternalHScrollWidth();
+            syncExternalHScroll();
         }
 
         const safeParseJson = (s, fallback) => {

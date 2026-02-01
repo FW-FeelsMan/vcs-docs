@@ -203,7 +203,7 @@
             if (!w || w <= 0) return null;
 
             // offsetLeft для TH в таблице нормальный (layout координаты)
-            const left = (firstHeader.offsetLeft + w) - 7;
+            const left = (firstHeader.offsetLeft + w) - wrapper.scrollLeft - 7;
             if (!Number.isFinite(left) || left < 0) return null;
 
             return left;
