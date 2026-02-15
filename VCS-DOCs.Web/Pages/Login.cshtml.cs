@@ -169,9 +169,16 @@ public sealed class LoginModel : PageModel
 
 			return await RegisterOrganizationAsync(speciality, username, emailToUse, password, ct);
 		}
-		catch
+		catch (Exception ex)
 		{
-			return JsonFailReg("Произошла ошибка при регистрации.");
+			var traceId = HttpContext.TraceIdentifier;
+			_logger.LogError(ex, "Registration failed. TraceId={TraceId}", traceId);
+
+			var msg = _webHostEnvironment.IsDevelopment()
+				? $"Произошла ошибка при регистрации. Код: {traceId}. {ex.GetBaseException().Message}"
+				: $"Произошла ошибка при регистрации. Код: {traceId}. Сообщите этот код администратору.";
+
+			return JsonFailReg(msg);
 		}
 	}
 
