@@ -11,8 +11,8 @@ using VCS_DOCs.Infrastructure.Data;
 namespace VCS_DOCs.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260215162416_Fix_CreateOrganizationsTables")]
-    partial class Fix_CreateOrganizationsTables
+    [Migration("20260215171319_AddOrganizationTables")]
+    partial class AddOrganizationTables
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

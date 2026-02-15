@@ -43,95 +43,6 @@ namespace VCS_DOCs.Infrastructure.Migrations
                     b.ToTable("AspNetRoles", (string)null);
                 });
 
-
-            modelBuilder.Entity("VCS_DOCs.Models.Entities.Organization", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<string>("Country")
-                        .IsRequired()
-                        .HasMaxLength(80)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Inn")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT");
-
-                    b.Property<bool>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(120)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Country", "Inn")
-                        .IsUnique();
-
-                    b.HasIndex("Email")
-                        .IsUnique();
-
-                    b.ToTable("Organizations");
-                });
-
-            modelBuilder.Entity("VCS_DOCs.Models.Entities.OrganizationMember", b =>
-                {
-                    b.Property<string>("OrganizationId")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("UserId")
-                        .HasMaxLength(64)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<string>("Position")
-                        .HasMaxLength(120)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("OrganizationId", "UserId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("OrganizationMembers");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.Property<int>("Id")
@@ -784,7 +695,6 @@ namespace VCS_DOCs.Infrastructure.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -893,14 +803,6 @@ namespace VCS_DOCs.Infrastructure.Migrations
                     b.Navigation("Members");
                 });
 
-<<<<<<< HEAD
-            modelBuilder.Entity("VCS_DOCs.Models.Entities.User", b =>
-                {
-                    b.Navigation("OrganizationMemberships");
-                });
-
-=======
->>>>>>> 1fd0028a3336097360458b4e89a67908623a7110
             modelBuilder.Entity("VCS_DOCs.Models.Entities.SupportTicket", b =>
                 {
                     b.Navigation("Messages");

@@ -1,16 +1,14 @@
 ﻿using System;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
-using VCS_DOCs.Infrastructure.Data;
 
 #nullable disable
 
 namespace VCS_DOCs.Infrastructure.Migrations
 {
-    [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260215000000_AddOrganizationsAndUniqueEmail")]
-    public partial class AddOrganizationsAndUniqueEmail : Migration
+    /// <inheritdoc />
+    public partial class AddOrganizationTables : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropIndex(
@@ -87,6 +85,7 @@ namespace VCS_DOCs.Infrastructure.Migrations
                 unique: true);
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
