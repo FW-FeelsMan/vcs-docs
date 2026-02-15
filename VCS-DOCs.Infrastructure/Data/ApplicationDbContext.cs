@@ -24,6 +24,8 @@ namespace VCS_DOCs.Infrastructure.Data
         public DbSet<SupportTicketMessage> SupportTicketMessages => Set<SupportTicketMessage>();
         public DbSet<SupportProject> SupportProjects => Set<SupportProject>();
         public DbSet<SupportTicketAttachment> SupportTicketAttachments => Set<SupportTicketAttachment>();
+        public DbSet<Organization> Organizations => Set<Organization>();
+        public DbSet<OrganizationMember> OrganizationMembers => Set<OrganizationMember>();
 
         protected override void OnModelCreating(ModelBuilder b)
         {
@@ -176,6 +178,57 @@ namespace VCS_DOCs.Infrastructure.Data
                  .WithMany()
                  .HasForeignKey(x => x.MessageId)
                  .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            // ------- Organizations -------
+            b.Entity<Organization>(e =>
+            {
+                e.ToTable("Organizations");
+                e.HasKey(x => x.Id);
+
+                e.Property(x => x.Id).HasMaxLength(36);
+                e.Property(x => x.Name).HasMaxLength(120).IsRequired();
+                e.Property(x => x.Inn).HasMaxLength(20).IsRequired();
+                e.Property(x => x.Email).HasMaxLength(120).IsRequired();
+                e.Property(x => x.Country).HasMaxLength(80).IsRequired();
+                e.Property(x => x.Address).HasMaxLength(200).IsRequired();
+                e.Property(x => x.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                e.Property(x => x.UpdatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+                e.Property(x => x.IsDeleted).HasDefaultValue(false);
+
+                e.HasIndex(x => new { x.Country, x.Inn }).IsUnique();
+                e.HasIndex(x => x.Email).IsUnique();
+            });
+
+            b.Entity<OrganizationMember>(e =>
+            {
+                e.ToTable("OrganizationMembers");
+                e.HasKey(x => new { x.OrganizationId, x.UserId });
+
+                e.Property(x => x.OrganizationId).HasMaxLength(36);
+                e.Property(x => x.UserId).HasMaxLength(64);
+                e.Property(x => x.Position).HasMaxLength(120);
+                e.Property(x => x.Role).HasConversion<string>().HasMaxLength(20).IsRequired();
+                e.Property(x => x.CreatedAt).HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                e.HasIndex(x => x.UserId);
+
+                e.HasOne(x => x.Organization)
+                    .WithMany(x => x.Members)
+                    .HasForeignKey(x => x.OrganizationId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                e.HasOne(x => x.User)
+                    .WithMany(x => x.OrganizationMemberships)
+                    .HasForeignKey(x => x.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            b.Entity<User>(e =>
+            {
+                e.HasIndex(x => x.NormalizedEmail)
+                    .IsUnique()
+                    .HasDatabaseName("EmailIndex");
             });
         }
 

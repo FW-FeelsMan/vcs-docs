@@ -18,5 +18,6 @@ namespace VCS_DOCs.Models.Entities
 		public string? JwtId { get; set; }
 		public bool IsDeleted { get; set; } = false;
 		public long? StorageLimitBytes { get; set; }
+		public ICollection<OrganizationMember> OrganizationMemberships { get; set; } = new List<OrganizationMember>();
 	}
 }

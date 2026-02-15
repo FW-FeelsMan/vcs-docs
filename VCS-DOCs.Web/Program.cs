@@ -117,6 +117,7 @@ builder.Services
 
 builder.Services.Configure<IdentityOptions>(opt =>
 {
+	opt.User.RequireUniqueEmail = true;
 	opt.Password.RequireDigit = true;
 	opt.Password.RequireLowercase = true;
 	opt.Password.RequireUppercase = true;
