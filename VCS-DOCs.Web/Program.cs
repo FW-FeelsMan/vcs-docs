@@ -280,6 +280,23 @@ Directory.CreateDirectory(absoluteUserDataPath);
 using (var scope = app.Services.CreateScope())
 {
 	var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+	var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("DB");
+
+	logger.LogWarning("DB DATASOURCE (runtime): {DataSource}", db.Database.GetDbConnection().DataSource);
+
+	// ВАЖНО: применяем миграции
+	var pending = (await db.Database.GetPendingMigrationsAsync()).ToList();
+	logger.LogWarning("DB pending migrations: {Count} => {List}", pending.Count, string.Join(", ", pending));
+
+	await db.Database.MigrateAsync();
+	var tables = await db.Database
+	.SqlQueryRaw<string>("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;")
+	.ToListAsync();
+
+	logger.LogWarning("DB tables: {Tables}", string.Join(", ", tables));
+
+	var applied = (await db.Database.GetAppliedMigrationsAsync()).ToList();
+	logger.LogWarning("DB applied migrations: {Count} (last: {Last})", applied.Count, applied.LastOrDefault());
 
 	db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
 	db.Database.ExecuteSqlRaw("PRAGMA synchronous=NORMAL;");
