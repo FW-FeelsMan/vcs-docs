@@ -11,6 +11,7 @@ using VCS_DOCs.Infrastructure.Auth;
 using VCS_DOCs.Infrastructure.Data;
 using VCS_DOCs.Models.Entities;
 using VCS_DOCs.Utilities;
+using static VCS_DOCs.Models.Entities.OrganizationMemberRole;
 
 namespace VCS_DOCs.Pages;
 
@@ -21,6 +22,7 @@ public sealed class LoginModel : PageModel
 	private const int MinPasswordLength = 6;
 	private const int MaxPathLength = 260;
 	private const int MaxFailedAttempts = 5;
+	private const string RegisterOrganizationLabel = "Зарегистрировать организацию";
 
 	private static readonly TimeSpan LockWindow = TimeSpan.FromMinutes(10);
 	private static readonly Regex UsernameRegex = new(@"^[a-zA-Z0-9._-]+$", RegexOptions.Compiled);
@@ -37,6 +39,7 @@ public sealed class LoginModel : PageModel
 	private readonly IWebHostEnvironment _webHostEnvironment;
 	private readonly SignInManager<User> _signInManager;
 	private readonly UserManager<User> _userManager;
+	private readonly ApplicationDbContext _dbContext;
 
 	public LoginModel(
 		ILogger<LoginModel> logger,
@@ -44,7 +47,8 @@ public sealed class LoginModel : PageModel
 		IUserService userService,
 		IWebHostEnvironment webHostEnvironment,
 		SignInManager<User> signInManager,
-		UserManager<User> userManager)
+		UserManager<User> userManager,
+		ApplicationDbContext dbContext)
 	{
 		_logger = logger;
 		_hubContext = hubContext;
@@ -52,6 +56,7 @@ public sealed class LoginModel : PageModel
 		_webHostEnvironment = webHostEnvironment;
 		_signInManager = signInManager;
 		_userManager = userManager;
+		_dbContext = dbContext;
 	}
 
 	[BindProperty] public string Username { get; set; } = string.Empty;
@@ -144,89 +149,218 @@ public sealed class LoginModel : PageModel
 	public async Task<IActionResult> OnPostRegisterAsync(CancellationToken ct = default)
 	{
 		var speciality = (Request.Form["speciality"].ToString() ?? string.Empty).Trim();
+		var isOrg = string.Equals(speciality, RegisterOrganizationLabel, StringComparison.OrdinalIgnoreCase);
 
-		// username/password/confirm могут приходить из basic или org (у них одинаковые name)
 		var username = (Username ?? string.Empty).Trim();
 		var password = Password ?? string.Empty;
 		var confirmPassword = ConfirmPassword ?? string.Empty;
-
-		// Email:
-		// - для обычной регистрации берём Email (новое поле)
-		// - для организации берём OwnerEmail
-		var isOrg = string.Equals(speciality, "Зарегистрировать организацию", StringComparison.OrdinalIgnoreCase);
-
 		var emailBasic = (Email ?? string.Empty).Trim();
-		var emailOwner = (Request.Form["OwnerEmail"].ToString() ?? string.Empty).Trim();
+		var ownerEmail = (Request.Form["OwnerEmail"].ToString() ?? string.Empty).Trim();
+		var emailToUse = isOrg ? ownerEmail : emailBasic;
 
-		var emailToUse = isOrg ? emailOwner : emailBasic;
-
-		var formatError = ValidateRegisterFormat(username, password, confirmPassword, emailToUse, isOrg);
-		if (formatError is not null)
-			return JsonFailReg(formatError);
+		var formatErrors = ValidateRegisterFormat(username, password, confirmPassword, emailToUse, isOrg, Request.Form);
+		if (formatErrors.Count > 0)
+			return JsonFailReg(formatErrors.ToArray());
 
 		try
 		{
-			var existingUser = await _userManager.FindByNameAsync(username);
-			if (existingUser is not null)
-				return JsonFailReg("Пользователь с таким логином уже существует.");
+			if (!isOrg)
+				return await RegisterBasicAsync(speciality, username, emailToUse, password);
 
-			// (опционально, но логично) запретить дубли email для обычной регистрации
-			// if (!string.IsNullOrWhiteSpace(emailToUse))
-			// {
-			//     var byEmail = await _userManager.FindByEmailAsync(emailToUse);
-			//     if (byEmail is not null) return JsonFailReg("Пользователь с таким Email уже существует.");
-			// }
-
-			var newUser = new User
-			{
-				UserName = username,
-				Email = emailToUse, // NEW
-				Speciality = speciality,
-				StatusOnline = 0,
-				HardwareId = null,
-				LastEntry = null,
-				CreatedAt = DateTime.UtcNow,
-				UpdatedAt = DateTime.UtcNow,
-				IsDeleted = false,
-				Access = 0,
-				StorageLimitBytes = 10L * 1024 * 1024 * 1024
-			};
-
-			var createRes = await _userManager.CreateAsync(newUser, password);
-			if (!createRes.Succeeded)
-				return JsonFailReg(createRes.Errors.Select(e => e.Description).ToArray());
-
-			var roleMgr = HttpContext.RequestServices.GetRequiredService<RoleManager<IdentityRole>>();
-			if (!await roleMgr.RoleExistsAsync(Roles.BaseUser))
-				await roleMgr.CreateAsync(new IdentityRole(Roles.BaseUser));
-
-			var roleRes = await _userManager.AddToRoleAsync(newUser, Roles.BaseUser);
-			if (!roleRes.Succeeded)
-			{
-				await _userManager.DeleteAsync(newUser);
-				return JsonFailReg(roleRes.Errors.Select(e => e.Description).ToArray());
-			}
-
-			var appDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData");
-			var shortUserId = ToShortUserId(newUser.Id);
-			var userFolderName = $"u_{shortUserId}";
-			var userDataPath = Path.Combine(appDataPath, userFolderName);
-
-			if (userDataPath.Length >= MaxPathLength)
-			{
-				await _userManager.DeleteAsync(newUser);
-				return JsonFailReg("Не удалось создать пользователя: путь к папке слишком длинный. Попробуйте более короткий логин.");
-			}
-
-			Directory.CreateDirectory(userDataPath);
-
-			IsRegistrationSuccessful = true;
-			return new JsonResult(new { success = true });
+			return await RegisterOrganizationAsync(speciality, username, emailToUse, password, ct);
 		}
 		catch
 		{
 			return JsonFailReg("Произошла ошибка при регистрации.");
 		}
+	}
+
+	private async Task<IActionResult> RegisterBasicAsync(string speciality, string username, string email, string password)
+	{
+		var existingUser = await _userManager.FindByNameAsync(username);
+		if (existingUser is not null)
+			return JsonFailReg("Пользователь с таким логином уже существует.");
+
+		var byEmail = await _userManager.FindByEmailAsync(email);
+		if (byEmail is not null)
+			return JsonFailReg("Пользователь с таким Email уже существует.");
+
+		var createResult = await CreateBaseUserAsync(speciality, username, email, password);
+		if (!createResult.Success || createResult.User is null)
+			return JsonFailReg(createResult.Errors.ToArray());
+
+		IsRegistrationSuccessful = true;
+		return new JsonResult(new { success = true });
+	}
+
+	private async Task<IActionResult> RegisterOrganizationAsync(string speciality, string username, string ownerEmail, string password, CancellationToken ct)
+	{
+		var orgName = (Request.Form["OrgName"].ToString() ?? string.Empty).Trim();
+		var orgInn = (Request.Form["OrgInn"].ToString() ?? string.Empty).Trim();
+		var orgEmail = (Request.Form["OrgEmail"].ToString() ?? string.Empty).Trim();
+		var orgCountry = (Request.Form["OrgCountry"].ToString() ?? string.Empty).Trim();
+		var orgAddress = (Request.Form["OrgAddress"].ToString() ?? string.Empty).Trim();
+		var ownerFullName = (Request.Form["OwnerFullName"].ToString() ?? string.Empty).Trim();
+		var ownerPosition = (Request.Form["OwnerPosition"].ToString() ?? string.Empty).Trim();
+
+		var existingOrgByInn = await _dbContext.Organizations
+			.AnyAsync(x => x.Country == orgCountry && x.Inn == orgInn, ct);
+		if (existingOrgByInn)
+			return JsonFailReg("Организация с таким ИНН в указанной стране уже зарегистрирована.");
+
+		var existingOrgByEmail = await _dbContext.Organizations
+			.AnyAsync(x => x.Email == orgEmail, ct);
+		if (existingOrgByEmail)
+			return JsonFailReg("Организация с таким Email уже зарегистрирована.");
+
+		var userByName = await _userManager.FindByNameAsync(username);
+		var userByEmail = await _userManager.FindByEmailAsync(ownerEmail);
+
+		User? ownerUser;
+		if (userByName is null && userByEmail is null)
+		{
+			var createResult = await CreateBaseUserAsync(speciality, username, ownerEmail, password, ownerFullName);
+			if (!createResult.Success || createResult.User is null)
+				return JsonFailReg(createResult.Errors.ToArray());
+
+			ownerUser = createResult.User;
+		}
+		else if (userByName is not null)
+		{
+			if (userByName.IsDeleted)
+				return JsonFailReg("Нельзя использовать удалённую учетную запись владельца.");
+
+			if (!string.Equals(userByName.Email, ownerEmail, StringComparison.OrdinalIgnoreCase))
+				return JsonFailReg("Указанный логин уже привязан к другому Email.");
+
+			var passwordMatches = await _userManager.CheckPasswordAsync(userByName, password);
+			if (!passwordMatches)
+				return JsonFailReg("Для привязки существующего владельца укажите корректный пароль этого аккаунта.");
+
+			ownerUser = userByName;
+		}
+		else
+		{
+			return JsonFailReg("Пользователь с таким Email уже существует под другим логином.");
+		}
+
+		var membershipRole = DetectMembershipRole(ownerPosition);
+		var organization = new Organization
+		{
+			Id = Guid.NewGuid().ToString("D"),
+			Name = orgName,
+			Inn = orgInn,
+			Email = orgEmail,
+			Country = orgCountry,
+			Address = orgAddress,
+			CreatedAt = DateTime.UtcNow,
+			UpdatedAt = DateTime.UtcNow,
+			IsDeleted = false
+		};
+
+		var member = new OrganizationMember
+		{
+			OrganizationId = organization.Id,
+			UserId = ownerUser.Id,
+			Role = membershipRole,
+			Position = string.IsNullOrWhiteSpace(ownerPosition) ? null : ownerPosition,
+			CreatedAt = DateTime.UtcNow
+		};
+
+		_dbContext.Organizations.Add(organization);
+		_dbContext.OrganizationMembers.Add(member);
+
+		try
+		{
+			await _dbContext.SaveChangesAsync(ct);
+		}
+		catch (DbUpdateException dbEx)
+		{
+			return JsonFailReg(MapOrganizationConstraintError(dbEx));
+		}
+
+		IsRegistrationSuccessful = true;
+		return new JsonResult(new { success = true });
+	}
+
+	private async Task<(bool Success, User? User, List<string> Errors)> CreateBaseUserAsync(string speciality, string username, string email, string password, string? fullName = null)
+	{
+		var newUser = new User
+		{
+			UserName = username,
+			Email = email,
+			FullName = string.IsNullOrWhiteSpace(fullName) ? "Не установлено" : fullName,
+			Speciality = speciality,
+			StatusOnline = 0,
+			HardwareId = null,
+			LastEntry = null,
+			CreatedAt = DateTime.UtcNow,
+			UpdatedAt = DateTime.UtcNow,
+			IsDeleted = false,
+			Access = 0,
+			StorageLimitBytes = 10L * 1024 * 1024 * 1024
+		};
+
+		var createRes = await _userManager.CreateAsync(newUser, password);
+		if (!createRes.Succeeded)
+			return (false, null, createRes.Errors.Select(x => x.Description).ToList());
+
+		var roleMgr = HttpContext.RequestServices.GetRequiredService<RoleManager<IdentityRole>>();
+		if (!await roleMgr.RoleExistsAsync(Roles.BaseUser))
+			await roleMgr.CreateAsync(new IdentityRole(Roles.BaseUser));
+
+		var roleRes = await _userManager.AddToRoleAsync(newUser, Roles.BaseUser);
+		if (!roleRes.Succeeded)
+		{
+			await _userManager.DeleteAsync(newUser);
+			return (false, null, roleRes.Errors.Select(x => x.Description).ToList());
+		}
+
+		var userFolderError = EnsureUserFolder(newUser.Id);
+		if (userFolderError is not null)
+		{
+			await _userManager.DeleteAsync(newUser);
+			return (false, null, new List<string> { userFolderError });
+		}
+
+		return (true, newUser, new List<string>());
+	}
+
+	private string? EnsureUserFolder(string userId)
+	{
+		var appDataPath = Path.Combine(_webHostEnvironment.ContentRootPath, "Data", "userData");
+		var shortUserId = ToShortUserId(userId);
+		var userFolderName = $"u_{shortUserId}";
+		var userDataPath = Path.Combine(appDataPath, userFolderName);
+
+		if (userDataPath.Length >= MaxPathLength)
+			return "Не удалось создать пользователя: путь к папке слишком длинный. Попробуйте более короткий логин.";
+
+		Directory.CreateDirectory(userDataPath);
+		return null;
+	}
+
+	private static OrganizationMemberRole DetectMembershipRole(string ownerPosition)
+	{
+		if (ownerPosition.Contains("директор", StringComparison.OrdinalIgnoreCase))
+			return Director;
+
+		return Owner;
+	}
+
+	private static string MapOrganizationConstraintError(DbUpdateException ex)
+	{
+		var text = ex.InnerException?.Message ?? ex.Message;
+		if (text.Contains("Organizations.Country", StringComparison.OrdinalIgnoreCase) || text.Contains("Organizations.Inn", StringComparison.OrdinalIgnoreCase))
+			return "Организация с таким ИНН в указанной стране уже зарегистрирована.";
+
+		if (text.Contains("Organizations.Email", StringComparison.OrdinalIgnoreCase))
+			return "Организация с таким Email уже зарегистрирована.";
+
+		if (text.Contains("OrganizationMembers", StringComparison.OrdinalIgnoreCase))
+			return "Пользователь уже состоит в этой организации.";
+
+		return "Не удалось завершить регистрацию организации из-за конфликта данных.";
 	}
 
 	public async Task<IActionResult> OnPostAsync(string action, CancellationToken ct)
@@ -281,38 +415,65 @@ public sealed class LoginModel : PageModel
 		return null;
 	}
 
-	// NEW: email + режим org
-	private static string? ValidateRegisterFormat(string username, string password, string confirmPassword, string email, bool isOrg)
+	private static List<string> ValidateRegisterFormat(string username, string password, string confirmPassword, string email, bool isOrg, IFormCollection form)
 	{
+		var errors = new List<string>();
+
 		if (string.IsNullOrWhiteSpace(username) || string.IsNullOrEmpty(password) || string.IsNullOrEmpty(confirmPassword))
-			return "Имя пользователя и пароль обязательны.";
+			errors.Add("Имя пользователя и пароль обязательны.");
 
 		if (username.Length > MaxUsernameLength)
-			return "Имя пользователя не должно превышать 20 символов.";
+			errors.Add("Имя пользователя не должно превышать 20 символов.");
 
-		if (!UsernameRegex.IsMatch(username))
-			return "Имя пользователя может содержать только латиницу, цифры, точку, подчёркивание и дефис.";
+		if (!string.IsNullOrWhiteSpace(username) && !UsernameRegex.IsMatch(username))
+			errors.Add("Имя пользователя может содержать только латиницу, цифры, точку, подчёркивание и дефис.");
 
 		if (password.Length > MaxPasswordLength || confirmPassword.Length > MaxPasswordLength)
-			return "Пароль не должен превышать 100 символов.";
+			errors.Add("Пароль не должен превышать 100 символов.");
 
-		if (password.Length < MinPasswordLength)
-			return "Пароль должен быть не менее 6 символов.";
+		if (!string.IsNullOrEmpty(password) && password.Length < MinPasswordLength)
+			errors.Add("Пароль должен быть не менее 6 символов.");
 
 		if (!string.Equals(password, confirmPassword, StringComparison.Ordinal))
-			return "Пароли не совпадают.";
+			errors.Add("Пароли не совпадают.");
 
-		// email обязателен для всех типов (и для org тоже, просто берётся из OwnerEmail)
 		if (string.IsNullOrWhiteSpace(email))
-			return "Email обязателен.";
+			errors.Add("Email обязателен.");
 
 		if (email.Length > 120)
-			return "Email не должен превышать 120 символов.";
+			errors.Add("Email не должен превышать 120 символов.");
 
-		if (!EmailRegex.IsMatch(email))
-			return "Некорректный формат Email.";
+		if (!string.IsNullOrWhiteSpace(email) && !EmailRegex.IsMatch(email))
+			errors.Add("Некорректный формат Email.");
 
-		return null;
+		if (isOrg)
+		{
+			var orgName = (form["OrgName"].ToString() ?? string.Empty).Trim();
+			var orgInn = (form["OrgInn"].ToString() ?? string.Empty).Trim();
+			var orgEmail = (form["OrgEmail"].ToString() ?? string.Empty).Trim();
+			var orgCountry = (form["OrgCountry"].ToString() ?? string.Empty).Trim();
+			var orgAddress = (form["OrgAddress"].ToString() ?? string.Empty).Trim();
+
+			if (string.IsNullOrWhiteSpace(orgName)) errors.Add("Название организации обязательно.");
+			if (string.IsNullOrWhiteSpace(orgInn)) errors.Add("ИНН организации обязателен.");
+			if (string.IsNullOrWhiteSpace(orgEmail)) errors.Add("Email организации обязателен.");
+			if (string.IsNullOrWhiteSpace(orgCountry)) errors.Add("Страна организации обязательна.");
+			if (string.IsNullOrWhiteSpace(orgAddress)) errors.Add("Адрес организации обязателен.");
+
+			if (orgName.Length > 120) errors.Add("Название организации не должно превышать 120 символов.");
+			if (orgInn.Length > 20) errors.Add("ИНН организации не должен превышать 20 символов.");
+			if (orgEmail.Length > 120) errors.Add("Email организации не должен превышать 120 символов.");
+			if (orgCountry.Length > 80) errors.Add("Страна организации не должна превышать 80 символов.");
+			if (orgAddress.Length > 200) errors.Add("Адрес организации не должен превышать 200 символов.");
+
+			if (!string.IsNullOrWhiteSpace(orgEmail) && !EmailRegex.IsMatch(orgEmail))
+				errors.Add("Некорректный формат Email организации.");
+
+			if (!string.IsNullOrWhiteSpace(orgInn) && !orgInn.All(ch => char.IsDigit(ch) || ch == '-' || ch == ' '))
+				errors.Add("ИНН организации должен содержать только цифры, пробел или дефис.");
+		}
+
+		return errors.Distinct().ToList();
 	}
 
 	private JsonResult JsonFail(string error) => new(new { success = false, errors = new[] { error } });
