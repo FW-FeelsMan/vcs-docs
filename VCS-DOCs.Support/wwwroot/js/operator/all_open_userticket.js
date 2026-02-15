@@ -203,6 +203,13 @@
             .withAutomaticReconnect()
             .build();
 
+    // Re-sync once after SignalR reconnect (no polling)
+    conn.onreconnected(() => {
+        try { document.dispatchEvent(new CustomEvent('supportTickets:hubReconnected')); } catch { }
+    });
+
+
+
         conn.on('message', payload => {
             try {
                 const id = payload?.ticketId;
@@ -435,6 +442,28 @@
         let currentQuery = '';
         let debounce = null;
 
+
+// ---- realtime fallback sync (no F5) ----
+// Иногда SignalR-событие может быть пропущено (например, если тикет создан в другом инстансе или вкладка была в фоне).
+// Мы не делаем постоянный polling — вместо этого обновляем список один раз после reconnection SignalR.
+let loadInFlight = false;
+let lastSyncKey = '';
+function buildOpenTicketsUrl() {
+    const url = new URL('/api/support/tickets/open', location.origin);
+    url.searchParams.set('scope', currentScope);
+    if (currentOrg) url.searchParams.set('org', currentOrg);
+    if (currentQuery) url.searchParams.set('q', currentQuery);
+    return url.toString();
+}
+
+function calcSyncKey(list) {
+    // Ключ достаточно чувствительный, чтобы ловить новые тикеты/назначения/изменение wait/организации.
+    return (list || []).map(r => `${r.id}|${r.wait}|${r.assignedUserId || ''}|${r.organization || ''}`).join('~');
+}
+
+
+
+
         // ---- Orgs ----
         async function loadOrgs() {
             try {
@@ -476,6 +505,9 @@
         async function loadTickets() {
             if (!tbody) return;
 
+            loadInFlight = true;
+            try {
+
             tbody.innerHTML = `<tr><td>Загрузка…</td></tr>`;
 
             await loadAgents();
@@ -498,6 +530,7 @@
                 }
 
                 const list = raw.map(normalizeRow);
+                lastSyncKey = calcSyncKey(list);
                 tbody.innerHTML = list.map(rowHtml).join('');
                 upgradeAssigneeColumn(tbody);
 
@@ -632,6 +665,10 @@
 
                 upgradeAssigneeColumn(tbody);
             }
+            } finally {
+                loadInFlight = false;
+            }
+
         }
 
         // Локальные события (на всякий случай)
@@ -700,7 +737,13 @@
             await loadMe();
             await loadOrgs();
             await loadTickets();
-        })();
+
+    // If SignalR reconnects, refresh once to catch missed events
+    document.addEventListener('supportTickets:hubReconnected', () => {
+        // best-effort; loadTickets handles its own in-flight guard
+        loadTickets();
+    }, { passive: true });
+                    })();
 
         panel.__dispose = function () {
             try { clearTimeout(debounce); } catch { }

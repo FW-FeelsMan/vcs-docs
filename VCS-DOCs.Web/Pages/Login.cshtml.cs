@@ -21,8 +21,12 @@ public sealed class LoginModel : PageModel
 	private const int MinPasswordLength = 6;
 	private const int MaxPathLength = 260;
 	private const int MaxFailedAttempts = 5;
+
 	private static readonly TimeSpan LockWindow = TimeSpan.FromMinutes(10);
 	private static readonly Regex UsernameRegex = new(@"^[a-zA-Z0-9._-]+$", RegexOptions.Compiled);
+
+	// простой email-regex (не RFC, но практично)
+	private static readonly Regex EmailRegex = new(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
 	private static readonly ConcurrentDictionary<string, (int Attempts, DateTime LastAttemptUtc)> FailedLogins =
 		new(StringComparer.Ordinal);
@@ -52,6 +56,10 @@ public sealed class LoginModel : PageModel
 
 	[BindProperty] public string Username { get; set; } = string.Empty;
 	[BindProperty] public string Password { get; set; } = string.Empty;
+	[BindProperty] public string ConfirmPassword { get; set; } = string.Empty;
+
+	// NEW: Email для обычной регистрации (Частное лицо / Корп. учётка)
+	[BindProperty] public string Email { get; set; } = string.Empty;
 
 	public List<string> LoginErrors { get; set; } = new();
 	public List<string> RegistrationErrors { get; set; } = new();
@@ -135,10 +143,24 @@ public sealed class LoginModel : PageModel
 
 	public async Task<IActionResult> OnPostRegisterAsync(CancellationToken ct = default)
 	{
+		var speciality = (Request.Form["speciality"].ToString() ?? string.Empty).Trim();
+
+		// username/password/confirm могут приходить из basic или org (у них одинаковые name)
 		var username = (Username ?? string.Empty).Trim();
 		var password = Password ?? string.Empty;
+		var confirmPassword = ConfirmPassword ?? string.Empty;
 
-		var formatError = ValidateRegisterFormat(username, password);
+		// Email:
+		// - для обычной регистрации берём Email (новое поле)
+		// - для организации берём OwnerEmail
+		var isOrg = string.Equals(speciality, "Зарегистрировать организацию", StringComparison.OrdinalIgnoreCase);
+
+		var emailBasic = (Email ?? string.Empty).Trim();
+		var emailOwner = (Request.Form["OwnerEmail"].ToString() ?? string.Empty).Trim();
+
+		var emailToUse = isOrg ? emailOwner : emailBasic;
+
+		var formatError = ValidateRegisterFormat(username, password, confirmPassword, emailToUse, isOrg);
 		if (formatError is not null)
 			return JsonFailReg(formatError);
 
@@ -148,10 +170,18 @@ public sealed class LoginModel : PageModel
 			if (existingUser is not null)
 				return JsonFailReg("Пользователь с таким логином уже существует.");
 
+			// (опционально, но логично) запретить дубли email для обычной регистрации
+			// if (!string.IsNullOrWhiteSpace(emailToUse))
+			// {
+			//     var byEmail = await _userManager.FindByEmailAsync(emailToUse);
+			//     if (byEmail is not null) return JsonFailReg("Пользователь с таким Email уже существует.");
+			// }
+
 			var newUser = new User
 			{
 				UserName = username,
-				Speciality = Request.Form["speciality"],
+				Email = emailToUse, // NEW
+				Speciality = speciality,
 				StatusOnline = 0,
 				HardwareId = null,
 				LastEntry = null,
@@ -251,9 +281,10 @@ public sealed class LoginModel : PageModel
 		return null;
 	}
 
-	private static string? ValidateRegisterFormat(string username, string password)
+	// NEW: email + режим org
+	private static string? ValidateRegisterFormat(string username, string password, string confirmPassword, string email, bool isOrg)
 	{
-		if (string.IsNullOrWhiteSpace(username) || string.IsNullOrEmpty(password))
+		if (string.IsNullOrWhiteSpace(username) || string.IsNullOrEmpty(password) || string.IsNullOrEmpty(confirmPassword))
 			return "Имя пользователя и пароль обязательны.";
 
 		if (username.Length > MaxUsernameLength)
@@ -262,11 +293,24 @@ public sealed class LoginModel : PageModel
 		if (!UsernameRegex.IsMatch(username))
 			return "Имя пользователя может содержать только латиницу, цифры, точку, подчёркивание и дефис.";
 
-		if (password.Length > MaxPasswordLength)
+		if (password.Length > MaxPasswordLength || confirmPassword.Length > MaxPasswordLength)
 			return "Пароль не должен превышать 100 символов.";
 
 		if (password.Length < MinPasswordLength)
 			return "Пароль должен быть не менее 6 символов.";
+
+		if (!string.Equals(password, confirmPassword, StringComparison.Ordinal))
+			return "Пароли не совпадают.";
+
+		// email обязателен для всех типов (и для org тоже, просто берётся из OwnerEmail)
+		if (string.IsNullOrWhiteSpace(email))
+			return "Email обязателен.";
+
+		if (email.Length > 120)
+			return "Email не должен превышать 120 символов.";
+
+		if (!EmailRegex.IsMatch(email))
+			return "Некорректный формат Email.";
 
 		return null;
 	}

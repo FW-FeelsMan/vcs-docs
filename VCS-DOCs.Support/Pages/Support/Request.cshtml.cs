@@ -63,37 +63,37 @@ namespace VCS_DOCs.Support.Pages.Support
 
         public sealed class InputModel
         {
-            [MaxLength(80, ErrorMessage = "ФИО — не более 80 символов.")]
+            [MaxLength(80, ErrorMessage = "    80 .")]
             public string? FullName
             {
                 get; set;
             }
 
-            [MaxLength(20, ErrorMessage = "Логин — не более 20 символов.")]
-            [RegularExpression("^[a-zA-Z0-9._-]*$", ErrorMessage = "Логин может содержать только латиницу, цифры, точку, подчёркивание и дефис.")]
+            [MaxLength(20, ErrorMessage = "    20 .")]
+            [RegularExpression("^[a-zA-Z0-9._-]*$", ErrorMessage = "    , , ,   .")]
             public string? Login
             {
                 get; set;
             }
 
-            [EmailAddress(ErrorMessage = "Неверный формат e-mail.")]
-            [MaxLength(100, ErrorMessage = "E-mail — не более 100 символов.")]
+            [EmailAddress(ErrorMessage = "  e-mail.")]
+            [MaxLength(100, ErrorMessage = "E-mail    100 .")]
             public string? ReplyTo
             {
                 get; set;
             }
 
-            [Required(ErrorMessage = "Укажите тему.")]
-            [MinLength(3, ErrorMessage = "Тема — не короче 3 символов.")]
-            [MaxLength(100, ErrorMessage = "Тема — не более 100 символов.")]
+            [Required(ErrorMessage = " .")]
+            [MinLength(3, ErrorMessage = "    3 .")]
+            [MaxLength(100, ErrorMessage = "    100 .")]
             public string Subject { get; set; } = string.Empty;
 
-            [Required(ErrorMessage = "Опишите проблему.")]
-            [MinLength(5, ErrorMessage = "Текст — не короче 5 символов.")]
-            [MaxLength(4000, ErrorMessage = "Текст — не более 4000 символов.")]
+            [Required(ErrorMessage = " .")]
+            [MinLength(5, ErrorMessage = "    5 .")]
+            [MaxLength(4000, ErrorMessage = "    4000 .")]
             public string Message { get; set; } = string.Empty;
 
-            [MaxLength(10, ErrorMessage = "Ответ на капчу — не более 10 символов.")]
+            [MaxLength(10, ErrorMessage = "      10 .")]
             public string? CaptchaAnswer
             {
                 get; set;
@@ -119,7 +119,7 @@ namespace VCS_DOCs.Support.Pages.Support
         {
             try
             {
-                // Нормализация
+                // 
                 Input.FullName = (Input.FullName ?? string.Empty).Trim();
                 Input.Login = (Input.Login ?? string.Empty).Trim();
                 Input.ReplyTo = (Input.ReplyTo ?? string.Empty).Trim();
@@ -128,7 +128,7 @@ namespace VCS_DOCs.Support.Pages.Support
                 Input.CaptchaAnswer = (Input.CaptchaAnswer ?? string.Empty).Trim();
                 Input.CaptchaToken = (Input.CaptchaToken ?? string.Empty).Trim();
 
-                // Пере-валидация
+                // -
                 ModelState.Clear();
                 if (!TryValidateModel(Input))
                 {
@@ -142,7 +142,7 @@ namespace VCS_DOCs.Support.Pages.Support
                     return new JsonResult(new
                     {
                         success = false,
-                        error = "Некорректные данные",
+                        error = " ",
                         details = errs
                     })
                     {
@@ -154,7 +154,7 @@ namespace VCS_DOCs.Support.Pages.Support
                 var email = Input.ReplyTo!;
                 var loginRaw = Input.Login!;
 
-                // Если логина нет — сгенерируем от e-mail
+                //       e-mail
                 if (string.IsNullOrWhiteSpace(loginRaw) && !string.IsNullOrWhiteSpace(email) && email.Contains('@'))
                 {
                     var (local, domainRoot) = SplitEmail(email);
@@ -168,14 +168,14 @@ namespace VCS_DOCs.Support.Pages.Support
                     return new JsonResult(new
                     {
                         success = false,
-                        error = "Укажите логин или почту"
+                        error = "   "
                     })
                     {
                         StatusCode = 400
                     };
                 }
 
-                // Проверим существование пользователя
+                //   
                 var exists = await _db.Users.AsNoTracking()
                     .AnyAsync(u => u.NormalizedUserName == loginRaw.ToUpperInvariant());
 
@@ -185,7 +185,7 @@ namespace VCS_DOCs.Support.Pages.Support
                     {
                         success = false,
                         code = "account_absent",
-                        message = "Учетная запись с указанным логином не существует. Создать новую и отправить запрос?",
+                        message = "      .     ?",
                         suggestedLogin = loginRaw
                     })
                     {
@@ -205,7 +205,7 @@ namespace VCS_DOCs.Support.Pages.Support
 
                 _log.LogInformation("PROVISION done: id={Id} login={Login} created={Created}", user.Id, user.UserName, created);
 
-                // StorageLimitBytes по умолчанию
+                // StorageLimitBytes  
                 var dbUser = await _db.Users.FirstOrDefaultAsync(u => u.Id == user.Id);
                 if (dbUser != null && (dbUser.StorageLimitBytes == null || dbUser.StorageLimitBytes <= 0))
                 {
@@ -214,7 +214,7 @@ namespace VCS_DOCs.Support.Pages.Support
                     _log.LogInformation("Set StorageLimitBytes={Limit} for user {Id}", dbUser.StorageLimitBytes, dbUser.Id);
                 }
 
-                // Создаём тикет + первое сообщение
+                //   +  
                 var ticketId = NewShortId(); // 8 hex
                 var now = DateTime.UtcNow;
 
@@ -243,18 +243,18 @@ namespace VCS_DOCs.Support.Pages.Support
                 _db.SupportTicketMessages.Add(first);
                 await _db.SaveChangesAsync();
 
-                // ?? Realtime: сообщаем всем операторам о создании тикета
+                // ?? Realtime:      
                 await _hub.Clients.All.SendAsync("created", new
                 {
                     id = ticketId,
-                    subject = t.Subject ?? "(без темы)",
+                    subject = t.Subject ?? "( )",
                     userLogin = t.OwnerLogin ?? "",
-                    organization = "",              // если у тебя есть поле организации — подставь здесь
+                    organization = "",              //         
                     wait = "user",
-                    assignedUserId = t.AssignedUserId // обычно null при создании
-                }, HttpContext.RequestAborted);
+                    assignedUserId = t.AssignedUserId //  null  
+                }, System.Threading.CancellationToken.None);
 
-                // Письмо пользователю (если указан email)
+                //   (  email)
                 if (!string.IsNullOrWhiteSpace(email))
                 {
                     try
@@ -262,11 +262,11 @@ namespace VCS_DOCs.Support.Pages.Support
                         var portalUrl = _cfg["Portal:PublicBaseUrl"] ?? "https://vcs-docs.support.local:7121";
                         var ticketUrl = $"{portalUrl.TrimEnd('/')}/Support/Tickets/{WebUtility.UrlEncode(ticketId)}";
 
-                        var subj = $"[Поддержка] Заявка № {ticketId} создана";
+                        var subj = $"[]   {ticketId} ";
 
                         var html = BuildEmailHtml(
                             ticketId: ticketId,
-                            ticketSubject: Input.Subject ?? "(без темы)",
+                            ticketSubject: Input.Subject ?? "( )",
                             ticketUrl: ticketUrl,
                             userLogin: user.UserName ?? "",
                             wasCreated: created,
@@ -301,7 +301,7 @@ namespace VCS_DOCs.Support.Pages.Support
                 return new JsonResult(new
                 {
                     success = false,
-                    error = "Внутренняя ошибка сервера"
+                    error = "  "
                 })
                 {
                     StatusCode = 500
@@ -397,15 +397,15 @@ namespace VCS_DOCs.Support.Pages.Support
                             string portalUrl)
         {
             var intro = wasCreated
-                ? "<p>Для вас создана учётная запись в системе поддержки.</p>"
-                : "<p>Ваше обращение принято в работу.</p>";
+                ? "<p>       .</p>"
+                : "<p>    .</p>";
 
             var creds = wasCreated
                 ? $@"<div style=""margin:12px 0;padding:12px;border:1px solid #e5e7eb;border-radius:8px;background:#f9fafb"">
-                <div style=""font-weight:700;margin-bottom:6px"">Данные для входа</div>
-                <div>Логин: <code>{Html(userLogin)}</code></div>
-                <div>Временный пароль: <code>{Html(tempPassword ?? "")}</code></div>
-                <div style=""color:#6b7280;margin-top:6px;font-size:.9rem"">Рекомендуем сменить пароль после первого входа.</div>
+                <div style=""font-weight:700;margin-bottom:6px"">  </div>
+                <div>: <code>{Html(userLogin)}</code></div>
+                <div> : <code>{Html(tempPassword ?? "")}</code></div>
+                <div style=""color:#6b7280;margin-top:6px;font-size:.9rem"">     .</div>
              </div>"
                 : "";
 
@@ -415,19 +415,19 @@ namespace VCS_DOCs.Support.Pages.Support
                 <head>
                   <meta charset=""utf-8"">
                   <meta name=""viewport"" content=""width=device-width,initial-scale=1"">
-                  <title>Заявка № {Html(ticketId)}</title>
+                  <title>  {Html(ticketId)}</title>
                 </head>
                 <body style=""font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:#ffffff;color:#111827;margin:0;padding:16px"">
                   <div style=""max-width:640px;margin:0 auto"">
-                    <h2 style=""margin:0 0 8px 0"">Заявка № {Html(ticketId)} создана</h2>
+                    <h2 style=""margin:0 0 8px 0"">  {Html(ticketId)} </h2>
                     <div style=""color:#6b7280;margin-bottom:12px"">{Html(ticketSubject)}</div>
                     {intro}
-                    <p>Откройте заявку по ссылке (может потребоваться вход в портал поддержки):<br>
+                    <p>    (     ):<br>
                        <a href=""{Html(ticketUrl)}"">{Html(ticketUrl)}</a></p>
-                    <p>Портал поддержки: <a href=""{Html(portalUrl)}"">{Html(portalUrl)}</a></p>
+                    <p> : <a href=""{Html(portalUrl)}"">{Html(portalUrl)}</a></p>
                     {creds}
                     <hr style=""border:none;border-top:1px solid #e5e7eb;margin:16px 0"">
-                    <div style=""color:#6b7280;font-size:.9rem"">Это автоматическое письмо. Пожалуйста, не отвечайте на него.</div>
+                    <div style=""color:#6b7280;font-size:.9rem"">  . ,    .</div>
                   </div>
                 </body>
                 </html>";

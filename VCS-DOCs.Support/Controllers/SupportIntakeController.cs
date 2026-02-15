@@ -169,7 +169,7 @@ namespace VCS_DOCs.Support.Controllers
 						organization = "",
 						wait = "user",
 						assignedUserId = (string?)null
-					}, ct);
+					}, System.Threading.CancellationToken.None);
 				}
 				catch (Exception ex)
 				{

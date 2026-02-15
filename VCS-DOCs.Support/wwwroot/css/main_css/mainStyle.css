@@ -2,6 +2,10 @@
 
 /* ===== Base ===== */
 :root {
+    /* UI scale for large monitors (same idea as VCS-DOCs.Web)
+       2560×1440  -> 175%
+       3840×2160  -> 250% */
+    --ui-scale: 1;
     --frame-gap: 7px;
     --sidebar-expanded: 220px;
     --sidebar-collapsed: 78px;
@@ -15,6 +19,24 @@
     --hover-bg: rgba(255, 255, 255, 0.08);
     --active-bg: rgba(255, 255, 255, 0.14);
     --danger: #c0392b;
+}
+
+/* Auto scaling by screen size (CSS pixels), same breakpoints as Web */
+@media (min-width: 2400px) and (min-height: 1300px) {
+    :root {
+        --ui-scale: 1.75;
+    }
+}
+
+@media (min-width: 3600px) and (min-height: 2000px) {
+    :root {
+        --ui-scale: 2.5;
+    }
+}
+
+/* "Dumb" UI upscaling for Support: scale the whole UI (no refactor to calc(...)) */
+html {
+    zoom: var(--ui-scale);
 }
 
 html, body {

@@ -59,6 +59,17 @@ async function ensureContentScripts(contentId, panelEl) {
         if (typeof window.initMyWork === "function") {
             await window.initMyWork(panelEl);
         }
+
+        // column resize (like LK storage table UX)
+        if (typeof window.initOpMyWorkColResize === "function") {
+            try {
+                window.initOpMyWorkColResize();
+                setTimeout(() => window.initOpMyWorkColResize?.(), 50);
+                setTimeout(() => window.initOpMyWorkColResize?.(), 250);
+            } catch (e) {
+                console.warn("[sidebar] my_work col resize init failed:", e);
+            }
+        }
         return;
     }
     if (contentId === "user_tickets") {

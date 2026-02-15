@@ -44,17 +44,9 @@
         return d.toISOString();
     };
 
-    const mock = () => {
-        const now = Date.now();
-        return Array.from({ length: 8 }).map((_, i) => ({
-            id: `22${(3000 + i).toString().padStart(4, '0')}zx`,
-            subject: `Демо: закрытая заявка #${i + 1}`,
-            organization: i % 2 === 0 ? 'ООО «Орг 1»' : 'АО «Корпорация»',
-            closedAt: now - i * 3600_000 * 12,
-            createdAt: now - i * 3600_000 * 36,
-            resolutionMinutes: 60 + i * 12,
-            replies: { user: 1 + (i % 3), op: 2 + (i % 2) }
-        }));
+    const setText = (el, text) => {
+        if (!el) return;
+        el.textContent = text;
     };
 
     const rowHtml = (t) => `
@@ -90,6 +82,10 @@
         const inputFrom = root.querySelector('#op_mywork_from');
         const inputTo = root.querySelector('#op_mywork_to');
 
+        const elTotalCount = root.querySelector('#mywork-total-count');
+        const elAvgDuration = root.querySelector('#mywork-avg-duration');
+        const elTotalReplies = root.querySelector('#mywork-total-replies');
+
         let q = '';
         let from = '';
         let to = '';
@@ -113,21 +109,32 @@
                 if (from) url.searchParams.set('from', from);
                 if (to) url.searchParams.set('to', to);
                 if (q) url.searchParams.set('q', q);
-                try {
-                    list = await getJson(url.toString());
-                } catch (err) {
-                    console.warn('[my-work] api fallback to mock', err);
-                    list = mock();
-                }
+                list = await getJson(url.toString());
 
                 if (!Array.isArray(list) || list.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="7">Нет данных</td></tr>';
+                    setText(elTotalCount, '0');
+                    setText(elAvgDuration, '—');
+                    setText(elTotalReplies, '0');
                     return;
                 }
                 tbody.innerHTML = list.map(rowHtml).join('');
+
+                // Сводка
+                const total = list.length;
+                const totalMins = list.reduce((acc, x) => acc + (Number(x.resolutionMinutes) || 0), 0);
+                const avgMins = total ? Math.round(totalMins / total) : 0;
+                const replies = list.reduce((acc, x) => acc + (Number(x.replies?.user) || 0) + (Number(x.replies?.op) || 0), 0);
+
+                setText(elTotalCount, String(total));
+                setText(elAvgDuration, avgMins ? fmtDuration(avgMins) : '—');
+                setText(elTotalReplies, String(replies));
             } catch (e) {
                 console.error('[my-work] failed to load', e);
                 tbody.innerHTML = '<tr><td colspan="7">Ошибка загрузки</td></tr>';
+                setText(elTotalCount, '—');
+                setText(elAvgDuration, '—');
+                setText(elTotalReplies, '—');
             }
         }
 

@@ -102,13 +102,17 @@ hr.solid {
     background: #fff;
     border: 1px solid var(--card-border);
     border-radius: 10px;
-    overflow: hidden;
+    /* IMPORTANT:
+       Sticky headers stop working if any ancestor of <th> creates a scroll container.
+       overflow:hidden on <table> does that in Chrome, so the header "уезжает".
+       Keep overflow visible and, if you need rounded clipping, do it on a wrapper div. */
+    overflow: visible;
 }
 
     .accounts-page .file-table thead th {
-        position: sticky;
-        top: 0;
-        z-index: 2;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 50 !important;
         background: #fff;
         border-bottom: 1px solid var(--grid-line-strong);
         user-select: none;
