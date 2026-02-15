@@ -117,6 +117,7 @@ builder.Services
 
 builder.Services.Configure<IdentityOptions>(opt =>
 {
+	opt.User.RequireUniqueEmail = true;
 	opt.Password.RequireDigit = true;
 	opt.Password.RequireLowercase = true;
 	opt.Password.RequireUppercase = true;
@@ -279,6 +280,7 @@ Directory.CreateDirectory(absoluteUserDataPath);
 using (var scope = app.Services.CreateScope())
 {
 	var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+	await db.Database.MigrateAsync();
 
 	db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
 	db.Database.ExecuteSqlRaw("PRAGMA synchronous=NORMAL;");
