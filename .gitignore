@@ -511,3 +511,12 @@ VCS-DOCs.Web/Data/userData/
 # Protect secrets – ignore local appsettings in Web project
 VCS-DOCs.Web/appsettings.json
 VCS-DOCs.Support/appsettings.json
+
+# Local SQLite databases (each developer has their own; project is migrating to Postgres)
+*.db
+*.db-shm
+*.db-wal
+*.sqbpro
+
+# Claude Code local state
+.claude/
